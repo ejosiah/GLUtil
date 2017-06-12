@@ -1,0 +1,100 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+layout( quads, equal_spacing, ccw ) in;
+
+const int MAX_LIGHT_SOURCES = 10;
+
+uniform mat4 LMV;
+uniform mat4 MV;
+uniform mat4 MVP;
+uniform mat3 normalMatrix;
+
+uniform struct LightSource{
+	vec4 position;
+	vec4 ambient;
+	vec4 diffuse;
+	vec4 specular;
+	vec4 spotDirection;
+	float spotAngle;
+	float spotExponent;
+	float kc;
+	float ki;
+	float kq;
+	bool transform;
+} light[MAX_LIGHT_SOURCES];
+
+in VERTEX{
+	smooth vec4 color;
+} in_vertex[];
+
+out VERTEX {
+	smooth vec3 position;
+	smooth vec3 normal;
+	smooth vec2 texCoord;
+	smooth vec4 color;
+	smooth vec4 lightDirection[MAX_LIGHT_SOURCES];
+} out_vertex;
+noperspective out vec3 edgeDistance;
+
+
+const vec4 bc = vec4(1, 3, 3, 1);
+
+float B(int i,  float u){
+	return bc[i] * pow(1.0 - u, 3 - i) * pow(u, i);
+}
+
+vec4 getLightDirection(vec4 pos, in LightSource light){
+	if(light.position.w == 0){	// directional light
+		if(light.transform){
+			return normalize(LMV*light.position);
+		}
+		return normalize(light.position);
+	}
+	else{	// positional light
+		vec4 lightPos = (light.position/light.position.w);
+		if(light.transform){
+			return normalize((LMV*light.position) - pos);
+		}
+		return normalize(light.position - pos);
+	}
+}
+
+float partialD(int i,  float u){
+	float du[] = {
+		-3.0 * (1 - u) * (1 - u),
+		 -6.0 * u * (1-u) + 3.0 * (1-u) * (1-u),
+		 -3.0 * u * u + 6.0 * u * (1-u),
+		 3.0 * u * u
+	};
+	return du[i];
+}
+
+void main(){
+	float u = gl_TessCoord.x;
+	float v = gl_TessCoord.y;
+
+	vec4 p = vec4(0);
+	vec4 du = vec4(0);
+	vec4 dv = vec4(0);
+	for(int i = 0; i < 4; i++){
+		for(int j = 0; j < 4; j++){
+			p += B(i, u) * B(j, v) * gl_in[i * 4 + j].gl_Position; 
+			du += partialD(i, u) * B(j, v) * gl_in[i * 4 + j].gl_Position; 
+			dv += B(i, u) * partialD(j, v) * gl_in[i * 4 + j].gl_Position;
+		}
+	}
+
+	vec3 normal = normalize(cross(du.xyz, dv.xyz));
+	vec4 pos = MV * p;
+	out_vertex.position = pos.xyz;
+	for(int i = 0; i < light.length(); i++){
+		out_vertex.lightDirection[i] = getLightDirection(pos, light[i]);
+	}
+	out_vertex.texCoord = gl_TessCoord.xy;
+	out_vertex.normal = normalize(normalMatrix * normal);
+	out_vertex.color = in_vertex[0].color;
+	gl_Position = MVP * p;
+
+}

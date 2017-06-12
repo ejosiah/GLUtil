@@ -1,0 +1,9 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+layout (quads, equal_spacing, ccw) in;
+
+void main(){
+	gl_Position = gl_in[gl_InvocationID].gl_Position;
+}

@@ -1,0 +1,29 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+uniform int grids;
+
+layout(vertices = 16) out;
+
+in VERTEX{
+	smooth vec4 color;
+} in_vertex[];
+
+out VERTEX{
+	smooth vec4 color;
+} out_vertex[];
+
+void main(){
+	gl_TessLevelOuter[0] = float(grids);
+	gl_TessLevelOuter[1] = float(grids);
+	gl_TessLevelOuter[2] = float(grids);
+	gl_TessLevelOuter[3] = float(grids);
+
+	gl_TessLevelInner[0] = float(grids);
+	gl_TessLevelInner[1] = float(grids);
+
+	out_vertex[gl_InvocationID].color = in_vertex[gl_InvocationID].color;
+
+	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+}

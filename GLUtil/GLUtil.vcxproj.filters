@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{238264ee-9297-4f20-af70-b3f7f04765b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\primitives">
+      <UniqueIdentifier>{0d8ce61f-6134-4087-b722-cea4828be23a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="build">
+      <UniqueIdentifier>{d6cba899-9080-4591-ab3b-cc6febd99b19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\examples">
+      <UniqueIdentifier>{229209a9-bd2e-4ed7-a8a4-f09b09ee893f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shaders">
+      <UniqueIdentifier>{b3dba7b3-6ef1-443e-8ecb-7b3ab27a7c04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{7870b115-19c8-46ca-a484-2f71913983d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ui">
+      <UniqueIdentifier>{d78d6877-7091-46f5-83ff-7681996f3190}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+    <Text Include="phongModel.txt">
+      <Filter>shaders</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\attributes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\mathlib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\CameraController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Cube.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Plane.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Drawable.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Model.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Bounds.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\mesh.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\models.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\VAOObject.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\VBOObject.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Sphere.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\primitives.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Shape.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\ProvidedMesh.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Teapot.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\teapotdata.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneTemplate.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="TestScene.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="exampleScene.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="TesellationExample.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\HiResCube.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\PatchTeapot.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Hemisphere.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Cylinder.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Cone.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageViewer.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Font.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\common.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\GlfwApp.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Image.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\input.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Keyboard.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Scene.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Shader.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Timer.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\util.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="FontTest.h">
+      <Filter>Header Files\examples</Filter>
+    </ClInclude>
+    <ClInclude Include="_virtualkeys.hpp">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\3DConnexion.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\UICore.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\button.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\events.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\layouts.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\frame.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\textures.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\ncl\gl\camera.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="include\ncl\gl\mathlib.inl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="shaders\identity.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\identity.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\texture.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\lightMap.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\lightMap.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\phong_lighting.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\basic.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\phong_lighting2.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="build.gradle">
+      <Filter>build</Filter>
+    </None>
+    <None Include="shaders\pass_through.tcs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\pass_through.tes">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\pass_through.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\pass_through.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\teapot.tcs">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\teapot.tes">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\teapot.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\teapot.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\per_fragment_lighing.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\per_fragment_lighing.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\wireframe.geom">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\font.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\font.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\ncl\gl\Shader.inl">
+      <Filter>Header Files\core</Filter>
+    </None>
+    <None Include="shader.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\ui.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\ui.frag">
+      <Filter>shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="media\textures\floor_color_map.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="media\textures\floor_light_map.tga">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="media\textures\Portrait-8.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

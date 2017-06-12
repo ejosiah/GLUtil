@@ -1,0 +1,18 @@
+task installHeaders(type: Copy, dependsOn: 'compileShaders'){
+	from 'include'
+	into  'C:/Users/Josiah/OneDrive/cpp/include'
+}
+
+task compileShaders << {
+	def src = new File('shaders').listFiles()
+	def dest = new File("include/ncl/gl/shaders.h")
+	dest.delete()
+	dest << "#pragma once\n"
+	dest << "#include <iostream>\n"
+	src.each{
+		def name = it.name.replace(".", "_")
+		dest << "const std::string ${name}_shader = \""
+		it.eachLine{ line -> dest << "$line\\n"   }
+		dest << '";\n'
+	}
+}
