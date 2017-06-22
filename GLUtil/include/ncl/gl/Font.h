@@ -85,6 +85,10 @@ namespace ncl {
 				return getFont("Arial", size, style, color);
 			}
 
+			static Font* Courier(int size = 10, int style = 0, const color& color = BLACK) {
+				return getFont("Courier", size, style, color);
+			}
+
 			static Font* getFont(std::string name, int size, int style, const color& color) {
 				auto key = getFontName(name, style) + std::to_string(size);
 				auto itr = fonts.find(key);
@@ -185,6 +189,7 @@ namespace ncl {
 				sx = 2.0 / w;
 				sy = 2.0 / h;
 
+				location["Courier"] = "C:\\Windows\\Fonts\\cour.ttf";
 				location["Arial"] = "C:\\Windows\\Fonts\\arial.ttf";
 				location["Arial Bold"] = "C:\\Windows\\Fonts\\arialbd.ttf";
 				location["Arial Bold Italic"] = "C:\\Windows\\Fonts\\arialbi.ttf";

@@ -61,12 +61,14 @@ struct LightModel {
 };
 
 uniform mat4 MV;
+uniform mat4 V;
 uniform LightSource light[MAX_LIGHT_SOURCES];
 uniform Material material[2];
 uniform LineInfo line;
 uniform bool wireframe;
 uniform LightModel lightModel;
 uniform bool activeTextures[MAX_TEXTURES];
+uniform int blendTex[MAX_TEXTURES - 1];
 
 ToonShader toonShader;
 
@@ -96,7 +98,7 @@ float daf(float dist, LightSource light){
 
 float saf(LightSource light, vec3 lightDirection){
 	vec3 l = normalize(lightDirection);
-	vec3 d = normalize(light.spotDirection).xyz;
+	vec3 d =   normalize(mat3(V) * light.spotDirection.xyz);
 	float h = light.spotExponent;
 	
 	if(light.spotAngle >= 180) 	return 1.0;
@@ -125,6 +127,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	float f = m.shininess;
 		
 	float _daf = daf(length(l), light);
+
 	float _saf = saf(light, l);
 	
 	vec4 ambient = light.ambient * m.ambient;
@@ -163,6 +166,13 @@ vec4 texColor(){
 		if(activeTextures[next]){
 			color = colors[next];
 			break;
+		}
+	}
+	for(int i = 0; i < blendTex.length(); i++){
+		int blendId = blendTex[i];
+		if(blendId != 0){
+			vec4 blendColor = colors[blendId];
+			color = mix(color, blendColor, blendColor.a);
 		}
 	}
 	return color;

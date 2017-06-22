@@ -20,7 +20,7 @@ namespace ncl {
 
 		const color RED = glm::vec4(1, 0, 0, 1);
 		const color GREEN = glm::vec4(0, 1, 0, 1);
-		const color BLUE = glm::vec4(1, 0, 1, 1);
+		const color BLUE = glm::vec4(0, 0, 1, 1);
 		const color WHITE = glm::vec4(1);
 		const color BLACK = glm::vec4(0, 0, 0, 1);
 		const color GRAY = glm::vec4(0.5f, 0.5f, 0.5f, 1);

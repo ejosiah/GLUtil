@@ -7,7 +7,7 @@
 namespace ncl {
 	namespace gl {
 		struct Material {
-			glm::vec4 ambient{ 0.2, 0.2, 0.2, 1 };
+			glm::vec4 ambient{ 0 };
 			glm::vec4 diffuse{ 0.8, 0.8, 0.8, 1 };
 			glm::vec4 specular{ 1 };
 			glm::vec4 transmittance{ 0 };
@@ -26,9 +26,9 @@ namespace ncl {
 			glm::vec4 ambient{ 0 };
 			glm::vec4 diffuse{ 1 };
 			glm::vec4 specular{ 1 };
-			glm::vec4 spotDirection;
-			float spotAngle = 180;
-			float spotExponent;
+			glm::vec4 spotDirection{ 0, 0, -1, 0 };
+			float spotAngle = 180.0f;
+			float spotExponent = 2.0f;
 			float kc = 1;
 			float ki = 0;
 			float kq = 0;
@@ -42,7 +42,9 @@ namespace ncl {
 			bool useObjectSpace = false;
 			bool celShading = false;
 			bool colorMaterial = false;
-			glm::vec4 globalAmbience{ 0.2, 0.2, 0.2, 1 };
+			glm::vec4 globalAmbience{ 0.02, 0.02, 0.02, 1 };
 		};
+
+		Material DEFAULT_MATERIAL;
 	}
 }

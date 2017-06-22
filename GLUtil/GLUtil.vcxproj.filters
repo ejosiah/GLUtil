@@ -84,9 +84,6 @@
     <ClInclude Include="include\ncl\gl\models.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\VAOObject.h">
-      <Filter>Header Files\primitives</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\gl\VBOObject.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
@@ -195,6 +192,12 @@
     <ClInclude Include="include\ncl\gl\textures.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\VAOObject.h">
+      <Filter>Header Files\shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Noise.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -290,6 +293,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\ui.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\noise.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

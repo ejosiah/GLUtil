@@ -9,12 +9,12 @@ namespace ncl {
 	namespace gl {
 		class Cube : public Shape {
 		public:
-			Cube(float size = 1.0f, glm::vec4& color = randomColor()) 
-				:Shape(createMesh(size/2, color)) {
+			Cube(float size = 1.0f, const glm::vec4& color = randomColor(), Material& mat = DEFAULT_MATERIAL)
+				:Shape(createMesh(size/2, color, mat)) {
 			}
 
 
-			 std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color) {
+			 std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color, Material& mat) {
 				using namespace glm;
 				const int NO_VERTICES = 24;
 
@@ -127,10 +127,10 @@ namespace ncl {
 				};
 
 				Mesh mesh;
-				Material mat;
+			/*	Material mat;
 				mat.diffuse = color;
 				mat.specular = color;
-				mat.shininess = 50.0f;
+				mat.shininess = 50.0f;*/
 
 
 				mesh.positions = std::vector<vec3>(std::begin(positions), std::end(positions));

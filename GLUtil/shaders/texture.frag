@@ -18,4 +18,5 @@ void main(){
 	vec4 color = texture(image0, vertex.texCoord);
 	vec4 oldLeather = texture(image1, vertex.texCoord);
 	fragColor = mix(color, oldLeather, oldLeather.a);
+	fragColor = color;
 }

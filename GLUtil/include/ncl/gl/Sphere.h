@@ -8,12 +8,12 @@ namespace ncl {
 	namespace gl {
 		class Sphere : public Shape {
 		public:
-			Sphere(GLfloat r, GLuint p, GLuint q, const glm::vec4& color = randomColor()) :
-				Shape(createMesh(r, p, q, color)){
+			Sphere(GLfloat r, GLuint p, GLuint q, Material& material = DEFAULT_MATERIAL) :
+				Shape(createMesh(r, p, q, material)){
 			}
 
 		protected:
-			std::vector<Mesh> createMesh(float r, int p, int q, const glm::vec4& color) {
+			std::vector<Mesh> createMesh(float r, int p, int q, Material& material) {
 				Mesh mesh;
 
 				for (int j = 0; j <= q; j++) {
@@ -21,7 +21,7 @@ namespace ncl {
 						mesh.positions.push_back(glm::vec3(f(i, j, q, p, r), g(i, j, q, p, r), h(i, j, q, p, r)));
 						mesh.normals.push_back(glm::vec3(fn(i, j, q, p, r), gn(i, j, q, p, r), hn(i, j, q, p, r)));
 						mesh.uvs[0].push_back(glm::vec2(float(p - i) / p, float(q - j) / q));
-						mesh.colors.push_back(color);
+						mesh.colors.push_back(material.diffuse);
 					}
 				}
 
@@ -32,6 +32,7 @@ namespace ncl {
 					}
 				}
 				mesh.primitiveType = GL_TRIANGLE_STRIP;
+				mesh.material = material;
 				return std::vector<Mesh>(1, mesh);
 			} 
 

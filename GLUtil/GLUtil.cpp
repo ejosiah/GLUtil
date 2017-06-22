@@ -1,12 +1,13 @@
 // GLUtil.cpp : Defines the entry point for the console application.
 //
 
+#include <Windows.h>
+#include "stdafx.h"
+
 #ifndef CONNECT_3D
 #define CONNECT_3D
 #endif
 
-#include <Windows.h>
-#include "stdafx.h"
 #include "include/ncl/gl/GlfwApp.h"
 #include "TestScene.h"
 #include "exampleScene.h"
@@ -38,7 +39,7 @@ int main()
 	GLVersion version{ 4, 5 };
 	Scene* scene = new ImageViewer();
 //	Scene* scene = new TestScene("Test Scene", ops);
-//  Scene* scene = new ExampleScene("Example Scene", ops);
+ //   Scene* scene = new ExampleScene("Example Scene", ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

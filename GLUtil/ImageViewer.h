@@ -8,6 +8,7 @@
 #include "include/ncl/gl/Image.h"
 #include "include/ncl/gl/Shader.h"
 #include "include/ncl/gl/textures.h"
+#include "include/ncl/gl/Noise.h"
 
 
 using namespace std;
@@ -24,7 +25,7 @@ public:
 		_width = 512;
 		_height = _width * float(img.width())/ img.height();
 		_shaders.push_back("shaders/identity.vert");
-		_shaders.push_back("shaders/texture.frag");
+		_shaders.push_back("shaders/noise.frag");
 	}
 	
 
@@ -43,10 +44,11 @@ public:
 
 
 	void loadTextures() {
-		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
-		texture1 = new Texture2D("D:\\Josiah\\Dropbox\\Dropbox\\images\\moss.png", 1);
+		texture0 = new NoiseTex2D();
+	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
+	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
 		_shader.sendUniform1ui("image0", texture0->id());
-		_shader.sendUniform1ui("image1", texture1->id());
+	//	_shader.sendUniform1ui("image1", texture1->id());
 	}
 
 

@@ -15,6 +15,7 @@
 #include "Image.h"
 #include "Font.h"
 #include "common.h"
+#include "textures.h"
 
 namespace ncl {
 	namespace gl {
@@ -41,7 +42,7 @@ namespace ncl {
 			* @param h scene height
 			* @param fbuffer OpenGL framebuffer settings
 			*/
-			Scene(const char* t, int w = 1280, int h = 720, bool useDefaultShader = false, std::vector<std::string> shaders = {}, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+			Scene(const char* t, int w = 1280, int h = 720, bool useDefaultShader = true, std::vector<std::string> shaders = {}, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 			:_width(w), _height(h), _title(t), _useDefaultShader(useDefaultShader), _shaders(shaders),  fBuffer(fBuffer) {
 				_center = glm::vec2(w / 2, h / 2);
 				_motionEventHandler = nullptr;
@@ -68,9 +69,9 @@ namespace ncl {
 			* @breif Private scene initializer
 			*/
 			void init0(){
-				if (_useDefaultShader) {
+				if (_shaders.empty() && _useDefaultShader) {
 					_shader.loadFromstring(GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
-					_shader.loadFromstring(GL_GEOMETRY_SHADER, wireframe_geom_shader);
+				//	_shader.loadFromstring(GL_GEOMETRY_SHADER, wireframe_geom_shader);
 					_shader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 					_shader.createAndLinkProgram();
 				}
@@ -87,6 +88,8 @@ namespace ncl {
 				glEnable(GL_DEPTH_TEST);
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
+
+				// TODO enable based on framebuffer
 
 				_shader.use();
 				init();

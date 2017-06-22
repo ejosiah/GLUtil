@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,10 +29,11 @@ public:
 		logger.info(msg);
 		msg = "rotation[" + to_string(event.rotation.x) + ", " + to_string(event.rotation.y) + ", " + to_string(event.rotation.z) + "]";
 		logger.info(msg);
-		cam.model = translate(cam.model, event.translation * 0.0011f);
-		cam.model = rotate(cam.model, radians(event.rotation.z * 0.001f), vec3(0, 0, 1));
-		cam.model = rotate(cam.model, radians(event.rotation.y * 0.001f), vec3(0, 1, 0));
-		cam.model = rotate(cam.model, radians(event.rotation.x * 0.001f), vec3(1, 0, 0));
+		auto trans = event.translation * vec3 {1, -1, 1};
+		cam.view = translate(cam.view, event.translation * vec3(1, 1, -1) * 0.0011f);
+		cam.view = rotate(cam.view, radians(event.rotation.z * 0.001f), vec3(0, 0, 1));
+		cam.view = rotate(cam.view, radians(event.rotation.y * 0.001f), vec3(0, 1, 0));
+		cam.view = rotate(cam.view, radians(event.rotation.x * 0.001f), vec3(1, 0, 0));
  	};
 	virtual void onNoMotion() override {};
 

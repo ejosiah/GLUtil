@@ -158,6 +158,7 @@
     <ClInclude Include="include\ncl\gl\events.h" />
     <ClInclude Include="include\ncl\gl\frame.h" />
     <ClInclude Include="include\ncl\gl\layouts.h" />
+    <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\UICore.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
@@ -225,6 +226,7 @@
     <None Include="shaders\identity.vert" />
     <None Include="shaders\lightMap.frag" />
     <None Include="shaders\lightMap.vert" />
+    <None Include="shaders\noise.frag" />
     <None Include="shaders\pass_through.frag" />
     <None Include="shaders\pass_through.tcs" />
     <None Include="shaders\pass_through.tes" />

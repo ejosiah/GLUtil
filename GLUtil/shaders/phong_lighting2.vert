@@ -90,7 +90,7 @@ float daf(float dist, LightSource light){
 
 float saf(LightSource light, vec3 lightDirection){
 	vec3 l = normalize(lightDirection);
-	vec3 d = normalize(light.spotDirection).xyz;
+	vec3 d = normalize(light.spotDirection.xyz);
 	float h = light.spotExponent;
 	
 	if(light.spotAngle >= 180) 	return 1.0;

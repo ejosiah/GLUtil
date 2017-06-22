@@ -104,6 +104,10 @@ namespace ncl {
 				}
 			}
 
+			Material& material() {
+				return materials[0];
+			}
+
 		protected:
 			void normalize(std::vector<Mesh>& mesh, float _scale) {
 				float radius;
@@ -151,6 +155,7 @@ namespace ncl {
 			float squaredDistance(glm::vec3& v) {
 				return v.x*v.x + v.y*v.y + v.z*v.z;
 			}
+
 		private:
 			bool cullface;
 		};

@@ -46,7 +46,7 @@ out VERTEX {
 } vertex;
 
 noperspective out vec3 edgeDistance;
-uniform mat4 LMV;
+uniform mat4 V;
 uniform mat4 MV;
 uniform mat4 MVP;
 uniform LightModel lightModel;
@@ -59,16 +59,17 @@ vec4 getLightDirection(vec4 pos, in LightSource light){
 	vec4 direction = vec4(0);
 	if(light.position.w == 0){	// directional light
 		if(light.transform){
-			direction = LMV * light.position;
+			direction = V * light.position;
 		}
 		direction = light.position;
 	}
 	else{	// positional light
 		vec4 lightPos = (light.position/light.position.w);
 		if(light.transform){
-			direction = (LMV*light.position) - pos;
+			direction = (V*light.position) - pos;
+		}else{
+			direction = light.position - pos;
 		}
-		direction = light.position - pos;
 	}
 	return normalize(vec4( OLM * direction.xyz, 1.0));
 }

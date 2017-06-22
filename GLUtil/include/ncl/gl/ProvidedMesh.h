@@ -5,6 +5,9 @@ namespace ncl {
 	namespace gl {
 		class ProvidedMesh : public Shape {
 		public:
+			ProvidedMesh(Mesh& mesh) :ProvidedMesh(std::vector<Mesh>(1, mesh)) {
+			}
+
 			ProvidedMesh(std::vector<Mesh>& meshes):Shape(meshes) {
 			}
 

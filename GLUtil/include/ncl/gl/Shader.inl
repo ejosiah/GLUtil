@@ -382,7 +382,7 @@ namespace ncl {
 			Matrix4 MVP = MV * camera.getProjectionMatrix();
 			Matrix3 NM = Matrix3(MV).inverse().transpose();
 
-			sendUniformMatrix4fv("LMV", 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
+			sendUniformMatrix4fv("V", 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
 			sendUniformMatrix4fv("MV", 1, GL_FALSE, MV);
 			sendUniformMatrix4fv("MVP", 1, GL_FALSE, MVP);
 			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, NM);
@@ -390,7 +390,8 @@ namespace ncl {
 		}
 
 		void Shader::send(const GlmCam& camera) {
-			sendUniformMatrix4fv("LMV", 1, GL_FALSE, glm::value_ptr(camera.view));
+			sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(camera.projection));
+			sendUniformMatrix4fv("V", 1, GL_FALSE, glm::value_ptr(camera.view));
 			sendUniformMatrix4fv("MV", 1, GL_FALSE, glm::value_ptr(camera.view * camera.model));
 			sendUniformMatrix4fv("MVP", 1, GL_FALSE, glm::value_ptr(camera.projection * camera.view * camera.model));
 			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(camera.view * camera.model))));
