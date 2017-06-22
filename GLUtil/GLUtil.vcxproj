@@ -227,6 +227,8 @@
     <None Include="shaders\lightMap.frag" />
     <None Include="shaders\lightMap.vert" />
     <None Include="shaders\noise.frag" />
+    <None Include="shaders\noise3d.frag" />
+    <None Include="shaders\noise3d.vert" />
     <None Include="shaders\pass_through.frag" />
     <None Include="shaders\pass_through.tcs" />
     <None Include="shaders\pass_through.tes" />

@@ -24,8 +24,8 @@ public:
 		Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
 		_width = 512;
 		_height = _width * float(img.width())/ img.height();
-		_shaders.push_back("shaders/identity.vert");
-		_shaders.push_back("shaders/noise.frag");
+		_shaders.push_back("shaders/noise3d.vert");
+		_shaders.push_back("shaders/noise3d.frag");
 	}
 	
 
@@ -44,10 +44,12 @@ public:
 
 
 	void loadTextures() {
-		texture0 = new NoiseTex2D();
+		
+	//	texture0 = new NoiseTex2D(Simplex2D);
+		texture1 = new NoiseTex3D();
 	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
 	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
-		_shader.sendUniform1ui("image0", texture0->id());
+		_shader.sendUniform1ui("image0", texture1->id());
 	//	_shader.sendUniform1ui("image1", texture1->id());
 	}
 
@@ -90,6 +92,6 @@ private:
 	ProvidedMesh* plane;
 	mat4 projection;
 	Cube* cube;
-	Texture2D* texture1;
+	Texture3D* texture1;
 	Texture2D* texture0;
 };
