@@ -37,9 +37,9 @@ int main()
 	ops.useDefaultShader = true;
 	
 	GLVersion version{ 4, 5 };
-	Scene* scene = new ImageViewer();
+//	Scene* scene = new ImageViewer();
 //	Scene* scene = new TestScene("Test Scene", ops);
- //   Scene* scene = new ExampleScene("Example Scene", ops);
+    Scene* scene = new ExampleScene("Example Scene", ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

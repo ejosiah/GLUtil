@@ -66,12 +66,25 @@ namespace ncl {
 
 		class Texture3D {
 		public:
-			Texture3D(unsigned char* data, GLuint width, GLuint height, GLuint depth, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
-				LoadData load = [&]() { glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data); };
+			Texture3D(unsigned char* data, GLuint width, GLuint height, GLuint depth, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR }) : _id(id) {
+			/*	LoadData load = [&]() { 
+					glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data); 
+					glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, wrap.t);
+				
+				};
 				loadTexture(GL_TEXTURE_3D, buffer, id, wrap, minMagfilter, load);
 				_width = width;
 				_height = height;
-				_depth = depth;
+				_depth = depth;*/
+				glGenTextures(1, &buffer);
+				glActiveTexture(TEXTURE(id));
+				glBindTexture(GL_TEXTURE_3D, buffer);
+				glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, wrap.s);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, wrap.t);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, wrap.t);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, minMagfilter.x);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, minMagfilter.y);
 			}
 
 			Texture3D() {}
@@ -100,8 +113,8 @@ namespace ncl {
 
 		class NoiseTex2D : public Texture2D {
 		public:
-			NoiseTex2D(Noise2D noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
-			:Texture2D(noise(freq, ampl, width, height).get(), width, height, nextId++, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
+			NoiseTex2D(const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
+			:Texture2D(noise(width, height, freq, ampl).get(), width, height, nextId++, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
 
 			}
 		private:

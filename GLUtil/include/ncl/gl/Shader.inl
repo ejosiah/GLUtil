@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <sstream>
-
+#include <regex>
 
 namespace ncl {
 	namespace gl {
@@ -76,10 +76,14 @@ namespace ncl {
 			if (activePrograms.empty()) activePrograms.push(0);
 		}
 
-		void Shader::loadFromstring(GLenum type, const std::string& source) {
+		std::string preprocess(const std::string& source, const std::string& filename, int level = 0, bool storeIntermidate = false);
+
+		void Shader::loadFromstring(GLenum type, const std::string& source, const std::string& filename) {
 			GLuint shader = glCreateShader(type);
 
-			const char * ptmp = source.c_str();
+			const std::string newSource = preprocess(source, filename, 0, _storePreprocessedShaders);
+
+			const char * ptmp = newSource.c_str();
 			glShaderSource(shader, 1, &ptmp, NULL);
 
 			//check whether the shader loads fine
@@ -225,7 +229,7 @@ namespace ncl {
 
 		void Shader::loadFromFile(GLenum whichShader, const std::string& filename) {
 			//Logger::get()->debug("compiling " + filename);
-			loadFromstring(whichShader, ncl::getText(filename));
+			loadFromstring(whichShader, ncl::getText(filename), filename);
 
 		}
 
@@ -405,6 +409,48 @@ namespace ncl {
 			send("lightModel.colorMaterial", lightModel.colorMaterial);
 			sendUniform4fv("lightModel.globalAmbience", 1, (float*)&lightModel.globalAmbience[0]);
 		}
+#ifndef SHADER_PROCESS
+#define SHADER_PROCESS
+		std::string preprocess(const std::string& source, const std::string& filename, int level, bool storeIntermidate) {
+			static unsigned num = 0;
+			if (level > 32) {
+				throw "header inclusion depth limit reached, might be caused by cyclic header inclusion";
+			}
+
+			using namespace std;
+			static const regex INCLUDE_PATTERN("^#pragma\\s*include\\s*\\(\\s*\"([A-Za-z0-9_.-]+\\.[A-za-z]+)\"\\.*\\)\\.*");
+			stringstream in;
+			stringstream out;
+			in << source;
+
+			size_t line_number = 1;
+			smatch matches;
+
+			string line;
+			while (getline(in, line)) {
+				if (regex_search(line, matches, INCLUDE_PATTERN)) {
+					string file = matches[1];
+					string include_file = "C:\\Users\\Josiah\\OneDrive\\cpp\\include\\shaders\\" + file;
+					string include_string = ncl::getText(include_file);
+					out << preprocess(include_string, include_file, level + 1) << endl;
+				}
+				else {
+					out << line << endl;
+				}
+				++line_number;
+			}
+			string result = out.str();
+			if (storeIntermidate) {
+				string name = filename.substr(filename.find_last_of(".") + 1, filename.length());
+				ofstream fout;
+				fout.open(filename + to_string(num++) +  ".preprocessed");
+				fout << result << endl;
+				fout.flush();
+				fout.close();
+			}
+			return result;
+		}
+#endif
 
 	}
 }

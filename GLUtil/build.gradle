@@ -9,7 +9,7 @@ task compileShaders << {
 	dest.delete()
 	dest << "#pragma once\n"
 	dest << "#include <iostream>\n"
-	src.each{
+	src.findAll{ !it.text.contains("#pragma nocomp") }.each{
 		def name = it.name.replace(".", "_")
 		dest << "const std::string ${name}_shader = \""
 		it.eachLine{ line -> dest << "$line\\n"   }

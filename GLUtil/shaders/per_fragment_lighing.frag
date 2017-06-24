@@ -132,7 +132,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	
 	vec4 ambient = light.ambient * m.ambient;
 	
-	vec4 diffuse =  lightModel.celShading ? floor(max(dot(l, n), 0) * toonShader.levels) * toonShader.scaleFactor * light.diffuse * (activeTextures[0]? texture(image0, vertex.texCoord) : getDiffuse(m))
+	vec4 diffuse =  lightModel.celShading ? floor(max(dot(l, n), 0) * toonShader.levels) * toonShader.scaleFactor * light.diffuse *  getDiffuse(m)
 							: max(dot(l, n), 0)  * light.diffuse * m.diffuse;
 	
 	vec3 e = normalize(vertex.eyes);

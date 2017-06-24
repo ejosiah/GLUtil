@@ -49,7 +49,7 @@ namespace ncl {
 
 			void loadFromFiles(std::vector<std::string> filenames);
 
-			void loadFromstring(GLenum shader, const std::string& source);
+			void loadFromstring(GLenum shader, const std::string& source, const std::string& filename = ".shader");
 			void loadFromFile(GLenum shader, const std::string& filename);
 			void createAndLinkProgram();
 
@@ -115,6 +115,8 @@ namespace ncl {
 
 			bool isActive() { return _program != 0;  }
 
+			void storePreprocessedShaders(bool flag) { _storePreprocessedShaders = flag;  }
+
 		private:
 			enum ShaderType { VERTEX_SHADER, FRAGMENT_SHADER, TESELLATION_CONTROL_SHADER, TESELLATION_EVAL_SHADER, GEOMETRY_SHADER, COMPUTE_SHADER };
 			GLuint _program;
@@ -125,6 +127,7 @@ namespace ncl {
 			std::map<GLenum, std::map<std::string, std::string>> _subroutineList;
 			ncl::Logger logger;
 			std::vector<Procedure> pendingOps;
+			bool _storePreprocessedShaders = false;
 
 			static std::stack<GLuint> activePrograms;
 		};

@@ -1,0 +1,41 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+#pragma nocomp
+uniform struct Light{
+    vec4 pos;
+    vec4 diff;
+    vec4 spec;
+} light;
+in LightInterface{
+    smooth vec3 direction;
+    smooth vec3 eyes;
+} light_in;
+const vec4 globalAmb = vec4(0.2, 0.2, 0.2, 1.0);
+vec4 applyLight(vec3 norm, vec4 mColor, float mShine){
+    vec4 amb = globalAmb * mColor;
+    vec3 N = gl_FrontFacing ? normalize(norm) : normalize(-norm);
+    vec3 L = light_in.direction;
+    float f = mShine;
+    vec4 diff = max(dot(L, N), 0) * light.diff * mColor;
+    vec3 E = vec3(0, 0, 1); // normalize(light_in.eyes);
+    vec3 S = normalize(L + E);
+    vec4 spec = pow(max(dot(S, N), 0), f) * light.spec * mColor;
+    return amb + diff + spec;
+}
+
+#define PI 3.14159265
+layout(binding=0) uniform sampler3D noise;
+uniform vec4 sky = vec4(0.3, 0.3, 0.9, 1.0);
+uniform vec4 cloud = vec4(1.0);
+smooth in vec3 texPos;
+smooth in vec3 norm;
+out vec4 fColor;
+void main(){
+	vec4 oct = texture(noise, texPos);
+	float sum =  ( oct.r + oct.g + oct.b + oct.a - 1)/2;
+	float t = (cos(sum * PI) + 1.0)/2.0;
+	vec4 color = vec4(mix(sky, cloud, t).rgb, 1.0);
+	fColor = applyLight(norm, color, 0.5);
+}
+

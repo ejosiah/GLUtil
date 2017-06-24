@@ -276,3 +276,4 @@ __pycache__/
 .vs/*
 ipch/**
 **/docs/*
+**/log.txt

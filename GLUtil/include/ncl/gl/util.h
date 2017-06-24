@@ -27,8 +27,10 @@ namespace ncl {
 		}
 		std::string line, buffer;
 		while (getline(fp, line)) {
-			buffer.append(line);
-			buffer.append("\r\n");
+			if (!line.empty()) {
+				buffer.append(line);
+				buffer.append("\r\n");
+			}
 		}
 		return buffer;
 
@@ -40,16 +42,16 @@ namespace ncl {
 		return rnd();
 	}
 
-	std::function<int(void)> rngInt(int min, int max) {
+	std::function<int(void)> rngInt(int min, int max, unsigned int seed = nextSeed()) {
 		using namespace std;
-		default_random_engine eng{ nextSeed() };
+		default_random_engine eng{ seed };
 		uniform_int_distribution<int> dist{ min, max };
 		return bind(dist, eng);
 	}
 
-	std::function<real(void)> rngReal(real min, real max) {
+	std::function<real(void)> rngReal(real min, real max, unsigned int seed = nextSeed()) {
 		using namespace std;
-		default_random_engine eng{ nextSeed() };
+		default_random_engine eng{ seed};
 		uniform_real_distribution<real> dist{ min, max };
 		return bind(dist, eng);
 	}

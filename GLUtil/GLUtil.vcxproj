@@ -217,6 +217,7 @@
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\mathlib.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
+    <None Include="include\shaders\simple_light.vert" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
     <None Include="shaders\basic.frag" />
@@ -237,6 +238,7 @@
     <None Include="shaders\phong_lighting2.vert" />
     <None Include="shaders\per_fragment_lighing.frag" />
     <None Include="shaders\phong_lighting.vert" />
+    <None Include="shaders\simple_light.frag" />
     <None Include="shaders\teapot.frag" />
     <None Include="shaders\teapot.tcs" />
     <None Include="shaders\teapot.tes" />
