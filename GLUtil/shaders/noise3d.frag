@@ -22,5 +22,5 @@ void main(){
 	float sum =  ( oct.r + oct.g + oct.b + oct.a - 1)/2;
 	float t = (cos(sum * PI) + 1.0)/2.0;
 	vec4 color = vec4(mix(sky, cloud, t).rgb, 1.0);
-	fColor = applyLight(norm, color, 0.5);
+	fColor = applyLight(norm, color, 20);
 }

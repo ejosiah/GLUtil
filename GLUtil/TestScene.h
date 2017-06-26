@@ -160,8 +160,8 @@ public:
 	}
 
 	void initShader() {
-		shader.loadFromFile(GL_VERTEX_SHADER, "shaders/lightMap.vert");
-		shader.loadFromFile(GL_FRAGMENT_SHADER, "shaders/lightMap.frag");
+		shader.loadFromFile("shaders/lightMap.vert");
+		shader.loadFromFile("shaders/lightMap.frag");
 		shader.createAndLinkProgram();
 	}
 
@@ -234,8 +234,8 @@ public:
 	virtual void init() {
 		using namespace glm;
 
-		shader.loadFromFile(GL_VERTEX_SHADER, "shaders/identity.vert");
-		shader.loadFromFile(GL_FRAGMENT_SHADER, "shaders/identity.frag");
+		shader.loadFromFile("shaders/identity.vert");
+		shader.loadFromFile("shaders/identity.frag");
 		shader.createAndLinkProgram();
 
 		camPos = new Sphere(0.1, 10, 10);

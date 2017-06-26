@@ -1,0 +1,37 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+layout (quads, equal_spacing, ccw) in;
+
+uniform mat4 MVP;
+
+out VERTEX {
+	smooth vec3 position;
+	smooth vec3 normal;
+	smooth vec2 texCoord;
+	smooth vec4 color;
+} vertex;
+
+smooth in vec4 vcolor[];
+
+void main(){
+	float u = gl_TessCoord.x;
+	float v = gl_TessCoord.y;
+	float i_u = 1 - u;
+	float i_v = 1 - v;
+
+	vec4 p0 = gl_in[0].gl_Position;
+	vec4 p1 = gl_in[1].gl_Position;
+	vec4 p2 = gl_in[2].gl_Position;
+	vec4 p3 = gl_in[3].gl_Position;
+
+	vec4 p = p0 * i_u * i_v + 
+			 p1 * u * i_v + 
+			 p3 * v * i_u +
+			 p2 * u * v;
+
+	vertex.texCoord = gl_TessCoord.xy;
+	vertex.color = vcolor[0];
+	gl_Position = MVP * p;
+}

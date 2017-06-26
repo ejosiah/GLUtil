@@ -38,6 +38,12 @@ namespace ncl {
 			glm::mat4 viewport;
 		};
 
+		struct ShaderSource {
+			GLenum ShaderType;
+			std::string data;
+			std::string filename;
+		};
+
 		class Shader {
 		protected:
 			GLuint findUniformLocation(const std::string& name);
@@ -50,7 +56,7 @@ namespace ncl {
 			void loadFromFiles(std::vector<std::string> filenames);
 
 			void loadFromstring(GLenum shader, const std::string& source, const std::string& filename = ".shader");
-			void loadFromFile(GLenum shader, const std::string& filename);
+			bool loadFromFile(const std::string& filename);
 			void createAndLinkProgram();
 
 			void use(Procedure proc);
@@ -115,7 +121,13 @@ namespace ncl {
 
 			bool isActive() { return _program != 0;  }
 
+			bool isShader(const std::string filename);
+
 			void storePreprocessedShaders(bool flag) { _storePreprocessedShaders = flag;  }
+
+			ShaderSource extractFromFile(const std::string& filename);
+
+			void load(const ShaderSource& source);
 
 		private:
 			enum ShaderType { VERTEX_SHADER, FRAGMENT_SHADER, TESELLATION_CONTROL_SHADER, TESELLATION_EVAL_SHADER, GEOMETRY_SHADER, COMPUTE_SHADER };

@@ -13,11 +13,11 @@ namespace ncl {
 			PatchTeapot(bool createShader = true, bool normalize = true, const color& color = glm::vec4(1))
 				:Shape(createMesh(normalize, color), false) {
 				if (createShader) {
-					shader.loadFromFile(GL_VERTEX_SHADER, "shaders/teapot.vert");
-					shader.loadFromFile(GL_TESS_CONTROL_SHADER, "shaders/teapot.tcs");
-					shader.loadFromFile(GL_TESS_EVALUATION_SHADER, "shaders/teapot.tes");
-					shader.loadFromFile(GL_GEOMETRY_SHADER, "shaders/wireframe.geom");
-					shader.loadFromFile(GL_FRAGMENT_SHADER, "shaders/per_fragment_lighing.frag");
+					shader.loadFromFile("shaders/teapot.vert");
+					shader.loadFromFile("shaders/teapot.tcs");
+					shader.loadFromFile("shaders/teapot.tes");
+					shader.loadFromFile("shaders/wireframe.geom");
+					shader.loadFromFile("shaders/per_fragment_lighing.frag");
 					shader.createAndLinkProgram();
 				}
 			}

@@ -46,15 +46,20 @@ class ExampleScene : public Scene {
 
 
 public:
-	using Scene::Scene;
+	ExampleScene(Options ops) :Scene("Example Scene", ops) {
+		addShaderFromFile("shaders\\quad.vert");
+		addShaderFromFile("shaders\\quad.tes");
+		addShaderFromFile("shaders\\identity.frag");
+	}
 
 	virtual void init() override {
 		delete _motionEventHandler;
 		_motionEventHandler = new _3DMotionEventLogger(cam);
-		cam.view = glm::lookAt(vec3(1.0f, 1.25f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+		cam.view = glm::lookAt(vec3(1.0f, 1.5f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 		font = Font::Arial(20, 0, BLACK);
 	//	sphere = new Sphere(0.1, 50, 50);
 	//	teapot = new Teapot(8);
+		cube = new Cube;
 		model = new Model("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj", true);
 		lightModel.twoSided = true;
 		lightModel.colorMaterial = true;
@@ -98,18 +103,19 @@ public:
 	virtual void display() override {
 	//	_shader.sendUniform1i("grids", 16);
 	//	cam.model = mat4(1);
-
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 	//	_shader.send(cam);
 		//teapot->draw(_shader);
-		model->draw(_shader);
+		_shader.send(cam);
+		cube->draw(_shader);
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });
 
 
 	//	_shader.send(cam);
 	//	sphere->draw(_shader);
-		UI::render();
+	//	UI::render();
 	//	font->render("The Quick Brown Fox Jumps over the Lazy Dog", 0, _height - 20);
 	}
 

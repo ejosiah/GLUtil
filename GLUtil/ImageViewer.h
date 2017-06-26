@@ -24,8 +24,8 @@ public:
 		Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
 		_width = 512;
 		_height = _width * float(img.width())/ img.height();
-		_shaders.push_back("shaders/identity.vert");
-		_shaders.push_back("shaders/texture.frag");
+		addShaderFromFile("shaders/identity.vert");
+		addShaderFromFile("shaders/texture.frag");
 	}
 	
 

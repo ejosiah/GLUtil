@@ -72,7 +72,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\Program Files %28x86%29\3Dconnexion\3DxWare SDK\Inc;C:\Users\$(username)\OneDrive\cpp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files %28x86%29\3Dconnexion\3DxWare SDK\Lib\x86;C:\Users\$(username)\OneDrive\cpp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files %28x86%29\3Dconnexion\3DxWare SDK\Lib\x86;C:\Users\$(username)\OneDrive\cpp\lib\debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -159,6 +159,7 @@
     <ClInclude Include="include\ncl\gl\frame.h" />
     <ClInclude Include="include\ncl\gl\layouts.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
+    <ClInclude Include="include\ncl\gl\PatchShape.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\UICore.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
@@ -217,7 +218,12 @@
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\mathlib.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
+    <None Include="include\shaders\lighting.frag" />
+    <None Include="include\shaders\lighting.vert" />
+    <None Include="include\shaders\lightModel.vert" />
     <None Include="include\shaders\simple_light.vert" />
+    <None Include="include\shaders\vertex_in.vert" />
+    <None Include="include\shaders\vertex_out.vert" />
     <None Include="shader.frag" />
     <None Include="shader.vert" />
     <None Include="shaders\basic.frag" />
@@ -238,6 +244,8 @@
     <None Include="shaders\phong_lighting2.vert" />
     <None Include="shaders\per_fragment_lighing.frag" />
     <None Include="shaders\phong_lighting.vert" />
+    <None Include="shaders\quad.tes" />
+    <None Include="shaders\quad.vert" />
     <None Include="shaders\simple_light.frag" />
     <None Include="shaders\teapot.frag" />
     <None Include="shaders\teapot.tcs" />

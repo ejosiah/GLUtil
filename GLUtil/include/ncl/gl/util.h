@@ -6,9 +6,19 @@
 #include <functional>
 #include <cmath>
 
+//#pragma comment(lib, "libboost_system-vc140-mt-gd-1_63.lib")
+//#pragma comment(lib, "libboost_filesystem-vc140-mt-gd-1_63.lib")
+
+
 namespace ncl {
 
 	using real = float;
+
+	std::string extractExt(const std::string& path) {
+		auto i = path.find_last_of(".");
+		if (i == std::string::npos) return "";
+		return path.substr(i + 1, path.length());
+	};
 
 	std::string getEnv(const char* name) {
 		char* value;
@@ -16,6 +26,15 @@ namespace ncl {
 		auto error = _dupenv_s(&value, &size, name);
 		if (error) throw std::runtime_error(std::string("no such environment variable: ") + name);
 		return value;
+	}
+
+	bool isBlankLine(std::string& line) {
+		if (line.empty()) return true;
+		if (line.size() == 2) {
+			size_t found = line.find("\r\n");
+			if (found == std::string::npos) return true;
+		}
+		return false;
 	}
 
 	std::string getText(const std::string& filename) {

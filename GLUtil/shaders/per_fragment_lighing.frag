@@ -122,8 +122,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	toonShader.scaleFactor = 1.0 / toonShader.levels;
 	vec3 n = gl_FrontFacing ? normalize(vertex.normal) : normalize(-vertex.normal);
 	n = lightModel.useObjectSpace ? (2.0 * texture(image1, vertex.texCoord) - 1.0).xyz : n;
-	vec4 pos = vec4(vertex.position, 1.0);
-	vec3 l = direction.xyz;
+	vec3 l = normalize(direction.xyz);
 	float f = m.shininess;
 		
 	float _daf = daf(length(l), light);

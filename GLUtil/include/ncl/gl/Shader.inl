@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <sstream>
 #include <regex>
+#include <boost/filesystem.hpp>
 
 namespace ncl {
 	namespace gl {
@@ -26,7 +27,7 @@ namespace ncl {
 			}
 		}
 
-		Shader::Shader(void)
+		Shader::Shader()
 		{
 			logger = ncl::Logger::get("Shader");
 			clear();
@@ -78,6 +79,10 @@ namespace ncl {
 
 		std::string preprocess(const std::string& source, const std::string& filename, int level = 0, bool storeIntermidate = false);
 
+		void Shader::load(const ShaderSource& source) {
+			loadFromstring(source.ShaderType, source.data);
+		}
+
 		void Shader::loadFromstring(GLenum type, const std::string& source, const std::string& filename) {
 			GLuint shader = glCreateShader(type);
 
@@ -95,7 +100,7 @@ namespace ncl {
 				glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 				GLchar *infoLog = new GLchar[infoLogLength];
 				glGetShaderInfoLog(shader, infoLogLength, NULL, infoLog);
-				std::string msg = shaderName(type) + " Compile log:\n";
+				std::string msg = shaderName(type) + ": " + filename +  " Compile log:\n";
 				msg.append(infoLog);
 				logger.error(msg);
 				delete[] infoLog;
@@ -214,23 +219,33 @@ namespace ncl {
 
 		void Shader::loadFromFiles(std::vector<std::string> filenames) {
 
-			auto extractExt = [](std::string& path) {
-				auto i = path.find_last_of(".");
-				if (i == std::string::npos) throw "unknow extention for file: " + path;
-				return path.substr(i + 1, path.length());
-			};
-
 			for (std::string filename : filenames) {
-				auto key = extractExt(filename);
-				GLenum shaderType = extensions.at(key);
-				loadFromFile(shaderType, filename);
+				loadFromFile(filename);
 			}
 		}
 
-		void Shader::loadFromFile(GLenum whichShader, const std::string& filename) {
-			//Logger::get()->debug("compiling " + filename);
-			loadFromstring(whichShader, ncl::getText(filename), filename);
+		bool Shader::loadFromFile(const std::string& filename) {
+			if (isShader(filename)) {
+				auto key = extractExt(filename);
+				GLenum whichShader = extensions.at(key);
+				logger.info("loading shader: " + filename);
+				loadFromstring(whichShader, ncl::getText(filename), filename);
+				return true;
+			}
+			return false;
+		}
 
+		bool Shader::isShader(const std::string filename) {
+			auto key = extractExt(filename);
+			auto itr = extensions.find(key);
+			return itr != extensions.end();
+		}
+
+		ShaderSource Shader::extractFromFile(const std::string& filename) {
+			auto key = extractExt(filename);
+			GLenum shaderType = extensions.at(key);
+			logger.info("loading shader: " + filename);
+			return ShaderSource{ shaderType,  ncl::getText(filename) };
 		}
 
 		void Shader::sendUniform1f(const std::string& name, GLfloat v0) {
@@ -441,9 +456,13 @@ namespace ncl {
 			}
 			string result = out.str();
 			if (storeIntermidate) {
-				string name = filename.substr(filename.find_last_of(".") + 1, filename.length());
+				int i = filename.find_last_of("\\");
+				int j = filename.find_last_of(".");
+				int k = filename.length() - j + 1;
+				string name = filename.substr(i + 1, k);
+				string ext = filename.substr(j + 1, filename.length());
 				ofstream fout;
-				fout.open(filename + to_string(num++) +  ".preprocessed");
+				fout.open(name  +  ".intermediate." + ext);
 				fout << result << endl;
 				fout.flush();
 				fout.close();

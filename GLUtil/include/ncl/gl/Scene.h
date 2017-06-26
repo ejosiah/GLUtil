@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -16,6 +17,7 @@
 #include "Font.h"
 #include "common.h"
 #include "textures.h"
+#include <boost/filesystem.hpp>
 
 namespace ncl {
 	namespace gl {
@@ -30,6 +32,11 @@ namespace ncl {
 			bool useDefaultShader = false;
 		};
 
+		static boost::filesystem::path shader_loc[] = {
+			"shaders",
+			"..\\shaders",
+		};
+
 		/** @file Scene.h
 		* @breif Defines a 3D scene
 		*/
@@ -42,8 +49,8 @@ namespace ncl {
 			* @param h scene height
 			* @param fbuffer OpenGL framebuffer settings
 			*/
-			Scene(const char* t, int w = 1280, int h = 720, bool useDefaultShader = true, std::vector<std::string> shaders = {}, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-			:_width(w), _height(h), _title(t), _useDefaultShader(useDefaultShader), _shaders(shaders),  fBuffer(fBuffer) {
+			Scene(const char* t, int w = 1280, int h = 720, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+			:_width(w), _height(h), _title(t),  fBuffer(fBuffer) {
 				_center = glm::vec2(w / 2, h / 2);
 				_motionEventHandler = nullptr;
 			}
@@ -53,7 +60,7 @@ namespace ncl {
 			* @param t scene title
 			* @param ops scene options
 			*/
-			Scene(const char* t, Options ops) : Scene(t, ops.dimensions.x, ops.dimensions.y, ops.useDefaultShader, ops.shaders, ops.fBuffer) {
+			Scene(const char* t, Options ops) : Scene(t, ops.dimensions.x, ops.dimensions.y, ops.fBuffer) {
 				_requireMouse = ops.requireMouse;
 				_hideCursor = ops.hideCursor;
 			}
@@ -69,17 +76,18 @@ namespace ncl {
 			* @breif Private scene initializer
 			*/
 			void init0(){
-				if (_shaders.empty() && _useDefaultShader) {
+				if (_useImplictShaderLoad) {
+					loadShaderImplicity();
+				}else if (!implicityLoaded && _shaders.empty()) {
 					_shader.loadFromstring(GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
 				//	_shader.loadFromstring(GL_GEOMETRY_SHADER, wireframe_geom_shader);
 					_shader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
-					_shader.createAndLinkProgram();
-				}
-				else if(!_shaders.empty()) {
-					_shader.loadFromFiles(_shaders);
-					_shader.createAndLinkProgram();
 				}
 				
+				for (auto& source : _shaders) {
+					_shader.load(source);
+				}
+				_shader.createAndLinkProgram();
 
 				light[0].on = true;
 				lightModel.twoSided = false;
@@ -98,6 +106,29 @@ namespace ncl {
 					processInput(Keyboard::get());
 				});
 				
+			}
+
+			void loadShaderImplicity() {
+				if (!_useImplictShaderLoad) return;
+
+				using namespace std;
+				using namespace boost::filesystem;
+
+				for (auto& p : shader_loc) {
+					if (exists(p) && is_directory(p) && !p.empty()) {
+						for (auto& entry : directory_iterator(p)) {
+							auto& path = entry.path();
+							if (!is_directory(path)) {
+								string filename = entry.path().string();
+								if (_shader.isShader(filename)) {
+									ShaderSource source = _shader.extractFromFile(filename);
+									_shaders.push_back(source);
+									implicityLoaded = true;
+								}
+							}
+						}
+					}
+				}
 			}
 
 			/** 
@@ -297,12 +328,24 @@ namespace ncl {
 				return _motionEventHandler;
 			}
 
+			void useImplictShaderLoad(bool flag) {
+				_useImplictShaderLoad = flag;
+			}
+
+			void addShader(GLenum shaderType, const std::string& source) {
+				_shaders.push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
+			}
+
+			void addShaderFromFile(const std::string& filename) {
+				ShaderSource source = _shader.extractFromFile(filename);
+				_shaders.push_back(source);
+			}
+
 		protected:
 			int _width;
 			int _height;
 			const char* _title;
-			bool _useDefaultShader;
-			std::vector<std::string> _shaders;
+			std::vector<ShaderSource> _shaders;
 			GLbitfield fBuffer;
 			bool _requireMouse = false;
 			bool _hideCursor = false;
@@ -316,6 +359,8 @@ namespace ncl {
 			LightSource light[MAX_LIGHT_SOURCES];
 			LightModel lightModel;
 			_3DMotionEventHandler* _motionEventHandler;
+			bool _useImplictShaderLoad = false;
+			bool implicityLoaded = false;
 
 		};
 	}

@@ -233,6 +233,7 @@ namespace ncl {
 					glfwTerminate();
 					std::string msg = "unable to start app:\t";
 					logger.error(msg, error);
+					std::cin.get();
 				}
 			}
 		};
