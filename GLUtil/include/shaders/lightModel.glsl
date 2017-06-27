@@ -1,6 +1,3 @@
-#ifdef LIGHT_MODEL_GLSL
-#define CONSTANTS_GLSL
-
 struct LightSource{
 	vec4 position;
 	vec4 ambient;
@@ -40,5 +37,3 @@ struct Material{
 uniform LightSource light[MAX_LIGHT_SOURCES];
 uniform LightModel lightModel;
 uniform Material material[2];
-
-#endif

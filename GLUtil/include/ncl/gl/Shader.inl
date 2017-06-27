@@ -3,6 +3,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <string>
+#include <set>
 #include "logger.h"
 #include "util.h"
 #include <glm/glm.hpp>
@@ -77,16 +78,17 @@ namespace ncl {
 			if (activePrograms.empty()) activePrograms.push(0);
 		}
 
-		std::string preprocess(const std::string& source, const std::string& filename, int level = 0, bool storeIntermidate = false);
+		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level = 0, bool storeIntermidate = false);
 
 		void Shader::load(const ShaderSource& source) {
-			loadFromstring(source.ShaderType, source.data);
+			loadFromstring(source.ShaderType, source.data, source.filename);
 		}
 
 		void Shader::loadFromstring(GLenum type, const std::string& source, const std::string& filename) {
 			GLuint shader = glCreateShader(type);
 
-			const std::string newSource = preprocess(source, filename, 0, _storePreprocessedShaders);
+			std::set<std::string> loaded;
+			const std::string newSource = preprocess(source, filename, loaded, 0, _storePreprocessedShaders);
 
 			const char * ptmp = newSource.c_str();
 			glShaderSource(shader, 1, &ptmp, NULL);
@@ -245,7 +247,7 @@ namespace ncl {
 			auto key = extractExt(filename);
 			GLenum shaderType = extensions.at(key);
 			logger.info("loading shader: " + filename);
-			return ShaderSource{ shaderType,  ncl::getText(filename) };
+			return ShaderSource{ shaderType,  ncl::getText(filename), filename };
 		}
 
 		void Shader::sendUniform1f(const std::string& name, GLfloat v0) {
@@ -426,7 +428,7 @@ namespace ncl {
 		}
 #ifndef SHADER_PROCESS
 #define SHADER_PROCESS
-		std::string preprocess(const std::string& source, const std::string& filename, int level, bool storeIntermidate) {
+		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level, bool storeIntermidate) {
 			static unsigned num = 0;
 			if (level > 32) {
 				throw "header inclusion depth limit reached, might be caused by cyclic header inclusion";
@@ -446,8 +448,11 @@ namespace ncl {
 				if (regex_search(line, matches, INCLUDE_PATTERN)) {
 					string file = matches[1];
 					string include_file = "C:\\Users\\Josiah\\OneDrive\\cpp\\include\\shaders\\" + file;
+					auto itr = loaded.find(include_file);
+					if (itr != loaded.end()) continue;	
+					loaded.insert(include_file);
 					string include_string = ncl::getText(include_file);
-					out << preprocess(include_string, include_file, level + 1) << endl;
+					out << preprocess(include_string, include_file, loaded, level + 1) << endl;
 				}
 				else {
 					out << line << endl;

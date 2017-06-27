@@ -8,4 +8,3 @@ out VERTEX {
 	smooth vec3 eyes;
 	smooth vec4 lightDirection[MAX_LIGHT_SOURCES];
 } vertex_out[];
-} vertex_out[];

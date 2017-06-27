@@ -1,3 +1,4 @@
+#pragma include("constants.glsl")
 #pragma include("lightModel.glsl")
 #pragma include("vertex_in.glsl")
 
