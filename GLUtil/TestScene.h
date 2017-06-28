@@ -17,6 +17,7 @@
 #include "include/ncl/gl/util.h"
 #include "include/ncl/gl/primitives.h"
 #include "include/ncl/gl/shaders.h"
+#include "include/ncl/gl/Camera2.h"
 
 using namespace std;
 using namespace ncl;
@@ -59,7 +60,7 @@ public:
 				phongShader.sendUniform1ui("localViewer", true);
 				phongShader.sendUniform1f("line.width", 0.1);
 				phongShader.sendUniform4f("line.color", 1, 1, 1, 1);
-				phongShader.sendUniform1i("wireframe", true);
+				phongShader.sendUniform1i("wireframe", false);
 				phongShader.sendUniformMatrix4fv("viewport", 1, GL_FALSE, value_ptr(getViewport()));
 				phongShader.sendUniformLight(light);
 				phongShader.send(camera, cameraController.modelTrans());

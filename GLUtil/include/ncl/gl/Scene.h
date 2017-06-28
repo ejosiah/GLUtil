@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -78,13 +79,13 @@ namespace ncl {
 			void init0(){
 				if (_useImplictShaderLoad) {
 					loadShaderImplicity();
-				}else if (!implicityLoaded && _shaders.empty()) {
+				}else if (!implicityLoaded && _sources.empty()) {
 					_shader.loadFromstring(GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
 				//	_shader.loadFromstring(GL_GEOMETRY_SHADER, wireframe_geom_shader);
 					_shader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 				}
 				
-				for (auto& source : _shaders) {
+				for (auto& source : _sources) {
 					_shader.load(source);
 				}
 				_shader.createAndLinkProgram();
@@ -122,7 +123,7 @@ namespace ncl {
 								string filename = entry.path().string();
 								if (_shader.isShader(filename)) {
 									ShaderSource source = _shader.extractFromFile(filename);
-									_shaders.push_back(source);
+									_sources.push_back(source);
 									implicityLoaded = true;
 								}
 							}
@@ -333,19 +334,21 @@ namespace ncl {
 			}
 
 			void addShader(GLenum shaderType, const std::string& source) {
-				_shaders.push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
+				_sources.push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
 			}
 
 			void addShaderFromFile(const std::string& filename) {
 				ShaderSource source = _shader.extractFromFile(filename);
-				_shaders.push_back(source);
+				_sources.push_back(source);
 			}
 
 		protected:
 			int _width;
 			int _height;
 			const char* _title;
-			std::vector<ShaderSource> _shaders;
+			std::vector<ShaderSource> _sources;
+			Shader _shader;
+			std::map <std::string, Shader> _shaders;
 			GLbitfield fBuffer;
 			bool _requireMouse = false;
 			bool _hideCursor = false;
@@ -354,7 +357,6 @@ namespace ncl {
 			std::vector<KeyListener> _keyListeners;
 			std::vector<MouseClickListner> _mouseClickListners;
 			std::vector<MouseMoveListner> _mouseMoveListner;
-			Shader _shader;
 			GlmCam cam;
 			LightSource light[MAX_LIGHT_SOURCES];
 			LightModel lightModel;

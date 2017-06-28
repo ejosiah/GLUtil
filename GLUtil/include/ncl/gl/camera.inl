@@ -21,6 +21,8 @@
 //-----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace ncl {
 	namespace gl {
 		const float Camera::DEFAULT_ROTATION_SPEED = 0.3f;
@@ -214,10 +216,10 @@ namespace ncl {
 
 			viewProjMatrix = viewMatrix * projMatrix;
 
-			fovx = fovx;
+			this->fovx = fovx;
 			aspectRatio = aspect;
-			znear = znear;
-			zfar = zfar;
+			this->znear = znear;
+			this->zfar = zfar;
 		}
 
 		void Camera::perspective(const Camera& otherCam) {

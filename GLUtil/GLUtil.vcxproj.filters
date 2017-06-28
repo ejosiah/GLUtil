@@ -105,9 +105,6 @@
     <ClInclude Include="include\ncl\gl\teapotdata.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="SceneTemplate.h">
-      <Filter>Header Files\examples</Filter>
-    </ClInclude>
     <ClInclude Include="TestScene.h">
       <Filter>Header Files\examples</Filter>
     </ClInclude>
@@ -200,6 +197,9 @@
     </ClInclude>
     <ClInclude Include="include\ncl\gl\PatchShape.h">
       <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Camera2.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -331,6 +331,9 @@
     </None>
     <None Include="shaders\quad.vert">
       <Filter>shaders</Filter>
+    </None>
+    <None Include="include\ncl\gl\Camera2.inl">
+      <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
