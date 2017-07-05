@@ -9,7 +9,6 @@
 #include "Plane.h"
 #include "ProvidedMesh.h"
 #include "Teapot.h"
-#include "HiResCube.h"
 #include "PatchTeapot.h"
 #include "Cylinder.h"
 #include "Cone.h"

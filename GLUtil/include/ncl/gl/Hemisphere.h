@@ -3,7 +3,6 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include "Shape.h"
-#include "mathlib.h"
 #include "logger.h"
 
 namespace ncl {
@@ -37,7 +36,7 @@ namespace ncl {
 					glm::vec3 v = mesh.positions[i];
 					for (int j = i + 1; j < mesh.positions.size(); j++) {
 						glm::vec3 v1 = mesh.positions[j];
-						if (Math::closeEnough(v.x, v1.x) && Math::closeEnough(v.y, v1.y) && Math::closeEnough(v.z, v1.z)) {
+						if (closeEnough(v.x, v1.x) && closeEnough(v.y, v1.y) && closeEnough(v.z, v1.z)) {
 							mesh.positions[j] = v;
 						}
 					}

@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include "common.h"
 
 namespace ncl {
 	namespace gl {
@@ -75,7 +76,7 @@ namespace ncl {
 
 			viewMatrix = glm::lookAt(eye, target, up);
 			// Extract the pitch angle from the view matrix.
-			accumPitchDegrees = Math::radiansToDegrees(asinf(viewMatrix[1][2]));	// TODO change this matrix is colomn matrix
+			accumPitchDegrees = degrees(asinf(viewMatrix[1][2]));	// TODO change this matrix is colomn matrix
 
 			xAxis = vec3(row(viewMatrix, 0));	// TODO verify that this is correct
 			yAxis = vec3(row(viewMatrix, 1));
@@ -241,13 +242,13 @@ namespace ncl {
 				// state when the Camera is no longer moving along that direction. To
 				// account for this the Camera's current velocity is also checked.
 
-				if (direction.x == 0.0f && Math::closeEnough(currentVelocity.x, 0.0f))
+				if (direction.x == 0.0f && closeEnough(currentVelocity.x, 0.0f))
 					displacement.x = 0.0f;
 
-				if (direction.y == 0.0f && Math::closeEnough(currentVelocity.y, 0.0f))
+				if (direction.y == 0.0f && closeEnough(currentVelocity.y, 0.0f))
 					displacement.y = 0.0f;
 
-				if (direction.z == 0.0f && Math::closeEnough(currentVelocity.z, 0.0f))
+				if (direction.z == 0.0f && closeEnough(currentVelocity.z, 0.0f))
 					displacement.z = 0.0f;
 
 				move(displacement.x, displacement.y, displacement.z);
@@ -432,7 +433,7 @@ namespace ncl {
 			// First person and spectator modes limit pitching to
 			// 90 degrees straight up and down.
 
-			accumPitchDegrees = Math::radiansToDegrees(asinf(m[1][2]));
+			accumPitchDegrees = glm::degrees(asinf(m[1][2]));
 
 			// First person and spectator modes don't allow rolling.
 			// Negate any rolling that might be encoded in the new orientation.

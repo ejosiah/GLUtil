@@ -5,16 +5,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "include/ncl/gl/primitives.h"
 #include "include/ncl/gl/models.h"
-#include "include/ncl/gl/UICore.h"
-#include "include/ncl/gl/layouts.h"
-#include "include/ncl/gl/button.h"
-#include "include/ncl/gl/frame.h"
 
 using namespace std;
 using namespace glm;
 using namespace ncl;
 using namespace gl;
-using namespace ui;
 
 class _3DMotionEventLogger : public _3DMotionEventHandler {
 public:
@@ -72,32 +67,10 @@ public:
 		
 
 
-		UI::init();
-		container.setLayout(new FlowLayout());
-
-		Button* button0 = new Button("Click me 0");
-		Button* button1 = new Button("Click me 1");
-		Button* button2 = new Button("Click me 2");
-
-		container.setPosition(10, 10);
-		container.add(button0);
-		container.add(button1);
-		container.add(button2);
-		container.setDimensions(700, 100);
-		container.show();
-
-		_mouseClickListners.push_back([&](Mouse& mouse) {
-			UI::handleMouseClick(mouse);
-		});
-
-		_mouseMoveListner.push_back([&](Mouse& mouse) {
-			UI::handleMouseMove(mouse);
-		});
 	}
 
 	virtual void resized() override {
 		cam.projection = glm::perspective(glm::radians(60.0f), aspectRatio, 0.3f, 100.0f);
-		UI::resize(_width, _height);
 	}
 
 	virtual void display() override {
@@ -130,9 +103,7 @@ private:
 	Teapot* teapot;
 	ProvidedMesh* controlPoints;
 	ProvidedMesh* controlLines;
-	HiResCube* hiResCube;
 	Material m;
-	ui::Frame container;
 	Font* font;
 	
 };

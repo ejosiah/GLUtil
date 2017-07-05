@@ -10,8 +10,6 @@
 #include "include/ncl/gl/Shader.h"
 #include "include/ncl/gl/Cube.h"
 #include "include/ncl/gl/Model.h"
-//#include "include/ncl/gl/camera.h"
-//#include "include/ncl/gl/CameraController.h"
 #include "include/ncl/gl/Plane.h"
 #include "include/ncl/gl/logger.h"
 #include "include/ncl/gl/Image.h"
@@ -327,7 +325,6 @@ private:
 	Camera cam2;
 	Sphere* camPos;
 	Font* font;
-	Template* info;
 	std::ofstream fout;
 	Shader shader;
 	std::string mainMsg;

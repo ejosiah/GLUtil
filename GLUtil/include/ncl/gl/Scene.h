@@ -19,7 +19,6 @@
 #include "common.h"
 #include "textures.h"
 #include <boost/filesystem.hpp>
-#include "Template.h"
 
 namespace ncl {
 	namespace gl {
@@ -109,6 +108,8 @@ namespace ncl {
 				// TODO enable based on framebuffer
 
 				_shader.use();
+				_shader.send(lightModel);
+				sendLights();
 				init();
 
 				_keyListeners.push_back([&](const Key& key) {
@@ -155,17 +156,6 @@ namespace ncl {
 				
 			}
 
-			/**
-			* @breif prepare scene before use
-			*/
-			void prepare() {
-				if (_shader.isActive()) {
-					_shader.use();
-					_shader.send(cam);
-					_shader.send(lightModel);
-					sendLights();
-				}
-			}
 
 			/**
 			* @breif intial display

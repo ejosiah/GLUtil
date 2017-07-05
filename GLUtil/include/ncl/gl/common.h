@@ -4,10 +4,16 @@
 #include <functional>
 #include <string>
 #include "util.h"
+#include <limits>
+#include <cmath>
 
 namespace ncl {
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)
+
+		const float EPSILON = sqrtf(std::numeric_limits<float>::epsilon());
+
+		bool closeEnough(float x, float y) { return abs(x - y) <= EPSILON * (abs(x) + abs(y) + 1.0f); }
 
 		void clear(glm::vec3& v) {
 			v.x = v.y = v.z = 0;

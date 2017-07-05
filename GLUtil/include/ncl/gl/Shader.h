@@ -11,7 +11,6 @@
 #include <gl/gl_core_4_5.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
-#include "mathlib.h"
 #include "models.h"
 #include <functional>
 #include "Camera.h"
