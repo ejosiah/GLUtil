@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <glm/glm.hpp>
@@ -9,15 +10,16 @@
 #include "include/ncl/gl/Shader.h"
 #include "include/ncl/gl/Cube.h"
 #include "include/ncl/gl/Model.h"
-#include "include/ncl/gl/camera.h"
-#include "include/ncl/gl/CameraController.h"
+//#include "include/ncl/gl/camera.h"
+//#include "include/ncl/gl/CameraController.h"
 #include "include/ncl/gl/Plane.h"
 #include "include/ncl/gl/logger.h"
 #include "include/ncl/gl/Image.h"
 #include "include/ncl/gl/util.h"
 #include "include/ncl/gl/primitives.h"
 #include "include/ncl/gl/shaders.h"
-#include "include/ncl/gl/Camera2.h"
+#include "include/ncl/gl/Camera.h"
+#include "include/ncl/gl/UserCameraController.h"
 
 using namespace std;
 using namespace ncl;
@@ -152,11 +154,8 @@ public:
 
 	void init() {
 		initShader();
-		glGenTextures(2, textureId);
 		loadBrickTexture();
 		loadLightMapTexture();
-		shader.sendUniform1f("image0", 0);
-		shader.sendUniform1f("image1", 1);
 		plane = new Plane(40, 40, 8.0f, 8.0f, true);
 	}
 
@@ -167,48 +166,31 @@ public:
 	}
 
 	void loadBrickTexture() {
-
-		Image img("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_color_map.tga");
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureId[0]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		floorTex = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_color_map.tga", 0, GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		shader.sendUniform1f("image0", floorTex->id());
 		
 	}
 
 	void loadLightMapTexture() {
+		lightMap = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_light_map.tga", 1);
+		shader.sendUniform1f("image1", lightMap->id());
 
-		Image img("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_light_map.tga");
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, textureId[1]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 
 	bool once = true;
 
 	void draw() {
-		Matrix4 MVP = camera.getViewMatrix() * camera.getProjectionMatrix();
 
 		shader([&]() {
-			shader.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &MVP[0][0]);
+			shader.send(camera);
 			plane->draw(shader);
 		});
 	}
 
 	void drawWith(const Camera& camera) {
-		Matrix4 MVP = camera.getViewMatrix() * camera.getProjectionMatrix();
 
 		shader([&]() {
-			shader.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &MVP[0][0]);
+			shader.send(camera);
 			plane->draw(shader);
 		});
 	}
@@ -221,7 +203,8 @@ private:
 	Plane* plane;
 	const Camera& camera;
 	Shader shader;
-	GLuint textureId[2];
+	Texture2D* floorTex;
+	Texture2D* lightMap;
 	Mesurements measurements;
 };
 
@@ -234,6 +217,8 @@ public:
 
 	virtual void init() {
 		using namespace glm;
+
+		font = Font::Courier(15, 0, YELLOW);
 
 		shader.loadFromFile("shaders/identity.vert");
 		shader.loadFromFile("shaders/identity.frag");
@@ -258,11 +243,12 @@ public:
 			cameraController.processUserInput();
 		});
 
+		/*
 		const Camera& cam1 = cameraController.getCamera();
-		Vector3 target = cam1.getPosition();
-		Vector3 eyes = target + Vector3(0, 0, 3);
+		vec3 target = cam1.getPosition();
+		vec3 eyes = target + vec3(0, 0, 3);
 		cam2.setMode(Camera::SPECTATOR);
-		cam2.lookAt(eyes, target, Vector3(0, 1, 0));
+		cam2.lookAt(eyes, target, vec3(0, 1, 0));*/
 		
 		glClearColor(0, 0, 0, 0);
 		glEnable(GL_DEPTH_TEST);
@@ -275,16 +261,18 @@ public:
 		cameraController.updateAspectRation(aspectRatio);
 		const Camera& cam1 = cameraController.getCamera();
 		cam2.perspective(cam1);
-		// update mouse center too
+		font->resize(_width, _height);
 	}
 
 	virtual void display() override {
 		using namespace glm;
-
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		using namespace std;
+		static std::stringstream sbr;
+		font->render(msg(), 10, _height - 20);
+	//	font->render("FPS: " + to_string(fps), 10, _height - 10);
 		const Camera& camera = cameraController.getCamera();
-		Vector3 target = camera.getPosition();
-		Vector3 eyes = target + Vector3(0, 0, 3);
+		vec3 target = camera.getPosition();
+		vec3 eyes = target + vec3(0, 0, 3);
 
 
 	//	glViewport(0, 0, _width / 2, _height );
@@ -298,7 +286,7 @@ public:
 		floor->drawWith(cam2);
 		shader([&]() {
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			Matrix4 model = Matrix4::IDENTITY;
+			mat4 model = mat4::IDENTITY;
 			model.translate(target.x, target.y, target.z);
 			shader.send(cam2, model);
 			camPos->draw(shader);
@@ -309,14 +297,40 @@ public:
 	virtual void update(float elapsedTime) override {
 		cameraController.update(elapsedTime);
 	}
+
+	std::string msg() {
+		using namespace std;
+		using namespace glm;
+		stringstream sbr;
+		
+		const vec3& pos = cameraController.getCamera().getPosition();
+
+		sbr << "FPS: " << fps << "\n\nCamera" << endl;
+		sbr << "\tPosition: x:" << setprecision(2) << pos.x << " y:" << pos.y << " z:" << pos.z << endl;
+		sbr << "\tVelocity: x:velX y:velY z:velZ" << endl;
+		sbr << "\tMode: Orbit" << endl;
+		sbr << "\tRotation speed: ?" << endl;
+		sbr << "\n\nMouse" << endl;
+		sbr << "Smoothing enabled" << endl;
+		sbr << "Sensitivity: 0.20" << endl;
+
+		sbr << "\n\nPress H to display help";
+
+		return sbr.str();
+	}
+
+
 private:
 	Floor* floor;
 	SpaceShip* spaceShip;
 	CameraController cameraController;
 	Camera cam2;
 	Sphere* camPos;
+	Font* font;
+	Template* info;
 	std::ofstream fout;
 	Shader shader;
+	std::string mainMsg;
 	glm::mat4 view;
 	glm::mat4 projection;
 };

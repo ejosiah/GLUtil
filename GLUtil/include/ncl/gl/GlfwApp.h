@@ -149,7 +149,9 @@ namespace ncl {
 					glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 					glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-					window = glfwCreateWindow(scene.width(), scene.height(), scene.title(), nullptr, nullptr);
+					GLFWmonitor* monitor = scene.fullScreen() ? glfwGetPrimaryMonitor() : nullptr; // glfwGetPrimaryMonitor();
+
+					window = glfwCreateWindow(scene.width(), scene.height(), scene.title(), monitor, nullptr);
 
 					if (!window) {
 						throw std::runtime_error("GLFW window creation failed");
@@ -164,7 +166,7 @@ namespace ncl {
 						throw std::runtime_error("failed loading gl functions");
 					}
 
-					glfwSwapInterval(1);
+					glfwSwapInterval(0);
 
 #ifdef CONNECT_3D
 					initSpacePro(window, scene.title());
@@ -199,6 +201,8 @@ namespace ncl {
 					auto sceneMouseMoveListners = scene.mouseMoveListners();
 					mouseMoveListners = std::vector<MouseMoveListner>(sceneMouseMoveListners.begin(), sceneMouseMoveListners.end());
 
+					if(!scene.vSync()) glfwSwapInterval(0);
+
 					while (!glfwWindowShouldClose(window)) {
 						int width, height;
 
@@ -208,11 +212,9 @@ namespace ncl {
 						
 						glViewport(0, 0, width, height);
 						scene.prepare();
-						scene.resize(width, height);
-						scene.update(Timer::get().lastFrameTime);
+						scene.resize(width, height);	// TODO resize only when screen changed
+						scene.update0(Timer::get().lastFrameTime);
 						scene.display0();
-					//	UI::resize(width, height);
-					//	UI::render();
 
 						glfwSwapBuffers(window);
 

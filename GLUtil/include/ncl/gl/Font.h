@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <thread>
+#include <future>
 #include <gl/gl_core_4_5.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "models.h"
@@ -19,6 +21,9 @@
 #include <cstdint>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <limits>
+#include <algorithm>
+#include <chrono>
 #include FT_FREETYPE_H
 
 #pragma comment(lib, "freetype.lib")
@@ -26,12 +31,88 @@
 namespace ncl {
 	namespace gl {
 
+		static std::chrono::milliseconds zero(0);
+
 		struct Character {
 			unsigned int id;
 			glm::ivec2 size;
 			glm::ivec2 bearing;
 			unsigned int advance;
 		};
+
+		struct RenderReq {
+			std::string text;
+			glm::vec2 pos;
+			Character* chars;
+			GLuint bufferId;
+		};
+
+		struct RenderResp {
+			GLuint* id;
+			glm::vec4** boxes;
+			unsigned size;
+		};
+
+		RenderResp calcuateTextPositions(RenderReq request) {
+			using namespace std;
+			using namespace glm;
+
+			string& text = request.text;
+			float x = request.pos.x;
+			float y = request.pos.y;
+			Character* character = request.chars;
+			GLuint bufferId = request.bufferId;
+
+			RenderResp response;
+			unsigned size = text.length();
+			response.size = size;
+			response.id = new GLuint[size];
+			response.boxes = new vec4*[size];
+
+
+			for (int i = 0; i < size; i++) {
+				char c = text[i];
+/*				if (c == '\n') {
+					y += (maxHeight + 0.5) * d;
+					x = startX;
+					continue;
+				}
+				if (c == '\t') {
+					x += maxWidth * 2;
+					continue;
+				}*/
+
+				auto ch = character[c];
+
+				response.id[i] = ch.id;
+
+				float x2 = x + ch.bearing.x;
+				float y2 = y - (ch.size.y - ch.bearing.y);
+				float w = ch.size.x;
+				float h = ch.size.y;
+
+				using namespace glm;
+
+				vec4* box = new vec4[4];
+
+				box[0] = { x2, y2 + h    , 0, 0 };;
+				box[1] = { x2, y2, 0, 1 };
+				box[2] = { x2 + w, y2 + h, 1, 0 };
+				box[3] = { x2 + w, y2    , 1, 1 };
+				response.boxes[i] = box;
+
+				x += (ch.advance >> 6);
+			}
+			return response;
+		}
+
+		void cleanup(GLuint* id, glm::vec4** boxes, unsigned size) {
+			delete[] id;
+			for (int i = 0; i < size; i++) {
+				delete[] boxes[i];
+			}
+			delete[] boxes;
+		}
 
 		class Font {
 		private:
@@ -62,6 +143,8 @@ namespace ncl {
 					glGenTextures(1, &texture);
 					glBindTexture(GL_TEXTURE_2D, texture);
 					auto g = face->glyph;
+					maxHeight = std::max(maxHeight, g->bitmap.rows);
+					maxWidth = std::max(maxWidth, g->bitmap.width);
 					glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, g->bitmap.width, g->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE, g->bitmap.buffer);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -112,59 +195,53 @@ namespace ncl {
 				background = new glm::vec4(color);
 			}
 
-			void render(const std::string& text, float x, float y) {
+			void render(const std::string& text, float x, float y, float d = -1) {
 				shader.use();
-				projection = glm::ortho(0.0f, width, 0.0f, height);
-				shader.sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(projection));
-				if (background) {
-					shader.send("useBackgroundColor", true);
-					shader.sendUniform1fv("backgroundColor", 1, &(*background)[0]);
-					delete background;
-					background = nullptr;
-				}
+				glActiveTexture(GL_TEXTURE10);
+				shader.sendUniform1ui("glyph", 10);
+				shader.sendUniform4fv("color", 1, glm::value_ptr(color));
+				bool blendingOff = !glIsEnabled(GL_BLEND);
+				if (blendingOff) glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				withVertexArray(vaoId, [&]() {
-
-					bool blendingOff = !glIsEnabled(GL_BLEND);
-					if (blendingOff) glEnable(GL_BLEND);
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					
+					float startX = x;
 					for (char c : text) {
-						auto ch = character[c];
-						
-						glActiveTexture(GL_TEXTURE10);
-						glBindTexture(GL_TEXTURE_2D, ch.id);
-						shader.sendUniform1ui("glyph", 10);
 
-						shader.sendUniform4fv("color", 1, glm::value_ptr(color));
+						if (c == '\n') {
+							y += (maxHeight + 0.5) * d;
+							x = startX;
+							continue;
+						}
+						if (c == '\t') {
+							x += maxWidth * 2;
+							continue;
+						}
+
+						auto ch = character[c];
+						glBindTexture(GL_TEXTURE_2D, ch.id);
 
 						float x2 = x + ch.bearing.x;
 						float y2 = y - (ch.size.y - ch.bearing.y);
 						float w = ch.size.x;
 						float h = ch.size.y;
 
-						using namespace glm;
-
-						box[0] = { x2, y2 + h    , 0, 0 };
+						box[0] = { x2, y2 + h    , 0, 0 };;
 						box[1] = { x2, y2, 0, 1 };
 						box[2] = { x2 + w, y2 + h, 1, 0 };
 						box[3] = { x2 + w, y2    , 1, 1 };
 
-						glm::vec4* buffer = (glm::vec4*)glMapNamedBuffer(bufferId, GL_READ_WRITE);
+						glBindBuffer(GL_ARRAY_BUFFER, bufferId);
+						glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(box), box);
+						glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-						buffer[0] = box[0];
-						buffer[1] = box[1];
-						buffer[2] = box[2];
-						buffer[3] = box[3];
-
-						glUnmapNamedBuffer(bufferId);
-						glPointSize(5);
 						glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 						x += (ch.advance >> 6);
 					}
-					if (blendingOff) glDisable(GL_BLEND);
 					
+
 				});
+				if (blendingOff) glDisable(GL_BLEND);
 				shader.unUse();
 			}
 
@@ -212,6 +289,15 @@ namespace ncl {
 				});
 			}
 
+			void resize(int w, int h) {
+				width = w;
+				height = h;
+				shader.use();
+				projection = glm::ortho(0.0f, width, 0.0f, height);
+				shader.sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(projection));
+				shader.unUse();
+			}
+
 		private:
 			static std::map<std::string, std::string> location;
 			static GLuint vaoId;
@@ -227,11 +313,14 @@ namespace ncl {
 
 			int style;
 			int size;
+			int maxHeight = std::numeric_limits<int>::min();
+			int maxWidth = std::numeric_limits<int>::min();
 			Character character[128];
 			FT_Face face;
 			glm::vec4 color;
 			glm::mat4 projection;
 			glm::vec4* background = nullptr;
+			std::future<RenderResp>* future;
 			
 
 			static std::string getFontName(std::string name, int style) {

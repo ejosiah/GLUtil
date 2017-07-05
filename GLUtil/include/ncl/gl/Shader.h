@@ -16,7 +16,7 @@
 #include <functional>
 #include "Camera.h"
 #include "logger.h"
-#include "Camera2.h"
+#include "Camera.h"
 
 
 
@@ -108,11 +108,14 @@ namespace ncl {
 			void sendUniformMaterial(const std::string& name, Material& material);
 			void sendUniformMaterials(const std::string& name, Material material[]);
 
-			void send(const Camera& camera, const Matrix4& model = Matrix4::IDENTITY);
 
-			void send(const Camera2& camera, const glm::mat4& model = glm::mat4(1));
+			void send(const Camera& camera, const glm::mat4& model = glm::mat4(1));
+
+			void sendComputed(const Camera& camera, const glm::mat4& model = glm::mat4(1));
 
 			void send(const GlmCam& camera);
+
+			void sendComputed(const GlmCam& camera);
 
             void operator()(Procedure proc){
                 use(proc);

@@ -11,9 +11,10 @@ namespace ncl {
 	namespace gl {
 		class Shape : public VAOObject, public Drawable {
 		public:
-			Shape(std::vector<Mesh> meshes, bool cullface = true) 
+			Shape(std::vector<Mesh> meshes, bool cullface = true, unsigned instanceCount = 1) 
 				:VAOObject(meshes)
-				, cullface(cullface) {
+				, cullface(cullface)
+				, instanceCount(instanceCount) {
 
 			}
 
@@ -29,17 +30,28 @@ namespace ncl {
 					glBindVertexArray(vaoId);
 
 					shader.sendUniformMaterial("material[0]", materials[i]);
-
+					
 					if (!indices[i]) {
-						glDrawArrays(primitiveType[i], 0, counts[i]);
+						if (instanceCount < 2) {
+							glDrawArrays(primitiveType[i], 0, counts[i]);
+						}
+						else {
+							glDrawArraysInstanced(primitiveType[0], 0, counts[i], instanceCount);
+						}
 					}
 					else {
-						glDrawElements(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0);
+						if (instanceCount < 2) {
+							glDrawElements(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0);
+						}
+						else {
+							glDrawElementsInstanced(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0, instanceCount);
+						}
 					}
 					glBindVertexArray(0);
 				}
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
 			}
+
 
 			void update(int attribute, std::function<void(float*)> consume) {
 				if (attribute < Position || attribute > Color)
@@ -158,6 +170,7 @@ namespace ncl {
 
 		private:
 			bool cullface;
+			unsigned instanceCount;
 		};
 	}
 }

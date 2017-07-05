@@ -5,10 +5,7 @@
 #include <random>
 #include <functional>
 #include <cmath>
-
-//#pragma comment(lib, "libboost_system-vc140-mt-gd-1_63.lib")
-//#pragma comment(lib, "libboost_filesystem-vc140-mt-gd-1_63.lib")
-
+#include <atomic>
 
 namespace ncl {
 
@@ -56,7 +53,6 @@ namespace ncl {
 	}
 
 	unsigned nextSeed() {
-		//  return (unsigned)std::chrono::steady_clock::now().time_since_epoch().count();
 		std::random_device rnd;
 		return rnd();
 	}
@@ -82,7 +78,6 @@ namespace ncl {
 		void init() {
 			std::mt19937 eng{ nextSeed() };
 			std::uniform_real_distribution<real> dist{ 0.0, 1.0 };
-			// std::binomial_distribution<real> dist{0.0, 1.0};
 
 			rng = std::bind(dist, eng);
 		}

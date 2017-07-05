@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Camera.h"
+#include "input.h"
 #include "mesh.h"
 #include "Model.h"
-#include "input.h"
-#include <iostream>
-#include <fstream>
 
 namespace ncl {
 	namespace gl {
@@ -14,7 +12,7 @@ namespace ncl {
 		static const float     FLOOR_HEIGHT = 8.0f;
 
 
-		static const float     CAMERA_FOVX = 90.0f;
+		static const float     CAMERA_FOVX = 60.0f;
 		static const float     CAMERA_ZFAR = 100.0f;
 		static const float     CAMERA_ZNEAR = 0.1f;
 		static const float     CAMERA_ZOOM_MAX = 5.0f;
@@ -23,8 +21,8 @@ namespace ncl {
 		static const float     CAMERA_SPEED_FLIGHT_YAW = 100.0f;
 		static const float     CAMERA_SPEED_ORBIT_ROLL = 100.0f;
 
-		static const Vector3   CAMERA_ACCELERATION(4.0f, 4.0f, 4.0f);
-		static const Vector3   CAMERA_VELOCITY(1.0f, 1.0f, 1.0f);
+		static const glm::vec3   CAMERA_ACCELERATION(4.0f, 4.0f, 4.0f);
+		static const glm::vec3   CAMERA_VELOCITY(1.0f, 1.0f, 1.0f);
 
 		class CameraController {
 		private:
@@ -39,19 +37,19 @@ namespace ncl {
 			float flightYawSpeed;
 			float orbitRollSpeed;
 			float modelHeight = 1;
-			Vector3 acceleration;
-			Vector3 velocty;
+			glm::vec3 acceleration;
+			glm::vec3 velocty;
 			Camera::Mode mode;
 			Mesurements sceneDimentions;
 			Mesurements floor;
 			struct {
-				Vector3 position;
-				Quaternion orientation;
+				glm::vec3 position;
+				glm::quat orientation;
 			} model;
-			Vector3 direction;
+			glm::vec3 direction;
 			struct {
-				Vector3 min;
-				Vector3 max;
+				glm::vec3 min;
+				glm::vec3 max;
 			} bounds;
 
 		public:
@@ -68,10 +66,10 @@ namespace ncl {
 				float minZoom = CAMERA_ZOOM_MIN,
 				float flightYawSpeed = CAMERA_SPEED_FLIGHT_YAW,
 				float orbitRollSpeed = CAMERA_SPEED_ORBIT_ROLL,
-				Vector3 acceleration = CAMERA_ACCELERATION,
-				Vector3 velocty = CAMERA_VELOCITY,
+				glm::vec3 acceleration = CAMERA_ACCELERATION,
+				glm::vec3 velocty = CAMERA_VELOCITY,
 				Mesurements floor = {}
-				){
+				) {
 
 				this->floorWidth = floorWidth;
 				this->floorHeight = floorHeight;
@@ -87,31 +85,31 @@ namespace ncl {
 				this->velocty = velocty;
 				this->mode = mode;
 				this->sceneDimentions = sceneDimentions;
-				this->direction = Vector3(0);
+				this->direction = glm::vec3(0);
 				this->floor = floor;
 
 			}
 
-			void init() {
+			virtual void init() {
 				using namespace std;
 				float aspectRatio = sceneDimentions.width / sceneDimentions.height;
 				camera.perspective(fovx, aspectRatio, zNear, zFar);
 
 				float offset = modelHeight * 0.5f;
-				camera.setPosition(Vector3(0.0f, offset, 0.0f));
+				camera.setPosition(glm::vec3(0.0f, offset, 0.0f));
 				camera.setOrbitMinZoom(minZoom);
 				camera.setOrbitMaxZoom(maxZoom);
-				camera.setOrbitOffsetDistance(minZoom + (maxZoom - minZoom) * 0.3f);
+				camera.setOrbitOffsetDistance(minZoom);
 
 				model.position = camera.getPosition();
-				model.orientation = camera.getOrientation().inverse();
+				model.orientation =  inverse(camera.getOrientation());
 
 				camera.setAcceleration(acceleration);
 				camera.setVelocity(velocty);
 				updateMode(mode);
 
-				bounds.max.set(floor.width / 2.0f, 4.0f, floor.length / 2.0f);
-				bounds.min.set(-floor.width / 2.0f, offset, -floor.length / 2.0f);
+				bounds.max = { floor.width / 2.0f, 4.0f, floor.length / 2.0f };
+				bounds.min = { -floor.width / 2.0f, offset, -floor.length / 2.0f };
 			}
 
 			void setModelHeight(float h) {
@@ -123,11 +121,11 @@ namespace ncl {
 			}
 
 			void updateMode(Camera::Mode mode) {
-				if (camera.mode == mode) return;
+				if (camera.getMode() == mode) return;
 
 				if (mode == Camera::ORBIT) {
 					model.position = camera.getPosition();
-					model.orientation = camera.getOrientation().inverse();
+					model.orientation = inverse(camera.getOrientation());
 				}
 
 				camera.setMode(mode);
@@ -136,31 +134,31 @@ namespace ncl {
 				}
 			}
 
-			const Camera& getCamera() const {
+			const Camera& getcamera() const {
 				return camera;
 			}
 
-			const Matrix4& project() const {
+			const glm::mat4& project() const {
 				return camera.getProjectionMatrix();
 			}
 
-			const Matrix4& view() const {
+			const glm::mat4& view() const {
 				return camera.getViewMatrix();
 			}
 
-			const Matrix4 modelTransform() const {
-				Matrix4 m = model.orientation.toMatrix4();
-				Matrix4 v = camera.getViewMatrix();
-				Matrix4 p = camera.getProjectionMatrix();
+			const glm::mat4 modelTransform() const {
+				glm::mat4 m = glm::mat4_cast(model.orientation);
+				glm::mat4 v = camera.getViewMatrix();
+				glm::mat4 p = camera.getProjectionMatrix();
 				m[3][0] = model.position.x;
 				m[3][1] = model.position.y;
 				m[3][2] = model.position.z;
 
-				return m * v * p;
+				return p * v * m;
 			}
 
-			const Matrix4 modelTrans() const {
-				Matrix4 m = model.orientation.toMatrix4();
+			const glm::mat4 modelTrans() const {
+				glm::mat4 m = glm::mat4_cast(model.orientation);
 				m[3][0] = model.position.x;
 				m[3][1] = model.position.y;
 				m[3][2] = model.position.z;
@@ -168,13 +166,13 @@ namespace ncl {
 				return m;
 			}
 
-			void update(float elapsedTime) {
+			virtual void update(float elapsedTime)  {
 				Mouse& mouse = Mouse::get();
 				float dx;
 				float dy;
 				float dz;
 
-				switch (camera.mode) {
+				switch (camera.getMode()) {
 				case Camera::FIRST_PERSON:
 				case Camera::SPECTATOR:
 					dx = -mouse.relativePos.x;
@@ -225,16 +223,17 @@ namespace ncl {
 				performCollisionDetection();
 			}
 
-			void performCollisionDetection() {	// TODO use proper collision detection
-				// Very simple collision detection to prevent the first person, spectator
-				// and flight cameras from moving too far outside of the scene. We don't
-				// worry about the orbiting camera here because the min and max zoom
-				// constants already limits how far the orbiting camera can zoom in/out
-				// of the scene.
+			void performCollisionDetection() {	
+			// TODO use proper collision detection
+			// Very simple collision detection to prevent the first person, spectator
+			// and flight cameras from moving too far outside of the scene. We don't
+			// worry about the orbiting camera here because the min and max zoom							
+			// constants already limits how far the orbiting camera can zoom in/out								
+			// of the scene.
 
 				if (camera.getMode() != Camera::ORBIT) {
-					const Vector3 &pos = camera.getPosition();
-					Vector3 newPos(pos);
+					const glm::vec3 &pos = camera.getPosition();
+					glm::vec3 newPos(pos);
 
 					if (pos.x > bounds.max.x)
 						newPos.x = bounds.max.x;
@@ -278,7 +277,7 @@ namespace ncl {
 				movementDirection(direction);
 			}
 
-			void movementDirection(Vector3& direction) {
+			void movementDirection(glm::vec3& direction) {
 				static bool moveForwardsPressed = false;
 				static bool moveBackwardsPressed = false;
 				static bool moveRightPressed = false;
@@ -286,8 +285,8 @@ namespace ncl {
 				static bool moveUpPressed = false;
 				static bool moveDownPressed = false;
 
-				Vector3 velocty = camera.getCurrentVelocity();
-				direction.set(0.0f, 0.0f, 0.0f);
+				glm::vec3 velocty = camera.getCurrentVelocity();
+				direction = glm::vec3(0.0f, 0.0f, 0.0f);
 
 				if (Keyboard::get().W.pressed()) {
 					if (!moveForwardsPressed) {
@@ -356,8 +355,12 @@ namespace ncl {
 				}
 			}
 
-			void updateAspectRation(float ratio) {
-				camera.perspective(camera.fovx, ratio, camera.znear, camera.zfar);
+			virtual void updateAspectRation(float ratio)  {
+				camera.perspective(ratio);
+			}
+
+			const Camera& getCamera() const {
+				return camera;
 			}
 		};
 	}
