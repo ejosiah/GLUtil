@@ -93,7 +93,6 @@ public:
 		_mouseMoveListner.push_back([&](Mouse& mouse) {
 			UI::handleMouseMove(mouse);
 		});
-
 	}
 
 	virtual void resized() override {
@@ -108,7 +107,7 @@ public:
 		
 	//	_shader.send(cam);
 		//teapot->draw(_shader);
-		_shader.send(cam);
+		_shader.sendComputed(cam);
 		cube->draw(_shader);
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });

@@ -42,8 +42,8 @@ int main()
 	
 	GLVersion version{ 4, 5 };
 //	Scene* scene = new ImageViewer();
-	Scene* scene = new TestScene("Test Scene", ops);
-//    Scene* scene = new ExampleScene(ops);
+//	Scene* scene = new TestScene("Test Scene", ops);
+    Scene* scene = new ExampleScene(ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

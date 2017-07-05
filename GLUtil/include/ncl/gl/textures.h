@@ -130,5 +130,28 @@ namespace ncl {
 		private:
 			GLuint* _data;
 		};
+
+		class TextureBuffer {
+		public:
+			TextureBuffer(const void* data, GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
+				glActiveTexture(TEXTURE(id));
+				glGenTextures(1, &tbo_id);
+				glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
+				glGenBuffers(1, &buffer);
+				glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+				glBufferData(GL_TEXTURE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+				glTexBuffer(GL_TEXTURE_BUFFER, iFormat, buffer);
+				glActiveTexture(GL_TEXTURE0);
+			}
+
+			virtual ~TextureBuffer() {
+				glDeleteBuffers(1, &buffer);
+				glDeleteTextures(1, &tbo_id);
+			}
+
+		private:
+			GLuint buffer;
+			GLuint tbo_id;
+		};
 	}
 }
