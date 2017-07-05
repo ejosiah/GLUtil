@@ -2,9 +2,9 @@
 #pragma debug(on)
 #pragma optimize(off)
 
-uniform mat4 MV;
-uniform mat4 MVP;
-uniform mat3 normalMatrix;
+uniform mat4 M;
+uniform mat4 V;
+uniform mat4 P;
 
 layout(location=0) in vec3 position;
 layout(location=1) in vec3 normal;
@@ -21,9 +21,11 @@ out VERTEX {
 } vertex;
 
 void main(){
-	vertex.normal = normalize(normalMatrix * normal);
+	mat4 MV = V * M;
+	mat3 NM = transpose(inverse(mat3(MV)));
+	vertex.normal = normalize(NM * normal);
 	vertex.position = (MV * vec4(position, 1)).xyz;
 	vertex.texCoord = uv;
 	vertex.color = color;
-	gl_Position = MVP * vec4(position, 1);
+	gl_Position = P * vec4(vertex.position, 1);
 }

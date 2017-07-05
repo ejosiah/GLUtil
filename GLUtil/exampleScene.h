@@ -50,6 +50,7 @@ public:
 		addShaderFromFile("shaders\\quad.vert");
 		addShaderFromFile("shaders\\quad.tes");
 		addShaderFromFile("shaders\\identity.frag");
+		_requireMouse = false;
 	}
 
 	virtual void init() override {

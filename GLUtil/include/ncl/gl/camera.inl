@@ -1,27 +1,5 @@
-//-----------------------------------------------------------------------------
-// Copyright (c) 2007-2008 dhpoware. All Rights Reserved.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the "Software"),
-// to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the
-// Software is furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-// IN THE SOFTWARE.
-//-----------------------------------------------------------------------------
-
+#pragma once
 #include <algorithm>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace ncl {
 	namespace gl {
@@ -33,15 +11,15 @@ namespace ncl {
 		const float Camera::DEFAULT_ORBIT_MIN_ZOOM = DEFAULT_ZNEAR + 1.0f;
 		const float Camera::DEFAULT_ORBIT_MAX_ZOOM = DEFAULT_ZFAR * 0.5f;
 
-		const float Camera::DEFAULT_ORBIT_OFFSET_DISTANCE = DEFAULT_ORBIT_MIN_ZOOM +
-			(DEFAULT_ORBIT_MAX_ZOOM - DEFAULT_ORBIT_MIN_ZOOM) * 0.25f;
+		const float Camera::DEFAULT_ORBIT_OFFSET_DISTANCE = DEFAULT_ORBIT_MIN_ZOOM + (DEFAULT_ORBIT_MAX_ZOOM - DEFAULT_ORBIT_MIN_ZOOM) * 0.25f;
 
-		const Vector3 Camera::WORLD_XAXIS(1.0f, 0.0f, 0.0f);
-		const Vector3 Camera::WORLD_YAXIS(0.0f, 1.0f, 0.0f);
-		const Vector3 Camera::WORLD_ZAXIS(0.0f, 0.0f, 1.0f);
+		const glm::vec3 Camera::WORLD_XAXIS(1.0f, 0.0f, 0.0f);
+		const glm::vec3 Camera::WORLD_YAXIS(0.0f, 1.0f, 0.0f);
+		const glm::vec3 Camera::WORLD_ZAXIS(0.0f, 0.0f, 1.0f);
 
 		Camera::Camera()
 		{
+			using namespace glm;
 			mode = FLIGHT;
 			_preferTargetYAxisOrbiting = true;
 
@@ -58,25 +36,25 @@ namespace ncl {
 			orbitMaxZoom = DEFAULT_ORBIT_MAX_ZOOM;
 			orbitOffsetDistance = DEFAULT_ORBIT_OFFSET_DISTANCE;
 
-			eye.set(0.0f, 0.0f, 0.0f);
-			savedEye.set(0.0f, 0.0f, 0.0f);
-			target.set(0.0f, 0.0f, 0.0f);
-			xAxis.set(1.0f, 0.0f, 0.0f);
-			yAxis.set(0.0f, 1.0f, 0.0f);
-			targetYAxis.set(0.0f, 1.0f, 0.0f);
-			zAxis.set(0.0f, 0.0f, 1.0f);
-			viewDir.set(0.0f, 0.0f, -1.0f);
+			eye = vec3(0);
+			savedEye = vec3(0);
+			target = vec3(0);
+			xAxis = vec3(1.0f, 0.0f, 0.0f);
+			yAxis = vec3(0.0f, 1.0f, 0.0f);
+			targetYAxis = vec3(0.0f, 1.0f, 0.0f);
+			zAxis = vec3(0.0f, 0.0f, 1.0f);
+			viewDir = vec3(0.0f, 0.0f, -1.0f);
 
-			acceleration.set(0.0f, 0.0f, 0.0f);
-			currentVelocity.set(0.0f, 0.0f, 0.0f);
-			velocity.set(0.0f, 0.0f, 0.0f);
+			acceleration = vec3(0);
+			currentVelocity = vec3(0);
+			velocity = vec3(0);
 
-			orientation.identity();
-			savedOrientation.identity();
+			orientation = Orientation();
+			savedOrientation = Orientation();
 
-			viewMatrix.identity();
-			projMatrix.identity();
-			viewProjMatrix.identity();
+			viewMatrix = mat4(1);
+			projMatrix = mat4(1);
+			viewProjMatrix = mat4(1);
 		}
 
 		Camera::~Camera()
@@ -84,73 +62,57 @@ namespace ncl {
 
 		}
 
-		void Camera::lookAt(const Vector3 &target)
+		void Camera::lookAt(const glm::vec3 &target)
 		{
 			lookAt(eye, target, yAxis);
 		}
 
-		void Camera::lookAt(const Vector3 &eye, const Vector3 &target, const Vector3 &up)
+		void Camera::lookAt(const glm::vec3 &eye, const glm::vec3 &target, const glm::vec3 &up)
 		{
+			using namespace glm;
 			this->eye = eye;
 			this->target = target;
 
-			zAxis = eye - target;
-			zAxis.normalize();
+			viewMatrix = glm::lookAt(eye, target, up);
+			// Extract the pitch angle from the view matrix.
+			accumPitchDegrees = Math::radiansToDegrees(asinf(viewMatrix[1][2]));	// TODO change this matrix is colomn matrix
+
+			xAxis = vec3(row(viewMatrix, 0));	// TODO verify that this is correct
+			yAxis = vec3(row(viewMatrix, 1));
+			zAxis = vec3(row(viewMatrix, 2));
 
 			viewDir = -zAxis;
 
-			xAxis = Vector3::cross(up, zAxis);
-			xAxis.normalize();
+			accumPitchDegrees = degrees(asinf(viewMatrix[1][2]));
 
-			yAxis = Vector3::cross(zAxis, xAxis);
-			yAxis.normalize();
-
-			viewMatrix[0][0] = xAxis.x;
-			viewMatrix[1][0] = xAxis.y;
-			viewMatrix[2][0] = xAxis.z;
-			viewMatrix[3][0] = -Vector3::dot(xAxis, eye);
-
-			viewMatrix[0][1] = yAxis.x;
-			viewMatrix[1][1] = yAxis.y;
-			viewMatrix[2][1] = yAxis.z;
-			viewMatrix[3][1] = -Vector3::dot(yAxis, eye);
-
-			viewMatrix[0][2] = zAxis.x;
-			viewMatrix[1][2] = zAxis.y;
-			viewMatrix[2][2] = zAxis.z;
-			viewMatrix[3][2] = -Vector3::dot(zAxis, eye);
-
-			// Extract the pitch angle from the view matrix.
-			accumPitchDegrees = Math::radiansToDegrees(asinf(viewMatrix[1][2]));
-
-			orientation.fromMatrix(viewMatrix);
+			orientation = Orientation(viewMatrix);
 			updateViewMatrix();
 		}
 
 		void Camera::move(float dx, float dy, float dz)
 		{
-			// Moves the camera by dx world units to the left or right; dy
+			// Moves the Camera by dx world units to the left or right; dy
 			// world units upwards or downwards; and dz world units forwards
 			// or backwards.
 
 			if (mode == ORBIT)
 			{
-				// Orbiting camera is always positioned relative to the
+				// Orbiting Camera is always positioned relative to the
 				// target position. See updateViewMatrix().
 				return;
 			}
 
-			Vector3 eye = this->eye;
-			Vector3 forwards;
+			glm::vec3 eye = this->eye;
+			glm::vec3 forwards;
 
 			if (mode == FIRST_PERSON)
 			{
-				// Calculate the forwards direction. Can't just use the camera's local
-				// z axis as doing so will cause the camera to move more slowly as the
-				// camera's view approaches 90 degrees straight up and down.
+				// Calculate the forwards direction. Can't just use the Camera's local
+				// z axis as doing so will cause the Camera to move more slowly as the
+				// Camera's view approaches 90 degrees straight up and down.
 
-				forwards = Vector3::cross(WORLD_YAXIS, xAxis);
-				forwards.normalize();
+				forwards = cross(WORLD_YAXIS, xAxis);
+				forwards = normalize(forwards);
 			}
 			else
 			{
@@ -164,14 +126,14 @@ namespace ncl {
 			setPosition(eye);
 		}
 
-		void Camera::move(const Vector3 &direction, const Vector3 &amount)
+		void Camera::move(const glm::vec3 &direction, const glm::vec3 &amount)
 		{
-			// Moves the camera by the specified amount of world units in the specified
+			// Moves the Camera by the specified amount of world units in the specified
 			// direction in world space.
 
 			if (mode == ORBIT)
 			{
-				// Orbiting camera is always positioned relative to the
+				// Orbiting Camera is always positioned relative to the
 				// target position. See updateViewMatrix().
 				return;
 			}
@@ -185,36 +147,9 @@ namespace ncl {
 
 		void Camera::perspective(float fovx, float aspect, float znear, float zfar)
 		{
-			// Construct a projection matrix based on the horizontal field of view
-			// 'fovx' rather than the more traditional vertical field of view 'fovy'.
+			projMatrix = glm::perspective(glm::radians(fovx), aspect, znear, zfar);
 
-			float e = 1.0f / tanf(Math::degreesToRadians(fovx) / 2.0f);
-			float aspectInv = 1.0f / aspect;
-			float fovy = 2.0f * atanf(aspectInv / e);
-			float xScale = 1.0f / tanf(0.5f * fovy);
-			float yScale = xScale / aspectInv;
-
-			projMatrix[0][0] = xScale;
-			projMatrix[0][1] = 0.0f;
-			projMatrix[0][2] = 0.0f;
-			projMatrix[0][3] = 0.0f;
-
-			projMatrix[1][0] = 0.0f;
-			projMatrix[1][1] = yScale;
-			projMatrix[1][2] = 0.0f;
-			projMatrix[1][3] = 0.0f;
-
-			projMatrix[2][0] = 0.0f;
-			projMatrix[2][1] = 0.0f;
-			projMatrix[2][2] = (zfar + znear) / (znear - zfar);
-			projMatrix[2][3] = -1.0f;
-
-			projMatrix[3][0] = 0.0f;
-			projMatrix[3][1] = 0.0f;
-			projMatrix[3][2] = (2.0f * zfar * znear) / (znear - zfar);
-			projMatrix[3][3] = 0.0f;
-
-			viewProjMatrix = viewMatrix * projMatrix;
+			viewProjMatrix = projMatrix * viewMatrix;
 
 			this->fovx = fovx;
 			aspectRatio = aspect;
@@ -228,7 +163,7 @@ namespace ncl {
 
 		void Camera::rotate(float headingDegrees, float pitchDegrees, float rollDegrees)
 		{
-			// Rotates the camera based on its current mode.
+			// Rotates the Camera based on its current mode.
 			// Note that not all modes support rolling.
 
 			pitchDegrees = -pitchDegrees;
@@ -260,8 +195,8 @@ namespace ncl {
 		void Camera::rotateSmoothly(float headingDegrees, float pitchDegrees, float rollDegrees)
 		{
 			// This method applies a scaling factor to the rotation angles prior to
-			// using these rotation angles to rotate the camera. This method is usually
-			// called when the camera is being rotated using an input device (such as a
+			// using these rotation angles to rotate the Camera. This method is usually
+			// called when the Camera is being rotated using an input device (such as a
 			// mouse or a joystick). 
 
 			headingDegrees *= rotationSpeed;
@@ -273,8 +208,8 @@ namespace ncl {
 
 		void Camera::undoRoll()
 		{
-			// Undo any camera rolling by leveling the camera. When the camera is
-			// orbiting this method will cause the camera to become level with the
+			// Undo any Camera rolling by leveling the Camera. When the Camera is
+			// orbiting this method will cause the Camera to become level with the
 			// orbit target.
 
 			if (mode == ORBIT)
@@ -283,28 +218,28 @@ namespace ncl {
 				lookAt(eye, eye + viewDir, WORLD_YAXIS);
 		}
 
-		void Camera::updatePosition(const Vector3 &direction, float elapsedTimeSec)
+		void Camera::updatePosition(const glm::vec3 &direction, float elapsedTimeSec)
 		{
-			// Moves the camera using Newton's second law of motion. Unit mass is
+			// Moves the Camera using Newton's second law of motion. Unit mass is
 			// assumed here to somewhat simplify the calculations. The direction vector
 			// is in the range [-1,1].
-
-			if (currentVelocity.magnitudeSq() != 0.0f)
+			using namespace glm;
+			if (dot(currentVelocity, currentVelocity) != 0.0f)
 			{
-				// Only move the camera if the velocity vector is not of zero length.
-				// Doing this guards against the camera slowly creeping around due to
+				// Only move the Camera if the velocity vector is not of zero length.
+				// Doing this guards against the Camera slowly creeping around due to
 				// floating point rounding errors.
 
-				Vector3 displacement = (currentVelocity * elapsedTimeSec) +
+				glm::vec3 displacement = (currentVelocity * elapsedTimeSec) +
 					(0.5f * acceleration * elapsedTimeSec * elapsedTimeSec);
 
 				// Floating point rounding errors will slowly accumulate and cause the
-				// camera to move along each axis. To prevent any unintended movement
+				// Camera to move along each axis. To prevent any unintended movement
 				// the displacement vector is clamped to zero for each direction that
-				// the camera isn't moving in. Note that the updateVelocity() method
-				// will slowly decelerate the camera's velocity back to a stationary
-				// state when the camera is no longer moving along that direction. To
-				// account for this the camera's current velocity is also checked.
+				// the Camera isn't moving in. Note that the updateVelocity() method
+				// will slowly decelerate the Camera's velocity back to a stationary
+				// state when the Camera is no longer moving along that direction. To
+				// account for this the Camera's current velocity is also checked.
 
 				if (direction.x == 0.0f && Math::closeEnough(currentVelocity.x, 0.0f))
 					displacement.x = 0.0f;
@@ -318,9 +253,9 @@ namespace ncl {
 				move(displacement.x, displacement.y, displacement.z);
 			}
 
-			// Continuously update the camera's velocity vector even if the camera
-			// hasn't moved during this call. When the camera is no longer being moved
-			// the camera is decelerating back to its stationary state.
+			// Continuously update the Camera's velocity vector even if the Camera
+			// hasn't moved during this call. When the Camera is no longer being moved
+			// the Camera is decelerating back to its stationary state.
 
 			updateVelocity(direction, elapsedTimeSec);
 		}
@@ -329,16 +264,16 @@ namespace ncl {
 		{
 			if (mode == ORBIT)
 			{
-				// Moves the camera closer to or further away from the orbit
+				// Moves the Camera closer to or further away from the orbit
 				// target. The zoom amounts are in world units.
 
 				orbitMaxZoom = maxZoom;
 				orbitMinZoom = minZoom;
 
-				Vector3 offset = eye - target;
+				glm::vec3 offset = eye - target;
 
-				orbitOffsetDistance = offset.magnitude();
-				offset.normalize();
+				orbitOffsetDistance = glm::length(offset);
+				offset = normalize(offset);
 				orbitOffsetDistance += zoom;
 				orbitOffsetDistance = std::min(std::max(orbitOffsetDistance, minZoom), maxZoom);
 
@@ -358,17 +293,17 @@ namespace ncl {
 			}
 		}
 
-		void Camera::setAcceleration(const Vector3 &acceleration)
+		void Camera::setAcceleration(const glm::vec3 &acceleration)
 		{
 			this->acceleration = acceleration;
 		}
 
 		void Camera::setMode(Mode newMode)
 		{
-			// Switch to a new camera mode (i.e., mode).
+			// Switch to a new Camera mode (i.e., mode).
 			// This method is complicated by the fact that it tries to save the current
-			// mode's state prior to making the switch to the new camera mode.
-			// Doing this allows seamless switching between camera modes.
+			// mode's state prior to making the switch to the new Camera mode.
+			// Doing this allows seamless switching between Camera modes.
 
 			Mode prevMode = mode;
 
@@ -454,22 +389,24 @@ namespace ncl {
 
 				targetYAxis = yAxis;
 
-				Vector3 newEye = eye + zAxis * orbitOffsetDistance;
-				Vector3 newTarget = eye;
+				glm::vec3 newEye = eye + zAxis * orbitOffsetDistance;
+				glm::vec3 newTarget = eye;
 
 				lookAt(newEye, newTarget, targetYAxis);
 				break;
 			}
 		}
 
-		void Camera::setCurrentVelocity(const Vector3 &currentVelocity)
+		void Camera::setCurrentVelocity(const glm::vec3 &currentVelocity)
 		{
 			this->currentVelocity = currentVelocity;
 		}
 
 		void Camera::setCurrentVelocity(float x, float y, float z)
 		{
-			this->currentVelocity.set(x, y, z);
+			this->currentVelocity.x = x;
+			this->currentVelocity.y = y;
+			this->currentVelocity.z = z;;
 		}
 
 		void Camera::setOrbitMaxZoom(float orbitMaxZoom)
@@ -487,9 +424,9 @@ namespace ncl {
 			this->orbitOffsetDistance = orbitOffsetDistance;
 		}
 
-		void Camera::setOrientation(const Quaternion &newOrientation)
+		void Camera::setOrientation(const Orientation &newOrientation)
 		{
-			Matrix4 m = newOrientation.toMatrix4();
+			glm::mat4 m = glm::mat4_cast(newOrientation);
 
 			// Store the pitch for this new orientation.
 			// First person and spectator modes limit pitching to
@@ -508,7 +445,7 @@ namespace ncl {
 			updateViewMatrix();
 		}
 
-		void Camera::setPosition(const Vector3 &newEye)
+		void Camera::setPosition(const glm::vec3 &newEye)
 		{
 			eye = newEye;
 			updateViewMatrix();
@@ -516,10 +453,10 @@ namespace ncl {
 
 		void Camera::setPreferTargetYAxisOrbiting(bool preferTargetYAxisOrbiting)
 		{
-			// Determines the mode of Y axis rotations when the camera is
+			// Determines the mode of Y axis rotations when the Camera is
 			// orbiting a target. When preferTargetYAxisOrbiting is true all
 			// Y axis rotations are about the orbit target's local Y axis.
-			// When preferTargetYAxisOrbiting is false then the camera's
+			// When preferTargetYAxisOrbiting is false then the Camera's
 			// local Y axis is used instead.
 
 			_preferTargetYAxisOrbiting = preferTargetYAxisOrbiting;
@@ -536,21 +473,23 @@ namespace ncl {
 			this->rotationSpeed = rotationSpeed;
 		}
 
-		void Camera::setVelocity(const Vector3 &velocity)
+		void Camera::setVelocity(const glm::vec3 &velocity)
 		{
 			this->velocity = velocity;
 		}
 
 		void Camera::setVelocity(float x, float y, float z)
 		{
-			velocity.set(x, y, z);
+			velocity.x = x;
+			velocity.y = y;
+			velocity.z = z;
 		}
 
 		void Camera::rotateFirstPerson(float headingDegrees, float pitchDegrees)
 		{
 			// Implements the rotation logic for the first person style and
-			// spectator style camera modes. Roll is ignored.
-
+			// spectator style Camera modes. Roll is ignored.
+			using namespace glm;
 			accumPitchDegrees += pitchDegrees;
 
 			if (accumPitchDegrees > 90.0f)
@@ -565,29 +504,29 @@ namespace ncl {
 				accumPitchDegrees = -90.0f;
 			}
 
-			Quaternion rot;
+			Orientation rot;
 
-			// Rotate camera about the world y axis.
-			// Note the order the quaternions are multiplied. That is important!
+			// Rotate Camera about the world y axis.
+			// Note the order the Orientationernions are multiplied. That is important!
 			if (headingDegrees != 0.0f)
 			{
-				rot.fromAxisAngle(WORLD_YAXIS, headingDegrees);
+				rot = fromAxisAngle(WORLD_YAXIS, radians(headingDegrees)); // TODO 
 				orientation = rot * orientation;
 			}
 
-			// Rotate camera about its local x axis.
-			// Note the order the quaternions are multiplied. That is important!
+			// Rotate Camera about its local x axis.
+			// Note the order the Orientationernions are multiplied. That is important!
 			if (pitchDegrees != 0.0f)
 			{
-				rot.fromAxisAngle(WORLD_XAXIS, pitchDegrees);
+				rot = fromAxisAngle(WORLD_XAXIS, radians(pitchDegrees));
 				orientation = orientation * rot;
 			}
 		}
 
 		void Camera::rotateFlight(float headingDegrees, float pitchDegrees, float rollDegrees)
 		{
-			// Implements the rotation logic for the flight style camera mode.
-
+			// Implements the rotation logic for the flight style Camera mode.
+			using namespace glm;
 			accumPitchDegrees += pitchDegrees;
 
 			if (accumPitchDegrees > 360.0f)
@@ -596,58 +535,56 @@ namespace ncl {
 			if (accumPitchDegrees < -360.0f)
 				accumPitchDegrees += 360.0f;
 
-			Quaternion rot;
-
-			rot.fromHeadPitchRoll(headingDegrees, pitchDegrees, rollDegrees);
+			Orientation rot = Orientation({ radians(pitchDegrees), radians(headingDegrees), radians(rollDegrees) });
 			orientation *= rot;
 		}
 
 		void Camera::rotateOrbit(float headingDegrees, float pitchDegrees, float rollDegrees)
 		{
-			// Implements the rotation logic for the orbit style camera mode.
+			// Implements the rotation logic for the orbit style Camera mode.
 			// Roll is ignored for target Y axis orbiting.
 			//
-			// Briefly here's how this orbit camera implementation works. Switching to
-			// the orbit camera mode via the setBehavior() method will set the
-			// camera's orientation to match the orbit target's orientation. Calls to
+			// Briefly here's how this orbit Camera implementation works. Switching to
+			// the orbit Camera mode via the setBehavior() method will set the
+			// Camera's orientation to match the orbit target's orientation. Calls to
 			// rotateOrbit() will rotate this orientation. To turn this into a third
-			// person style view the updateViewMatrix() method will move the camera
-			// position back 'orbitOffsetDistance' world units along the camera's
+			// person style view the updateViewMatrix() method will move the Camera
+			// position back 'orbitOffsetDistance' world units along the Camera's
 			// local z axis from the orbit target's world position.
-
-			Quaternion rot;
+			using namespace glm;
+			Orientation rot;
 
 			if (_preferTargetYAxisOrbiting)
 			{
 				if (headingDegrees != 0.0f)
 				{
-					rot.fromAxisAngle(targetYAxis, headingDegrees);
+					rot = fromAxisAngle(targetYAxis, headingDegrees);
 					orientation = rot * orientation;
 				}
 
 				if (pitchDegrees != 0.0f)
 				{
-					rot.fromAxisAngle(WORLD_XAXIS, pitchDegrees);
+					rot = fromAxisAngle(WORLD_XAXIS, pitchDegrees);
 					orientation = orientation * rot;
 				}
 			}
 			else
 			{
-				rot.fromHeadPitchRoll(headingDegrees, pitchDegrees, rollDegrees);
+				rot = Orientation({ radians(pitchDegrees), radians(headingDegrees), radians(rollDegrees) });
 				orientation *= rot;
 			}
 		}
 
-		void Camera::updateVelocity(const Vector3 &direction, float elapsedTimeSec)
+		void Camera::updateVelocity(const glm::vec3 &direction, float elapsedTimeSec)
 		{
-			// Updates the camera's velocity based on the supplied movement direction
+			// Updates the Camera's velocity based on the supplied movement direction
 			// and the elapsed time (since this method was last called). The movement
 			// direction is in the range [-1,1].
 
 			if (direction.x != 0.0f)
 			{
 				// Camera is moving along the x axis.
-				// Linearly accelerate up to the camera's max speed.
+				// Linearly accelerate up to the Camera's max speed.
 
 				currentVelocity.x += direction.x * acceleration.x * elapsedTimeSec;
 
@@ -676,7 +613,7 @@ namespace ncl {
 			if (direction.y != 0.0f)
 			{
 				// Camera is moving along the y axis.
-				// Linearly accelerate up to the camera's max speed.
+				// Linearly accelerate up to the Camera's max speed.
 
 				currentVelocity.y += direction.y * acceleration.y * elapsedTimeSec;
 
@@ -705,7 +642,7 @@ namespace ncl {
 			if (direction.z != 0.0f)
 			{
 				// Camera is moving along the z axis.
-				// Linearly accelerate up to the camera's max speed.
+				// Linearly accelerate up to the Camera's max speed.
 
 				currentVelocity.z += direction.z * acceleration.z * elapsedTimeSec;
 
@@ -735,47 +672,29 @@ namespace ncl {
 		void Camera::updateViewMatrix()
 		{
 			// Reconstruct the view matrix.
+			using namespace glm;
+			viewMatrix = mat4_cast(orientation);
 
-			viewMatrix = orientation.toMatrix4();
-
-			xAxis.set(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
-			yAxis.set(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-			zAxis.set(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
+			xAxis = vec3(row(viewMatrix, 0));	// TODO verify that this is correct
+			yAxis = vec3(row(viewMatrix, 1));
+			zAxis = vec3(row(viewMatrix, 2));
 			viewDir = -zAxis;
 
 			if (mode == ORBIT)
 			{
-				// Calculate the new camera position based on the current
-				// orientation. The camera must always maintain the same
+				// Calculate the new Camera position based on the current
+				// orientation. The Camera must always maintain the same
 				// distance from the target. Use the current offset vector
 				// to determine the correct distance from the target.
 
 				eye = target + zAxis * orbitOffsetDistance;
 			}
 
-			viewMatrix[3][0] = -Vector3::dot(xAxis, eye);
-			viewMatrix[3][1] = -Vector3::dot(yAxis, eye);
-			viewMatrix[3][2] = -Vector3::dot(zAxis, eye);
+
+			viewMatrix[3][0] = -dot(xAxis, eye);
+			viewMatrix[3][1] = -dot(yAxis, eye);
+			viewMatrix[3][2] =  -dot(zAxis, eye);
 		}
 
-		const glm::mat4 Camera::view() const {
-			glm::mat4 view;
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					view[i][j] = viewMatrix[i][j];
-				}
-			}
-			return view;
-		}
-
-		const glm::mat4 Camera::projection() const {
-			glm::mat4 projection;
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					projection[i][j] = projMatrix[i][j];
-				}
-			}
-			return projection;
-		}
 	}
 }

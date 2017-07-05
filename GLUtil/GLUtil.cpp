@@ -8,6 +8,8 @@
 #define CONNECT_3D
 #endif
 
+#undef CONNECT_3D
+
 #include "include/ncl/gl/GlfwApp.h"
 #include "TestScene.h"
 #include "exampleScene.h"
@@ -35,11 +37,13 @@ int main()
 	ops.hideCursor = true;
 	ops.requireMouse = true;
 	ops.useDefaultShader = true;
+	ops.fullscreen = false;
+	ops.vSync = true;
 	
 	GLVersion version{ 4, 5 };
 //	Scene* scene = new ImageViewer();
 	Scene* scene = new TestScene("Test Scene", ops);
- //   Scene* scene = new ExampleScene(ops);
+//    Scene* scene = new ExampleScene(ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

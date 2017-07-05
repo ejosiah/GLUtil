@@ -19,6 +19,7 @@
 #include "common.h"
 #include "textures.h"
 #include <boost/filesystem.hpp>
+#include "Template.h"
 
 namespace ncl {
 	namespace gl {
@@ -27,10 +28,12 @@ namespace ncl {
 		struct Options {
 			std::vector<std::string> shaders = {};
 			GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-			glm::ivec2 dimensions = glm::ivec2{ 1280, 720 };
+			glm::ivec2 dimensions = glm::ivec2{ 1920 , 1080 };
 			bool requireMouse = false;
 			bool hideCursor = false;
 			bool useDefaultShader = false;
+			bool vSync = true;
+			bool fullscreen = false;
 		};
 
 		static boost::filesystem::path shader_loc[] = {
@@ -50,10 +53,15 @@ namespace ncl {
 			* @param h scene height
 			* @param fbuffer OpenGL framebuffer settings
 			*/
-			Scene(const char* t, int w = 1280, int h = 720, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-			:_width(w), _height(h), _title(t),  fBuffer(fBuffer) {
+			Scene(const char* t, int w = 1280, int h = 720, bool fullscreen = false, bool vsync = true, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+			:_width(w), _height(h), _title(t), fBuffer(fBuffer)
+			, _fullScreen(fullscreen), _vsync(vsync) {
 				_center = glm::vec2(w / 2, h / 2);
 				_motionEventHandler = nullptr;
+				if (fullscreen) {
+					_width = GetSystemMetrics(SM_CXSCREEN);
+					_height = GetSystemMetrics(SM_CYSCREEN);
+				}
 			}
 
 			/**
@@ -61,7 +69,7 @@ namespace ncl {
 			* @param t scene title
 			* @param ops scene options
 			*/
-			Scene(const char* t, Options ops) : Scene(t, ops.dimensions.x, ops.dimensions.y, ops.fBuffer) {
+			Scene(const char* t, Options ops) : Scene(t, ops.dimensions.x, ops.dimensions.y, ops.fullscreen, ops.vSync, ops.fBuffer) {
 				_requireMouse = ops.requireMouse;
 				_hideCursor = ops.hideCursor;
 			}
@@ -165,6 +173,26 @@ namespace ncl {
 			void display0() {
 				glClear(fBuffer);
 				display();
+			}
+
+			void update0(float elapsedTime) {
+				updateFrameRate(elapsedTime);
+				update(elapsedTime);
+			}
+
+			void updateFrameRate(float elapsedTime) {
+				static float totalTime = 0.0f;
+				static int frames = 0;
+
+				totalTime += elapsedTime;
+				if (totalTime >= 1.0f) {
+					fps = frames;
+					totalTime = 0.0f;
+					frames = 0;
+				}
+				else {
+					++frames;
+				}
 			}
 
 			/**
@@ -342,6 +370,9 @@ namespace ncl {
 				_sources.push_back(source);
 			}
 
+			bool fullScreen() { return _fullScreen;  }
+			bool vSync() { return _vsync;  }
+
 		protected:
 			int _width;
 			int _height;
@@ -363,7 +394,9 @@ namespace ncl {
 			_3DMotionEventHandler* _motionEventHandler;
 			bool _useImplictShaderLoad = false;
 			bool implicityLoaded = false;
-
+			bool _fullScreen = false;
+			bool _vsync = true;
+			float fps;
 		};
 	}
 }

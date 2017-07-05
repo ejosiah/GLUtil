@@ -398,31 +398,37 @@ namespace ncl {
 			delete[] indices;
 		}
 
-		void Shader::send(const Camera& camera, const Matrix4& model) {
-			Matrix4 MV = model * camera.getViewMatrix();
-			Matrix4 MVP = MV * camera.getProjectionMatrix();
-			Matrix3 NM = Matrix3(MV).inverse().transpose();
 
-			sendUniformMatrix4fv("V", 1, GL_FALSE, &camera.getViewMatrix()[0][0]);
-			sendUniformMatrix4fv("MV", 1, GL_FALSE, MV);
-			sendUniformMatrix4fv("MVP", 1, GL_FALSE, MVP);
-			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, NM);
-
+		void Shader::send(const Camera& camera, const glm::mat4& model) {
+			using namespace glm;
+			sendUniformMatrix4fv("M", 1, GL_FALSE, glm::value_ptr(model));
+			sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(camera.getProjectionMatrix()));
+			sendUniformMatrix4fv("V", 1, GL_FALSE, glm::value_ptr(camera.getViewMatrix()));
 		}
 
-		void Shader::send(const Camera2& camera, const glm::mat4& model) {
+		void Shader::sendComputed(const Camera& camera, const glm::mat4& model) {
 			using namespace glm;
-			mat4 MV =  camera.getViewMatrix() * model;
-			mat4 MVP =  camera.getProjectionMatrix() * MV;
-			mat3 NM = inverseTranspose(mat3(camera.getViewMatrix() * model));
 
-			sendUniformMatrix4fv("V", 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
-			sendUniformMatrix4fv("MV", 1, GL_FALSE, value_ptr(MV));
-			sendUniformMatrix4fv("MVP", 1, GL_FALSE, value_ptr(MVP));
-			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, value_ptr(NM));
+			auto V = camera.getViewMatrix();
+			auto P = camera.getProjectionMatrix();
+			auto MV = V * model;
+			auto MVP = P * MV;
+			auto NM = inverseTranspose(mat3(MV));
+
+			send(camera);
+			sendUniformMatrix4fv("MV", 1, GL_FALSE, glm::value_ptr(MV));
+			sendUniformMatrix4fv("MVP", 1, GL_FALSE, glm::value_ptr(MVP));
+			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, glm::value_ptr(NM));
 		}
 
 		void Shader::send(const GlmCam& camera) {
+			sendUniformMatrix4fv("M", 1, GL_FALSE, glm::value_ptr(camera.model));
+			sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(camera.projection));
+			sendUniformMatrix4fv("V", 1, GL_FALSE, glm::value_ptr(camera.view));
+		}
+
+		void Shader::sendComputed(const GlmCam& camera) {
+			sendUniformMatrix4fv("M", 1, GL_FALSE, glm::value_ptr(camera.model));
 			sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(camera.projection));
 			sendUniformMatrix4fv("V", 1, GL_FALSE, glm::value_ptr(camera.view));
 			sendUniformMatrix4fv("MV", 1, GL_FALSE, glm::value_ptr(camera.view * camera.model));

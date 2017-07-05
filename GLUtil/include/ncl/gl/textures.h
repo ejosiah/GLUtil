@@ -113,8 +113,8 @@ namespace ncl {
 
 		class NoiseTex2D : public Texture2D {
 		public:
-			NoiseTex2D(const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
-			:Texture2D(noise(width, height, freq, ampl).get(), width, height, nextId++, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
+			NoiseTex2D(unsigned id = nextId++, const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
+			:Texture2D(noise(width, height, freq, ampl).get(), width, height, id, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
 
 			}
 		private:

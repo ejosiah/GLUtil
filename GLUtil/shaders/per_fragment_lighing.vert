@@ -47,13 +47,16 @@ out VERTEX {
 
 noperspective out vec3 edgeDistance;
 uniform mat4 V;
-uniform mat4 MV;
-uniform mat4 MVP;
+uniform mat4 M;
+uniform mat4 P;
 uniform LightModel lightModel;
 uniform mat3 normalMatrix;
 uniform bool useObjectSpace;
 
 mat3 OLM;
+mat4 MV;
+mat4 MVP;
+mat3 NM;
 
 vec4 getLightDirection(vec4 pos, in LightSource light){
 	vec4 direction = vec4(0);
@@ -79,7 +82,11 @@ void main(){
 	vec3 t = normalize(normalMatrix * tangent);
 	vec3 b = normalize(normalMatrix * bitangent);
 
-	vertex.normal = normalize(normalMatrix * normal);
+	MV = V * M;
+	MVP = P * MV;
+	NM = transpose(inverse(mat3(MV)));
+
+	vertex.normal =  normalize(NM * normal);
 	vec4 pos = MV * vec4(position, 1);
 	vertex.position = pos.xyz;
 	

@@ -31,9 +31,6 @@
     <Filter Include="Header Files\core">
       <UniqueIdentifier>{7870b115-19c8-46ca-a484-2f71913983d2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\ui">
-      <UniqueIdentifier>{d78d6877-7091-46f5-83ff-7681996f3190}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -51,13 +48,7 @@
     <ClInclude Include="include\ncl\gl\attributes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\gl\mathlib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\CameraController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\logger.h">
@@ -171,21 +162,6 @@
     <ClInclude Include="include\ncl\gl\3DConnexion.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\UICore.h">
-      <Filter>Header Files\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\button.h">
-      <Filter>Header Files\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\events.h">
-      <Filter>Header Files\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\layouts.h">
-      <Filter>Header Files\ui</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\frame.h">
-      <Filter>Header Files\ui</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\gl\textures.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
@@ -198,7 +174,16 @@
     <ClInclude Include="include\ncl\gl\PatchShape.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\Camera2.h">
+    <ClInclude Include="include\ncl\gl\UserCameraController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\orientation.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Template.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -211,9 +196,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="include\ncl\gl\camera.inl">
-      <Filter>Header Files</Filter>
-    </None>
     <None Include="include\ncl\gl\mathlib.inl">
       <Filter>Header Files</Filter>
     </None>
@@ -332,7 +314,7 @@
     <None Include="shaders\quad.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="include\ncl\gl\Camera2.inl">
+    <None Include="include\ncl\gl\camera.inl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

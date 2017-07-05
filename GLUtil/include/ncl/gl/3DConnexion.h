@@ -77,7 +77,7 @@ namespace ncl {
 		void handle3DConnexionEvents() {
 			handled = SPW_FALSE;
 			if (devHdl) {
-				if (GetMessage(&msg, NULL, 0, 0)) {
+				if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
 					SiGetEventWinInit(&EData, msg.message, msg.wParam, msg.lParam);
 
