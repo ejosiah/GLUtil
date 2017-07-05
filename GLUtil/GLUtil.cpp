@@ -37,7 +37,7 @@ int main()
 	ops.hideCursor = true;
 	ops.requireMouse = true;
 	ops.useDefaultShader = true;
-	ops.fullscreen = false;
+	ops.fullscreen = true;
 	ops.vSync = true;
 	
 	GLVersion version{ 4, 5 };
