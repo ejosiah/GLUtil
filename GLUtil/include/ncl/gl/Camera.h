@@ -73,6 +73,7 @@ namespace ncl {
 			void setRotationSpeed(float rotationSpeed);
 			void setVelocity(const glm::vec3 &velocity);
 			void setVelocity(float x, float y, float z);
+			std::string modeAsString() const;
 
 		private:
 			void rotateFirstPerson(float headingDegrees, float pitchDegrees);
@@ -80,6 +81,7 @@ namespace ncl {
 			void rotateOrbit(float headingDegrees, float pitchDegrees, float rollDegrees);
 			void updateVelocity(const glm::vec3 &direction, float elapsedTimeSec);
 			void updateViewMatrix();
+			
 
 			static const float DEFAULT_ROTATION_SPEED;
 			static const float DEFAULT_FOVX;

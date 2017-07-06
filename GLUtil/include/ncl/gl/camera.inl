@@ -697,5 +697,18 @@ namespace ncl {
 			viewMatrix[3][2] =  -dot(zAxis, eye);
 		}
 
+		std::string Camera::modeAsString() const{
+			switch (mode) {
+			case ORBIT:
+				return "Orbit";
+			case FLIGHT:
+				return "Flight";
+			case FIRST_PERSON:
+				return "First person";
+			case SPECTATOR:
+				return "Spectator";
+			}
+		}
+
 	}
 }

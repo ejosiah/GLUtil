@@ -11,6 +11,7 @@
 #include <sstream>
 #include <regex>
 #include <boost/filesystem.hpp>
+#include "common.h"
 
 namespace ncl {
 	namespace gl {
@@ -465,7 +466,7 @@ namespace ncl {
 			while (getline(in, line)) {
 				if (regex_search(line, matches, INCLUDE_PATTERN)) {
 					string file = matches[1];
-					string include_file = "C:\\Users\\Josiah\\OneDrive\\cpp\\include\\shaders\\" + file;
+					string include_file = "C:\\Users\\" + username + "\\OneDrive\\cpp\\include\\shaders\\" + file;
 					auto itr = loaded.find(include_file);
 					if (itr != loaded.end()) continue;	
 					loaded.insert(include_file);

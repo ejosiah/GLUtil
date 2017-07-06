@@ -24,7 +24,7 @@ using namespace ncl;
 using namespace ncl::gl;
 using namespace glm;
 
-static const string USERNAME = getEnv("username");
+const string USERNAME = getEnv("username");
 
 class SpaceShip {
 public:
@@ -306,7 +306,7 @@ public:
 		sbr << "FPS: " << fps << "\n\nCamera" << endl;
 		sbr << "\tPosition: x:" << setprecision(2) << pos.x << " y:" << pos.y << " z:" << pos.z << endl;
 		sbr << "\tVelocity: x:velX y:velY z:velZ" << endl;
-		sbr << "\tMode: Orbit" << endl;
+		sbr << "\tMode: " << cameraController.getCamera().modeAsString() << endl;
 		sbr << "\tRotation speed: ?" << endl;
 		sbr << "\n\nMouse" << endl;
 		sbr << "Smoothing enabled" << endl;

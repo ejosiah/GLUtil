@@ -38,7 +38,7 @@ int main()
 	ops.requireMouse = true;
 	ops.useDefaultShader = true;
 	ops.fullscreen = true;
-	ops.vSync = true;
+	ops.vSync = false;
 	
 	GLVersion version{ 4, 5 };
 //	Scene* scene = new ImageViewer();

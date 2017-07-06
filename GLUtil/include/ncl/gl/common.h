@@ -11,7 +11,7 @@ namespace ncl {
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)
 
-		const float EPSILON = sqrtf(std::numeric_limits<float>::epsilon());
+		const float EPSILON = 0.000001;
 
 		bool closeEnough(float x, float y) { return abs(x - y) <= EPSILON * (abs(x) + abs(y) + 1.0f); }
 

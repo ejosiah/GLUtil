@@ -21,9 +21,6 @@
 #include <cstdint>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <limits>
-#include <algorithm>
-#include <chrono>
 #include FT_FREETYPE_H
 
 #pragma comment(lib, "freetype.lib")
@@ -31,80 +28,12 @@
 namespace ncl {
 	namespace gl {
 
-		static std::chrono::milliseconds zero(0);
-
 		struct Character {
 			unsigned int id;
 			glm::ivec2 size;
 			glm::ivec2 bearing;
 			unsigned int advance;
 		};
-
-		struct RenderReq {
-			std::string text;
-			glm::vec2 pos;
-			Character* chars;
-			GLuint bufferId;
-		};
-
-		struct RenderResp {
-			GLuint* id;
-			glm::vec4** boxes;
-			unsigned size;
-		};
-
-		RenderResp calcuateTextPositions(RenderReq request) {
-			using namespace std;
-			using namespace glm;
-
-			string& text = request.text;
-			float x = request.pos.x;
-			float y = request.pos.y;
-			Character* character = request.chars;
-			GLuint bufferId = request.bufferId;
-
-			RenderResp response;
-			unsigned size = text.length();
-			response.size = size;
-			response.id = new GLuint[size];
-			response.boxes = new vec4*[size];
-
-
-			for (int i = 0; i < size; i++) {
-				char c = text[i];
-/*				if (c == '\n') {
-					y += (maxHeight + 0.5) * d;
-					x = startX;
-					continue;
-				}
-				if (c == '\t') {
-					x += maxWidth * 2;
-					continue;
-				}*/
-
-				auto ch = character[c];
-
-				response.id[i] = ch.id;
-
-				float x2 = x + ch.bearing.x;
-				float y2 = y - (ch.size.y - ch.bearing.y);
-				float w = ch.size.x;
-				float h = ch.size.y;
-
-				using namespace glm;
-
-				vec4* box = new vec4[4];
-
-				box[0] = { x2, y2 + h    , 0, 0 };;
-				box[1] = { x2, y2, 0, 1 };
-				box[2] = { x2 + w, y2 + h, 1, 0 };
-				box[3] = { x2 + w, y2    , 1, 1 };
-				response.boxes[i] = box;
-
-				x += (ch.advance >> 6);
-			}
-			return response;
-		}
 
 		void cleanup(GLuint* id, glm::vec4** boxes, unsigned size) {
 			delete[] id;
@@ -208,7 +137,7 @@ namespace ncl {
 					for (char c : text) {
 
 						if (c == '\n') {
-							y += (maxHeight + 0.5) * d;
+							y += (maxHeight + 2) * d;
 							x = startX;
 							continue;
 						}
@@ -320,7 +249,6 @@ namespace ncl {
 			glm::vec4 color;
 			glm::mat4 projection;
 			glm::vec4* background = nullptr;
-			std::future<RenderResp>* future;
 			
 
 			static std::string getFontName(std::string name, int style) {
