@@ -108,9 +108,9 @@ namespace ncl {
 				// TODO enable based on framebuffer
 
 				_shader.use();
+				init();
 				_shader.send(lightModel);
 				sendLights();
-				init();
 
 				_keyListeners.push_back([&](const Key& key) {
 					processInput(Keyboard::get());

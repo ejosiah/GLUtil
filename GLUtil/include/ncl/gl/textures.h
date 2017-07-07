@@ -133,15 +133,24 @@ namespace ncl {
 
 		class TextureBuffer {
 		public:
-			TextureBuffer(const void* data, GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
+			TextureBuffer(const void* data, GLuint size,GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
+				//glActiveTexture(TEXTURE(id));
+				//glGenTextures(1, &tbo_id);
+				//glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
+				//glGenBuffers(1, &buffer);
+				//glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+				//glBufferData(GL_TEXTURE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+				//glTexBuffer(GL_TEXTURE_BUFFER, iFormat, buffer);
+
 				glActiveTexture(TEXTURE(id));
-				glGenTextures(1, &tbo_id);
-				glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
 				glGenBuffers(1, &buffer);
 				glBindBuffer(GL_TEXTURE_BUFFER, buffer);
-				glBufferData(GL_TEXTURE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-				glTexBuffer(GL_TEXTURE_BUFFER, iFormat, buffer);
-				glActiveTexture(GL_TEXTURE0);
+				glBufferData(GL_TEXTURE_BUFFER, size, data, GL_STATIC_DRAW);
+
+				glGenTextures(1, &tbo_id);
+				glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
+				glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, buffer);
+				_id = id;
 			}
 
 			virtual ~TextureBuffer() {
@@ -149,9 +158,12 @@ namespace ncl {
 				glDeleteTextures(1, &tbo_id);
 			}
 
+			GLuint id() const { return _id;  }
+
 		private:
 			GLuint buffer;
 			GLuint tbo_id;
+			GLuint _id;
 		};
 	}
 }

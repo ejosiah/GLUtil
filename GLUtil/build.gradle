@@ -1,11 +1,13 @@
-def username = System.getProperty("user.name")
+def username = System.getProperty('user.home');
+def includeDir = "$username/OneDrive/cpp/include"
 
 task installHeaders(type: Copy, dependsOn: 'compileShaders'){
 	from 'include'
-	into  "C:/Users/$username/OneDrive/cpp/include"
+	into  includeDir
 }
 
 task compileShaders << {
+	println("transfering to $includeDir")
 	def src = new File('shaders').listFiles()
 	def dest = new File("include/ncl/gl/shaders.h")
 	dest.delete()

@@ -22,7 +22,7 @@ namespace ncl {
 		static const float     CAMERA_SPEED_ORBIT_ROLL = 100.0f;
 
 		static const glm::vec3   CAMERA_ACCELERATION(4.0f, 4.0f, 4.0f);
-		static const glm::vec3   CAMERA_VELOCITY(1.0f, 1.0f, 1.0f);
+		static const glm::vec3   CAMERA_VELOCITY(1.0f);
 
 		class CameraController {
 		private:
@@ -132,10 +132,6 @@ namespace ncl {
 				if (mode == Camera::ORBIT) {
 					camera.rotate(0.0f, -30.0f, 0.0f);
 				}
-			}
-
-			const Camera& getcamera() const {
-				return camera;
 			}
 
 			const glm::mat4& project() const {

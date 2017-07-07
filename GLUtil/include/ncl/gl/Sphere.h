@@ -8,12 +8,12 @@ namespace ncl {
 	namespace gl {
 		class Sphere : public Shape {
 		public:
-			Sphere(GLfloat r, GLuint p, GLuint q, unsigned instances = 1) :
-				Shape(createMesh(r, p, q), true, instances){
+			Sphere(GLfloat r, GLuint p, GLuint q, glm::vec4& color = randomColor(), unsigned instances = 1) :
+				Shape(createMesh(r, p, q, color), true, instances){
 			}
 
 		protected:
-			std::vector<Mesh> createMesh(float r, int p, int q) {
+			std::vector<Mesh> createMesh(float r, int p, int q, glm::vec4& color) {
 				Mesh mesh;
 
 				for (int j = 0; j <= q; j++) {
@@ -21,7 +21,7 @@ namespace ncl {
 						mesh.positions.push_back(glm::vec3(f(i, j, q, p, r), g(i, j, q, p, r), h(i, j, q, p, r)));
 						mesh.normals.push_back(glm::vec3(fn(i, j, q, p, r), gn(i, j, q, p, r), hn(i, j, q, p, r)));
 						mesh.uvs[0].push_back(glm::vec2(float(p - i) / p, float(q - j) / q));
-						mesh.colors.push_back(mesh.material.diffuse);
+						mesh.colors.push_back(color);
 					}
 				}
 
