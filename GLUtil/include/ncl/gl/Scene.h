@@ -77,7 +77,6 @@ namespace ncl {
 			* scene cleanup 
 			*/
 			virtual ~Scene() {
-				delete _motionEventHandler;
 			}
 
 			/**

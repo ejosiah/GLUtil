@@ -89,9 +89,9 @@ namespace ncl {
 							event.translation.y = spEvent.u.spwData.mData[SI_TY];
 							event.translation.z = spEvent.u.spwOrientation == SiOrientation::SI_LEFT ? -spEvent.u.spwData.mData[SI_TZ] : spEvent.u.spwData.mData[SI_TZ];
 
-							event.rotation.x = spEvent.u.spwData.mData[SI_RX];
-							event.rotation.y = spEvent.u.spwData.mData[SI_RY];
-							event.rotation.z = spEvent.u.spwOrientation == SiOrientation::SI_LEFT ? -spEvent.u.spwData.mData[SI_RZ] : spEvent.u.spwData.mData[SI_RZ];
+							event.rotation.x = glm::clamp(float(spEvent.u.spwData.mData[SI_RX]), -360.0f, 360.0f);
+							event.rotation.y = glm::clamp(float(spEvent.u.spwData.mData[SI_RY]), -360.0f, 360.0f);
+							event.rotation.z = glm::clamp(float(spEvent.u.spwOrientation == SiOrientation::SI_LEFT ? -spEvent.u.spwData.mData[SI_RZ] : spEvent.u.spwData.mData[SI_RZ]), -360.0f, 360.0f);
 
 							motionEventHandler->onMotion(event);
 
