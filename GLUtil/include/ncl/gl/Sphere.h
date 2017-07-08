@@ -8,12 +8,12 @@ namespace ncl {
 	namespace gl {
 		class Sphere : public Shape {
 		public:
-			Sphere(GLfloat r, GLuint p, GLuint q, glm::vec4& color = randomColor(), unsigned instances = 1) :
+			Sphere(GLfloat r, GLuint p, GLuint q, const glm::vec4& color = randomColor(), unsigned instances = 1) :
 				Shape(createMesh(r, p, q, color), true, instances){
 			}
 
 		protected:
-			std::vector<Mesh> createMesh(float r, int p, int q, glm::vec4& color) {
+			std::vector<Mesh> createMesh(float r, int p, int q,const glm::vec4& color) {
 				Mesh mesh;
 
 				for (int j = 0; j <= q; j++) {
