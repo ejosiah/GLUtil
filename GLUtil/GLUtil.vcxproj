@@ -155,6 +155,7 @@
     <ClInclude Include="include\ncl\gl\3DConnexion.h" />
     <ClInclude Include="include\ncl\gl\Camera.h" />
     <ClInclude Include="include\ncl\gl\common.h" />
+    <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="include\ncl\gl\Hemisphere.h" />
     <ClInclude Include="include\ncl\gl\PatchTeapot.h" />
     <ClInclude Include="include\ncl\gl\UserCameraController.h" />
+    <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />
