@@ -7,6 +7,7 @@ namespace ncl {
 			HalfEdge* pair;
 			Face* face;
 			HalfEdge* next;
+			unsigned id;
 		};
 
 		struct Face {

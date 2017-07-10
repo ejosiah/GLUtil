@@ -1,17 +1,22 @@
 #pragma once
 #include <unordered_map>
 #include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include "logger.h"
 #include "HalfEdge.h"
 
 namespace ncl {
 	namespace gl {
 		class WithTriangleAdjacency {
 
-			std::vector<unsigned> operator()(std::vector<unsigned>& indices) {
-				
+			std::vector<unsigned> operator()(std::vector<unsigned>& indices, bool& isManifold) {
+				using namespace std;
 				size_t size = indices.size();
 
-				std::unordered_map<unsigned, HalfEdge> edges;
+				vector<Face> faces;
+				unordered_map<unsigned, HalfEdge> edges;
 
 				for (int i = 0; i < size; i += 3) {
 					unsigned v0 = indices[i];
@@ -26,31 +31,65 @@ namespace ncl {
 					e1.vert = v1;
 					e2.vert = v2;
 
-					e0.next = &e2;
-					e1.next = &e0;
-					e2.next = &e1;
+					e0.id = v2 | (v0 << 16);
+					e1.id = v0 | (v1 << 16);
+					e2.id = v1 | (v2 << 16);
 
-					Face f;
-					f.edge = &e0;
-					e0.face = e1.face = e2.face = &f;
+					e0.next = &e1;
+					e1.next = &e2;
+					e2.next = &e0;
 
-					edges.insert(std::make_pair(v2 | (v0 << 16), e0));
-					edges.insert(std::make_pair(v0 | (v1 << 16), e1));
-					edges.insert(std::make_pair(v1 | (v2 << 16), e2));
+					Face face;
+					face.edge = &e0;
+					e0.face = e1.face = e2.face = &face;
+
+					faces.push_back(face);
+					edges.insert(make_pair(e0.id, e0));
+					edges.insert(make_pair(e1.id, e1));
+					edges.insert(make_pair(e2.id, e2));
+
 				}
 				if (edges.size() != size) {
 					throw "Bad mesh:  dupicated edges or inconsistent winding";
 				}
 
-				for (auto e : edges) {
-					auto index = e.first;
-					auto halfEdge0 = e.second;
-					unsigned long pairIndex = ((index & 0xFFFF) << 16) | (index >> 16);
-					auto halfEdge1 = edges[pairIndex];
-					halfEdge0.pair = &halfEdge1;
-					halfEdge1.pair = &halfEdge0;
+				int boundaries = 0;
+				for (auto face : faces) {
+					auto edge = face.edge;
+					for (int i = 0; i < 3; i++) {
+						unsigned long id = ((edge->id & 0xFFFF) << 16) | (edge->id >> 16);
+						auto itr = edges.find(id);
+						if (itr != edges.end()) {
+							edge->pair = &itr->second;
+							itr->second.pair = edge;
+						}
+						else {
+							boundaries++;
+						}
+						edge = edge->next;
+					}
+				}
+
+				isManifold = boundaries == 0;
+				if(!isManifold) logger.warn("Mesh is not watertight. Contains " + to_string(boundaries) + " boundary edges");
+
+				vector<unsigned> indicesWithAdjacency;
+
+				for (auto face : faces) {
+					auto e0 = face.edge;
+					auto e1 = e0->next;
+					auto e2 = e1->next;
+
+					indicesWithAdjacency.push_back(e0->vert);
+					indicesWithAdjacency.push_back(e1->pair ? e1->pair->next->vert : e0->vert);
+					indicesWithAdjacency.push_back(e1->vert);
+					indicesWithAdjacency.push_back(e2->pair ? e2->pair->next->vert : e1->vert);
+					indicesWithAdjacency.push_back(e2->vert);
+					indicesWithAdjacency.push_back(e0->pair ? e0->pair->next->vert : e2->vert);
 				}
 			}
+		private:
+			ncl::Logger logger = ncl::Logger::get("WithTriangleAdjacency");
 		};
 	}
 }
