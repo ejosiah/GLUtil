@@ -247,7 +247,7 @@ namespace ncl {
 		ShaderSource Shader::extractFromFile(const std::string& filename) {
 			auto key = extractExt(filename);
 			GLenum shaderType = extensions.at(key);
-			logger.info("loading shader: " + filename);
+			ncl::Logger::get("Shader").info("loading shader: " + filename);
 			return ShaderSource{ shaderType,  ncl::getText(filename), filename };
 		}
 

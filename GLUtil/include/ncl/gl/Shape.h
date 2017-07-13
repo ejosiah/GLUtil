@@ -4,7 +4,7 @@
 #include <functional>
 #include <algorithm>
 #include <set>
-
+#include "WithTriangleAdjacency.h"
 #include "common.h"
 
 namespace ncl {
@@ -15,7 +15,6 @@ namespace ncl {
 				:VAOObject(meshes)
 				, cullface(cullface)
 				, instanceCount(instanceCount) {
-
 			}
 
 			virtual void draw(Shader& shader) override {
@@ -166,6 +165,10 @@ namespace ncl {
 			// move to util
 			float squaredDistance(glm::vec3& v) {
 				return v.x*v.x + v.y*v.y + v.z*v.z;
+			}
+
+			static std::vector<Mesh>& postProcess(std::vector<Mesh>& meshes) {
+
 			}
 
 		private:

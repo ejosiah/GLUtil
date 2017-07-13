@@ -13,7 +13,7 @@ namespace ncl {
 
 
 		static const float     CAMERA_FOVX = 60.0f;
-		static const float     CAMERA_ZFAR = 100.0f;
+		static const float     CAMERA_ZFAR = 1000.0f;
 		static const float     CAMERA_ZNEAR = 0.1f;
 		static const float     CAMERA_ZOOM_MAX = 5.0f;
 		static const float     CAMERA_ZOOM_MIN = 1.5f;
@@ -57,8 +57,7 @@ namespace ncl {
 				Mesurements sceneDimentions = {},
 				Camera::Mode mode = Camera::SPECTATOR,
 				float modelHeight = 1,
-				float floorWidth = FLOOR_WIDTH,
-				float floorHeight = FLOOR_HEIGHT,
+				Mesurements floor = { FLOOR_WIDTH , FLOOR_HEIGHT },
 				float fovx = CAMERA_FOVX,
 				float zNear = CAMERA_ZNEAR,
 				float zFar = CAMERA_ZFAR,
@@ -67,8 +66,7 @@ namespace ncl {
 				float flightYawSpeed = CAMERA_SPEED_FLIGHT_YAW,
 				float orbitRollSpeed = CAMERA_SPEED_ORBIT_ROLL,
 				glm::vec3 acceleration = CAMERA_ACCELERATION,
-				glm::vec3 velocty = CAMERA_VELOCITY,
-				Mesurements floor = {}
+				glm::vec3 velocty = CAMERA_VELOCITY
 				) {
 
 				this->floorWidth = floorWidth;
@@ -96,6 +94,7 @@ namespace ncl {
 				camera.perspective(fovx, aspectRatio, zNear, zFar);
 
 				float offset = modelHeight * 0.5f;
+					
 				camera.setPosition(glm::vec3(0.0f, offset, 0.0f));
 				camera.setOrbitMinZoom(minZoom);
 				camera.setOrbitMaxZoom(maxZoom);

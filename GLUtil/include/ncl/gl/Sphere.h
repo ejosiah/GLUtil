@@ -3,12 +3,14 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include "Shape.h"
+#include "WithTrianglation.h"
+#include "WithTriangleAdjacency.h"
 
 namespace ncl {
 	namespace gl {
 		class Sphere : public Shape {
 		public:
-			Sphere(GLfloat r, GLuint p, GLuint q, const glm::vec4& color = randomColor(), unsigned instances = 1) :
+			Sphere(GLfloat r = 0.5f, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1) :
 				Shape(createMesh(r, p, q, color), true, instances){
 			}
 
@@ -31,6 +33,7 @@ namespace ncl {
 						mesh.indices.push_back(j*(p + 1) + i);
 					}
 				}
+
 				mesh.primitiveType = GL_TRIANGLE_STRIP;
 				return std::vector<Mesh>(1, mesh);
 			} 

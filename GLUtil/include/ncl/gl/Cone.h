@@ -6,8 +6,8 @@ namespace ncl {
 	namespace gl {
 		class Cone : public Shape {
 		public:
-			Cone(GLfloat r, float l, GLuint p, GLuint q, const glm::vec4& color = glm::vec4(1)) :
-				Shape(createMesh(r, l, p, q, color), false) {
+			Cone(GLfloat r = 0.5f, float l = 1.0f, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1) :
+				Shape(createMesh(r, l, p, q, color), false, instances) {
 			}
 
 		protected:

@@ -2,11 +2,14 @@
 
 namespace ncl {
 	namespace gl {
+
+		struct Face;
+
 		struct HalfEdge {
 			unsigned int vert;
-			HalfEdge* pair;
-			Face* face;
-			HalfEdge* next;
+			HalfEdge* pair = nullptr;
+			Face* face = nullptr;
+			HalfEdge* next = nullptr;
 			unsigned id;
 		};
 

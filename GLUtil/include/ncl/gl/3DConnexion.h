@@ -38,10 +38,12 @@ namespace ncl {
 		static SiGetEventData EData;    /* SpaceWare Event Data */
 		static MSG msg;
 		static BOOL handled;
+		static float rotationSensitivity;
+		static float translationSensitivity;
 
 		static _3DMotionEventHandler* motionEventHandler;
 
-		void initSpacePro(GLFWwindow* window, const char* appName) {
+		void initSpacePro(GLFWwindow* window, const char* appName, float rSensitivity = 1.0f, float tSensitivity = 1.0f) {
 			ncl::Logger logger = ncl::Logger::get("3DConnexion");
 
 			HWND hWndMain = glfwGetWin32Window(window);
@@ -61,7 +63,8 @@ namespace ncl {
 			else {
 				SiDeviceName devName;
 				SiGetDeviceName(devHdl, &devName);
-				
+				rotationSensitivity = rSensitivity;
+				translationSensitivity = tSensitivity;
 				logger.info(std::string(devName.name) + " connected");
 				
 			}
@@ -92,6 +95,9 @@ namespace ncl {
 							event.rotation.x = glm::clamp(float(spEvent.u.spwData.mData[SI_RX]), -360.0f, 360.0f);
 							event.rotation.y = glm::clamp(float(spEvent.u.spwData.mData[SI_RY]), -360.0f, 360.0f);
 							event.rotation.z = glm::clamp(float(spEvent.u.spwOrientation == SiOrientation::SI_LEFT ? -spEvent.u.spwData.mData[SI_RZ] : spEvent.u.spwData.mData[SI_RZ]), -360.0f, 360.0f);
+
+							event.rotation *= rotationSensitivity;
+							event.translation *= translationSensitivity;
 
 							motionEventHandler->onMotion(event);
 

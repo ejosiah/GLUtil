@@ -16,8 +16,8 @@ public:
 	using Scene::Scene;
 
 	virtual void init() override {
-		shader.loadFromFile(GL_VERTEX_SHADER, "shaders/pass_through.vert");
-		shader.loadFromFile(GL_FRAGMENT_SHADER, "shaders/pass_through.frag");
+	//	shader.loadFromFile(GL_VERTEX_SHADER, "shaders/pass_through.vert");
+	//	shader.loadFromFile(GL_FRAGMENT_SHADER, "shaders/pass_through.frag");
 	//	shader.loadFromFile(GL_TESS_CONTROL_SHADER, "shaders/pass_through.fcs");
 	//	shader.loadFromFile(GL_TESS_EVALUATION_SHADER, "shader/pass_through.fes");
 		shader.createAndLinkProgram();

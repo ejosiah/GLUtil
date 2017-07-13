@@ -126,11 +126,11 @@ namespace ncl {
 
 			bool isActive() { return _program != 0;  }
 
-			bool isShader(const std::string filename);
+			static bool isShader(const std::string filename);
 
 			void storePreprocessedShaders(bool flag) { _storePreprocessedShaders = flag;  }
 
-			ShaderSource extractFromFile(const std::string& filename);
+			static ShaderSource extractFromFile(const std::string& filename);
 
 			void load(const ShaderSource& source);
 

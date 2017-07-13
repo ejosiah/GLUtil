@@ -24,8 +24,8 @@ public:
 		Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
 		_width = 512;
 		_height = _width * float(img.width())/ img.height();
-		addShaderFromFile("shaders/identity.vert");
-		addShaderFromFile("shaders/texture.frag");
+		addShaderFromFile("image", "shaders/identity.vert");
+		addShaderFromFile("image", "shaders/texture.frag");
 	}
 	
 
@@ -48,9 +48,10 @@ public:
 	//	WorleyNoise2D noise(Euclidean, invertLayout);
 	//	texture0 = new NoiseTex2D(noise);
 	//	texture1 = new NoiseTex3D();
+		shader("image").use();
 		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
 	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
-		_shader.sendUniform1ui("image0", texture0->id());
+		shader("image").sendUniform1ui("image0", texture0->id());
 	//	_shader.sendUniform1ui("image1", texture1->id());
 	}
 
@@ -79,6 +80,8 @@ public:
 	virtual void display() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		Shader& _shader = shader("image");
+
 		_shader([&]() {
 			_shader.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
 			plane->draw(_shader);
@@ -95,4 +98,5 @@ private:
 	Cube* cube;
 	Texture3D* texture1;
 	Texture2D* texture0;
+	Shader _shader;
 };

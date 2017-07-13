@@ -211,6 +211,7 @@ class TestScene : public Scene {
 public:
 	TestScene(const char* title, Options ops) :Scene(title, ops) {
 		_requireMouse = true;
+		
 	}
 
 	virtual void init() {

@@ -83,18 +83,25 @@ namespace ncl {
 			* @breif Private scene initializer
 			*/
 			void init0(){
+				using namespace std;
 				if (_useImplictShaderLoad) {
 					loadShaderImplicity();
 				}else if (!implicityLoaded && _sources.empty()) {
-					_shader.loadFromstring(GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
-				//	_shader.loadFromstring(GL_GEOMETRY_SHADER, wireframe_geom_shader);
-					_shader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
+					vector<ShaderSource> sources;
+					sources.push_back(ShaderSource{ GL_VERTEX_SHADER,  per_fragment_lighing_vert_shader , "default.vert" });
+					sources.push_back(ShaderSource{ GL_GEOMETRY_SHADER,  wireframe_geom_shader , "default.geom" });
+					sources.push_back(ShaderSource{ GL_FRAGMENT_SHADER,  per_fragment_lighing_frag_shader , "default.frag" });
+					_sources.insert(make_pair("default", sources));
 				}
 				
-				for (auto& source : _sources) {
-					_shader.load(source);
+				for (auto& entry : _sources) {
+					Shader* shader = new Shader;
+					for (auto source : entry.second) {
+						shader->load(source);
+					}
+					shader->createAndLinkProgram();
+					_shaders.insert(std::make_pair(entry.first, shader));
 				}
-				_shader.createAndLinkProgram();
 
 				light[0].on = true;
 				lightModel.twoSided = false;
@@ -106,10 +113,7 @@ namespace ncl {
 
 				// TODO enable based on framebuffer
 
-				_shader.use();
 				init();
-				_shader.send(lightModel);
-				sendLights();
 
 				_keyListeners.push_back([&](const Key& key) {
 					processInput(Keyboard::get());
@@ -127,12 +131,19 @@ namespace ncl {
 					if (exists(p) && is_directory(p) && !p.empty()) {
 						for (auto& entry : directory_iterator(p)) {
 							auto& path = entry.path();
-							if (!is_directory(path)) {
-								string filename = entry.path().string();
-								if (_shader.isShader(filename)) {
-									ShaderSource source = _shader.extractFromFile(filename);
-									_sources.push_back(source);
-									implicityLoaded = true;
+							if (is_directory(path)) {
+								string name = path.filename().string();
+								for (auto& entry2 : directory_iterator(path)) {
+									auto path2 = entry2.path();
+									if (!is_directory(path2)) {
+										string filename = path2.string();
+										if (Shader::isShader(filename)) {
+											ensureSources(name);
+											ShaderSource source = Shader::extractFromFile(filename);
+											_sources[name].push_back(source);
+											implicityLoaded = true;
+										}
+									}
 								}
 							}
 						}
@@ -309,8 +320,8 @@ namespace ncl {
 			/**
 			* @breif push light settings to shader
 			*/
-			void sendLights() {
-				_shader.sendUniformLights(light, MAX_LIGHT_SOURCES);
+			void sendLights(std::string shaderName) {
+				shader(shaderName).sendUniformLights(light, MAX_LIGHT_SOURCES);
 			}
 
 			/**
@@ -350,25 +361,33 @@ namespace ncl {
 				_useImplictShaderLoad = flag;
 			}
 
-			void addShader(GLenum shaderType, const std::string& source) {
-				_sources.push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
+			void addShader(std::string name, GLenum shaderType, const std::string& source) {
+				ensureSources(name);
+				_sources[name].push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
 			}
 
-			void addShaderFromFile(const std::string& filename) {
-				ShaderSource source = _shader.extractFromFile(filename);
-				_sources.push_back(source);
+			void addShaderFromFile(std::string name, const std::string& filename) {
+				ensureSources(name);
+				ShaderSource source = Shader::extractFromFile(filename);
+				_sources[name].push_back(source);
+			}
+
+			void ensureSources(std::string name) {
+				auto itr = _sources.find(name);
+				if (itr == _sources.end()) _sources.insert(std::make_pair(name, std::vector<ShaderSource>()));
 			}
 
 			bool fullScreen() { return _fullScreen;  }
 			bool vSync() { return _vsync;  }
 
+			Shader& shader(std::string name) { return *_shaders[name]; }
+
 		protected:
 			int _width;
 			int _height;
 			const char* _title;
-			std::vector<ShaderSource> _sources;
-			Shader _shader;
-			std::map <std::string, Shader> _shaders;
+			std::map<std::string, std::vector<ShaderSource>> _sources;
+			std::map <std::string, Shader*> _shaders;
 			GLbitfield fBuffer;
 			bool _requireMouse = false;
 			bool _hideCursor = false;

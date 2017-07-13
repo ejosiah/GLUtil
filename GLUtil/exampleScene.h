@@ -42,9 +42,9 @@ class ExampleScene : public Scene {
 
 public:
 	ExampleScene(Options ops) :Scene("Example Scene", ops) {
-		addShaderFromFile("shaders\\quad.vert");
-		addShaderFromFile("shaders\\quad.tes");
-		addShaderFromFile("shaders\\identity.frag");
+		//addShaderFromFile("shaders\\quad.vert");
+		//addShaderFromFile("shaders\\quad.tes");
+		//addShaderFromFile("shaders\\identity.frag");
 		_requireMouse = false;
 	}
 
@@ -53,7 +53,7 @@ public:
 		_motionEventHandler = new _3DMotionEventLogger(cam);
 		cam.view = glm::lookAt(vec3(1.0f, 1.5f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 		font = Font::Arial(20, 0, BLACK);
-	//	sphere = new Sphere(0.1, 50, 50);
+		sphere = new Sphere(0.5, 50, 50);
 	//	teapot = new Teapot(8);
 		cube = new Cube;
 		model = new Model("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj", true);
@@ -61,7 +61,7 @@ public:
 		lightModel.colorMaterial = true;
 		m.ambient = m.diffuse = vec4(1, 0, 0, 1);
 		m.specular = vec4(1);
-		_shader.sendUniformMaterial("material[1]", m);
+		shader("default").sendUniformMaterial("material[1]", m);
 		glClearColor(0.8, 0.8, 0.8, 1);
 		cam.model = mat4(1);
 		
@@ -76,12 +76,12 @@ public:
 	virtual void display() override {
 	//	_shader.sendUniform1i("grids", 16);
 	//	cam.model = mat4(1);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 	//	_shader.send(cam);
 		//teapot->draw(_shader);
-		_shader.sendComputed(cam);
-		cube->draw(_shader);
+		shader("default").sendComputed(cam);
+		sphere->draw(shader("default"));
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });
 

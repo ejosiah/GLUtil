@@ -9,9 +9,9 @@
 
 namespace ncl {
 	namespace gl {
-		class Teapot : public Shape {
+		class Teapot : public Shape, public WithTriangleAdjacency {
 		public:
-			Teapot(int grids = 10,  bool normalize = true, const glm::mat4& lidTransform = glm::mat4(1)):Shape(createMesh(grids, normalize, lidTransform), false){}
+			Teapot(int grids = 10,  bool normalize = true, const glm::mat4& lidTransform = glm::mat4(1), unsigned instances = 1):Shape(createMesh(grids, normalize, lidTransform), false, instances){}
 
 			std::vector<Mesh> createMesh(int grid, bool _normalize, const glm::mat4& lidTransform) {
 				glm::vec4 color = randomColor();
@@ -23,7 +23,7 @@ namespace ncl {
 				mesh.uvs[0] = std::vector<glm::vec2>(num_vertices);
 				mesh.indices = std::vector<GLuint>(num_indices * 6);
 				mesh.colors = std::vector<glm::vec4>(num_vertices, color);
-				mesh.primitiveType = GL_TRIANGLES;
+				mesh.primitiveType = GL_TRIANGLES_ADJACENCY;
 
 				generatePatches((float*)&mesh.positions[0], (float*)&mesh.normals[0], (float*)&mesh.uvs[0][0], (unsigned*)&mesh.indices[0], grid);
 
@@ -33,7 +33,7 @@ namespace ncl {
 					mesh.normals[i] = glm::inverseTranspose(rotMat) * mesh.normals[i];
 				}
 				
-				
+				mesh.indices = addAdjacency(mesh.indices);
 				std::vector<Mesh> meshes(1, mesh);
 				if(_normalize) normalize(meshes, 1.0f);
 				moveLid(grid, (float*)&meshes[0].positions[0], lidTransform);
