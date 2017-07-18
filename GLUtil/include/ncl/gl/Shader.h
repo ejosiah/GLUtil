@@ -21,14 +21,16 @@
 
 namespace ncl {
 	namespace gl {
+		class Shader;
 		static const unsigned NO_OF_SHADERS = 6;
-        using Procedure = std::function<void(void)>;
+        using Procedure = std::function<void(Shader& shader)>;
 		const std::map<std::string, GLenum> extensions{
 			std::make_pair("vert", GL_VERTEX_SHADER),
 			std::make_pair("frag", GL_FRAGMENT_SHADER),
 			std::make_pair("geom", GL_GEOMETRY_SHADER),
 			std::make_pair("tcs", GL_TESS_CONTROL_SHADER),
-			std::make_pair("tes", GL_TESS_EVALUATION_SHADER)
+			std::make_pair("tes", GL_TESS_EVALUATION_SHADER),
+			std::make_pair("comp", GL_COMPUTE_SHADER)
 		};
 
 		struct GlmCam {

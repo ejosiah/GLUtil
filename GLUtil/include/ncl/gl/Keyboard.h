@@ -29,6 +29,14 @@ namespace ncl {
 			void press() const{
 				status = PRESSED;
 			}
+
+			int value() const {
+				if (values.size() == 1) return values[0];
+				if (!isLowerCase) {
+					return values[0];
+				}
+				return values[1];
+			}
 		};
 
 		class Keyboard {

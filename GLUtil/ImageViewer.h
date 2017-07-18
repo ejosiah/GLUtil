@@ -80,11 +80,9 @@ public:
 	virtual void display() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		Shader& _shader = shader("image");
-
-		_shader([&]() {
-			_shader.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
-			plane->draw(_shader);
+		shader("image")([&](Shader& s) {
+			s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
+			plane->draw(s);
 		});
 	}
 

@@ -10,6 +10,7 @@ namespace ncl { namespace gl{
 	const size_t MAX_UVS = 8;
 
 	struct Mesh {
+		std::string name;
 		std::vector<glm::vec3> positions;
 		std::vector<glm::vec3> normals;
 		std::vector<glm::vec3> tangents;
@@ -32,23 +33,19 @@ namespace ncl { namespace gl{
 	};
 
 	struct Mesurements {
-		glm::vec3 minX, minY, minZ, maxX, maxY, maxZ;	// TODO use 2 vectors instead
+		glm::vec3 min, max;
 		float height;
 		float width;
 		float length;
 
 		Mesurements() {}
 		
-		Mesurements(glm::vec3 minX, glm::vec3 minY, glm::vec3 minZ, glm::vec3 maxX, glm::vec3 maxY, glm::vec3 maxZ) {
-			this->minX = minX;
-			this->minY = minY;
-			this->minZ = minZ;
-			this->maxX = maxX;
-			this->maxY = maxY;
-			this->maxZ = maxZ;
-			height = glm::length(maxY - minY);
-			width = glm::length(maxX - minY);
-			length = glm::length(maxZ - minZ);
+		Mesurements(glm::vec3 min, glm::vec3 max) {
+			this->min = min;
+			this->max = max;
+			height = glm::length(max.y - min.y);
+			width = glm::length(max.x - min.x);
+			length = glm::length(max.z - min.z);
 		}
 
 		Mesurements(float w, float h, float l = 0.0f) {

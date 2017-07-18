@@ -2,6 +2,8 @@
 #pragma include("lightModel.glsl")
 #pragma include("vertex_in.glsl")
 
+layout(binding=0) uniform sampler2D ambientMap;
+layout(binding=1) uniform sampler2D diffuseMap;
 layout(binding=3) uniform sampler2D normalMap;
 
 vec4 getAmbience(Material m);
@@ -61,9 +63,11 @@ vec4 phongLightModel(mat4 M){
 }
 
 vec4 getAmbience(Material m){
-	return lightModel.colorMaterial ? vertex_in.color : m.ambient;
+    vec4 color = m.ambientMap ? m.ambient * texture(ambientMap, vertex_in.texCoord) : m.ambient;
+	return lightModel.colorMaterial ? vertex_in.color : color;
 }
 
 vec4 getDiffuse(Material m){
-	return lightModel.colorMaterial ? vertex_in.color : m.diffuse;
+    vec4 color = m.diffuseMap ? m.diffuse * texture(diffuseMap, vertex_in.texCoord) : m.diffuse;
+	return lightModel.colorMaterial ? vertex_in.color : color;
 }

@@ -15,15 +15,17 @@ namespace ncl {
 
 		using LoadData = std::function<void(void)>;
 
-		void loadTexture(GLenum target, GLuint& buffer, GLuint id, glm::vec2 wrap, glm::vec2 minMagfilter, LoadData loadData) {
+		void loadTexture(GLenum target, GLuint& buffer, GLuint id, glm::vec2 wrap, glm::vec2 minMagfilter, LoadData loadData, bool optimize = true) {
 			glGenTextures(1, &buffer);
 			glActiveTexture(TEXTURE(id));
 			glBindTexture(target, buffer);
 			loadData();
-			glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap.s);
-			glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap.t);
-			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minMagfilter.x);
-			glTexParameteri(target, GL_TEXTURE_MAG_FILTER, minMagfilter.y);
+			if (optimize) {
+				glTexParameteri(target, GL_TEXTURE_WRAP_S, wrap.s);
+				glTexParameteri(target, GL_TEXTURE_WRAP_T, wrap.t);
+				glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minMagfilter.x);
+				glTexParameteri(target, GL_TEXTURE_MAG_FILTER, minMagfilter.y);
+			}
 		}
 
 		class Texture2D {
@@ -43,13 +45,17 @@ namespace ncl {
 				_height = height;
 			}
 
-			Texture2D(){}
+			Texture2D(GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA) {
+
+			}
 
 			virtual ~Texture2D() {
 				glDeleteTextures(1, &buffer);
 			}
 
 			GLuint id() { return _id;  }
+
+			GLuint bufferId() { return buffer; }
 
 			GLuint width() { return _width; }
 
@@ -134,14 +140,6 @@ namespace ncl {
 		class TextureBuffer {
 		public:
 			TextureBuffer(const void* data, GLuint size,GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
-				//glActiveTexture(TEXTURE(id));
-				//glGenTextures(1, &tbo_id);
-				//glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
-				//glGenBuffers(1, &buffer);
-				//glBindBuffer(GL_TEXTURE_BUFFER, buffer);
-				//glBufferData(GL_TEXTURE_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
-				//glTexBuffer(GL_TEXTURE_BUFFER, iFormat, buffer);
-
 				glActiveTexture(TEXTURE(id));
 				glGenBuffers(1, &buffer);
 				glBindBuffer(GL_TEXTURE_BUFFER, buffer);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
@@ -7,6 +8,7 @@
 namespace ncl {
 	namespace gl {
 		struct Material {
+			std::string name;
 			glm::vec4 ambient{ 0 };
 			glm::vec4 diffuse{ 0.8, 0.8, 0.8, 1 };
 			glm::vec4 specular{ 1 };
@@ -19,6 +21,10 @@ namespace ncl {
 			int specularMat = -1;
 			int ambientMat = -1;
 			int bumpMap = -1;
+			std::string ambientTexPath;
+			std::string diffuseTexPath;
+			std::string specularTexPath;
+			std::string bumpTexPath;
 		};
 
 		struct LightSource {

@@ -154,14 +154,17 @@ namespace ncl {
 			}
 
 			glDeleteShader(_shaders[VERTEX_SHADER]);
+			glDeleteShader(_shaders[TESELLATION_EVAL_SHADER]);
+			glDeleteShader(_shaders[TESELLATION_CONTROL_SHADER]);
 			glDeleteShader(_shaders[FRAGMENT_SHADER]);
 			glDeleteShader(_shaders[GEOMETRY_SHADER]);
 			glDeleteShader(_shaders[COMPUTE_SHADER]);
+
 		}
 
 		void Shader::use(Procedure proc) {
 			use();
-			proc();
+			proc(*this);
 			unUse();
             
 		}
@@ -379,6 +382,8 @@ namespace ncl {
 			sendUniform4fv(name + ".specular", 1, &material.specular[0]);
 			sendUniform4fv(name + ".emission", 1, &material.emission[0]);
 			sendUniform1f(name + ".shininess", material.shininess);
+			send(name + ".ambientMap", material.ambientMat != -1);
+			send(name + ".diffuseMap", material.diffuseMat != -1);
 		}
 
 		void Shader::sendUniformMaterials(const std::string& name, Material materials[]) {

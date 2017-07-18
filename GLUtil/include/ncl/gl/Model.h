@@ -10,6 +10,7 @@
 #include <gl/gl_core_4_5.h>
 #include "Shape.h"
 #include "Bounds.h"
+#include "textures.h"
 
 #pragma comment(lib, "assimp-vc140-mt.lib")
 
@@ -22,11 +23,11 @@ namespace ncl {
 				Shape(createMesh(path, normalize, scale, pFlags)){}
 
 			void initBounds() {
-				bounds.maxX = bounds.maxY = bounds.maxZ = glm::vec3(0);
-				bounds.minX = bounds.minY = bounds.minZ = glm::vec3(0);
+				bounds.max = bounds.max = bounds.max = glm::vec3(0);
+				bounds.min = bounds.min = bounds.min = glm::vec3(0);
 
-				bounds.minX.x = bounds.minY.y = bounds.minZ.z =  std::numeric_limits<float>::max();
-				bounds.maxX.x = bounds.maxY.y = bounds.maxZ.z = std::numeric_limits<float>::min();
+				bounds.min.x = bounds.min.y = bounds.min.z =  std::numeric_limits<float>::max();
+				bounds.max.x = bounds.max.y = bounds.max.z = std::numeric_limits<float>::min();
 			}
 
 			 std::vector<Mesh> createMesh(std::string path, bool _normalize, float scale, unsigned pFlags) {
@@ -34,19 +35,27 @@ namespace ncl {
 				std::vector<Mesh> meshes;
 				Assimp::Importer importer;
 				const aiScene* scene = importer.ReadFile(path, pFlags);
-				extractMesh(scene->mRootNode, scene, meshes);
+				int i = path.find_last_of("\\") + 1;
+				std::string parent = path.substr(0, i);
+				extractMesh(scene->mRootNode, scene, meshes, parent);
 				if (_normalize) {
 					normalize(meshes, scale);
 				}
 				calculateBounds(meshes);
-				bound = new Bounds(mesurements = { bounds.minX, bounds.minY, bounds.minZ, bounds.maxX, bounds.maxY, bounds.maxZ });
+				bound = new Bounds(mesurements = { bounds.min, bounds.max });
+				Logger logger = Logger::get("Model");
+				size_t vertices = 0;
+				std::for_each(meshes.begin(), meshes.end(), [&](Mesh& m) {  vertices += m.positions.size();});
+				logger.info("no of vertices loaded: " + std::to_string(vertices));
 				return meshes;
 			}
 
-			void extractMesh(const aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes) {
+			void extractMesh(const aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes, std::string& parent) {
+				using namespace std;
 				for (unsigned i = 0; i < node->mNumMeshes; i++) {
 					aiMesh* aiMesh = scene->mMeshes[node->mMeshes[i]];
 					Mesh mesh;
+					mesh.name = aiMesh->mName.C_Str();
 					mesh.primitiveType = aiMesh->mPrimitiveTypes;
 					for (unsigned j = 0; j < aiMesh->mNumVertices; j++) {
 						aiVector3D aiv = aiMesh->mVertices[j];
@@ -54,24 +63,24 @@ namespace ncl {
 
 						glm::vec3 pos{ aiv.x, aiv.y, aiv.z };
 
-						if (pos.x < bounds.minX.x) {
-							bounds.minX.x = pos.x;
+						if (pos.x < bounds.min.x) {
+							bounds.min.x = pos.x;
 						}
-						if (pos.y < bounds.minY.y) {
-							bounds.minY.y = pos.y;
+						if (pos.y < bounds.min.y) {
+							bounds.min.y = pos.y;
 						}
-						if (pos.z < bounds.minZ.z) {
-							bounds.minZ.z = pos.z;
+						if (pos.z < bounds.min.z) {
+							bounds.min.z = pos.z;
 						}
 
-						if (pos.x > bounds.maxX.x) {
-							bounds.maxX.x = pos.x;
+						if (pos.x > bounds.max.x) {
+							bounds.max.x = pos.x;
 						}
-						if (pos.y > bounds.maxY.y) {
-							bounds.maxY.y = pos.y;
+						if (pos.y > bounds.max.y) {
+							bounds.max.y = pos.y;
 						}
-						if (pos.z > bounds.maxZ.z) {
-							bounds.maxZ.z = pos.z;
+						if (pos.z > bounds.max.z) {
+							bounds.max.z = pos.z;
 						}
 
 						mesh.positions.push_back(pos);
@@ -117,53 +126,77 @@ namespace ncl {
 					}
 
 					aiMaterial* aiMaterial = scene->mMaterials[aiMesh->mMaterialIndex];
-					Material mat;
+					Material material;
 					float data[3];
 					unsigned int size = 3;
 
-					aiReturn ret = aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, data, &size);
+					aiString name;
+					aiReturn ret = aiMaterial->Get(AI_MATKEY_NAME, name);
+					if (ret == aiReturn_SUCCESS) {
+						material.name = name.C_Str();
+					}
+
+					ret = aiMaterial->Get(AI_MATKEY_COLOR_DIFFUSE, data, &size);
 					float opacity = 1;
 					ret = aiMaterial->Get(AI_MATKEY_OPACITY, opacity);
 					if (ret == aiReturn_SUCCESS) {
-						mat.opacity = opacity;
+						material.opacity = opacity;
 					}
 					if (ret == aiReturn_SUCCESS) {
-						mat.diffuse = { data[0], data[1], data[2], opacity };
+						material.diffuse = { data[0], data[1], data[2], opacity };
 					}
 
 					ret = aiMaterial->Get(AI_MATKEY_COLOR_AMBIENT, data, &size);
 					if (ret == aiReturn_SUCCESS) {
-						mat.ambient = { data[0], data[1], data[2], opacity };
+						material.ambient = { data[0], data[1], data[2], opacity };
 					}
 
 					ret = aiMaterial->Get(AI_MATKEY_COLOR_SPECULAR, data, &size);
 					if (ret == aiReturn_SUCCESS) {
-						mat.specular = { data[0], data[1], data[2], opacity };
+						material.specular = { data[0], data[1], data[2], opacity };
 					}
 
 					ret = aiMaterial->Get(AI_MATKEY_COLOR_EMISSIVE, data, &size);
 					if (ret == aiReturn_SUCCESS) {
-						mat.emission = { data[0], data[1], data[2], opacity };
+						material.emission = { data[0], data[1], data[2], opacity };
 					}
 
 					float f = 0;
 
 					ret = aiMaterial->Get(AI_MATKEY_REFRACTI, f);
 					if (ret == aiReturn_SUCCESS) {
-						mat.ior = f;
+						material.ior = f;
 					}
 
 					ret = aiMaterial->Get(AI_MATKEY_SHININESS, f);
 					if (ret == aiReturn_SUCCESS) {
-						mat.shininess = f;
+						material.shininess = f;
 					}
 
-					mesh.material = mat;
+					aiString path;
+					ret = aiMaterial->GetTexture(aiTextureType_AMBIENT, 0, &path);
+					if (ret == aiReturn_SUCCESS) {
+						string texPath = parent + path.C_Str();
+						ambient = new Texture2D(texPath, 0);
+						material.ambientMat = ambient->bufferId();
+						material.ambientTexPath = texPath;
+					}
+
+
+					ret = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+					if (ret == aiReturn_SUCCESS) {
+						string texPath = parent + path.C_Str();
+						diffuse = new Texture2D(texPath, 1);
+						material.diffuseMat = diffuse->bufferId();
+						material.diffuseTexPath = texPath;
+					}
+
+					mesh.material = material;
 					meshes.push_back(mesh);
 				}
 
 				for (unsigned i = 0; i < node->mNumChildren; i++) {
-					extractMesh(node->mChildren[i], scene, meshes);
+					extractMesh(node->mChildren[i], scene, meshes, parent);
 				}
 
 			}
@@ -179,10 +212,10 @@ namespace ncl {
 			}
 
 
-			std::vector<Mesh> extractMesh(const aiScene* scene) {
+			std::vector<Mesh> extractMesh(const aiScene* scene, std::string parent) {
 				std::vector<Mesh> meshes;
 
-				extractMesh(scene->mRootNode, scene, meshes);
+				extractMesh(scene->mRootNode, scene, meshes, parent);
 
 				std::sort(meshes.begin(), meshes.end(), [](Mesh& a, Mesh& b) {
 					return a.material.opacity >= b.material.opacity;
@@ -223,24 +256,24 @@ namespace ncl {
 					initBounds();
 					for (Mesh& mesh : meshes) {
 						for (glm::vec3& pos : mesh.positions) {
-							if (pos.x < bounds.minX.x) {
-								bounds.minX.x = pos.x;
+							if (pos.x < bounds.min.x) {
+								bounds.min.x = pos.x;
 							}
-							if (pos.y < bounds.minY.y) {
-								bounds.minY.y = pos.y;
+							if (pos.y < bounds.min.y) {
+								bounds.min.y = pos.y;
 							}
-							if (pos.z < bounds.minZ.z) {
-								bounds.minZ.z = pos.z;
+							if (pos.z < bounds.min.z) {
+								bounds.min.z = pos.z;
 							}
 
-							if (pos.x > bounds.maxX.x) {
-								bounds.maxX.x = pos.x;
+							if (pos.x > bounds.max.x) {
+								bounds.max.x = pos.x;
 							}
-							if (pos.y > bounds.maxY.y) {
-								bounds.maxY.y = pos.y;
+							if (pos.y > bounds.max.y) {
+								bounds.max.y = pos.y;
 							}
-							if (pos.z > bounds.maxZ.z) {
-								bounds.maxZ.z = pos.z;
+							if (pos.z > bounds.max.z) {
+								bounds.max.z = pos.z;
 							}
 						}
 					}
@@ -252,8 +285,10 @@ namespace ncl {
 				glm::vec3 center;
 				Mesurements mesurements;
 				struct {
-					glm::vec3 minX, minY, minZ, maxX, maxY, maxZ;
+					glm::vec3 min, max;
 				} bounds;
+				Texture2D* ambient;
+				Texture2D* diffuse;
 		};
 	}
 }

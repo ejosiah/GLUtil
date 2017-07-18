@@ -6,7 +6,7 @@
 #include <set>
 #include "WithTriangleAdjacency.h"
 #include "common.h"
-
+#include "textures.h"
 namespace ncl {
 	namespace gl {
 		class Shape : public VAOObject, public Drawable {
@@ -28,7 +28,18 @@ namespace ncl {
 					GLuint vaoId = vaoIds[i];
 					glBindVertexArray(vaoId);
 
-					shader.sendUniformMaterial("material[0]", materials[i]);
+					Material& material = materials[i];
+					if (material.ambientMat != -1) {
+						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
+						glActiveTexture(GL_TEXTURE0);
+						shader.sendUniform1ui("ambientMap", 0);
+					}
+					if (material.diffuseMat != -1) {
+						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
+						glActiveTexture(GL_TEXTURE1);
+						shader.sendUniform1ui("diffuseMap", 1);
+					}
+					shader.sendUniformMaterial("material[0]", material);
 					
 					if (!indices[i]) {
 						if (instanceCount < 2) {
@@ -73,27 +84,28 @@ namespace ncl {
 			}
 
 			template<typename T>
-			void get(int attribute, std::function<void(T*)> use) const {
+			void get(unsigned int meshId, int attribute, std::function<void(T*)> use) const {
+				// FIX might fail if we have multiple texture buffers
 				if (attribute < Position || attribute > Indices)
 					throw std::runtime_error("invalid attribute id");
-				glBindVertexArray(vaoIds[0]);
+				glBindVertexArray(vaoIds[meshId]);
 				int bufferId = 0;
 				switch (attribute) {
 				case Position:
 					break;
-				case Indices:
+				case Indices:	
 					bufferId = numBuffers - 1;
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
-						if (attributes[0][i]) {
+						if (attributes[meshId][i]) {
 							bufferId++;
 						}
 					}
 				}
-				T* data = (T*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_ONLY);
+				T* data = (T*)glMapNamedBuffer(buffers[meshId][bufferId], GL_READ_ONLY);
 				use(data);
-				glUnmapNamedBuffer(buffers[0][bufferId]);
+				glUnmapNamedBuffer(buffers[meshId][bufferId]);
 			}
 
 
@@ -104,7 +116,7 @@ namespace ncl {
 				else {
 					std::set<GLuint> indices;
 					int size = counts[meshId];
-					get<GLuint>(Indices, [&](GLuint* index) {
+					get<GLuint>(meshId, Indices, [&](GLuint* index) {
 						GLuint* begin = index;
 						GLuint* end = index + size;
 						for (; index != end; index++) {
@@ -113,6 +125,61 @@ namespace ncl {
 					});
 					return indices.size();
 				}
+			}
+
+			std::vector<Mesh> getMeshes() {
+				std::vector<Mesh> meshes;
+				int no_of_meshes = vaoIds.size();
+				for (int i = 0; i < no_of_meshes; i++) {
+					Mesh mesh;
+					int no_of_vertices = numVertices(i);
+					get<glm::vec3>(i, Position, [&](glm::vec3* vertex) {
+						glm::vec3* end = vertex + no_of_vertices;
+						for (glm::vec3* next = vertex; next != end; next++) {
+							mesh.positions.push_back(*next);
+						}
+					});
+					if (normals[i]) {
+						get<glm::vec3>(i, Normal, [&](glm::vec3* normal) {
+							glm::vec3* end = normal + no_of_vertices;
+							for (glm::vec3* next = normal; next != end; next++) {
+								mesh.normals.push_back(*next);
+							}
+						});
+					}
+					if (colors[i]) {
+						get<glm::vec4>(i, Color, [&](glm::vec4* color) {
+							glm::vec4* end = color + no_of_vertices;
+							for (glm::vec4* next = color; next != end; next++) {
+								mesh.colors.push_back(*next);
+							}
+						});
+					}
+					if (indices[i]) {
+						get<GLuint>(i, Indices, [&](GLuint* index) {
+							GLuint* end = index + counts[i];
+							for (GLuint* next = index; next != end; next++) {
+								mesh.indices.push_back(*next);
+							}
+						});
+					}
+					mesh.material = materials[i];
+					meshes.push_back(mesh);
+				}
+				return meshes;
+			}
+
+			int numVertices() const {
+				int total = 0;
+				size_t meshCount = numMeshes();
+				for (int i = 0; i < meshCount; i++) {
+					total += numVertices(i);
+				}
+				return total;
+			}
+
+			int numMeshes() const {
+				return vaoIds.size();
 			}
 
 			Material& material() {

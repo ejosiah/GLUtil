@@ -183,6 +183,9 @@
     <ClInclude Include="include\ncl\gl\WithTrianglation.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\CrossHair.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

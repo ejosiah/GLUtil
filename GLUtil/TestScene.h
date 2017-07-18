@@ -44,7 +44,7 @@ public:
 
 		phongShader.createAndLinkProgram();
 		string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj";
-	//	string path = "D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\examples\\bin\\media\\armadillo_low.vbm";
+	//	string path = "C:\\Users\\Josiah\\Documents\\Visual Studio 2015\\Projects\\LitScene\\media\\blocks.obj";
 		model = new Model(path, true);
 		model->forEachMaterial([](Material& m) { m.shininess =  128.0f; });
 	}
@@ -53,7 +53,7 @@ public:
 		const Camera& camera = cameraController.getCamera();
 		if (camera.getMode() == Camera::ORBIT) {
 			//Shader& phongShader = teapot->shader;
-			phongShader([&]() {
+			phongShader([&](Shader& shader) {
 				LightSource light = calculateLight(camera);
 				phongShader.sendUniform1i("celShading", false);
 				phongShader.sendUniform3fv("globalAmbience", 1, &glm::vec4(0.2)[0]);
@@ -69,7 +69,7 @@ public:
 			});
 		}
 		else {
-			shader([&]() {
+			shader([&](Shader& shader) {
 				shader.send(camera);
 				model->draw(shader);
 			});
@@ -81,7 +81,7 @@ public:
 		if (cameraController.getCamera().getMode() == Camera::ORBIT) {
 		//	Shader& phongShader = teapot->shader;
 
-			phongShader([&]() {
+			phongShader([&](Shader& shader) {
 				LightSource light = calculateLight(cameraController.getCamera());
 				phongShader.sendUniform1i("grids", 16);
 				phongShader.sendUniform1i("celShading", false);
@@ -95,7 +95,7 @@ public:
 			});
 		}
 		else {
-			shader([&]() {
+			shader([&](Shader& shader) {
 				//shader.send(camera);
 				model->draw(shader);
 			});
@@ -179,17 +179,17 @@ public:
 
 	void draw() {
 
-		shader([&]() {
-			shader.send(camera);
-			plane->draw(shader);
+		shader([&](Shader& s) {
+			s.send(camera);
+			plane->draw(s);
 		});
 	}
 
 	void drawWith(const Camera& camera) {
 
-		shader([&]() {
-			shader.send(camera);
-			plane->draw(shader);
+		shader([&](Shader& s) {
+			s.send(camera);
+			plane->draw(s);
 		});
 	}
 

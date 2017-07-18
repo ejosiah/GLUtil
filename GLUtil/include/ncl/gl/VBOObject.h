@@ -22,8 +22,8 @@ namespace ncl {
 					txc = std::vector<bool>(no_of_meshes, false);
 				}
 				indices = std::vector<bool>(no_of_meshes, false);
-
-				numBuffers = calculateNoOfBuffers(meshes[0]);
+				int cololBuffer = 1;
+				numBuffers = calculateNoOfBuffers(meshes[0]) + cololBuffer;
 
 				for (int i = 0; i < no_of_meshes; i++) {
 					Mesh mesh = meshes[i];
@@ -33,7 +33,6 @@ namespace ncl {
 					if (mesh.colors.empty()) {
 						size_t n = mesh.positions.size();
 						mesh.colors = std::vector<glm::vec4>(n, mesh.material.diffuse);
-						numBuffers += 1;
 					}
 
 
@@ -124,7 +123,7 @@ namespace ncl {
 				if (mesh.hasColors()) {
 					numBuffers += 1;
 				}
-				if (mesh.hasTexCoords()) {
+				if (mesh.hasTexCoords()) {	
 					for (int i = 0; i < MAX_UVS; i++) {
 						if (!mesh.uvs[i].empty())
 							numBuffers += 1;

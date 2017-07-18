@@ -155,6 +155,7 @@
     <ClInclude Include="include\ncl\gl\3DConnexion.h" />
     <ClInclude Include="include\ncl\gl\Camera.h" />
     <ClInclude Include="include\ncl\gl\common.h" />
+    <ClInclude Include="include\ncl\gl\CrossHair.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />

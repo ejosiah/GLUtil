@@ -116,7 +116,7 @@ namespace ncl {
 				init();
 
 				_keyListeners.push_back([&](const Key& key) {
-					processInput(Keyboard::get());
+					processInput(key);
 				});
 				
 			}
@@ -131,19 +131,17 @@ namespace ncl {
 					if (exists(p) && is_directory(p) && !p.empty()) {
 						for (auto& entry : directory_iterator(p)) {
 							auto& path = entry.path();
-							if (is_directory(path)) {
-								string name = path.filename().string();
-								for (auto& entry2 : directory_iterator(path)) {
-									auto path2 = entry2.path();
-									if (!is_directory(path2)) {
-										string filename = path2.string();
-										if (Shader::isShader(filename)) {
-											ensureSources(name);
-											ShaderSource source = Shader::extractFromFile(filename);
-											_sources[name].push_back(source);
-											implicityLoaded = true;
-										}
-									}
+							string ext = path.filename().extension().string();
+							string filename = path.filename().string();
+							auto i = filename.find(ext);
+							string name = filename.substr(0, i);
+							if (!is_directory(path)) {
+								string filename = path.string();
+								if (Shader::isShader(filename)) {
+									ensureSources(name);
+									ShaderSource source = Shader::extractFromFile(filename);
+									_sources[name].push_back(source);
+									implicityLoaded = true;
 								}
 							}
 						}
@@ -213,7 +211,7 @@ namespace ncl {
 			* @breif process keyboard input
 			* @param keyboard handle to keyboard
 			*/
-			virtual void processInput(Keyboard& keyboard) {
+			virtual void processInput(const Key& key) {
 
 			}
 
@@ -315,6 +313,10 @@ namespace ncl {
 				_center = glm::vec2(w / 2, h / 2);
 				aspectRatio = float(w) / h;
 				resized();
+			}
+
+			bool shouldResize(int w, int h) {
+				return _width != w || _height != h;
 			}
 
 			/**

@@ -28,9 +28,9 @@ struct Material{
 	vec4 diffuse;
 	vec4 specular;
 	float shininess;
-	int diffuseMat;
-	int specularMat;
-	int ambientMat;
+	bool diffuseMap;
+	bool specularMap;
+	bool ambientMap;
 	int bumpMap;
 };
 

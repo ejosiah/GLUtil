@@ -10,24 +10,22 @@ namespace ncl {
 			glm::vec3 center;
 		public:
 			Bounds(Mesurements m) :m(m), Shape(getMeshes()) {
-				glm::vec3 xCenter = (m.maxX - m.minX) * 0.5f + m.minX;
-				glm::vec3 yCenter = (m.maxY - m.minY) * 0.5f + m.minY;
-				glm::vec3 zCenter = (m.maxZ - m.minZ) * 0.5f + m.minZ;
-				center = xCenter + yCenter + zCenter;
+
+				center = m.max - m.min * 0.5f + m.min;
 			}
 
 			std::vector<Mesh> getMeshes() {
 				using namespace glm;
 				using namespace std;
 				Mesh mesh;
-				mesh.positions.push_back(m.minX + m.minY + m.maxZ);
-				mesh.positions.push_back(m.minX + m.minY + m.minZ);
-				mesh.positions.push_back(m.minX + m.maxY + m.minZ);
-				mesh.positions.push_back(m.minX + m.maxY + m.maxZ);
-				mesh.positions.push_back(m.maxX + m.minY + m.minZ);
-				mesh.positions.push_back(m.maxX + m.maxY + m.minZ);
-				mesh.positions.push_back(m.maxX + m.minY + m.maxZ);
-				mesh.positions.push_back(m.maxX + m.maxY + m.maxZ);
+				mesh.positions.push_back(vec3(m.min.x, m.min.y, m.max.z));
+				mesh.positions.push_back(vec3(m.min.x , m.min.y , m.min.z));
+				mesh.positions.push_back(vec3(m.min.x , m.max.y , m.min.z));
+				mesh.positions.push_back(vec3(m.min.x , m.max.y , m.max.z));
+				mesh.positions.push_back(vec3(m.max.x , m.min.y , m.min.z));
+				mesh.positions.push_back(vec3(m.max.x , m.max.y , m.min.z));
+				mesh.positions.push_back(vec3(m.max.x , m.min.y , m.max.z));
+				mesh.positions.push_back(vec3(m.max.x , m.max.y , m.max.z));
 
 				/*
 				GLuint indices[] = {

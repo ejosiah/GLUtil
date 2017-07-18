@@ -21,7 +21,7 @@ namespace ncl {
 				Mesh mesh;
 				mesh.primitiveType = primitiveType;
 				mesh.material.diffuse = color;
-				shape.get<glm::vec3>(Position, [&](glm::vec3* v) {
+				shape.get<glm::vec3>(0, Position, [&](glm::vec3* v) {
 					int size = shape.numVertices(0);
 					for (int i = 0; i < size; i++) {
 						glm::vec3 vCopy = *v;

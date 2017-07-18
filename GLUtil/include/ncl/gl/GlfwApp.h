@@ -200,6 +200,7 @@ namespace ncl {
 
 					if(!scene.vSync()) glfwSwapInterval(0);
 
+					int oldW = 0, oldH = 0;
 					while (!glfwWindowShouldClose(window)) {
 						int width, height;
 
@@ -207,8 +208,12 @@ namespace ncl {
 						Timer::get().update();
 
 						
-						glViewport(0, 0, width, height);
-						scene.resize(width, height);	// TODO resize only when screen changed
+						if (oldW != width || oldH != height) {
+							oldW = width;
+							oldH = height;
+							glViewport(0, 0, width, height);
+							scene.resize(width, height);
+						}
 						scene.update0(Timer::get().lastFrameTime);
 						scene.display0();
 
