@@ -49,7 +49,8 @@ public:
 	//	texture0 = new NoiseTex2D(noise);
 	//	texture1 = new NoiseTex3D();
 		shader("image").use();
-		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
+	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
+		texture0 = new CheckerTexture;
 	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
 		shader("image").sendUniform1ui("image0", texture0->id());
 	//	_shader.sendUniform1ui("image1", texture1->id());

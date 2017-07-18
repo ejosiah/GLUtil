@@ -15,6 +15,7 @@ namespace ncl {
 				:VAOObject(meshes)
 				, cullface(cullface)
 				, instanceCount(instanceCount) {
+				checkerBoard = new CheckerTexture;
 			}
 
 			virtual void draw(Shader& shader) override {
@@ -187,6 +188,7 @@ namespace ncl {
 			}
 
 		protected:
+			Texture2D* checkerBoard;
 			void normalize(std::vector<Mesh>& mesh, float _scale) {
 				float radius;
 				glm::vec3 center;

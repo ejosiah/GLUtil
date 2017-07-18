@@ -163,5 +163,29 @@ namespace ncl {
 			GLuint tbo_id;
 			GLuint _id;
 		};
+
+		class CheckerTexture : public Texture2D {
+		public:
+			CheckerTexture(unsigned id = nextId++, const glm::vec4& colorA = WHITE, const glm::vec4& colorB = BLACK)
+				: Texture2D(generate(colorA, colorB).get(), 128, 128, id, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
+			}
+
+			static std::unique_ptr<GLubyte[]> generate(const glm::vec4& a, const glm::vec4& b) {
+				GLubyte* data = new GLubyte[128 * 128 * 4];
+				glm::vec4 color;
+				for (int i = 0; i<128; i++) {
+					for (int j = 0; j < 128; j++){
+						int idx = (i * 128 + j) * 4;
+						color = (((i/8)%2) && ((j/8)%2)) || (!((i / 8) % 2) && !((j / 8) % 2)) ? b : a;
+						data[idx] = color.r * 255;
+						data[idx + 1] = color.g * 255;
+						data[idx + 2] = color.b * 255;
+						data[idx + 3] = color.a * 255;
+					}
+				}
+				return std::unique_ptr<GLubyte[]>{data};
+			}
+
+		};
 	}
 }
