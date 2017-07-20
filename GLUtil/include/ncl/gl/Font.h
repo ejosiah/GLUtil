@@ -130,7 +130,9 @@ namespace ncl {
 				shader.sendUniform1ui("glyph", 10);
 				shader.sendUniform4fv("color", 1, glm::value_ptr(color));
 				bool blendingOff = !glIsEnabled(GL_BLEND);
+				bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
 				if (blendingOff) glEnable(GL_BLEND);
+				if (depthTestOn) glDisable(GL_DEPTH_TEST);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				withVertexArray(vaoId, [&]() {
 					float startX = x;
@@ -171,6 +173,7 @@ namespace ncl {
 
 				});
 				if (blendingOff) glDisable(GL_BLEND);
+				if (depthTestOn) glEnable(GL_DEPTH_TEST);
 				shader.unUse();
 			}
 

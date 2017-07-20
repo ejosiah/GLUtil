@@ -57,6 +57,9 @@ namespace ncl {
 				mesh.primitiveType = GL_LINES;
 				return vector<Mesh>(1, mesh);
 			}
+
+			glm::vec3 min() { return m.min;  }
+			glm::vec3 max() { return m.max;  }
 		};
 	}
 }

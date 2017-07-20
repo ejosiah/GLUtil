@@ -64,7 +64,7 @@ public:
 				phongShader.sendUniformMatrix4fv("viewport", 1, GL_FALSE, value_ptr(getViewport()));
 				phongShader.sendUniformLight(light);
 				phongShader.send(camera, cameraController.modelTrans());
-				phongShader.shade(model);
+				model->draw(shader);
 				
 			});
 		}

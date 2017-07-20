@@ -16,7 +16,6 @@
 #include "Camera.h"
 #include "logger.h"
 #include "Camera.h"
-#include "Shape.h"
 
 
 
@@ -137,9 +136,6 @@ namespace ncl {
 
 			void load(const ShaderSource& source);
 
-			void shade(Shape* shape) {
-				shape->draw(this);
-			}
 
 		private:
 			enum ShaderType { VERTEX_SHADER, FRAGMENT_SHADER, TESELLATION_CONTROL_SHADER, TESELLATION_EVAL_SHADER, GEOMETRY_SHADER, COMPUTE_SHADER };

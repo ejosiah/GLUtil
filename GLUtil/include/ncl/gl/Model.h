@@ -21,6 +21,8 @@ namespace ncl {
 		public:
 			Model(std::string path, bool normalize = false, float scale = 1, unsigned int pFlags = DEFAULT_PROCESS_FLAGS):
 				Shape(createMesh(path, normalize, scale, pFlags)){}
+			
+			Bounds* bound;
 
 			void initBounds() {
 				bounds.max = bounds.max = bounds.max = glm::vec3(0);
@@ -281,7 +283,6 @@ namespace ncl {
 
 			protected:
 				static const unsigned int DEFAULT_PROCESS_FLAGS = aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace;
-				Bounds* bound;
 				glm::vec3 center;
 				Mesurements mesurements;
 				struct {

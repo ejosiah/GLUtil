@@ -141,26 +141,30 @@ namespace ncl {
 		public:
 			TextureBuffer(const void* data, GLuint size,GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
 				glActiveTexture(TEXTURE(id));
-				glGenBuffers(1, &buffer);
-				glBindBuffer(GL_TEXTURE_BUFFER, buffer);
+				glGenBuffers(1, &_buffer);
+				glBindBuffer(GL_TEXTURE_BUFFER, _buffer);
 				glBufferData(GL_TEXTURE_BUFFER, size, data, GL_STATIC_DRAW);
 
-				glGenTextures(1, &tbo_id);
-				glBindTexture(GL_TEXTURE_BUFFER, tbo_id);
-				glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, buffer);
+				glGenTextures(1, &_tbo_id);
+				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
+				glTexBuffer(GL_TEXTURE_BUFFER, iFormat, _buffer);
 				_id = id;
 			}
 
 			virtual ~TextureBuffer() {
-				glDeleteBuffers(1, &buffer);
-				glDeleteTextures(1, &tbo_id);
+				glDeleteBuffers(1, &_buffer);
+				glDeleteTextures(1, &_tbo_id);
 			}
+
+			GLuint tbo_id() const { return _tbo_id;  }
+
+			GLuint buffer() const { return _buffer;  }
 
 			GLuint id() const { return _id;  }
 
 		private:
-			GLuint buffer;
-			GLuint tbo_id;
+			GLuint _buffer;
+			GLuint _tbo_id;
 			GLuint _id;
 		};
 

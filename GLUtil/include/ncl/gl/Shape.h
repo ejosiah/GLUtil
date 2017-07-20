@@ -15,7 +15,7 @@ namespace ncl {
 				:VAOObject(meshes)
 				, cullface(cullface)
 				, instanceCount(instanceCount) {
-				checkerBoard = new CheckerTexture;
+			//	checkerBoard = new CheckerTexture;
 			}
 
 			virtual void draw(Shader& shader) override {
