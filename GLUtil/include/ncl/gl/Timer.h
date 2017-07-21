@@ -71,6 +71,12 @@ public:
 		}
         
     }
+
+	int now() {
+		using namespace std::chrono;
+		auto dt = currentTime.time_since_epoch();
+		return duration_cast<milliseconds>(dt).count();
+	}
 };
 
 Timer* Timer::timer;
