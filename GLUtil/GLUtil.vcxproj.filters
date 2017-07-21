@@ -25,9 +25,6 @@
     <Filter Include="Header Files\examples">
       <UniqueIdentifier>{229209a9-bd2e-4ed7-a8a4-f09b09ee893f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\shaders">
-      <UniqueIdentifier>{b3dba7b3-6ef1-443e-8ecb-7b3ab27a7c04}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\core">
       <UniqueIdentifier>{7870b115-19c8-46ca-a484-2f71913983d2}</UniqueIdentifier>
     </Filter>
@@ -156,9 +153,6 @@
     <ClInclude Include="include\ncl\gl\textures.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\VAOObject.h">
-      <Filter>Header Files\shaders</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\gl\Noise.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
@@ -184,6 +178,9 @@
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\CrossHair.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\VAOObject.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
   </ItemGroup>

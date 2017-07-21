@@ -2,8 +2,8 @@
 #pragma include("lightModel.glsl")
 #pragma include("vertex_in.glsl")
 
-layout(binding=0) uniform sampler2D ambientMap;
-layout(binding=1) uniform sampler2D diffuseMap;
+layout(binding=10) uniform sampler2D ambientMap;
+layout(binding=11) uniform sampler2D diffuseMap;
 layout(binding=3) uniform sampler2D normalMap;
 
 vec4 getAmbience(Material m);

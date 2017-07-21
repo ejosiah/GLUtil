@@ -179,18 +179,27 @@ namespace ncl {
 					ret = aiMaterial->GetTexture(aiTextureType_AMBIENT, 0, &path);
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
-						ambient = new Texture2D(texPath, 0);
+						ambient = new Texture2D(texPath,10);
 						material.ambientMat = ambient->bufferId();
 						material.ambientTexPath = texPath;
+					}
+					else {
+						ambient = new CheckerTexture(10, WHITE, WHITE);
+						material.ambientMat = ambient->bufferId();
 					}
 
 
 					ret = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path);
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
-						diffuse = new Texture2D(texPath, 1);
+						diffuse = new Texture2D(texPath, 11);
 						material.diffuseMat = diffuse->bufferId();
 						material.diffuseTexPath = texPath;
+						material.usingDefaultMat = false;
+					}
+					else {
+						diffuse = new CheckerTexture(11, WHITE, WHITE);
+						material.diffuseMat = ambient->bufferId();
 					}
 
 					mesh.material = material;
@@ -290,6 +299,7 @@ namespace ncl {
 				} bounds;
 				Texture2D* ambient;
 				Texture2D* diffuse;
+
 		};
 	}
 }

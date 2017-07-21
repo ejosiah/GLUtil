@@ -38,8 +38,8 @@ namespace ncl {
 				_height = img.height();
 			}
 
-			Texture2D(unsigned char* data, GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
-				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data); };
+			Texture2D(void* data, GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
+				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, width, height, 0, format, dataType, data); };
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
 				_width = width;
 				_height = height;
@@ -120,7 +120,7 @@ namespace ncl {
 		class NoiseTex2D : public Texture2D {
 		public:
 			NoiseTex2D(unsigned id = nextId++, const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
-			:Texture2D(noise(width, height, freq, ampl).get(), width, height, id, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
+			:Texture2D(noise(width, height, freq, ampl).get(), width, height, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }){ // TODO free data memory
 
 			}
 		private:
@@ -130,7 +130,7 @@ namespace ncl {
 		class NoiseTex3D : public Texture3D {
 		public:
 			NoiseTex3D(Noise3D noise = Perlin3D, float freq = 4.0f, float ampl = 0.5f, int width = 64, int height = 64, int depth = 64)
-				:Texture3D(noise(freq, ampl, width, height, depth).get(), width, height, depth, nextId++, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
+				:Texture3D(noise(freq, ampl, width, height, depth).get(), width, height, depth, nextId++, GL_RGBA8, GL_RGBA,  glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 
 			}
 		private:
@@ -171,7 +171,7 @@ namespace ncl {
 		class CheckerTexture : public Texture2D {
 		public:
 			CheckerTexture(unsigned id = nextId++, const glm::vec4& colorA = WHITE, const glm::vec4& colorB = BLACK)
-				: Texture2D(generate(colorA, colorB).get(), 128, 128, id, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
+				: Texture2D(generate(colorA, colorB).get(), 128, 128, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 			}
 
 			static std::unique_ptr<GLubyte[]> generate(const glm::vec4& a, const glm::vec4& b) {

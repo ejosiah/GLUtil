@@ -15,7 +15,6 @@ namespace ncl {
 				:VAOObject(meshes)
 				, cullface(cullface)
 				, instanceCount(instanceCount) {
-			//	checkerBoard = new CheckerTexture;
 			}
 
 			virtual void draw(Shader& shader) override {
@@ -32,13 +31,13 @@ namespace ncl {
 					Material& material = materials[i];
 					if (material.ambientMat != -1) {
 						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-						glActiveTexture(GL_TEXTURE0);
-						shader.sendUniform1ui("ambientMap", 0);
+						glActiveTexture(GL_TEXTURE10);
+						shader.sendUniform1ui("ambientMap", 10);
 					}
 					if (material.diffuseMat != -1) {
 						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-						glActiveTexture(GL_TEXTURE1);
-						shader.sendUniform1ui("diffuseMap", 1);
+						glActiveTexture(GL_TEXTURE11);
+						shader.sendUniform1ui("diffuseMap", 11);
 					}
 					shader.sendUniformMaterial("material[0]", material);
 					
@@ -61,6 +60,7 @@ namespace ncl {
 					glBindVertexArray(0);
 				}
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
+				glActiveTexture(GL_TEXTURE0);
 			}
 
 

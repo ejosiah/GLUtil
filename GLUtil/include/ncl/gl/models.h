@@ -21,6 +21,7 @@ namespace ncl {
 			int specularMat = -1;
 			int ambientMat = -1;
 			int bumpMap = -1;
+			bool usingDefaultMat = true;
 			std::string ambientTexPath;
 			std::string diffuseTexPath;
 			std::string specularTexPath;
