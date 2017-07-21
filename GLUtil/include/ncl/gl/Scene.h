@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <gl/gl_core_4_5.h>
+#include <initializer_list>
 #include "input.h"
 #include "logger.h"
 #include "models.h"
@@ -383,6 +384,12 @@ namespace ncl {
 			bool vSync() { return _vsync;  }
 
 			Shader& shader(std::string name) { return *_shaders[name]; }
+
+			void forShaders(std::initializer_list<std::string> names, Procedure proc) {
+				for (std::string name : names) {
+					shader(name)(proc);
+				}
+			}
 
 		protected:
 			int _width;

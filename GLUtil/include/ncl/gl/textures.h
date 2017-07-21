@@ -5,6 +5,7 @@
 #include <functional>
 #include "Image.h"
 #include "Noise.h"
+#include "Shader.h"
 
 #define TEXTURE(id) GL_TEXTURE0 + id
 
@@ -36,6 +37,7 @@ namespace ncl {
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
 				_width = img.width();
 				_height = img.height();
+			//	_name = name;
 			}
 
 			Texture2D(void* data, GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
@@ -43,6 +45,7 @@ namespace ncl {
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
 				_width = width;
 				_height = height;
+			//	_name = name;
 			}
 
 			Texture2D(GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA) {
@@ -61,11 +64,19 @@ namespace ncl {
 
 			GLuint height() { return _height; }
 
+			void sendTo(Shader& shader) {
+				glActiveTexture(TEXTURE(_id));
+				glBindTexture(GL_TEXTURE_2D, buffer);
+				shader.sendUniform1ui(_name, _id);
+				glActiveTexture(TEXTURE(0));
+			}
+
 		private:
 			GLuint buffer;
 			GLuint _id;
 			GLuint _width;
 			GLuint _height;
+			std::string _name;
 
 		
 		};
@@ -139,7 +150,7 @@ namespace ncl {
 
 		class TextureBuffer {
 		public:
-			TextureBuffer(const void* data, GLuint size,GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
+			TextureBuffer(std::string name, const void* data, GLuint size,GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) {
 				glActiveTexture(TEXTURE(id));
 				glGenBuffers(1, &_buffer);
 				glBindBuffer(GL_TEXTURE_BUFFER, _buffer);
@@ -149,6 +160,7 @@ namespace ncl {
 				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
 				glTexBuffer(GL_TEXTURE_BUFFER, iFormat, _buffer);
 				_id = id;
+				_name = name;
 			}
 
 			virtual ~TextureBuffer() {
@@ -162,10 +174,18 @@ namespace ncl {
 
 			GLuint id() const { return _id;  }
 
+			void sendTo(Shader& shader) {
+				glActiveTexture(TEXTURE(_id));
+				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
+				shader.sendUniform1ui(_name, _id);
+				glActiveTexture(TEXTURE(0));
+			}
+
 		private:
 			GLuint _buffer;
 			GLuint _tbo_id;
 			GLuint _id;
+			std::string _name;
 		};
 
 		class CheckerTexture : public Texture2D {
