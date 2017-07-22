@@ -78,6 +78,10 @@ namespace ncl {
 			* scene cleanup 
 			*/
 			virtual ~Scene() {
+				if (_motionEventHandler) {
+					delete _motionEventHandler;
+					_motionEventHandler = nullptr;
+				}
 			}
 
 			/**

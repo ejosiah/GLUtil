@@ -186,6 +186,9 @@
     <ClInclude Include="include\ncl\gl\geometry.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\rayTracingUtilities.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

@@ -161,6 +161,7 @@
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
+    <ClInclude Include="include\ncl\gl\rayTracingUtilities.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
     <ClInclude Include="include\ncl\gl\Cylinder.h" />

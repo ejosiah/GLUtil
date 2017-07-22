@@ -6,6 +6,7 @@
 #include "util.h"
 #include <limits>
 #include <cmath>
+#include <vector>
 
 namespace ncl {
 	namespace gl {
@@ -57,6 +58,30 @@ namespace ncl {
 		public:
 			virtual void onMotion(const _3DMotionEvent&) override {};
 			virtual void onNoMotion() override {};
+		};
+
+		class Chain3DMotionEventHandler : public _3DMotionEventHandler {
+		public:
+			Chain3DMotionEventHandler(std::vector<_3DMotionEventHandler*> handlers):handlers(handlers) {
+
+			}
+
+			virtual ~Chain3DMotionEventHandler() {
+				for (auto handler : handlers) delete handler;
+			}
+
+			virtual void onMotion(const _3DMotionEvent& event) override {
+				for (auto handler : handlers) {
+					handler->onMotion(event);
+				}
+			};
+			virtual void onNoMotion() override {
+				for (auto handler : handlers) {
+					handler->onNoMotion();
+				}
+			};
+		private:
+			std::vector<_3DMotionEventHandler*> handlers;
 		};
 
 	}

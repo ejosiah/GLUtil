@@ -23,6 +23,7 @@ private:
     Clock::time_point currentTime;
 	float frameTimes[MAX_SAMPLE_COUNT];
 	float elapsedTime = 0.0f;
+	float totalElapsedTime = 0.0f;
 	int sampleCount = 0;
     
 public:
@@ -49,7 +50,9 @@ public:
     void update(){
         using namespace std::chrono;
         auto diff = Clock::now() - currentTime;
-		elapsedTime = duration_cast<milliseconds>(diff).count() / 1000.0f;
+		long elapsedTimeMillis = duration_cast<milliseconds>(diff).count();
+		totalElapsedTime += elapsedTimeMillis;
+		elapsedTime = elapsedTimeMillis / 1000.0f;
 		currentTime += diff;
 
 		if (fabsf(elapsedTime - lastFrameTime) < 1.0f) {
@@ -69,13 +72,12 @@ public:
 		if (sampleCount > 0) {
 			lastFrameTime /= sampleCount;
 		}
+		
         
     }
 
-	int now() {
-		using namespace std::chrono;
-		auto dt = currentTime.time_since_epoch();
-		return duration_cast<milliseconds>(dt).count();
+	float now() {
+		return totalElapsedTime;
 	}
 };
 
