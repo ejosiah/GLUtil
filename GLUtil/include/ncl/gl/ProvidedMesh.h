@@ -1,14 +1,15 @@
 #pragma once
 #include "Shape.h"
+#include "WithTriangleAdjacency.h"
 
 namespace ncl {
 	namespace gl {
-		class ProvidedMesh : public Shape {
+		class ProvidedMesh : public Shape, public WithTriangleAdjacency {
 		public:
-			ProvidedMesh(Mesh& mesh) :ProvidedMesh(std::vector<Mesh>(1, mesh)) {
+			ProvidedMesh(Mesh& mesh, bool adjacency = false) :ProvidedMesh(std::vector<Mesh>(1, mesh), adjacency) {
 			}
 
-			ProvidedMesh(std::vector<Mesh>& meshes):Shape(meshes) {
+			ProvidedMesh(std::vector<Mesh>& meshes, bool adjacency = false):Shape(preprocess(meshes, adjacency)) {
 			}
 
 			ProvidedMesh(Shape& shape, GLenum primitiveType, const color& color = glm::vec4(1))	// TODO add bitfields of what to copy
@@ -17,6 +18,7 @@ namespace ncl {
 			}
 
 		private:
+			Logger logger = Logger::get("Provided Mesh");
 			std::vector<Mesh> copyMesh(const Shape& shape, GLenum primitiveType, const color& color) {
 				Mesh mesh;
 				mesh.primitiveType = primitiveType;
@@ -32,6 +34,17 @@ namespace ncl {
 
 				return std::vector<Mesh>(1, mesh);
 			}
+			std::vector<Mesh>& preprocess(std::vector<Mesh>& meshes, bool adjacency) {
+				if (adjacency) {
+					logger.info("added adjacency data to mesh");
+					for (Mesh& mesh : meshes) {
+						mesh.indices = addAdjacency(mesh.indices);
+					}
+				}
+				return meshes;
+			}
 		};
+
+
 	}
 }

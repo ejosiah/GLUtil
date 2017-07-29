@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/vec4.hpp>
+#include <glm/glm.hpp>
 #include <functional>
 #include <string>
 #include "util.h"
@@ -82,6 +82,45 @@ namespace ncl {
 			};
 		private:
 			std::vector<_3DMotionEventHandler*> handlers;
+		};
+
+		struct buf_vec4 {
+			//union {
+			//	struct { float x, y, z, w; };
+			//	float data[4];
+			//};
+			float data[4];
+
+			buf_vec4() = default;
+
+			buf_vec4(const glm::vec4& v) {
+				data[0] = v.x;
+				data[1] = v.y;
+				data[2] = v.z;
+				data[3] = v.w;
+			}
+
+			operator glm::vec4() const {
+				return glm::vec4(data[0], data[1], data[2], data[3]);
+			}
+		};
+		bool operator==(const buf_vec4& a, const buf_vec4& b) {
+			return a.data[0] == b.data[0]
+				&& a.data[1] == b.data[1]
+				&& a.data[2] == b.data[2]
+				&& a.data[3] == b.data[3];
+		}
+
+		struct buf_vec4_hash {
+
+			size_t operator()(buf_vec4 v) const {
+				size_t seed = 3;
+				for (int i = 0; i < 3; i++) {
+					int v_comp = v.data[i];
+					seed ^= v_comp + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+				}
+				return seed;
+			}
 		};
 
 	}

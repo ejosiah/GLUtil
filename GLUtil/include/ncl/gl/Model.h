@@ -11,16 +11,19 @@
 #include "Shape.h"
 #include "Bounds.h"
 #include "textures.h"
+#include "WithTriangleAdjacency.h"
 
 #pragma comment(lib, "assimp-vc140-mt.lib")
 
 namespace ncl {
 	namespace gl {
-		class Model : public Shape {
+		class Model : public Shape, public WithTriangleAdjacency {
 
 		public:
-			Model(std::string path, bool normalize = false, float scale = 1, unsigned int pFlags = DEFAULT_PROCESS_FLAGS):
-				Shape(createMesh(path, normalize, scale, pFlags)){}
+			static const unsigned int DEFAULT_PROCESS_FLAGS = aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_JoinIdenticalVertices;
+
+			Model(std::string path, bool normalize = false, float scale = 1, bool adjacency = false, unsigned int pFlags = DEFAULT_PROCESS_FLAGS):
+				Shape(createMesh(path, normalize, scale, pFlags, adjacency)){}
 			
 			Bounds* bound;
 
@@ -32,7 +35,7 @@ namespace ncl {
 				bounds.max.x = bounds.max.y = bounds.max.z = std::numeric_limits<float>::min();
 			}
 
-			 std::vector<Mesh> createMesh(std::string path, bool _normalize, float scale, unsigned pFlags) {
+			 std::vector<Mesh> createMesh(std::string path, bool _normalize, float scale, unsigned pFlags, bool adjacency) {
 				initBounds();
 				std::vector<Mesh> meshes;
 				Assimp::Importer importer;
@@ -49,6 +52,13 @@ namespace ncl {
 				size_t vertices = 0;
 				std::for_each(meshes.begin(), meshes.end(), [&](Mesh& m) {  vertices += m.positions.size();});
 				logger.info("no of vertices loaded: " + std::to_string(vertices));
+				if (adjacency) {
+					logger.info("added adjacency data to mesh");
+					std::for_each(meshes.begin(), meshes.end(), [&](Mesh& m) {  
+						m.indices = addAdjacency(m.indices);
+						m.primitiveType = GL_TRIANGLES_ADJACENCY;
+					});
+				}
 				return meshes;
 			}
 
@@ -291,7 +301,6 @@ namespace ncl {
 				}
 
 			protected:
-				static const unsigned int DEFAULT_PROCESS_FLAGS = aiProcess_GenSmoothNormals | aiProcess_Triangulate | aiProcess_CalcTangentSpace;
 				glm::vec3 center;
 				Mesurements mesurements;
 				struct {

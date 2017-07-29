@@ -187,6 +187,10 @@ namespace ncl {
 				return materials[0];
 			}
 
+			void changePrimitiveType(GLenum newType) {
+				primitiveType[0] = newType;
+			}
+
 		protected:
 			Texture2D* checkerBoard;
 			void normalize(std::vector<Mesh>& mesh, float _scale) {

@@ -4,11 +4,9 @@
 
 namespace ncl {
 	namespace gl {
-		class Bounds : public Shape {
-		private:
+		struct Bounds : public Shape {
 			Mesurements m;
 			glm::vec3 center;
-		public:
 			Bounds(Mesurements m) :m(m), Shape(getMeshes()) {
 
 				center = m.max - m.min * 0.5f + m.min;
