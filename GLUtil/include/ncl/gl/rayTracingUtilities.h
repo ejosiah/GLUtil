@@ -7,12 +7,6 @@ namespace ncl {
 	namespace gl {
 		namespace ray_tracing {
 
-#pragma pack (push, 1)
-			struct Plane {
-				glm::vec4 n;
-				float d;
-			};
-#pragma pack (pop)
 
 #pragma pack (push, 1)
 			struct Material {
@@ -24,6 +18,14 @@ namespace ncl {
 				float shininess;
 				float ior;
 				float opacity;
+			};
+#pragma pack (pop)
+
+#pragma pack (push, 1)
+			struct Plane {
+				glm::vec4 n;
+				Material material;
+				float d;
 			};
 #pragma pack (pop)
 
