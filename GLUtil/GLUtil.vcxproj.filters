@@ -189,6 +189,9 @@
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h">
       <Filter>Header Files\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\shaders.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -305,9 +308,6 @@
     <None Include="include\shaders\vertex_in.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="include\shaders\lighting.frag">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="shaders\quad.tes">
       <Filter>shaders</Filter>
     </None>
@@ -316,6 +316,48 @@
     </None>
     <None Include="include\ncl\gl\camera.inl">
       <Filter>Header Files</Filter>
+    </None>
+    <None Include="include\shaders\ads_diffuse.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\composite_diffuse.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\constants.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\lighting.frag.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\lighting.vert.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\lightModel.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\normal_calculator.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\toon_diffuse.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\vertex_in.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\vertex_in_array.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\vertex_out.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\vertex_out_array.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\wireframe.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\wireframe_geom.glsl">
+      <Filter>shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
