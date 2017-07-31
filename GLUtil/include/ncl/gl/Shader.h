@@ -147,7 +147,7 @@ namespace ncl {
 			std::map<GLenum, std::map<std::string, std::string>> _subroutineList;
 			ncl::Logger logger;
 			std::vector<Procedure> pendingOps;
-			bool _storePreprocessedShaders = true;
+			bool _storePreprocessedShaders = false;
 
 			static std::stack<GLuint> activePrograms;
 		};

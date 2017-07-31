@@ -12,3 +12,4 @@
 #include "PatchTeapot.h"
 #include "Cylinder.h"
 #include "Cone.h"
+#include "CrossHair.h"

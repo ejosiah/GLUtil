@@ -4,7 +4,7 @@
 
 layout(binding=10) uniform sampler2D ambientMap;
 layout(binding=11) uniform sampler2D diffuseMap;
-layout(binding=3) uniform sampler2D normalMap;
+layout(binding=13) uniform sampler2D normalMap;
 
 vec4 getAmbience(Material m);
 vec4 getDiffuse(Material m);

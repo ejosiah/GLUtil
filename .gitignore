@@ -278,3 +278,4 @@ ipch/**
 **/docs/*
 **/log.txt
 .gradle/
+**/*.intermediate.*

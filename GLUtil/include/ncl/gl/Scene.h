@@ -62,6 +62,8 @@ namespace ncl {
 					_width = GetSystemMetrics(SM_CXSCREEN);
 					_height = GetSystemMetrics(SM_CYSCREEN);
 				}
+				addShader("flat", GL_VERTEX_SHADER, identity_vert_shader);
+				addShader("flat", GL_FRAGMENT_SHADER, identity_frag_shader);
 			}
 
 			/**
