@@ -24,7 +24,15 @@ namespace ncl {
 #pragma pack (push, 1)
 			struct Plane {
 				glm::vec4 n;
-				Material material;
+				glm::vec4 ambient;
+				glm::vec4 diffuse;
+				glm::vec4 specular;
+				glm::vec4 transmittance;
+				glm::vec4 emission;
+				float shininess;
+				float ior;
+				float opacity;
+				float f0 = 1.0f;
 				float d;
 			};
 #pragma pack (pop)
@@ -42,8 +50,16 @@ namespace ncl {
 #pragma pack (push, 1)
 			struct Sphere {
 				glm::vec4 center;
+				glm::vec4 ambient;
+				glm::vec4 diffuse;
+				glm::vec4 specular;
+				glm::vec4 transmittance;
+				glm::vec4 emission;
+				float shininess;
+				float ior;
+				float opacity;
+				float f0;
 				float radius;
-				Material material;
 			};
 #pragma pack (pop)
 
