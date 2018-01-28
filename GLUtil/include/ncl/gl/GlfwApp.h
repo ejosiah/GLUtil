@@ -1,5 +1,7 @@
 #pragma once
 
+#define GLM_SWIZZLE 
+
 #include <stdexcept>
 #include <iostream>
 #include <gl/gl_core_4_5.h>
@@ -36,6 +38,7 @@ namespace ncl {
 			if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
 			}
+			Keyboard::get().setActivatModifiers(mods);
 			const Key* kptr =  Keyboard::get(key);
 			if (!kptr) {
 				localKey = true;

@@ -170,6 +170,7 @@
     <ClInclude Include="include\ncl\gl\Hemisphere.h" />
     <ClInclude Include="include\ncl\gl\PatchTeapot.h" />
     <ClInclude Include="include\ncl\gl\UserCameraController.h" />
+    <ClInclude Include="include\ncl\gl\Vector.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
     <ClInclude Include="TesellationExample.h" />

@@ -192,6 +192,9 @@
     <ClInclude Include="include\ncl\gl\shaders.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\Vector.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

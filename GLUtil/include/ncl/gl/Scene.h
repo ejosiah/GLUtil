@@ -93,13 +93,12 @@ namespace ncl {
 				using namespace std;
 				if (_useImplictShaderLoad) {
 					loadShaderImplicity();
-				}else if (!implicityLoaded && _sources.empty()) {
-					vector<ShaderSource> sources;
-					sources.push_back(ShaderSource{ GL_VERTEX_SHADER,  per_fragment_lighing_vert_shader , "default.vert" });
-					sources.push_back(ShaderSource{ GL_GEOMETRY_SHADER,  wireframe_geom_shader , "default.geom" });
-					sources.push_back(ShaderSource{ GL_FRAGMENT_SHADER,  per_fragment_lighing_frag_shader , "default.frag" });
-					_sources.insert(make_pair("default", sources));
 				}
+				vector<ShaderSource> sources;
+				sources.push_back(ShaderSource{ GL_VERTEX_SHADER,  per_fragment_lighing_vert_shader , "default.vert" });
+				sources.push_back(ShaderSource{ GL_GEOMETRY_SHADER,  wireframe_geom_shader , "default.geom" });
+				sources.push_back(ShaderSource{ GL_FRAGMENT_SHADER,  per_fragment_lighing_frag_shader , "default.frag" });
+				_sources.insert(make_pair("default", sources));
 				
 				for (auto& entry : _sources) {
 					Shader* shader = new Shader;
@@ -117,8 +116,6 @@ namespace ncl {
 				glEnable(GL_DEPTH_TEST);
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
-
-				// TODO enable based on framebuffer
 
 				init();
 

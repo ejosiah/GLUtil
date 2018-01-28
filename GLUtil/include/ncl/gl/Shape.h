@@ -85,6 +85,27 @@ namespace ncl {
 			}
 
 			template<typename T>
+			void update2(int attribute, std::function<void(T*)> consume) {
+				if (attribute < Position || attribute > Color)
+					throw std::runtime_error("invalid attribute id");
+				glBindVertexArray(vaoIds[0]);
+				int bufferId = 0;
+				switch (attribute) {
+				case Position:
+					break;
+				default:
+					for (int i = 0; i < attribute; i++) {
+						if (attributes[0][i]) {
+							bufferId++;
+						}
+					}
+				}
+				T* data = (T*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_WRITE);
+				consume(data);
+				glUnmapNamedBuffer(buffers[0][bufferId]);
+			}
+
+			template<typename T>
 			void get(unsigned int meshId, int attribute, std::function<void(T*)> use) const {
 				// FIX might fail if we have multiple texture buffers
 				if (attribute < Position || attribute > Indices)

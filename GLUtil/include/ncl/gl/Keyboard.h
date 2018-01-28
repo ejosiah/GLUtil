@@ -2,6 +2,7 @@
 #include <initializer_list>
 #include <vector>
 #include <algorithm>
+#include <GLFW/glfw3.h>
 
 namespace ncl {
 	namespace gl {
@@ -98,12 +99,11 @@ namespace ncl {
 				shift = ctrl = alt = false;
 			}
 
-			void activatModifier(int mod) {
-				switch (mod) {
-				case 1: shift = true; break;
-				case 2: ctrl = true; break;
-				case 4: alt = true; break;
-				}
+			void setActivatModifiers(int mods) {
+				clearModifiers();
+				shift = mods & GLFW_MOD_SHIFT;
+				ctrl = mods & GLFW_MOD_CONTROL;
+				alt = mods & GLFW_MOD_ALT;
 			}
 
 			bool shiftHeld() {

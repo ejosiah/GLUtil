@@ -53,13 +53,19 @@ public:
 		_motionEventHandler = new _3DMotionEventLogger(cam);
 		cam.view = glm::lookAt(vec3(1.0f, 1.5f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 		font = Font::Arial(20, 0, BLACK);
-		sphere = new Sphere(0.5, 50, 50);
-	//	teapot = new Teapot(8);
+		sphere = new Sphere(0.6, 10, 10);
+		teapot = new Teapot(8);
 		cube = new Cube;
+		cylinder = new Cylinder;
+		cone = new Cone;
+	//	v = new Vector(vec3{4, 5, 0});
+		x = new Vector(vec3{ 1, 0, 0 });
+		y = new Vector(vec3{ 0, 1, 0 });
+		z = new Vector(vec3{ 0, 0, -1 });
 		model = new Model("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj", true);
-		lightModel.twoSided = true;
+		lightModel.twoSided = false;
 		lightModel.colorMaterial = true;
-		m.ambient = m.diffuse = vec4(1, 0, 0, 1);
+		m.ambient = m.diffuse = vec4(1, 0, 0, -1);
 		m.specular = vec4(1);
 		shader("default").sendUniformMaterial("material[1]", m);
 		glClearColor(0.8, 0.8, 0.8, 1);
@@ -74,14 +80,27 @@ public:
 	}
 
 	virtual void display() override {
+		cam.model = mat4(1);
 	//	_shader.sendUniform1i("grids", 16);
 	//	cam.model = mat4(1);
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 	//	_shader.send(cam);
 		//teapot->draw(_shader);
-		shader("default").sendComputed(cam);
-		sphere->draw(shader("default"));
+		shader("default")([&](Shader& s) {
+			s.send(lightModel);
+			s.sendUniformLight("light[0]", light[0]);
+			s.sendComputed(cam);
+			//cylinder->draw(s);
+			//sphere->draw(s);
+			//cam.model = translate(mat4(1), { 0, 0, -2 });
+			//s.sendComputed(cam);
+			//cone->draw(s);
+			x->draw(s);
+			y->draw(s);
+			z->draw(s);
+		//	cube->draw(s);
+		});
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });
 
@@ -101,6 +120,11 @@ private:
 	Model* model;
 	Sphere* sphere;
 	Teapot* teapot;
+	Cylinder* cylinder;
+	Cone* cone;
+	Vector* x;
+	Vector* y;
+	Vector* z;
 	ProvidedMesh* controlPoints;
 	ProvidedMesh* controlLines;
 	Material m;
