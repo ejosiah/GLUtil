@@ -6,12 +6,12 @@ namespace ncl {
 	namespace gl {
 		class Plane : public Shape {
 		public:
-			Plane(int r, int c, float l, float w, bool mapUVtoSize = true, glm::vec4& color = randomColor())
+			Plane(int r, int c, float l, float w, const glm::vec4& color = randomColor(), bool mapUVtoSize = true)
 			:Shape(createMesh(w, l, r, c, mapUVtoSize, color)){
 
 			}
 
-			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, glm::vec4& color) {
+			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, const glm::vec4& color) {
 				float halfLength = l / 2;
 				float halfWidth = w / 2;
 				Mesh mesh;

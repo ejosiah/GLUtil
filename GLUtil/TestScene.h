@@ -124,8 +124,8 @@ public:
 	}
 
 	mat4 getViewport() {
-		float w = scene.width() / 2.0;
-		float h = scene.height() / 2.0;
+		float w = scene.width() / 2.0f;
+		float h = scene.height() / 2.0f;
 
 		return mat4(
 			vec4(w, 0, 0, 0),
@@ -154,7 +154,7 @@ public:
 		initShader();
 		loadBrickTexture();
 		loadLightMapTexture();
-		plane = new Plane(40, 40, 8.0f, 8.0f, true);
+		plane = new Plane(40, 40, 8.0f, 8.0f, vec4(1), true);
 	}
 
 	void initShader() {

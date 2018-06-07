@@ -460,15 +460,20 @@ namespace ncl {
 
 			using namespace std;
 			static const regex INCLUDE_PATTERN("^#pragma\\s*include\\s*\\(\\s*\"([A-Za-z0-9_.-]+\\.[A-za-z]+)\"\\.*\\)\\.*");
+			const regex DEBUG_MODE("^#pragma\\s*storeIntermediate\\(on\\)");
 			stringstream in;
 			stringstream out;
 			in << source;
 
 			size_t line_number = 1;
 			smatch matches;
+			smatch debug_match;
 
 			string line;
 			while (getline(in, line)) {
+				if (regex_search(line, debug_match, DEBUG_MODE) && level == 0) {
+					storeIntermidate = true;
+				}
 				if (regex_search(line, matches, INCLUDE_PATTERN)) {
 					string file = matches[1];
 					string include_file = "C:\\Users\\" + username + "\\OneDrive\\cpp\\include\\shaders\\" + file;
@@ -495,6 +500,7 @@ namespace ncl {
 				fout << result << endl;
 				fout.flush();
 				fout.close();
+				storeIntermidate = false;
 			}
 			return result;
 		}

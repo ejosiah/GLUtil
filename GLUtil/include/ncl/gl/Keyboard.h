@@ -23,6 +23,10 @@ namespace ncl {
 				return status == PRESSED;
 			}
 
+			bool released() const {
+				return status == RELEASED;
+			}
+
 			void release() const{
 				status = RELEASED;
 			}

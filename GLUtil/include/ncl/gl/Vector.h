@@ -10,7 +10,7 @@ namespace ncl {
 	namespace gl {
 		class Vector : public Drawable {
 		public: 
-			Vector(glm::vec3& value, glm::vec3& origin = glm::vec3(0), bool scale = true, glm::vec4& color = randomColor()) {
+			Vector(glm::vec3 value, glm::vec3 origin = glm::vec3(0), bool scale = true, glm::vec4 color = randomColor()) {
 				
 				glm::vec3 v1(0, 0, -1);
 				glm::vec3 v2 = normalize(value);

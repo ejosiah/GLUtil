@@ -6,10 +6,10 @@ namespace ncl {
 	namespace gl {
 		class ProvidedMesh : public Shape, public WithTriangleAdjacency {
 		public:
-			ProvidedMesh(Mesh& mesh, bool adjacency = false) :ProvidedMesh(std::vector<Mesh>(1, mesh), adjacency) {
+			ProvidedMesh(Mesh mesh, bool adjacency = false) :ProvidedMesh(std::vector<Mesh>(1, mesh), adjacency) {
 			}
 
-			ProvidedMesh(std::vector<Mesh>& meshes, bool adjacency = false):Shape(preprocess(meshes, adjacency)) {
+			ProvidedMesh(std::vector<Mesh> meshes, bool adjacency = false):Shape(preprocess(meshes, adjacency)) {
 			}
 
 			ProvidedMesh(Shape& shape, GLenum primitiveType, const color& color = glm::vec4(1))	// TODO add bitfields of what to copy

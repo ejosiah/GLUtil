@@ -94,7 +94,7 @@ namespace ncl {
 			return round((rng() * x));
 		}
 
-		glm::vec3 vector(glm::vec3& min, glm::vec3 max) const{
+		glm::vec3 vector(glm::vec3 min, glm::vec3 max) const{
 			return glm::vec3{
 				_real(min.x, max.x),
 				_real(min.y, max.y),

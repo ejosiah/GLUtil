@@ -13,6 +13,9 @@ namespace ncl {
 			struct Button {
 				enum Status { PRESSED, RELEASED };
 				Status status = RELEASED;
+
+				bool isPressed() { return status == PRESSED; }
+				bool isReleased() { return status == RELEASED;  }
 			};
 			Button left;
 			Button middle;

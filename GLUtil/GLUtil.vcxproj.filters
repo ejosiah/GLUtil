@@ -299,16 +299,10 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\simple_light.frag" />
-    <None Include="include\shaders\lighting.vert">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="include\shaders\lightModel.vert">
       <Filter>shaders</Filter>
     </None>
     <None Include="include\shaders\vertex_out.vert">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\vertex_in.vert">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\quad.tes">

@@ -102,6 +102,7 @@ namespace ncl {
 				
 				for (auto& entry : _sources) {
 					Shader* shader = new Shader;
+
 					for (auto source : entry.second) {
 						shader->load(source);
 					}
@@ -316,7 +317,8 @@ namespace ncl {
 				_height = h;
 				_center = glm::vec2(w / 2, h / 2);
 				aspectRatio = float(w) / h;
-				resized();
+				Font::onResize(w, h);
+				try { resized(); } catch (...) {}
 			}
 
 			bool shouldResize(int w, int h) {
@@ -352,7 +354,7 @@ namespace ncl {
 			* @param text text to render on scene
 			* @param font font used to render text
 			*/
-			void renderText(int x, int y, std::string text, Font* font = Font::Arial(10, 0, glm::vec4(1, 1, 0, 1))) {
+			void renderText(int x, int y, std::string text, Font* font = Font::Arial(10, 0, glm::vec4(0, 0, 0, 1))) {
 				font->render(text, x, y);
 			}
 
@@ -392,6 +394,14 @@ namespace ncl {
 				for (std::string name : names) {
 					shader(name)(proc);
 				}
+			}
+
+			/**
+			* @breif Sets the background of the scene
+			* @param color color to set the background to
+			*/
+			void setBackGroundColor(const glm::vec4& color) {
+				glClearColor(color.r, color.g, color.b, color.a);
 			}
 
 		protected:

@@ -15,6 +15,17 @@ out VERTEX {
 
 smooth in vec4 vcolor[];
 
+vec3 calculateNormal(){
+	vec3 p0 = gl_in[0].gl_Position.xyz;
+	vec3 p1 = gl_in[2].gl_Position.xyz;
+	vec3 p2 = gl_in[1].gl_Position.xyz;
+
+	vec3 a = p0 - p1;
+	vec3 b = p2 - p1;
+	
+	return cross(a, b); 
+}
+
 void main(){
 	float u = gl_TessCoord.x;
 	float v = gl_TessCoord.y;
@@ -30,6 +41,10 @@ void main(){
 			 p1 * u * i_v + 
 			 p3 * v * i_u +
 			 p2 * u * v;
+
+	vec3 pn = calculateNormal();
+
+	vertex.normal = normalize(pn + p.xyz);
 
 	vertex.texCoord = gl_TessCoord.xy;
 	vertex.color = vcolor[0];

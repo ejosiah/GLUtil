@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <stdexcept>
 #include <thread>
 #include <future>
@@ -108,6 +109,11 @@ namespace ncl {
 					fonts[key] = new Font(name, size, style, color);
 				}
 				return fonts[key];
+			}
+
+			static void onResize(int w, int h) {
+				using namespace std;
+				for_each(fonts.begin(), fonts.end(), [&](std::pair<string, Font*> pair) { pair.second->resize(w, h); });
 			}
 
 			void intepretError(int code) {

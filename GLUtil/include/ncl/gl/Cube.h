@@ -7,12 +7,10 @@
 
 namespace ncl {
 	namespace gl {
-		class Cube : public PatchShape {
+		class Cube : public Shape {
 		public:
 			Cube(float size = 1.0f, float grids = 10, const glm::vec4& color = randomColor())
-				:PatchShape(createMesh(size / 2, color), 4
-					, new float[4]{ grids, grids, grids, grids }
-					, new float[2]{ grids, grids }) {}
+				:Shape(createMesh(size/2, color), true) {}
 
 
 			std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color) {

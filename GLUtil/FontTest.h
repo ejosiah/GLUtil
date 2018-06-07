@@ -25,7 +25,7 @@ public:
 		float sx = 2.0 / _width;
 		float sy = 2.0 / _height;
 
-		font->render("FPS: " + std::to_string(fps), 10, _height - 20);
+		renderText(10, _height - 20, "FPS: " + std::to_string(fps));
 		for (int i = 0; i < 10; i++) {
 			font->render("The Quick Brown Fox Jumps over the Lazy Dog", 10, _height - (40 + i * 20));
 		}
@@ -33,7 +33,7 @@ public:
 	}
 
 	virtual void resized() {
-		font->resize(_width, _height);
+		
 	}
 private:
 	Font* font;
