@@ -152,8 +152,12 @@
   <ItemGroup>
     <ClInclude Include="exampleScene.h" />
     <ClInclude Include="FontTest.h" />
+    <ClInclude Include="Header.h" />
+    <ClInclude Include="include\ncl\geom\Plane.h" />
+    <ClInclude Include="include\ncl\geom\Triangle.h" />
     <ClInclude Include="include\ncl\gl\3DConnexion.h" />
     <ClInclude Include="include\ncl\gl\Camera.h" />
+    <ClInclude Include="include\ncl\gl\Cloth.h" />
     <ClInclude Include="include\ncl\gl\common.h" />
     <ClInclude Include="include\ncl\gl\CrossHair.h" />
     <ClInclude Include="include\ncl\gl\geometry.h" />
@@ -163,12 +167,14 @@
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h" />
     <ClInclude Include="include\ncl\gl\shaders.h" />
+    <ClInclude Include="include\ncl\gl\shader_binding.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
     <ClInclude Include="include\ncl\gl\Cylinder.h" />
     <ClInclude Include="include\ncl\gl\Font.h" />
     <ClInclude Include="include\ncl\gl\Hemisphere.h" />
     <ClInclude Include="include\ncl\gl\PatchTeapot.h" />
+    <ClInclude Include="include\ncl\gl\TransformFeedBack.h" />
     <ClInclude Include="include\ncl\gl\UserCameraController.h" />
     <ClInclude Include="include\ncl\gl\Vector.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />

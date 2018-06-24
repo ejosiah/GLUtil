@@ -70,7 +70,7 @@ public:
 		shader("default").sendUniformMaterial("material[1]", m);
 		glClearColor(0.8, 0.8, 0.8, 1);
 		cam.model = mat4(1);
-		
+		copyCube();
 
 
 	}
@@ -96,10 +96,10 @@ public:
 			//cam.model = translate(mat4(1), { 0, 0, -2 });
 			//s.sendComputed(cam);
 			//cone->draw(s);
-			x->draw(s);
-			y->draw(s);
-			z->draw(s);
-		//	cube->draw(s);
+		//	x->draw(s);
+		//	y->draw(s);
+		//	z->draw(s);
+			cube->draw(s);
 		});
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });
@@ -109,6 +109,35 @@ public:
 	//	sphere->draw(_shader);
 	//	UI::render();
 	//	font->render("The Quick Brown Fox Jumps over the Lazy Dog", 0, _height - 20);
+	}
+
+	void copyCube() {
+		vector<GLuint*> buffers = cube->getBuffers();
+		GLuint* buf0 = buffers[0];
+		for (int i = 0; i < 3; i++) {
+			Logger::get("example").info(std::to_string(buf0[i]));
+		}
+	
+		GLint size;
+		glBindBuffer(GL_COPY_READ_BUFFER, buf0[0]);
+		glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
+
+		Logger::get("example").info("size of pos: " + to_string(size / (sizeof(float) * 3)));
+
+		glGenBuffers(1, &cubeCopyVBOID);
+		glBindBuffer(GL_COPY_WRITE_BUFFER, cubeCopyVBOID);
+		glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_STATIC_DRAW);
+
+		glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
+
+		glBindBuffer(GL_ARRAY_BUFFER, cubeCopyVBOID);
+		glm::vec3* data = (glm::vec3*)glMapNamedBuffer(cubeCopyVBOID, GL_READ_ONLY);
+		for (int i = 0; i < 24; i++) {
+			glm::vec3 v = *data;
+			Logger::get("example").info("v{" + to_string(v.x) + ", " + to_string(v.y) + ", " + to_string(v.z) + "}");
+			data++;
+		}
+
 	}
 
 	virtual void update(float elapsedTime) override {
@@ -129,5 +158,7 @@ private:
 	ProvidedMesh* controlLines;
 	Material m;
 	Font* font;
+	GLuint cubeCopyVAOID;
+	GLuint cubeCopyVBOID;
 	
 };

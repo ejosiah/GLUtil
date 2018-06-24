@@ -1,0 +1,246 @@
+#pragma once
+
+#include "Shader.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <initializer_list>
+
+namespace ncl {
+	namespace gl {
+
+		void ensureShaderbound() {
+			if (Shader::boundShader == nullptr) {
+				throw std::runtime_error("No shader active");
+			}
+		}
+
+		void addAttribute(const std::string& attribute, const GLuint location) {
+			ensureShaderbound();
+			Shader::boundShader->addAttribute(attribute, location);
+		}
+
+
+		void addUniform(const std::string& uniform) {
+			ensureShaderbound();
+			Shader::boundShader->addUniform(uniform);
+		}
+
+	
+
+		void send(const std::string& name, GLfloat v0) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1f(name, v0);
+		}
+
+
+		void send(const std::string& name, GLfloat v0, GLfloat v1) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform2f(name, v0, v1);
+		}
+
+		void sendUniform3f(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform3f(name, v0, v1, v2);
+		}
+
+
+		void sendUniform4f(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform4f(name, v0, v1, v2, v3);
+		}
+
+
+		void send(const std::string& name, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1fv(name, 1, value);
+		}
+
+		void send(const std::string& name, GLsizei count, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1fv(name, count, value);
+		}
+
+		void send2fv(const std::string& name, GLsizei count, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform2fv(name, count, value);
+		}
+
+
+		void send2fv(const std::string& name, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform2fv(name, 1, value);
+		}
+
+		void send3fv(const std::string& name, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform3fv(name, 1, value);
+		}
+
+		void send3fv(const std::string& name, GLsizei count, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform3fv(name, count, value);
+		}
+
+
+		void send4fv(const std::string& name, GLsizei count, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform4fv(name, count, value);
+		}
+
+		void send4fv(const std::string& name, GLfloat* value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform4fv(name, 1, value);
+		}
+
+		void send(const std::string& name, glm::vec2& value) {
+			send2fv(name, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, glm::vec3& value) {
+			send3fv(name, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, glm::vec4& value) {
+			send4fv(name, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, GLint v0) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1i(name, v0);
+		}
+
+
+		void send(const std::string& name, GLint v0, GLint v1) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform2i(name, v0, v1);
+		}
+
+		void send(const std::string& name, GLint v0, GLint v1, GLint v2) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform3i(name, v0, v1, v2);
+		}
+
+
+		void send(const std::string& name, GLint v0, GLint v1, GLint v2, GLint v3) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform4i(name, v0, v1, v2, v3);
+		}
+
+		void sendui(const std::string& name, GLint v0) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1ui(name, v0);
+		}
+
+
+		void sendui(const std::string& name, GLint v0, GLint v1) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform2ui(name, v0, v1);
+		}
+
+		void sendui(const std::string& name, GLint v0, GLint v1, GLint v2) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform3ui(name, v0, v1, v2);
+		}
+
+
+		void sendui(const std::string& name, GLint v0, GLint v1, GLint v2, GLint v3) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform4ui(name, v0, v1, v2, v3);
+		}
+
+		void send(const std::string& name, GLsizei count, GLboolean transpose, glm::mat2 value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformMatrix2fv(name, count, transpose, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, GLboolean transpose, glm::mat2 value) {
+			send(name, 1, transpose, value);
+		}
+
+		void send(const std::string& name, glm::mat2 value) {
+			send(name, 1, false, value);
+		}
+
+
+		void send(const std::string& name, GLsizei count, GLboolean transpose, glm::mat3 value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformMatrix3fv(name, count, transpose, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, GLboolean transpose, glm::mat3 value) {
+			send(name, 1, transpose, value);
+		}
+
+		void send(const std::string& name, glm::mat3 value) {
+			send(name, false, value);
+		}
+
+		void send(const std::string& name, GLsizei count, GLboolean transpose, glm::mat4 value) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformMatrix4fv(name, count, transpose, glm::value_ptr(value));
+		}
+
+		void send(const std::string& name, GLboolean transpose, glm::mat4 value) {
+			send(name, 1, transpose, value);
+		}
+
+		void send(const std::string& name, glm::mat4 value) {
+			send(name, false, value);
+		}
+
+
+		void send(const LightModel& lightModel) {
+			ensureShaderbound();
+			Shader::boundShader->send(lightModel);
+		}
+
+		void send(LightSource& light) { 
+			ensureShaderbound();
+			Shader::boundShader->sendUniformLight("light[0]", light); 
+		}
+
+		void send(const std::string& name, LightSource& light) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformLight(name, light);
+		}
+
+		void send(LightSource light[], int size) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformLights(light, size);
+		}
+
+		void send(const std::string& name, Material& material) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformMaterial(name, material);
+		}
+
+
+		void sendUniformMaterials(const std::string& name, Material material[]) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniformMaterials(name, material);
+		}
+
+
+		void send(const Camera& camera, const glm::mat4& model = glm::mat4(1)){
+			ensureShaderbound();
+			Shader::boundShader->sendComputed(camera);
+		}
+
+		void send(GlmCam& cam) {
+			ensureShaderbound();
+			Shader::boundShader->sendComputed(cam);
+		}
+
+		void shade(Shape* shape) {
+			ensureShaderbound();
+			shape->draw(*Shader::boundShader);
+		}
+		
+		void shade(std::initializer_list<Shape*> shapes) {
+			for (auto* shape : shapes) {
+				shade(shape);
+			}
+		}
+
+	}
+}

@@ -84,9 +84,8 @@ void main(){
 
 	MV = V * M;
 	MVP = P * MV;
-	NM = transpose(inverse(mat3(MV)));
 
-	vertex.normal =  normalize(NM * normal);
+	vertex.normal =  n;
 	vec4 pos = MV * vec4(position, 1);
 	vertex.position = pos.xyz;
 	

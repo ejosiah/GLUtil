@@ -16,6 +16,9 @@
 namespace ncl {
 	namespace gl {
 
+		Shader* Shader::boundShader;
+		Shader* Shader::previouslyBoundShader = 0;
+
 		std::stack<GLuint> Shader::activePrograms;
 
 		std::string shaderName(GLenum shaderType) {
@@ -162,11 +165,20 @@ namespace ncl {
 
 		}
 
+		void Shader::relink() {
+			glLinkProgram(_program);
+		}
+
 		void Shader::use(Procedure proc) {
 			use();
 			proc(*this);
+			unUse();  
+		}
+
+		void Shader::use(Procedure1 proc) {
+			use();
+			proc();
 			unUse();
-            
 		}
 
 		void Shader::use() {
@@ -177,6 +189,8 @@ namespace ncl {
 			if (activePrograms.top() != _program) {
 				activePrograms.push(_program);
 				glUseProgram(_program);
+				previouslyBoundShader = boundShader;
+				boundShader = this;
 			}
 		}
 
@@ -198,6 +212,8 @@ namespace ncl {
 			}*/
 
 			glUseProgram(program);
+			boundShader = previouslyBoundShader;
+			previouslyBoundShader = 0;
 		}
 
 		void Shader::addAttribute(const std::string& attribute, const GLuint location) {

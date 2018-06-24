@@ -131,15 +131,20 @@ namespace ncl {
 			}
 
 			void render(const std::string& text, float x, float y, float d = -1) {
+				
 				shader.use();
 				glActiveTexture(GL_TEXTURE10);
-				shader.sendUniform1ui("glyph", 10);
+				shader.sendUniform1i("glyph", 10);
 				shader.sendUniform4fv("color", 1, glm::value_ptr(color));
 				bool blendingOff = !glIsEnabled(GL_BLEND);
 				bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
 				if (blendingOff) glEnable(GL_BLEND);
 				if (depthTestOn) glDisable(GL_DEPTH_TEST);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				GLint polygonMode[2];
+				glGetIntegerv(GL_POLYGON_MODE, polygonMode);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 				withVertexArray(vaoId, [&]() {
 					float startX = x;
 					for (char c : text) {
@@ -180,6 +185,9 @@ namespace ncl {
 				});
 				if (blendingOff) glDisable(GL_BLEND);
 				if (depthTestOn) glEnable(GL_DEPTH_TEST);
+				glPolygonMode(GL_FRONT, polygonMode[0]);
+				glPolygonMode(GL_BACK, polygonMode[1]);
+
 				shader.unUse();
 			}
 

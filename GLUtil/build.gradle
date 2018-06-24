@@ -8,7 +8,7 @@ task installHeaders(type: Copy, dependsOn: 'compileShaders'){
 
 task compileShaders << {
 	println("transfering to $includeDir")
-	def src = new File('shaders').listFiles()
+	def src = new File('shaders').listFiles().findAll{ it.isFile() }
 	def dest = new File("include/ncl/gl/shaders.h")
 	dest.delete()
 	dest << "#pragma once\n"

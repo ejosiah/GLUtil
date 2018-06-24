@@ -134,6 +134,11 @@ namespace ncl {
 				}
 				return numBuffers;
 			}
+
+			std::vector<GLuint*> getBuffers() const {
+				return buffers;
+			}
+
 		protected:
 			std::vector<Material> materials;
 			std::vector<GLsizei> counts;

@@ -194,7 +194,7 @@ namespace ncl {
 						material.ambientTexPath = texPath;
 					}
 					else {
-						ambient = new CheckerTexture(10, WHITE, WHITE);
+						ambient = new CheckerTexture(10, "", WHITE, WHITE);
 						material.ambientMat = ambient->bufferId();
 					}
 
@@ -208,7 +208,7 @@ namespace ncl {
 						material.usingDefaultMat = false;
 					}
 					else {
-						diffuse = new CheckerTexture(11, WHITE, WHITE);
+						diffuse = new CheckerTexture(11, "", WHITE, WHITE);
 						material.diffuseMat = ambient->bufferId();
 					}
 

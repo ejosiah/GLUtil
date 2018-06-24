@@ -20,11 +20,11 @@ namespace ncl {
 				vec3 positions[NO_VERTICES] = {
 					// Front
 					vec3(-halfSize, -halfSize, halfSize),
-					vec3(halfSize, -halfSize, halfSize),
+					vec3(halfSize, -halfSize, halfSize),//
 					vec3(halfSize,  halfSize, halfSize),
 					vec3(-halfSize,  halfSize, halfSize),
 					// Right
-					vec3(halfSize, -halfSize, halfSize),
+					vec3(halfSize, -halfSize, halfSize),//
 					vec3(halfSize, -halfSize, -halfSize),
 					vec3(halfSize,  halfSize, -halfSize),
 					vec3(halfSize,  halfSize, halfSize),
@@ -42,7 +42,7 @@ namespace ncl {
 					vec3(-halfSize, -halfSize, halfSize),
 					vec3(-halfSize, -halfSize, -halfSize),
 					vec3(halfSize, -halfSize, -halfSize),
-					vec3(halfSize, -halfSize, halfSize),
+					vec3(halfSize, -halfSize, halfSize),//
 					// Top
 					vec3(-halfSize,  halfSize, halfSize),
 					vec3(halfSize,  halfSize, halfSize),

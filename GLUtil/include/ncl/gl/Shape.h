@@ -60,7 +60,7 @@ namespace ncl {
 					glBindVertexArray(0);
 				}
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
-				glActiveTexture(GL_TEXTURE0);
+				//(GL_TEXTURE0);
 			}
 
 
@@ -136,7 +136,7 @@ namespace ncl {
 					return counts[meshId];
 				}
 				else {
-					std::set<GLuint> indices;
+					std::set<GLuint> indices;	 // TODO check this might be wrong, mutiple indices may point to the same vertex
 					int size = counts[meshId];
 					get<GLuint>(meshId, Indices, [&](GLuint* index) {
 						GLuint* begin = index;

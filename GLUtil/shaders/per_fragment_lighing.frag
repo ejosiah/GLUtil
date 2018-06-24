@@ -6,7 +6,7 @@ const int MAX_LIGHT_SOURCES = 10;
 const int MAX_TEXTURES = 8;
 
 layout(binding = 0) uniform sampler2D image0;
-layout(binding = 1) uniform sampler2D image1;
+layout(binding = 1) uniform sampler2D image1;   // normalMap if using object  space
 layout(binding=2) uniform sampler2D image2;
 layout(binding=3) uniform sampler2D image3;
 layout(binding=4) uniform sampler2D image4;
@@ -122,6 +122,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	toonShader.scaleFactor = 1.0 / toonShader.levels;
 	vec3 n = gl_FrontFacing ? normalize(vertex.normal) : normalize(-vertex.normal);
 	n = lightModel.useObjectSpace ? (2.0 * texture(image1, vertex.texCoord) - 1.0).xyz : n;
+//	n = (2.0 * texture(image1, vertex.texCoord) - 1.0).xyz;
 	vec3 l = normalize(direction.xyz);
 	float f = m.shininess;
 		
@@ -167,17 +168,18 @@ vec4 texColor(){
 			break;
 		}
 	}
-	for(int i = 0; i < blendTex.length(); i++){
-		int blendId = blendTex[i];
-		if(blendId != 0){
-			vec4 blendColor = colors[blendId];
-			color = mix(color, blendColor, blendColor.a);
-		}
-	}
+//	for(int i = 0; i < blendTex.length(); i++){
+//		int blendId = blendTex[i];
+//		if(blendId != 0){
+//			vec4 blendColor = colors[blendId];
+//			color = mix(color, blendColor, blendColor.a);
+//		}
+//	}
 	return color;
 }
 
 void main(){
 	fragColor = phongLightModel() * texColor();
 	fragColor = wireframe ? mix(line.color, fragColor, getLineMixColor()) : fragColor;
+//	fragColor = texture(image0, vertex.texCoord);
 }

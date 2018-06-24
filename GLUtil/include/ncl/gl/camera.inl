@@ -78,7 +78,7 @@ namespace ncl {
 			// Extract the pitch angle from the view matrix.
 			accumPitchDegrees = degrees(asinf(viewMatrix[1][2]));	// TODO change this matrix is colomn matrix
 
-			xAxis = vec3(row(viewMatrix, 0));	// TODO verify that this is correct
+			xAxis = vec3(row(viewMatrix, 0));
 			yAxis = vec3(row(viewMatrix, 1));
 			zAxis = vec3(row(viewMatrix, 2));
 

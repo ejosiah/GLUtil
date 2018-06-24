@@ -43,7 +43,8 @@ public:
 		phongShader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 
 		phongShader.createAndLinkProgram();
-		string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj";
+	//	string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj";
+		string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\Game_model\\Game_model.obj";
 	//	string path = "C:\\Users\\Josiah\\Documents\\Visual Studio 2015\\Projects\\LitScene\\media\\blocks.obj";
 		model = new Model(path, true);
 		model->forEachMaterial([](Material& m) { m.shininess =  128.0f; });
@@ -54,16 +55,20 @@ public:
 		if (camera.getMode() == Camera::ORBIT) {
 			//Shader& phongShader = teapot->shader;
 			phongShader([&](Shader& shader) {
+				LightModel lm;
+				lm.localViewer = true;
+				//lm.useObjectSpace = true;
 				LightSource light = calculateLight(camera);
-				phongShader.sendUniform1i("celShading", false);
+				phongShader.sendUniform1i("celShading", true);
 				phongShader.sendUniform3fv("globalAmbience", 1, &glm::vec4(0.2)[0]);
 				phongShader.sendUniform1ui("localViewer", true);
 				phongShader.sendUniform1f("line.width", 0.1);
 				phongShader.sendUniform4f("line.color", 1, 1, 1, 1);
-				phongShader.sendUniform1i("wireframe", false);
+				phongShader.sendUniform1i("wireframe", true);
 				phongShader.sendUniformMatrix4fv("viewport", 1, GL_FALSE, value_ptr(getViewport()));
 				phongShader.sendUniformLight(light);
 				phongShader.send(camera, cameraController.modelTrans());
+				phongShader.send(lm);
 				model->draw(shader);
 				
 			});
@@ -164,14 +169,14 @@ public:
 	}
 
 	void loadBrickTexture() {
-		floorTex = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_color_map.tga", 0, GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
-		shader.sendUniform1f("image0", floorTex->id());
+		floorTex = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_color_map.tga", 0, "image0", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		shader.sendUniform1i("image0", floorTex->id());
 		
 	}
 
 	void loadLightMapTexture() {
 		lightMap = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_light_map.tga", 1);
-		shader.sendUniform1f("image1", lightMap->id());
+		shader.sendUniform1i("image1", lightMap->id());
 
 	}
 

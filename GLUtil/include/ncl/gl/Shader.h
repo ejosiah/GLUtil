@@ -24,6 +24,7 @@ namespace ncl {
 		class Shader;
 		static const unsigned NO_OF_SHADERS = 6;
         using Procedure = std::function<void(Shader& shader)>;
+		using Procedure1 = std::function<void()>;
 		const std::map<std::string, GLenum> extensions{
 			std::make_pair("vert", GL_VERTEX_SHADER),
 			std::make_pair("frag", GL_FRAGMENT_SHADER),
@@ -60,8 +61,10 @@ namespace ncl {
 			void loadFromstring(GLenum shader, const std::string& source, const std::string& filename = ".shader");
 			bool loadFromFile(const std::string& filename);
 			void createAndLinkProgram();
+			void relink();
 
-			void use(Procedure proc);
+			void use(Procedure proc);	// TODO delete this
+			void use(Procedure1 proc);
 			void use();
 			void unUse();
 
@@ -122,6 +125,10 @@ namespace ncl {
                 use(proc);
             }
 
+			void operator()(Procedure1 proc) {
+				use(proc);
+			}
+
 			void clear();
 
 			GLuint program() { return _program;  }
@@ -135,6 +142,9 @@ namespace ncl {
 			static ShaderSource extractFromFile(const std::string& filename);
 
 			void load(const ShaderSource& source);
+
+			static Shader* boundShader;
+			static Shader* previouslyBoundShader;
 
 
 		private:
@@ -155,3 +165,4 @@ namespace ncl {
 }
 
 #include "Shader.inl"
+// TODO bind active shader 
