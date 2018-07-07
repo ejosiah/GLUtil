@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "textures.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <initializer_list>
@@ -231,14 +232,18 @@ namespace ncl {
 			Shader::boundShader->sendComputed(cam);
 		}
 
-		void shade(Shape* shape) {
+		void send(TextureBuffer* buffer) {
+			buffer->sendTo(*Shader::boundShader);
+		}
+
+		void shade(Drawable* drawable) {
 			ensureShaderbound();
-			shape->draw(*Shader::boundShader);
+			drawable->draw(*Shader::boundShader);
 		}
 		
-		void shade(std::initializer_list<Shape*> shapes) {
-			for (auto* shape : shapes) {
-				shade(shape);
+		void shade(std::initializer_list<Drawable*> drawables) {
+			for (auto* drawable : drawables) {
+				shade(drawable);
 			}
 		}
 

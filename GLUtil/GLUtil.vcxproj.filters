@@ -31,6 +31,9 @@
     <Filter Include="Header Files\geometry">
       <UniqueIdentifier>{c5efc520-f80f-4a9b-a208-1d1656109018}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\geometry\bounding_volumes">
+      <UniqueIdentifier>{797b70bd-cfe0-40d3-be7c-777e551f133c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -207,13 +210,28 @@
     <ClInclude Include="include\ncl\gl\shader_binding.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>Header Files\geometry</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\geom\Plane.h">
       <Filter>Header Files\geometry</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\geom\Triangle.h">
+      <Filter>Header Files\geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\configured_logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\bounding_volumn.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\AABB.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\visualize_bounding_volumes.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\glm\vec_equals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\Ray.h">
       <Filter>Header Files\geometry</Filter>
     </ClInclude>
   </ItemGroup>

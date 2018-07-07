@@ -12,5 +12,5 @@ in VERTEX {
 out vec4 fragColor;
 
 void main(){
-	fragColor = vec4(0);
+	fragColor = vertex.color;
 }

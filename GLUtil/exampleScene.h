@@ -96,10 +96,10 @@ public:
 			//cam.model = translate(mat4(1), { 0, 0, -2 });
 			//s.sendComputed(cam);
 			//cone->draw(s);
-		//	x->draw(s);
-		//	y->draw(s);
-		//	z->draw(s);
-			cube->draw(s);
+			x->draw(s);
+			y->draw(s);
+			z->draw(s);
+		//	cube->draw(s);
 		});
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });

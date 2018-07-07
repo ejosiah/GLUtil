@@ -103,7 +103,8 @@ namespace ncl {
 			}
 
 			static Font* getFont(std::string name, int size, int style, const color& color) {
-				auto key = getFontName(name, style) + std::to_string(size);
+				auto colorStr = std::to_string(color.r) + std::to_string(color.g) + std::to_string(color.b);
+				auto key = getFontName(name, style) + std::to_string(size) + colorStr;
 				auto itr = fonts.find(key);
 				if (itr == fonts.end()) {
 					fonts[key] = new Font(name, size, style, color);

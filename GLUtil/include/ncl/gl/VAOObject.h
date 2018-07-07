@@ -3,11 +3,14 @@
 #include <glm/glm.hpp>
 #include "Drawable.h"
 #include "VBOObject.h"
+#include <functional>
 
 namespace ncl {
 	namespace gl {
 		class VAOObject : public VBOObject {	
 		public:
+			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices };
+
 			VAOObject(std::vector<Mesh>& meshes)
 				:VBOObject(meshes) {
 				const int no_of_vaos = buffers.size();
@@ -62,12 +65,18 @@ namespace ncl {
 				}
 				
 			}
+
+			void use(int vaoIndex, std::function<void()> proc) {
+				glBindVertexArray(vaoIds[vaoIndex]);
+				proc();
+				glBindVertexArray(0);
+			}
+
 			virtual ~VAOObject() {
 				glDeleteVertexArrays(vaoIds.size(), &vaoIds[0]);
 			}
 
 		protected:
-			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices };
 			std::vector<GLuint> vaoIds;
 		};
 	}

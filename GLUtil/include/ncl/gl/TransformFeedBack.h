@@ -16,7 +16,7 @@ namespace ncl {
 					glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tf_id); 
 					glTransformFeedbackVaryings(shader->program(), noOfVaryings, varyings, separate_attribs ? GL_SEPARATE_ATTRIBS : GL_INTERLEAVED_ATTRIBS); 
 					shader->relink();
-				//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+					glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 				}
 
 			}
@@ -26,7 +26,7 @@ namespace ncl {
 			}
 
 			void operator()(const GLuint* buffers, const GLsizei noOfBuffers, GLenum primitiveType, std::function<void()> proc) {
-			//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tf_id);
+				glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tf_id);
 				for (int i = 0; i < noOfBuffers; i++) {
 					glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, i, buffers[i]); 
 				}
@@ -35,7 +35,7 @@ namespace ncl {
 				proc(); 
 				glEndTransformFeedback(); 
 				if (disableRaster) glDisable(GL_RASTERIZER_DISCARD); 
-			//	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+				glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
 			}
 
 		private:

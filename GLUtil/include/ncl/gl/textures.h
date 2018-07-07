@@ -151,11 +151,11 @@ namespace ncl {
 
 		class TextureBuffer {
 		public:
-			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, unsigned id = nextId++) { // TODO fix nextId bug
+			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW) { // TODO fix nextId bug
 				glActiveTexture(TEXTURE(id));
 				glGenBuffers(1, &_buffer);
 				glBindBuffer(GL_TEXTURE_BUFFER, _buffer);
-				glBufferData(GL_TEXTURE_BUFFER, size, data, GL_STATIC_DRAW);
+				glBufferData(GL_TEXTURE_BUFFER, size, data, usage);
 
 				glGenTextures(1, &_tbo_id);
 				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
