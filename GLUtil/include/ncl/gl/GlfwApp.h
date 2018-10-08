@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #define GLM_SWIZZLE 
 
 #include <stdexcept>
@@ -11,7 +12,6 @@
 #include "Timer.h"
 #include "logger.h"
 #include "Font.h"
-
 
 #ifdef CONNECT_3D
 
@@ -108,6 +108,24 @@ namespace ncl {
 			}
 		}
 
+#ifdef DEBUG_MODE
+
+		static void APIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+
+			using namespace std;
+			stringstream ss;
+			for (int i = 0; i < length; i++) ss << *(message + i);
+
+			switch (severity) {
+			case GL_DEBUG_SEVERITY_HIGH:
+				//throw runtime_error(ss.str());
+				Logger::get("GLFW").info(ss.str());
+
+			}
+		}
+
+#endif
+
 		struct GLVersion {
 			int major, minor;
 		};
@@ -151,6 +169,12 @@ namespace ncl {
 					glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 					glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+#ifdef DEBUG_MODE
+					glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+					logger.info("debug mode enabled, using OpenGL debug context");
+
+#endif
+
 					GLFWmonitor* monitor = scene.fullScreen() ? glfwGetPrimaryMonitor() : nullptr;
 
 					window = glfwCreateWindow(scene.width(), scene.height(), scene.title(), monitor, nullptr);
@@ -160,6 +184,9 @@ namespace ncl {
 					}
 
 					glfwSetKeyCallback(window, onKey);
+
+
+
 					glfwMakeContextCurrent(window);
 
 					int loaded = ogl_LoadFunctions();
@@ -167,6 +194,11 @@ namespace ncl {
 						int failedCount = loaded - ogl_LOAD_SUCCEEDED;
 						throw std::runtime_error("failed loading gl functions");
 					}
+
+
+#ifdef DEBUG_MODE
+					glDebugMessageCallback(&debugCallback, nullptr);
+#endif
 
 #ifdef CONNECT_3D
 					initSpacePro(window, scene.title());

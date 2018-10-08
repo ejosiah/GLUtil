@@ -14,3 +14,5 @@
 #include "Cone.h"
 #include "CrossHair.h"
 #include "Vector.h"
+#include "DoubleBufferedObj.h"
+#include "AABBShape.h"

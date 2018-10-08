@@ -12,7 +12,7 @@ namespace ncl {
 			public:
 				AABB(glm::vec3* points, int n){
 					_min = _max = *points;
-					for (int i = 0; i < n; i++) {
+					for (int i = 1; i < n; i++) {
 						_min = glm::min(_min, *(points + i));
 						_max = glm::max(_max, *(points + i));
 					}
@@ -36,6 +36,26 @@ namespace ncl {
 					if (_max.z < b._min.z || _min.z > b._max.z) return false;
 
 					return true;
+				}
+
+				glm::vec3 closestPoint(glm::vec3 p) {
+					glm::vec3 q;
+					for (int i = 0; i < 3; i++) {
+						q[i] = p[i];
+						if (q[i] < _min[i]) q[i] = _min[i];
+						if (q[i] > _max[i]) q[i] = _max[i];
+					}
+					return q;
+				}
+
+				float sqDistance(glm::vec3 p) {
+					float d = 0;
+					for (int i = 0; i < 3; i++) {
+						float v = p[i];
+						if (v < _min[i]) d += (_min[i] - v) * (_min[i] - v);
+						if (v > _max[i]) d += (v - _max[i]) * (v - _max[i]);
+					}
+					return d;
 				}
 
 				const glm::vec3& min() const {

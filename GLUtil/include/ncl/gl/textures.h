@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <gl/gl_core_4_5.h>
+#include "gl_commands.h"
 #include <glm/vec2.hpp>
 #include <functional>
 #include <algorithm>
@@ -151,15 +151,20 @@ namespace ncl {
 
 		class TextureBuffer {
 		public:
-			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW) { // TODO fix nextId bug
+			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, GLuint bufId = 0, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW):_buffer(bufId) { // TODO fix nextId bug
 				glActiveTexture(TEXTURE(id));
-				glGenBuffers(1, &_buffer);
-				glBindBuffer(GL_TEXTURE_BUFFER, _buffer);
-				glBufferData(GL_TEXTURE_BUFFER, size, data, usage);
+			
+				if (glIsBuffer(_buffer) == GL_FALSE) {
+					glGenBuffers(1, &_buffer);
+					glBindBuffer(GL_TEXTURE_BUFFER, _buffer);
+					glBufferData(GL_TEXTURE_BUFFER, size, data, usage);
+					gl::objectLabel(GL_BUFFER, _buffer, "textureBuffer:buffer" + name);
+				}
 
 				glGenTextures(1, &_tbo_id);
 				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
 				glTexBuffer(GL_TEXTURE_BUFFER, iFormat, _buffer);
+				gl::objectLabel(GL_TEXTURE, _tbo_id, "textureBuffer:" + name);
 				_id = id;
 				_name = name;
 			}
@@ -215,17 +220,22 @@ namespace ncl {
 
 		class DoubleBuffer {
 		public:
-			DoubleBuffer(GLuint atId, GLenum format, GLuint* buffers) {
+			DoubleBuffer(GLuint atId, GLenum format, GLuint* buffers) :DoubleBuffer(atId, format, { *buffers, *(++buffers) }) {}
+
+			DoubleBuffer(GLuint atId, GLenum format, std::initializer_list<GLuint> buffers) {
+				this->_buffers[0] = *buffers.begin();
+				this->_buffers[1] = *(buffers.begin()+1);
 				this->activeTexId = atId;
 				glGenTextures(2, texIds);
 				glBindTexture(GL_TEXTURE_BUFFER, texIds[_front]);
-				glTexBuffer(GL_TEXTURE_BUFFER, format, buffers[_front]);
+				glTexBuffer(GL_TEXTURE_BUFFER, format, _buffers[_front]);
 
 				glBindTexture(GL_TEXTURE_BUFFER, texIds[_back]);
-				glTexBuffer(GL_TEXTURE_BUFFER, format, buffers[_back]);
+				glTexBuffer(GL_TEXTURE_BUFFER, format, _buffers[_back]);
+				glBindTexture(GL_TEXTURE_BUFFER, 0);
 			}
 
-			DoubleBuffer() {
+			~DoubleBuffer() {
 				glDeleteTextures(2, texIds);
 			}
 
@@ -246,7 +256,16 @@ namespace ncl {
 				return _back;
 			}
 
+			const GLuint* buffers() const {
+				return _buffers;
+			}
+
+			GLuint buffer(int idx) const {
+				return _buffers[idx];
+			}
+
 		private:
+			GLuint _buffers[2];
 			GLuint texIds[2];
 			GLuint activeTexId;
 			GLuint _front = 0, _back = 1;

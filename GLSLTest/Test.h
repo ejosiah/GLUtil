@@ -40,14 +40,14 @@ public:
 		Mesh m;
 		m.positions.push_back(glm::vec3(0));
 		mesh = new ProvidedMesh(m);
-		tfb = new TransformFeebBack(true, varyings, 2, shader);
-		inputBuffer = new TextureBuffer("testData", testData, size, GL_RGBA32F, 1, GL_DYNAMIC_READ);
+		tfb = new TransformFeebBack("", true, varyings, 2, shader);
+		inputBuffer = new TextureBuffer("testData", testData, size, GL_RGBA32F, 0, 1, GL_DYNAMIC_READ);
 
 		glm::vec3 output { 0, 0, 0 };
 		glm::vec4 v{ 0 };
-		tfbBuffer = new TextureBuffer("test_output", &output.x, sizeof(float) * 3, GL_RGBA32F, 2, GL_DYNAMIC_READ);
-		extraData = new TextureBuffer("extra_data", &v.x, sizeof(float) * 4, GL_RGBA32F, 3, GL_DYNAMIC_READ);
-
+		tfbBuffer = new TextureBuffer("test_output", nullptr, sizeof(float) * 3, GL_RGBA32F, 0, 2, GL_DYNAMIC_READ);
+		extraData = new TextureBuffer("extra_data", nullptr, sizeof(float) * 4, GL_RGBA32F, 0, 3, GL_DYNAMIC_READ);
+	
 	}
 
 	virtual void run() {

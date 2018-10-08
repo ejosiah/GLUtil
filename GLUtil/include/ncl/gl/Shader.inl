@@ -437,7 +437,7 @@ namespace ncl {
 			auto MVP = P * MV;
 			auto NM = inverseTranspose(mat3(MV));
 
-			send(camera);
+			send(camera, model);
 			sendUniformMatrix4fv("MV", 1, GL_FALSE, glm::value_ptr(MV));
 			sendUniformMatrix4fv("MVP", 1, GL_FALSE, glm::value_ptr(MVP));
 			sendUniformMatrix3fv("normalMatrix", 1, GL_FALSE, glm::value_ptr(NM));
@@ -476,7 +476,7 @@ namespace ncl {
 
 			using namespace std;
 			static const regex INCLUDE_PATTERN("^#pragma\\s*include\\s*\\(\\s*\"([A-Za-z0-9_.-]+\\.[A-za-z]+)\"\\.*\\)\\.*");
-			const regex DEBUG_MODE("^#pragma\\s*storeIntermediate\\(on\\)");
+			const regex DEBUG_MODE_REGEX("^#pragma\\s*storeIntermediate\\(on\\)");
 			stringstream in;
 			stringstream out;
 			in << source;
@@ -487,7 +487,7 @@ namespace ncl {
 
 			string line;
 			while (getline(in, line)) {
-				if (regex_search(line, debug_match, DEBUG_MODE) && level == 0) {
+				if (regex_search(line, debug_match, DEBUG_MODE_REGEX) && level == 0) {
 					storeIntermidate = true;
 				}
 				if (regex_search(line, matches, INCLUDE_PATTERN)) {

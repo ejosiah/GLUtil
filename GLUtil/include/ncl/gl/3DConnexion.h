@@ -99,14 +99,18 @@ namespace ncl {
 							event.rotation *= rotationSensitivity;
 							event.translation *= translationSensitivity;
 
-							motionEventHandler->onMotion(event);
+							if (motionEventHandler) {
+								motionEventHandler->onMotion(event);
+							}
 
 							clear(event.translation);
 							clear(event.rotation);
 
 							break;
 						case SI_ZERO_EVENT:
-							motionEventHandler->onNoMotion();
+							if (motionEventHandler) {
+								motionEventHandler->onNoMotion();
+							}
 							break;
 						}
 						handled = SPW_TRUE;

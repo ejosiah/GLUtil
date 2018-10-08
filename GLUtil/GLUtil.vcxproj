@@ -152,7 +152,7 @@
   <ItemGroup>
     <ClInclude Include="exampleScene.h" />
     <ClInclude Include="FontTest.h" />
-    <ClInclude Include="include\glm\vec_equals.h" />
+    <ClInclude Include="include\glm\vec_util.h" />
     <ClInclude Include="include\ncl\configured_logger.h" />
     <ClInclude Include="include\ncl\geom\AABB.h" />
     <ClInclude Include="include\ncl\geom\bounding_volumn.h" />
@@ -161,11 +161,14 @@
     <ClInclude Include="include\ncl\geom\Triangle.h" />
     <ClInclude Include="include\ncl\geom\visualize_bounding_volumes.h" />
     <ClInclude Include="include\ncl\gl\3DConnexion.h" />
+    <ClInclude Include="include\ncl\gl\AABBShape.h" />
     <ClInclude Include="include\ncl\gl\Camera.h" />
     <ClInclude Include="include\ncl\gl\Cloth.h" />
     <ClInclude Include="include\ncl\gl\common.h" />
     <ClInclude Include="include\ncl\gl\CrossHair.h" />
+    <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h" />
     <ClInclude Include="include\ncl\gl\geometry.h" />
+    <ClInclude Include="include\ncl\gl\gl_commands.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />
@@ -184,6 +187,7 @@
     <ClInclude Include="include\ncl\gl\Vector.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
+    <ClInclude Include="include\ncl\space_partition\bsp_tree.h" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />

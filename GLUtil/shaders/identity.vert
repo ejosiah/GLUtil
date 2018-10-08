@@ -21,6 +21,8 @@ out VERTEX {
 	smooth vec4 color;
 } vertex;
 
+layout(xfb_buffer=0, xfb_offset=0) out vec3 capture_position;
+
 void main(){
 	mat4 MV = V * M;
 	mat3 NM = transpose(inverse(mat3(MV)));
@@ -28,5 +30,8 @@ void main(){
 	vertex.position = (MV * vec4(position, 1)).xyz;
 	vertex.texCoord = uv;
 	vertex.color = color;
+
+	capture_position = (M * vec4(position, 1.0)).xyz;
+
 	gl_Position = MVP * vec4(position, 1);
 }

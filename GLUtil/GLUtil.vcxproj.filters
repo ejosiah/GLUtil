@@ -34,6 +34,9 @@
     <Filter Include="Header Files\geometry\bounding_volumes">
       <UniqueIdentifier>{797b70bd-cfe0-40d3-be7c-777e551f133c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\space_partition">
+      <UniqueIdentifier>{3a1be322-6703-4c50-8cde-cb7a0ea21bd3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -228,11 +231,23 @@
     <ClInclude Include="include\ncl\geom\visualize_bounding_volumes.h">
       <Filter>Header Files\geometry\bounding_volumes</Filter>
     </ClInclude>
-    <ClInclude Include="include\glm\vec_equals.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\geom\Ray.h">
       <Filter>Header Files\geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\gl_commands.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\AABBShape.h">
+      <Filter>Header Files\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\glm\vec_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\space_partition\bsp_tree.h">
+      <Filter>Header Files\space_partition</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

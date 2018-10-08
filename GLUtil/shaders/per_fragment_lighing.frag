@@ -5,6 +5,7 @@
 const int MAX_LIGHT_SOURCES = 10;
 const int MAX_TEXTURES = 8;
 
+
 layout(binding = 0) uniform sampler2D image0;
 layout(binding = 1) uniform sampler2D image1;   // normalMap if using object  space
 layout(binding=2) uniform sampler2D image2;

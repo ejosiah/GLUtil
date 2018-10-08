@@ -186,8 +186,8 @@ namespace ncl {
 				});
 				if (blendingOff) glDisable(GL_BLEND);
 				if (depthTestOn) glEnable(GL_DEPTH_TEST);
-				glPolygonMode(GL_FRONT, polygonMode[0]);
-				glPolygonMode(GL_BACK, polygonMode[1]);
+				glPolygonMode(GL_FRONT_AND_BACK, polygonMode[0]);
+			
 
 				shader.unUse();
 			}

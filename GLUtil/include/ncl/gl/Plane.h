@@ -1,14 +1,52 @@
 #pragma once
 
 #include "Shape.h"
+#include "..\geom\Plane.h"
+#include "..\..\glm\vec_util.h"
+#include <glm\glm.hpp>
 
 namespace ncl {
 	namespace gl {
 		class Plane : public Shape {
 		public:
+			Plane(const geom::Plane& plane, float scale = 1.0f, const glm::vec4& color = randomColor())
+				:Shape(from(plane, scale, color)){
+			
+			}
+
 			Plane(int r, int c, float l, float w, const glm::vec4& color = randomColor(), bool mapUVtoSize = true)
 			:Shape(createMesh(w, l, r, c, mapUVtoSize, color)){
 
+			}
+
+			std::vector<Mesh> from(const geom::Plane& plane, float s, const glm::vec4& color) {
+				std::vector<Mesh> meshes = createMesh(1.0f, 1.0f, 10.0f, 10.0f, false, color);
+				Mesh& m = meshes.at(0);
+				
+				glm::vec3 n1 = plane.n;
+				glm::vec3 n2 = m.normals[0];
+				glm::vec3 axis = glm::normalize(glm::cross(n1, n2));
+				if (glm::abs(n1) == glm::abs(n2)) { // TODO this is wrong, its assuming the vector is at (1, 0, 0,), (0, 1, 0), (0, 0, 1)
+					axis = glm::vec3(1, 0, 0);
+				}
+
+				float angle = -glm::degrees(glm::acos(dot(n1, n2)));
+
+				auto scale = glm::scale(glm::mat4(1), { s, s, s });
+				auto translate = glm::translate(glm::mat4(1), plane.d * n1);
+				auto rotate = glm::mat4_cast(fromAxisAngle(axis, angle));
+				if (n1 == n2) {
+					rotate = glm::mat4(1);
+				}
+
+				size_t size = m.positions.size();
+
+				for (int i = 0; i < size; i++) {
+					auto& p = m.positions[i];
+					m.positions[i] =  (translate * rotate * scale *  glm::vec4(p, 1.0f)).xyz;
+					m.normals[i] = plane.n;
+				}
+				return meshes;
 			}
 
 			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, const glm::vec4& color) {
@@ -22,7 +60,7 @@ namespace ncl {
 							, 0
 							, (float(j) / (r - 1) * 2 - 1) * halfLength
 						};
-						glm::vec3 normal = glm::normalize(pos + glm::vec3(0, 1, 0));
+						glm::vec3 normal = glm::vec3(0, 1, 0);
 						glm::vec2 uv;
 
 						if (mapUVtoSize) {
@@ -32,7 +70,6 @@ namespace ncl {
 						else {
 							uv = { float(i) / c, float(j) / r };
 						}
-
 
 						mesh.positions.push_back(pos);
 						mesh.normals.push_back(normal);

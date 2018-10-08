@@ -1,11 +1,16 @@
 // GLUtil.cpp : Defines the entry point for the console application.
 //
 
+
 #include <Windows.h>
 #include "stdafx.h"
 
 #ifndef CONNECT_3D
 #define CONNECT_3D
+#endif
+
+#ifndef DEBUG_MODE
+#define DEBUG_MODE
 #endif
 
 #include "include/ncl/gl/GlfwApp.h"
@@ -30,10 +35,9 @@ const unsigned int Logger::level = LEVEL_DEBUG;
 
 int main()
 {
-
 	Options ops;
 	ops.hideCursor = true;
-	ops.requireMouse = true;
+	ops.requireMouse = false;
 	ops.useDefaultShader = false;
 	ops.fullscreen = false;
 	ops.vSync = false;
@@ -41,11 +45,12 @@ int main()
 	GLVersion version{ 4, 5 };
 //	Scene* scene = new ImageViewer();
 //	Scene* scene = new TestScene("Test Scene", ops);
-   Scene* scene = new ExampleScene(ops);
+    Scene* scene = new ExampleScene(ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();
 	delete scene;
+	
     return 0;
 		
 }

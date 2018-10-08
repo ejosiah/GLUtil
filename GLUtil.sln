@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLSLTest", "GLSLTest\GLSLTe
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RayTriangIntersection", "RayTriangIntersection\RayTriangIntersection.vcxproj", "{F3D7A379-6FA7-4F43-909C-37E6412D2E45}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PointAABBTest", "PointAABBTest\PointAABBTest.vcxproj", "{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,6 +73,14 @@ Global
 		{F3D7A379-6FA7-4F43-909C-37E6412D2E45}.Release|x64.Build.0 = Release|x64
 		{F3D7A379-6FA7-4F43-909C-37E6412D2E45}.Release|x86.ActiveCfg = Release|Win32
 		{F3D7A379-6FA7-4F43-909C-37E6412D2E45}.Release|x86.Build.0 = Release|Win32
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Debug|x64.ActiveCfg = Debug|x64
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Debug|x64.Build.0 = Debug|x64
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Debug|x86.ActiveCfg = Debug|Win32
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Debug|x86.Build.0 = Debug|Win32
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Release|x64.ActiveCfg = Release|x64
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Release|x64.Build.0 = Release|x64
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Release|x86.ActiveCfg = Release|Win32
+		{0B1DA71F-4D2B-425A-926E-EDEB65CED9BC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

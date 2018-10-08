@@ -10,6 +10,7 @@ namespace ncl {
 		class VAOObject : public VBOObject {	
 		public:
 			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices };
+			friend class DoubleBufferedObj;
 
 			VAOObject(std::vector<Mesh>& meshes)
 				:VBOObject(meshes) {
@@ -74,6 +75,10 @@ namespace ncl {
 
 			virtual ~VAOObject() {
 				glDeleteVertexArrays(vaoIds.size(), &vaoIds[0]);
+			}
+
+			GLuint getVaoId(int index) {
+				return vaoIds[index];
 			}
 
 		protected:

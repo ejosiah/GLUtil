@@ -52,6 +52,9 @@ uniform mat4 P;
 uniform LightModel lightModel;
 uniform mat3 normalMatrix;
 uniform bool useObjectSpace;
+uniform bool capture;
+
+layout(xfb_buffer=0, xfb_offset=0) out vec3 capture_position;
 
 mat3 OLM;
 mat4 MV;
@@ -88,6 +91,8 @@ void main(){
 	vertex.normal =  n;
 	vec4 pos = MV * vec4(position, 1);
 	vertex.position = pos.xyz;
+
+	capture_position = (M * vec4(position, 1.0)).xyz;
 	
 	OLM = !lightModel.useObjectSpace ? mat3(1) : mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
 

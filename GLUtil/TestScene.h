@@ -28,7 +28,7 @@ const string USERNAME = getEnv("username");
 
 class SpaceShip {
 public:
-	SpaceShip(const CameraController& cameraController, const Scene& scene)
+	SpaceShip(const CameraController& cameraController, Scene& scene)
 		:cameraController(cameraController), scene(scene){}
 
 	void init() {
@@ -43,8 +43,8 @@ public:
 		phongShader.loadFromstring(GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 
 		phongShader.createAndLinkProgram();
-	//	string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj";
-		string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\Game_model\\Game_model.obj";
+		string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj";
+	//	string path = "C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\Game_model\\Game_model.obj";
 	//	string path = "C:\\Users\\Josiah\\Documents\\Visual Studio 2015\\Projects\\LitScene\\media\\blocks.obj";
 		model = new Model(path, true);
 		model->forEachMaterial([](Material& m) { m.shininess =  128.0f; });
@@ -59,15 +59,15 @@ public:
 				lm.localViewer = true;
 				//lm.useObjectSpace = true;
 				LightSource light = calculateLight(camera);
-				phongShader.sendUniform1i("celShading", true);
+				phongShader.send("celShading", true);
 				phongShader.sendUniform3fv("globalAmbience", 1, &glm::vec4(0.2)[0]);
-				phongShader.sendUniform1ui("localViewer", true);
+				phongShader.send("localViewer", true);
 				phongShader.sendUniform1f("line.width", 0.1);
 				phongShader.sendUniform4f("line.color", 1, 1, 1, 1);
-				phongShader.sendUniform1i("wireframe", true);
+				phongShader.send("wireframe", false);
 				phongShader.sendUniformMatrix4fv("viewport", 1, GL_FALSE, value_ptr(getViewport()));
 				phongShader.sendUniformLight(light);
-				phongShader.send(camera, cameraController.modelTrans());
+				phongShader.sendComputed(camera, cameraController.modelTrans());
 				phongShader.send(lm);
 				model->draw(shader);
 				
@@ -79,6 +79,11 @@ public:
 				model->draw(shader);
 			});
 		}
+
+		scene.shader("flat")([&]() {
+			send(camera);
+			shade(model->bound);
+		});
 
 	}
 	
@@ -145,7 +150,7 @@ private:
 	Shader phongShader;
 	Model* model;
 	const CameraController& cameraController;
-	const Scene& scene;
+	Scene& scene;
 };
 
 class Floor {
@@ -157,8 +162,10 @@ public:
 
 	void init() {
 		initShader();
+		shader.use();
 		loadBrickTexture();
 		loadLightMapTexture();
+		shader.unUse();
 		plane = new Plane(40, 40, 8.0f, 8.0f, vec4(1), true);
 	}
 
@@ -214,9 +221,7 @@ private:
 
 class TestScene : public Scene {
 public:
-	TestScene(const char* title, Options ops) :Scene(title, ops) {
-		_requireMouse = true;
-		
+	TestScene(const char* title, Options ops) :Scene(title, ops) {	
 	}
 
 	virtual void init() {

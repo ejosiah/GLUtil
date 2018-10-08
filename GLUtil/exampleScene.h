@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "include/ncl/gl/primitives.h"
 #include "include/ncl/gl/models.h"
+#include "include/ncl/geom/Plane.h"
 
 using namespace std;
 using namespace glm;
@@ -25,7 +26,7 @@ public:
 		msg = "rotation[" + to_string(event.rotation.x) + ", " + to_string(event.rotation.y) + ", " + to_string(event.rotation.z) + "]";
 		logger.info(msg);
 		auto trans = event.translation * vec3 {1, -1, 1};
-		cam.view = translate(cam.view, event.translation * vec3(1, 1, -1) * 0.0011f);
+	//	cam.view = translate(cam.view, event.translation * vec3(1, 1, -1) * 0.0011f);
 		cam.view = rotate(cam.view, radians(event.rotation.z * 0.001f), vec3(0, 0, 1));
 		cam.view = rotate(cam.view, radians(event.rotation.y * 0.001f), vec3(0, 1, 0));
 		cam.view = rotate(cam.view, radians(event.rotation.x * 0.001f), vec3(1, 0, 0));
@@ -53,15 +54,20 @@ public:
 		_motionEventHandler = new _3DMotionEventLogger(cam);
 		cam.view = glm::lookAt(vec3(1.0f, 1.5f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 		font = Font::Arial(20, 0, BLACK);
-		sphere = new Sphere(0.6, 10, 10);
+		sphere = new Sphere(0.1, 20, 20);
 		teapot = new Teapot(8);
 		cube = new Cube;
 		cylinder = new Cylinder;
 		cone = new Cone;
+
+		geom::Plane p{ { 1, 1, 0 }, 0 };
+
+		plane = new Plane(p, 5.0f, BLACK);
+	//	plane = new Plane(10, 10, 1, 1, BLACK);
 	//	v = new Vector(vec3{4, 5, 0});
-		x = new Vector(vec3{ 1, 0, 0 });
-		y = new Vector(vec3{ 0, 1, 0 });
-		z = new Vector(vec3{ 0, 0, -1 });
+		x = new Vector(vec3{ 1, 0, 0 }, vec3(0), 1, RED);
+		y = new Vector(vec3{ 0, 1, 0 }, vec3(0), 1, GREEN);
+		z = new Vector(vec3{ 0, 0, -1 }, vec3(0), 1, BLUE);
 		model = new Model("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj", true);
 		lightModel.twoSided = false;
 		lightModel.colorMaterial = true;
@@ -71,8 +77,7 @@ public:
 		glClearColor(0.8, 0.8, 0.8, 1);
 		cam.model = mat4(1);
 		copyCube();
-
-
+		aabb = new AABBShape(*sphere);
 	}
 
 	virtual void resized() override {
@@ -86,13 +91,13 @@ public:
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 	//	_shader.send(cam);
-		//teapot->draw(_shader);
 		shader("default")([&](Shader& s) {
 			s.send(lightModel);
 			s.sendUniformLight("light[0]", light[0]);
 			s.sendComputed(cam);
-			//cylinder->draw(s);
-			//sphere->draw(s);
+		//	cylinder->draw(s);
+			sphere->draw(s);
+			
 			//cam.model = translate(mat4(1), { 0, 0, -2 });
 			//s.sendComputed(cam);
 			//cone->draw(s);
@@ -100,6 +105,16 @@ public:
 			y->draw(s);
 			z->draw(s);
 		//	cube->draw(s);
+		//	teapot->draw(s);
+		});
+
+		shader("flat")([&]() {
+			send(cam);
+			shade(aabb);
+	//		glFrontFace(GL_CW);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			shade(plane);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		});
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });
@@ -149,6 +164,7 @@ private:
 	Model* model;
 	Sphere* sphere;
 	Teapot* teapot;
+	Plane* plane;
 	Cylinder* cylinder;
 	Cone* cone;
 	Vector* x;
@@ -157,6 +173,7 @@ private:
 	ProvidedMesh* controlPoints;
 	ProvidedMesh* controlLines;
 	Material m;
+	AABBShape* aabb;
 	Font* font;
 	GLuint cubeCopyVAOID;
 	GLuint cubeCopyVBOID;

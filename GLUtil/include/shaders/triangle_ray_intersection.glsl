@@ -1,4 +1,4 @@
-bool TriangleRayIntersect(vec3 a, vec3 b, vec3 c, vec3 p, vec3 q, bool lineTest, out float u, out float v, out float w, out float t){
+bool triangleRayIntersect(vec3 a, vec3 b, vec3 c, vec3 p, vec3 q, bool lineTest, out float u, out float v, out float w, out float t){
     vec3 ba = b - a;
     vec3 ca = c - a;
     vec3 pa = p - a;
@@ -30,4 +30,15 @@ bool TriangleRayIntersect(vec3 a, vec3 b, vec3 c, vec3 p, vec3 q, bool lineTest,
     u = 1 - v - w;
 
     return true;
+}
+
+
+bool triangleLineIntersect(vec3 a, vec3 b, vec3 c, vec3 p, vec3 q, out float t){
+    float u;
+    float v;
+    float w;
+    float t1;
+    bool res =  triangleRayIntersect(a, b, c, p, q, true, u, v, w, t1);
+    t = t1;
+    return res;
 }

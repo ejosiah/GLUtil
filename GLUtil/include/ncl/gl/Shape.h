@@ -1,4 +1,5 @@
 #pragma once
+
 #include "VAOObject.h"
 #include "Drawable.h"
 #include <functional>
@@ -7,6 +8,8 @@
 #include "WithTriangleAdjacency.h"
 #include "common.h"
 #include "textures.h"
+#include "TransformFeedBack.h"
+
 namespace ncl {
 	namespace gl {
 		class Shape : public VAOObject, public Drawable {
@@ -14,7 +17,14 @@ namespace ncl {
 			Shape(std::vector<Mesh> meshes, bool cullface = true, unsigned instanceCount = 1) 
 				:VAOObject(meshes)
 				, cullface(cullface)
-				, instanceCount(instanceCount) {
+				, instanceCount(instanceCount)
+				, tfb(nullptr){
+			}
+
+			~Shape() {
+				if (tfb != nullptr) {
+					delete tfb;
+				}
 			}
 
 			virtual void draw(Shader& shader) override {
@@ -28,41 +38,64 @@ namespace ncl {
 					GLuint vaoId = vaoIds[i];
 					glBindVertexArray(vaoId);
 
+					
 					Material& material = materials[i];
-					if (material.ambientMat != -1) {
-						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-						glActiveTexture(GL_TEXTURE10);
-						shader.sendUniform1ui("ambientMap", 10);
-					}
-					if (material.diffuseMat != -1) {
-						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-						glActiveTexture(GL_TEXTURE11);
-						shader.sendUniform1ui("diffuseMap", 11);
-					}
+					//if (material.ambientMat != -1) {
+					//	glBindTexture(GL_TEXTURE_2D, material.ambientMat);
+					//	glActiveTexture(GL_TEXTURE10);
+					//	shader.sendUniform1ui("ambientMap", 10);
+					//}
+					//if (material.diffuseMat != -1) {
+					//	glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
+					//	glActiveTexture(GL_TEXTURE11);
+					//	shader.sendUniform1ui("diffuseMap", 11);
+					//}
 					shader.sendUniformMaterial("material[0]", material);
 					
-					if (!indices[i]) {
-						if (instanceCount < 2) {
-							glDrawArrays(primitiveType[i], 0, counts[i]);
-						}
-						else {
-							glDrawArraysInstanced(primitiveType[0], 0, counts[i], instanceCount);
-						}
+					if (tfb != nullptr) {
+						shader.send("capture", true);
+						tfb->use({ captureBuffer }, 1, primitiveType[i], [&]() {
+							drawPrimitive(i);
+						});
 					}
 					else {
-						if (instanceCount < 2) {
-							glDrawElements(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0);
-						}
-						else {
-							glDrawElementsInstanced(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0, instanceCount);
-						}
+						drawPrimitive(i);
 					}
+					
 					glBindVertexArray(0);
 				}
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
 				//(GL_TEXTURE0);
 			}
 
+			void drawPrimitive(int i) {
+				if (!indices[i]) {
+					if (instanceCount < 2) {
+						glDrawArrays(primitiveType[i], 0, counts[i]);
+					}
+					else {
+						glDrawArraysInstanced(primitiveType[i], 0, counts[i], instanceCount);
+					}
+				}
+				else {
+					if (instanceCount < 2) {
+						glDrawElements(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0);
+					}
+					else {
+						glDrawElementsInstanced(primitiveType[i], counts[i], GL_UNSIGNED_INT, 0, instanceCount);
+					}
+				}
+			}
+
+			void enableTransformFeedBack(GLuint buf) {
+				captureBuffer = buf;
+				tfb = new TransformFeebBack("xbf:shape" + std::to_string(buf), false);
+			}
+
+			void disableTransformFeedBack() {
+				delete tfb;
+				tfb = nullptr;
+			}
 
 			void update(int attribute, std::function<void(float*)> consume) {
 				if (attribute < Position || attribute > Color)
@@ -82,6 +115,7 @@ namespace ncl {
 				float* data = (float*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_WRITE);
 				consume(data);
 				glUnmapNamedBuffer(buffers[0][bufferId]);
+				glBindVertexArray(0);
 			}
 
 			template<typename T>
@@ -103,6 +137,27 @@ namespace ncl {
 				T* data = (T*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_WRITE);
 				consume(data);
 				glUnmapNamedBuffer(buffers[0][bufferId]);
+				glBindVertexArray(0);
+			}
+
+			GLuint bufferFor(int vaoId, int attribute) const {
+				if (attribute < Position || attribute > Indices)
+					throw std::runtime_error("invalid attribute id");
+				int bufferId = 0;
+				switch (attribute) {
+				case Position:
+					break;
+				case Indices:
+					bufferId = numBuffers - 1;
+					break;
+				default:
+					for (int i = 0; i < attribute; i++) {
+						if (attributes[vaoId][i]) {
+							bufferId++;
+						}
+					}
+				}
+				return buffers[vaoId][bufferId];
 			}
 
 			template<typename T>
@@ -128,25 +183,50 @@ namespace ncl {
 				T* data = (T*)glMapNamedBuffer(buffers[meshId][bufferId], GL_READ_ONLY);
 				use(data);
 				glUnmapNamedBuffer(buffers[meshId][bufferId]);
+				glBindVertexArray(0);
+			}
+
+			template<typename R, typename T>
+			R mapTo(unsigned int meshId, int attribute, std::function<R(T*)> mapper) const {
+				// FIX might fail if we have multiple texture buffers
+				if (attribute < Position || attribute > Indices)
+					throw std::runtime_error("invalid attribute id");
+				glBindVertexArray(vaoIds[meshId]);
+				int bufferId = 0;
+				switch (attribute) {
+				case Position:
+					break;
+				case Indices:
+					bufferId = numBuffers - 1;
+					break;
+				default:
+					for (int i = 0; i < attribute; i++) {
+						if (attributes[meshId][i]) {
+							bufferId++;
+						}
+					}
+				}
+				T* data = (T*)glMapNamedBuffer(buffers[meshId][bufferId], GL_READ_ONLY);
+				R res = mapper(data);
+				glUnmapNamedBuffer(buffers[meshId][bufferId]);
+				glBindVertexArray(0);
+				return res;
 			}
 
 
 			int numVertices(int meshId) const {
-				if (!indices[meshId]) {
-					return counts[meshId];
-				}
-				else {
-					std::set<GLuint> indices;	 // TODO check this might be wrong, mutiple indices may point to the same vertex
-					int size = counts[meshId];
-					get<GLuint>(meshId, Indices, [&](GLuint* index) {
-						GLuint* begin = index;
-						GLuint* end = index + size;
-						for (; index != end; index++) {
-							indices.insert(*index);
-						}
-					});
-					return indices.size();
-				}
+				GLint size;
+				glBindBuffer(GL_ARRAY_BUFFER, buffers[meshId][Position]);
+				glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+				return size / sizeof(glm::vec3);
+			}
+
+			int numIndices(int meshId) const {
+				if (!indices[meshId]) return 0;
+				GLint size;
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferFor(meshId, Indices));
+				glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+				return size/sizeof(unsigned int);
 			}
 
 			std::vector<Mesh> getMeshes() {
@@ -202,6 +282,18 @@ namespace ncl {
 
 			int numMeshes() const {
 				return vaoIds.size();
+			}
+
+			int numTriangles() {
+				if (primitiveType[0] != GL_TRIANGLES) return 0; // TODO handle other triangle types
+				int n = 0;
+				int v = 0;
+				for (int i = 0; i < vaoIds.size(); i++) {
+					n = numIndices(i);
+					v = numVertices(i);
+				}
+				if (n > 0) return n / 3;
+				return v / 3;
 			}
 
 			Material& material() {
@@ -268,6 +360,8 @@ namespace ncl {
 		private:
 			bool cullface;
 			unsigned instanceCount;
+			TransformFeebBack* tfb;	
+			GLuint captureBuffer;
 		};
 	}
 }
