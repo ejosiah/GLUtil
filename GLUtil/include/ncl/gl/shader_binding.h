@@ -236,6 +236,14 @@ namespace ncl {
 			buffer->sendTo(*Shader::boundShader);
 		}
 
+		inline void send(Texture2D* texutre) {
+			texutre->sendTo(*Shader::boundShader);
+		}
+
+		inline void send(Image2D* image) {
+			image->sendTo(*Shader::boundShader);
+		}
+
 		inline void shade(Drawable* drawable) {
 			ensureShaderbound();
 			drawable->draw(*Shader::boundShader);

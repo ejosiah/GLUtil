@@ -21,7 +21,7 @@ void main(){
 	float v = 0.0;
 	float w = 0.0;
 	float t = 0.0;
-	float result = TriangleRayIntersect(a, b, c, p, q, false, u, v, w, t) ? 1.0 : 0.0;
+	float result = triangleRayIntersect(a, b, c, p, q, false, u, v, w, t) ? 1.0 : 0.0;
 
 	gl_Position = position;
 	test_output = vec3(result);

@@ -17,6 +17,8 @@ namespace ncl {
 
 			}
 
+			virtual ~ProvidedMesh() = default;
+
 		private:
 			Logger logger = Logger::get("Provided Mesh");
 			std::vector<Mesh> copyMesh(const Shape& shape, GLenum primitiveType, const color& color) {

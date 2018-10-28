@@ -30,6 +30,16 @@ namespace ncl { namespace gl{
 		int numTexCoords() {
 			return std::count_if(uvs.begin(), uvs.end(), [](std::vector<glm::vec2>& uvs) { return !uvs.empty(); });
 		}
+
+		void clear() {
+			positions.clear();
+			normals.clear();
+			tangents.clear();
+			bitangents.clear();
+			colors.clear();
+			for (auto& uv : uvs) { uv.clear(); }
+			indices.clear();
+		}
 	};
 
 	struct Mesurements {

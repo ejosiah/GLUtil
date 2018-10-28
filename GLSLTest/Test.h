@@ -15,6 +15,10 @@ using namespace ncl;
 using namespace gl;
 using namespace glm;
 
+#ifndef CHECK_GL_ERRORS
+#define CHECK_GL_ERRORS  assert(glGetError()==GL_NO_ERROR);
+#endif
+
 class Test {
 public:
 	Test(string msg):msg(msg) {
@@ -40,24 +44,25 @@ public:
 		Mesh m;
 		m.positions.push_back(glm::vec3(0));
 		mesh = new ProvidedMesh(m);
-		tfb = new TransformFeebBack("", true, varyings, 2, shader);
-		inputBuffer = new TextureBuffer("testData", testData, size, GL_RGBA32F, 0, 1, GL_DYNAMIC_READ);
+		tfb = new TransformFeebBack("", true, varyings, 2, shader); CHECK_GL_ERRORS
+		inputBuffer = new TextureBuffer("testData", testData, size, GL_RGBA32F, 0, 1, GL_DYNAMIC_READ); CHECK_GL_ERRORS
 
 		glm::vec3 output { 0, 0, 0 };
 		glm::vec4 v{ 0 };
-		tfbBuffer = new TextureBuffer("test_output", nullptr, sizeof(float) * 3, GL_RGBA32F, 0, 2, GL_DYNAMIC_READ);
-		extraData = new TextureBuffer("extra_data", nullptr, sizeof(float) * 4, GL_RGBA32F, 0, 3, GL_DYNAMIC_READ);
+		tfbBuffer = new TextureBuffer("test_output", nullptr, sizeof(float) * 3, GL_RGBA32F, 0, 2, GL_DYNAMIC_READ); CHECK_GL_ERRORS
+		extraData = new TextureBuffer("extra_data", nullptr, sizeof(float) * 4, GL_RGBA32F, 0, 3, GL_DYNAMIC_READ); CHECK_GL_ERRORS
 	
 	}
 
 	virtual void run() {
+		CHECK_GL_ERRORS
 		if (!done) {
 			(*shader)([&] {
-				send(inputBuffer);
-				GLuint buffer[2] = { tfbBuffer->buffer(), extraData->buffer() };
+				send(inputBuffer); CHECK_GL_ERRORS
+				GLuint buffer[2] = { tfbBuffer->buffer(), extraData->buffer() }; 
 				mesh->use(0, [&]() {
 					(*tfb)(buffer, 2, GL_POINTS, [&]() {
-						glDrawArrays(GL_POINTS, 0, 1);
+						glDrawArrays(GL_POINTS, 0, 1); CHECK_GL_ERRORS
 					});
 				});
 			});

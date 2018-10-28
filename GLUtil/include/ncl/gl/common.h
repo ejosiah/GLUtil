@@ -8,6 +8,10 @@
 #include <cmath>
 #include <vector>
 
+#ifndef CHECK_GL_ERRORS
+#define CHECK_GL_ERRORS  assert(glGetError()==GL_NO_ERROR);
+#endif
+
 namespace ncl {
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)

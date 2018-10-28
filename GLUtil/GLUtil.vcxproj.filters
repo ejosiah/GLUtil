@@ -16,9 +16,6 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{238264ee-9297-4f20-af70-b3f7f04765b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\primitives">
-      <UniqueIdentifier>{0d8ce61f-6134-4087-b722-cea4828be23a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="build">
       <UniqueIdentifier>{d6cba899-9080-4591-ab3b-cc6febd99b19}</UniqueIdentifier>
     </Filter>
@@ -36,6 +33,12 @@
     </Filter>
     <Filter Include="Header Files\space_partition">
       <UniqueIdentifier>{3a1be322-6703-4c50-8cde-cb7a0ea21bd3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\data_structure">
+      <UniqueIdentifier>{648e359f-2759-4bbf-a922-265f090e7813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\geometry\primitives">
+      <UniqueIdentifier>{0d8ce61f-6134-4087-b722-cea4828be23a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -55,43 +58,43 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Cube.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Plane.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Drawable.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Model.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Bounds.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\mesh.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\VBOObject.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Sphere.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\primitives.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Shape.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\ProvidedMesh.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Teapot.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\teapotdata.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="TestScene.h">
       <Filter>Header Files\examples</Filter>
@@ -103,16 +106,16 @@
       <Filter>Header Files\examples</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\PatchTeapot.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Hemisphere.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Cylinder.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Cone.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="ImageViewer.h">
       <Filter>Header Files\examples</Filter>
@@ -163,7 +166,7 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\PatchShape.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\UserCameraController.h">
       <Filter>Header Files</Filter>
@@ -178,16 +181,16 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\WithTrianglation.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\CrossHair.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\VAOObject.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\models.h">
       <Filter>Header Files\core</Filter>
@@ -196,13 +199,13 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\shaders.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Vector.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\TransformFeedBack.h">
       <Filter>Header Files\core</Filter>
@@ -235,19 +238,34 @@
       <Filter>Header Files\geometry</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\gl_commands.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\AABBShape.h">
-      <Filter>Header Files\primitives</Filter>
+      <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
     <ClInclude Include="include\glm\vec_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\space_partition\bsp_tree.h">
       <Filter>Header Files\space_partition</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\data_structure\binary_tree.h">
+      <Filter>Header Files\data_structure</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\bvh.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\AttributeCapture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Resolution.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\compute.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

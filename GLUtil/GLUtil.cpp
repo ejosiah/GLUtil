@@ -20,6 +20,7 @@
 #include "ImageViewer.h"
 #include <cstdlib>
 #include "include/ncl/gl/logger.h"
+#include "include/ncl/gl/DoubleBufferedObj.h"
 #include "FontTest.h"
 
 using namespace std;
@@ -37,15 +38,15 @@ int main()
 {
 	Options ops;
 	ops.hideCursor = true;
-	ops.requireMouse = false;
+	ops.requireMouse = true;
 	ops.useDefaultShader = false;
 	ops.fullscreen = false;
 	ops.vSync = false;
 	
 	GLVersion version{ 4, 5 };
-//	Scene* scene = new ImageViewer();
+	Scene* scene = new ImageViewer();
 //	Scene* scene = new TestScene("Test Scene", ops);
-    Scene* scene = new ExampleScene(ops);
+//    Scene* scene = new ExampleScene(ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

@@ -183,7 +183,7 @@ namespace ncl {
 			void sendTo(Shader& shader) {
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
-				shader.sendUniform1ui(_name, _id);
+				shader.sendUniform1i(_name, _id);
 				glActiveTexture(TEXTURE(0));
 			}
 
@@ -197,15 +197,16 @@ namespace ncl {
 		class CheckerTexture : public Texture2D {
 		public:
 			CheckerTexture(unsigned id = nextId++, std::string name = "", const glm::vec4& colorA = WHITE, const glm::vec4& colorB = BLACK)
-				: Texture2D(generate(colorA, colorB).get(), 128, 128, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
+				: Texture2D(generate(colorA, colorB).get(), 256, 256, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 			}
 
 			static std::unique_ptr<GLubyte[]> generate(const glm::vec4& a, const glm::vec4& b) {
-				GLubyte* data = new GLubyte[128 * 128 * 4];
+				// TODO cache texture
+				GLubyte* data = new GLubyte[256 * 256 * 4];
 				glm::vec4 color;
-				for (int i = 0; i<128; i++) {
-					for (int j = 0; j < 128; j++) {
-						int idx = (i * 128 + j) * 4;
+				for (int i = 0; i<256; i++) {
+					for (int j = 0; j < 256; j++) {
+						int idx = (i * 256 + j) * 4;
 						color = (((i / 8) % 2) && ((j / 8) % 2)) || (!((i / 8) % 2) && !((j / 8) % 2)) ? b : a;
 						data[idx] = color.r * 255;
 						data[idx + 1] = color.g * 255;
@@ -269,6 +270,56 @@ namespace ncl {
 			GLuint texIds[2];
 			GLuint activeTexId;
 			GLuint _front = 0, _back = 1;
+		};
+
+		class Image2D {
+		public:
+			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0): 
+				_id(id), _buffer(buffer), _format(format), _name(name) {
+			//	if (glIsBuffer(_buffer) == GL_FALSE) {
+					glGenTextures(1, &_buffer);
+			//	}
+				glActiveTexture(TEXTURE(_id));
+				glBindTexture(GL_TEXTURE_2D, _buffer);
+				glTexStorage2D(GL_TEXTURE_2D, 1, _format, width, height);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+				if (_name == "") _name = std::string("image") + std::to_string(id);
+				gl::objectLabel(GL_BUFFER, _buffer, "image2D:" + name);
+
+				mode = Mode::COMPUTE;
+			}
+
+			void computeMode() {
+				mode = Mode::COMPUTE;
+			}
+
+			void renderMode() {
+				mode = Mode::RENDER;
+			}
+
+			void sendTo(Shader& shader) {
+				if (mode == Mode::COMPUTE) {
+					glBindImageTexture(_id, _buffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, _format);
+					shader.sendUniform1i(_name, _id);
+				}
+				else {
+					glActiveTexture(TEXTURE(_id));
+					glBindTexture(GL_TEXTURE_2D, _buffer);
+					shader.sendUniform1i(_name, _id);
+				}
+			}
+
+		protected:
+			enum Mode { COMPUTE, RENDER };
+
+		private:
+			GLuint _id;
+			GLuint _buffer;
+			GLenum _format;
+			std::string _name;
+			Mode mode;
 		};
 	}
 }

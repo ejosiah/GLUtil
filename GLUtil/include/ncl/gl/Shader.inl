@@ -38,9 +38,9 @@ namespace ncl {
 			clear();
 		}
 
-		GLuint Shader::findUniformLocation(const std::string& name) {
+		GLint Shader::findUniformLocation(const std::string& name) {
 			auto itr = _uniformLocationList.find(name);
-			GLuint location = -1;
+			GLint location = -1;
 			if (itr == _uniformLocationList.end()) {
 				addUniform(name);
 			}
@@ -235,7 +235,7 @@ namespace ncl {
 			}
 		}
 
-		GLuint Shader::operator()(const std::string& uniform) {
+		GLint Shader::operator()(const std::string& uniform) {
 			return _uniformLocationList[uniform];
 		}
 
@@ -271,102 +271,102 @@ namespace ncl {
 		}
 
 		void Shader::sendUniform1f(const std::string& name, GLfloat v0) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform1f(location, v0);
 		}
 
 		void Shader::sendUniform2f(const std::string& name, GLfloat v0, GLfloat v1) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform2f(location, v0, v1);
 		}
 
 		void Shader::sendUniform3f(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform3f(location, v0, v1, v2);
 		}
 
 		void Shader::sendUniform4f(const std::string& name, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform4f(location, v0, v1, v2, v3);
 		}
 
 		void Shader::sendUniform1fv(const std::string& name, GLsizei count, GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform1fv(location, count, value);
 		}
 
 		void Shader::sendUniform2fv(const std::string& name, GLsizei count, GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform2fv(location, count, value);
 		}
 
 		void Shader::sendUniform3fv(const std::string& name, GLsizei count, GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform3fv(location, count, value);
 		}
 
 		void Shader::sendUniform4fv(const std::string& name, GLsizei count, GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform4fv(location, count, value);
 		}
 
 		void Shader::sendUniform1i(const std::string& name, GLint v0) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform1i(location, v0);
 		}
 
 		void Shader::sendUniform2i(const std::string& name, GLint v0, GLint v1) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform2i(location, v0, v1);
 		}
 
 		void Shader::sendUniform3i(const std::string& name, GLint v0, GLint v1, GLint v2) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform3i(location, v0, v1, v2);
 		}
 
 		void Shader::sendUniform4i(const std::string& name, GLint v0, GLint v1, GLint v2, GLint v3) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform4i(location, v0, v1, v2, v3);
 		}
 
 		void Shader::sendUniform1ui(const std::string& name, GLuint v0) {
-			GLuint location = findUniformLocation(name);
-			glUniform1ui(location, v0);
+			GLint location = findUniformLocation(name); CHECK_GL_ERRORS
+			glUniform1ui(location, v0); CHECK_GL_ERRORS
 		}
 
 		void Shader::sendUniform2ui(const std::string& name, GLuint v0, GLuint v1) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform2ui(location, v0, v1);
 		}
 
 		void Shader::sendUniform3ui(const std::string& name, GLuint v0, GLuint v1, GLuint v2) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform3ui(location, v0, v1, v2);
 		}
 
 		void Shader::sendUniform4ui(const std::string& name, GLuint v0, GLuint v1, GLuint v2, GLuint v3) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform4ui(location, v0, v1, v2, v3);
 		}
 
 		void Shader::sendUniformMatrix2fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniformMatrix2fv(location, count, transpose, value);
 		}
 
 		void Shader::sendUniformMatrix3fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniformMatrix3fv(location, count, transpose, value);
 		}
 
 		void Shader::sendUniformMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniformMatrix4fv(location, count, transpose, value);
 		}
 
 		void Shader::send(const std::string& name, bool value) {
-			GLuint location = findUniformLocation(name);
+			GLint location = findUniformLocation(name);
 			glUniform1i(location, value);
 		}
 

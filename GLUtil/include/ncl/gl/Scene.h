@@ -21,6 +21,7 @@
 #include "common.h"
 #include "textures.h"
 #include "TransformFeedBack.h"
+#include "Resolution.h"
 #include <boost/filesystem.hpp>
 
 
@@ -49,11 +50,26 @@ namespace ncl {
 		*/
 		class Scene {
 		public:
+
+
+			/**
+			* Scene constructor
+			* @param t scene title
+			* @param res desired screen resolution
+			* @param fullscreen enable fullscreen mode
+			* @param vsync enable sync frame rate to screen refresh rate
+			* @param fbuffer OpenGL framebuffer settings
+			*/
+			Scene(const char* t, const Resolution& res, bool fullscreen = false, bool vsync = true, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) :
+				Scene(t, res.width, res.height, fullscreen, vsync, fBuffer){}
+
 			/**
 			* Scene constructor
 			* @param t scene title
 			* @param w scene width
 			* @param h scene height
+			* @param fullscreen enable fullscreen mode
+			* @param vsync enable sync frame rate to screen refresh rate
 			* @param fbuffer OpenGL framebuffer settings
 			*/
 			Scene(const char* t, int w = 1280, int h = 720, bool fullscreen = false, bool vsync = true, GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -93,6 +109,8 @@ namespace ncl {
 			* @breif Private scene initializer
 			*/
 			void init0(){
+				setForeGroundColor(BLACK);
+				setBackGroundColor(WHITE);
 				using namespace std;
 				if (_useImplictShaderLoad) {
 					loadShaderImplicity();
@@ -404,7 +422,29 @@ namespace ncl {
 			* @param color color to set the background to
 			*/
 			void setBackGroundColor(const glm::vec4& color) {
+				_background = color;
 				glClearColor(color.r, color.g, color.b, color.a);
+			}
+
+			glm::vec4 getBackground() {
+				return _background;
+			}
+
+			void setForeGroundColor(const glm::vec4& color) {
+				_foreground = color;
+			}
+
+			glm::vec4 getForeGround() {
+				return _foreground;
+			}
+
+			glm::vec3 mousePositionInScene() {
+				Mouse& mouse = Mouse::get();
+				float winZ = 0;
+				float x = mouse.pos.x;
+				float y = _height - mouse.pos.y;
+				glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
+				return unProject(glm::vec3(x, y, winZ), cam.view, cam.projection, glm::vec4(0, 0, _width, _height));
 			}
 
 		protected:
@@ -429,6 +469,8 @@ namespace ncl {
 			bool implicityLoaded = false;
 			bool _fullScreen = false;
 			bool _vsync = true;
+			glm::vec4 _background;
+			glm::vec4 _foreground;
 			float fps;
 		};
 	}

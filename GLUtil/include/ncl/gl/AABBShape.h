@@ -8,9 +8,9 @@ namespace ncl {
 	namespace gl {
 		class AABBShape : public Shape {
 		public:
-			AABBShape(Shape& s) :AABBShape(extractFrom(s)) {}
+			AABBShape(Shape& s, const glm::vec4 color = randomColor()) :AABBShape(extractFrom(s), color) {}
 
-			AABBShape(geom::bvol::AABB aabb) :Shape(createMesh(aabb)), aabb(aabb) {
+			AABBShape(geom::bvol::AABB aabb, const glm::vec4 color = randomColor()) :Shape(createMesh(aabb, color)), aabb(aabb) {
 
 			}
 
@@ -23,7 +23,7 @@ namespace ncl {
 			}
 
 		protected:
-			static std::vector<Mesh> createMesh(geom::bvol::AABB aabb) {
+			static std::vector<Mesh> createMesh(geom::bvol::AABB aabb, const glm::vec4 color = randomColor()) {
 				using namespace glm;
 				using namespace std;
 				Mesh mesh;
@@ -47,7 +47,7 @@ namespace ncl {
 				};
 
 				mesh.indices = vector<GLuint>(begin(indices), end(indices));
-				mesh.colors = vector<vec4>(8, vec4(0));
+				mesh.colors = vector<vec4>(8, color);
 				mesh.primitiveType = GL_LINES;
 				return vector<Mesh>(1, mesh);
 			}

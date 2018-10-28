@@ -18,7 +18,7 @@ namespace ncl {
 					}
 				}
 
-				AABB(glm::vec3 min, glm::vec3 max) :_min(min), _max(max) {
+				AABB(glm::vec3 min = glm::vec3(0), glm::vec3 max = glm::vec3(0)) :_min(min), _max(max) {
 
 				}
 

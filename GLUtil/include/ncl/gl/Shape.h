@@ -21,7 +21,7 @@ namespace ncl {
 				, tfb(nullptr){
 			}
 
-			~Shape() {
+			virtual ~Shape() {
 				if (tfb != nullptr) {
 					delete tfb;
 				}
@@ -40,16 +40,16 @@ namespace ncl {
 
 					
 					Material& material = materials[i];
-					//if (material.ambientMat != -1) {
-					//	glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-					//	glActiveTexture(GL_TEXTURE10);
-					//	shader.sendUniform1ui("ambientMap", 10);
-					//}
-					//if (material.diffuseMat != -1) {
-					//	glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-					//	glActiveTexture(GL_TEXTURE11);
-					//	shader.sendUniform1ui("diffuseMap", 11);
-					//}
+					/*if (material.ambientMat != -1) {
+						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
+						glActiveTexture(GL_TEXTURE10);
+						shader.sendUniform1ui("ambientMap", 10);
+					}
+					if (material.diffuseMat != -1) {
+						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
+						glActiveTexture(GL_TEXTURE11);
+						shader.sendUniform1ui("diffuseMap", 11);
+					}*/
 					shader.sendUniformMaterial("material[0]", material);
 					
 					if (tfb != nullptr) {
@@ -184,6 +184,10 @@ namespace ncl {
 				use(data);
 				glUnmapNamedBuffer(buffers[meshId][bufferId]);
 				glBindVertexArray(0);
+			}
+
+			 glm::vec3 getFirstVertex() const {
+				return mapTo<glm::vec3, glm::vec3>(0, VAOObject::Position, [](glm::vec3* v) { return *v; });
 			}
 
 			template<typename R, typename T>

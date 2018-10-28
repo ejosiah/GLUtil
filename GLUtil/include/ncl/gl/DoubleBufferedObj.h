@@ -1,88 +1,118 @@
 #pragma once
 
 #include <initializer_list>
+#include <vector>
 #include <functional>
 #include "Shape.h"
 #include "textures.h"
 
 namespace ncl {
 	namespace gl {
-		class DoubleBufferedObj {
+		class DoubleBuffered {
 		public:
-			DoubleBufferedObj(Shape* shape, std::initializer_list<int> attributes){
-				for (auto attribute : attributes) {
-					GLintptr write_offset = 0;
-					GLuint copyBufferIds[2];
-					glGenBuffers(2, copyBufferIds);
-					for (int i = 0; i < shape->numMeshes(); i++) {
-						GLuint bufferId = shape->getBuffers()[i][attribute];
-						GLint size = 0;
+			using Proc = std::function<void(GLuint*, int)>;
 
-						glBindBuffer(GL_COPY_READ_BUFFER, bufferId);
-						glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
-
-						glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferIds[0]);
-						glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_DYNAMIC_COPY);
-						glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, write_offset, size);
-
-						glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferIds[1]);
-						glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_DYNAMIC_COPY);
-						glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, write_offset, size);
-						write_offset += size;
+			/*
+			virtual ~DoubleBuffered() {
+				auto no_of_meshes = self()->numMeshes();
+				for (int i = 0; i < no_of_meshes; i++) {
+					for (int j = 0; i < attributes().size(); j++) {
+						glDeleteBuffers(1, &vboIds[i][j][1]);  // delete only the our copy
+						delete[] vboIds[i][j];
 					}
-					_buffers.push_back(new DoubleBuffer(attribute, GL_RGBA32F, copyBufferIds));
+					glDeleteVertexArrays(1, &vaoIds[i][1]); // delete only the our copy
+					delete[] vaoIds[i];
 				}
-				
-				glGenVertexArrays(2, vaoIds);
+			}*/
 
-				for (int i = 0; i < 2; i++) {
-					glBindVertexArray(vaoIds[i]);
-					GLuint bufId = _buffers[0]->buffer(i);
-					glBindBuffer(GL_ARRAY_BUFFER, bufId);
-					glEnableVertexAttribArray(VAOObject::Position);
-					glVertexAttribPointer(VAOObject::Position, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			virtual Shape* self() = 0;
 
-					if (attributes.size() > 1 && shape->normals[0]) {
-						bufId = _buffers[1]->buffer(i);
-						glBindBuffer(GL_ARRAY_BUFFER, bufId);
-						glEnableVertexAttribArray(VAOObject::Normal);
-						glVertexAttribPointer(VAOObject::Normal, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			virtual std::vector<int> attributes() const = 0;
+
+			virtual void enableDoubleBuffering() {
+				auto shape = self();
+				auto no_of_meshes = shape->numMeshes();
+				_fronts = std::vector<int>( no_of_meshes, 0 );
+				_backs = std::vector<int>( no_of_meshes, 1 );
+
+				for (int i = 0; i < no_of_meshes; i++) {
+
+					GLuint* vaos = new GLuint[2];
+
+					vaos[0] = shape->getVaoId(i);
+					glGenVertexArrays(1, &vaos[1]);
+
+					glBindVertexArray(vaos[1]);
+
+					std::vector<GLuint*> meshBuffers;
+					for (int j = 0; j < attributes().size(); j++) {
+						GLuint* vbos = new GLuint[2];
+						auto attribute = attributes()[j];
+						
+						vbos[0] = shape->getBuffers()[i][attribute];
+						vbos[1] = copy(shape->getBuffers()[i][attribute]);
+
+						glBindBuffer(GL_ARRAY_BUFFER, vbos[1]);
+						glEnableVertexAttribArray(attribute);
+						glVertexAttribPointer(j, 3, GL_FLOAT, GL_FALSE, 0, 0);	// based on attribute, 
+						meshBuffers.push_back(vbos);
 					}
+					vaoIds.push_back(vaos);
+					vboIds.push_back(meshBuffers);
+					
 					glBindVertexArray(0);
+					
 				}
 			}
 
-			void swapBuffers() {
-				for (auto buffer : _buffers) {
-					buffer->swapBuffers();
+			virtual void useDoubleBuffer(Proc proc) {
+				auto no_of_buffers = attributes().size();
+				auto no_of_meshes = vaoIds.size();
+
+				for (int i = 0; i < no_of_meshes; i++) {
+					auto vaos = vaoIds[i];
+					auto mBuffers = vboIds[i];
+					glBindVertexArray(vaos[_fronts[i]]);
+					GLuint* bufs = new GLuint[no_of_buffers];
+					for (int j = 0; j < no_of_buffers; j++) bufs[j] = mBuffers[j][_backs[i]];
+					proc(bufs, no_of_buffers);
+					glBindVertexArray(0);
+					delete[] bufs;
+					swapBuffers(i);
 				}
 			}
 
-			void activate() {
-				for (auto buffer : _buffers) {
-					buffer->activate();
-				}
+			void swapBuffers(int index = 0) {
+				std::swap(_fronts[index], _backs[index]);
 			}
 
-			void use(std::function<void(GLuint*, GLsizei)> proc) {
-				activate();
-				glBindVertexArray(_buffers[0]->front());
-
-				std::vector<GLuint> bufIds;
-				for (auto buffer : _buffers) {
-					bufIds.push_back(buffer->buffer(buffer->back()));
-				}
-
-				proc(&bufIds[0], bufIds.size());
-
-				swapBuffers();
-				glBindVertexArray(0);
+			GLuint front(int index = 0) const {
+				return _fronts[index];
 			}
 
-		private:
-			std::vector<DoubleBuffer*> _buffers;
-			GLenum primitiveType;
-			GLuint vaoIds[2];
+			GLuint back(int index = 0) const {
+				return _backs[index];
+			}
+
+		protected:
+			GLuint copy(GLuint bufferId) {
+				GLint size;
+				glBindBuffer(GL_COPY_READ_BUFFER, bufferId); CHECK_GL_ERRORS
+					glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size); CHECK_GL_ERRORS
+
+					GLuint copyBufferId;
+				glGenBuffers(1, &copyBufferId); CHECK_GL_ERRORS
+					glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId); CHECK_GL_ERRORS
+					glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_DYNAMIC_COPY); CHECK_GL_ERRORS
+					glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size); CHECK_GL_ERRORS
+
+					return copyBufferId;
+			}
+
+			std::vector<GLuint*> vaoIds;
+			std::vector<int> _fronts;
+			std::vector<int> _backs;
+			std::vector<std::vector<GLuint*>> vboIds;
 		};
 	}
 }

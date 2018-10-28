@@ -31,6 +31,8 @@ namespace ncl {
 			std::make_pair("geom", GL_GEOMETRY_SHADER),
 			std::make_pair("tcs", GL_TESS_CONTROL_SHADER),
 			std::make_pair("tes", GL_TESS_EVALUATION_SHADER),
+			std::make_pair("tesc", GL_TESS_CONTROL_SHADER),
+			std::make_pair("tese", GL_TESS_EVALUATION_SHADER),
 			std::make_pair("comp", GL_COMPUTE_SHADER)
 		};
 
@@ -49,7 +51,7 @@ namespace ncl {
 
 		class Shader {
 		protected:
-			GLuint findUniformLocation(const std::string& name);
+			GLint findUniformLocation(const std::string& name);
 			GLuint findSubroutineLocation(const std::string& name, GLenum shaderType);
 
 		public:
@@ -72,7 +74,7 @@ namespace ncl {
 			void addUniform(const std::string& uniform);
 			void addSubroutineLocation(GLenum shaderType, const std::string& subroutine, std::initializer_list<std::string> functions);
 			GLuint operator[] (const std::string& attribute);
-			GLuint operator() (const std::string& uniform);
+			GLint operator() (const std::string& uniform);
 
 			void sendUniform1f(const std::string& name, GLfloat v0);
 			void sendUniform2f(const std::string& name, GLfloat v0, GLfloat v1);
@@ -153,11 +155,11 @@ namespace ncl {
 			int _totalShaders;
 			GLuint _shaders[NO_OF_SHADERS];
 			std::map<std::string, GLuint> _attributeList;
-			std::map<std::string, GLuint> _uniformLocationList;
+			std::map<std::string, GLint> _uniformLocationList;
 			std::map<GLenum, std::map<std::string, std::string>> _subroutineList;
 			ncl::Logger logger;
 			std::vector<Procedure> pendingOps;
-			bool _storePreprocessedShaders = false;
+			bool _storePreprocessedShaders = true;
 
 			static std::stack<GLuint> activePrograms;
 		};
