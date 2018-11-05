@@ -1,0 +1,116 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+layout(local_size_x = $cols, local_size_y = $rows) in;
+
+layout(std430, binding=0) buffer CURR_POSITIONS{
+	vec3 positionsIn[];
+};
+
+layout(std430, binding=1) buffer CURR_POSITIONS_OUT{
+	vec3 positionsOut[];
+};
+
+
+layout(std430, binding=2) buffer PREV_POSITIONS{
+	vec3 prev_positionsIn[];
+};
+
+layout(std430, binding=3) buffer PREV_POSITIONS_OUT{
+	vec3 prev_positionsOut[];
+};
+
+layout(std430, binding=4) buffer COEFFICIENT_BLOCK{
+	float vd;
+	float ks[3];
+	float kd[3];
+} Coefficients;
+
+
+//float vd = -0.05f;
+//const float ks[3] = {10.5, 0.25, 0.25};
+//float kd[3] = {-0.0055, -0.00025, -0.00025};
+
+uniform vec2 patch_length;
+uniform float dt = 0.016666666666666;
+uniform vec3 gravity = vec3(0, 9.8, 0);
+uniform float m;
+
+const uvec3 CLOTH_SIZE = (gl_NumWorkGroups * gl_WorkGroupSize);
+
+
+uint flatten(ivec3 id){
+	uvec3 size = CLOTH_SIZE;
+	return id.z * size.x * size.y  + id.y * size.x + id.x;
+}
+
+const uint TOP_LEFT_CORNER = 0;
+const uint TOP_RIGHT_CORNER = flatten(ivec3(CLOTH_SIZE.x - 1, 0, 0));
+
+
+const ivec2 NeighborOffsets[3][4] = {
+	{ ivec2(1, 0), ivec2(0, -1), ivec2(-1, 0), ivec2(0, 1) } // structural springs  
+	, { ivec2(1, -1), ivec2(-1, -1), ivec2(-1, 1), ivec2(1, 1) } // shear springs
+	, { ivec2(2, 0), ivec2(0, -2), ivec2(-2, 0), ivec2(0, 2) } // flex springs
+};
+
+vec3 spring_force(vec3 x, vec3 x1, vec3 v, vec3 v1, float l, float kd, float ks){
+	vec3 d = x - x1;
+	float dl = length(d);
+
+	float left = -ks * (dl - l);
+	float right = kd * dot(v - v1, d/dl);
+	
+	return ((d/dl) * (left + right));
+}
+
+vec3 external_force(vec3 velocity, float damping, float mass){
+	return gravity * mass + velocity * damping;
+}
+
+vec3 integrate(vec3 p, vec3 p1, vec3 a, float t){
+	return 2 * p - p1  + a * t * t;
+}
+
+bool exists(ivec3 pos){
+	uvec2 size = (gl_NumWorkGroups * gl_WorkGroupSize).xy;
+	return (pos.x >= 0 && pos.x < size.x) && (pos.y >= 0 && pos.y < size.y);
+}
+
+void main(){
+
+	uint loc = flatten(ivec3(gl_GlobalInvocationID));
+	vec3 pos = positionsIn[loc];
+	vec3 prev_pos = prev_positionsIn[loc];
+	vec3 velocity = (pos - prev_pos)/dt;
+	float mass = m;
+
+	if(loc == TOP_LEFT_CORNER || loc == TOP_RIGHT_CORNER) mass = 0; 
+
+	vec3 force = external_force(velocity, Coefficients.vd, mass);
+	
+	for(int i = 0; i < 3; i++){
+		for(int j = 0; j < 4; j++){
+			ivec3 neighbor = ivec3(gl_GlobalInvocationID) + ivec3(NeighborOffsets[i][j], 0);
+			if(!exists(neighbor)) continue;
+			uint loc = flatten(neighbor);
+			vec3 pos1 = positionsIn[loc];
+			vec3 prev_pos1 = prev_positionsIn[loc];
+			vec3 velocity1 = (pos1 - prev_pos1)/dt;
+
+			float resting_length = length(NeighborOffsets[i][j] * patch_length);
+
+			force += spring_force(pos, pos1, velocity, velocity1, resting_length, Coefficients.kd[i], Coefficients.ks[i]);
+		}
+	}
+
+	vec3 acceleration = vec3(0);
+	if(mass != 0) acceleration = force/mass;
+
+
+	pos.y = max(0, pos.y);
+
+	prev_positionsOut[loc] = pos;
+	positionsOut[loc] = integrate(pos, prev_pos, acceleration, dt);
+}

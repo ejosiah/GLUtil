@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{0BFA152F-F962-4CC9-9360-A56B9749732C}</ProjectGuid>
-    <RootNamespace>ComputeExample</RootNamespace>
+    <ProjectGuid>{8A805566-D1BE-4875-857A-9D3466747B0E}</ProjectGuid>
+    <RootNamespace>MassSpringEval</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -123,16 +123,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ComputeScene.h" />
+    <ClCompile Include="MassSpringEval.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ComputeExample.cpp" />
+    <ClInclude Include="MassSpringScene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compute.comp" />
-    <None Include="shaders\lerp.comp" />
-    <None Include="shaders\plain.frag" />
-    <None Include="shaders\plain.vert" />
+    <None Include="shaders\point.frag" />
+    <None Include="shaders\point.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

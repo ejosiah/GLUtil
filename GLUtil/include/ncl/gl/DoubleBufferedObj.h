@@ -5,12 +5,13 @@
 #include <functional>
 #include "Shape.h"
 #include "textures.h"
+#include "CopyBuffer.h"
 
 namespace ncl {
 	namespace gl {
-		class DoubleBuffered {
+		class DoubleBuffered : public CopyBuffer {
 		public:
-			using Proc = std::function<void(GLuint*, int)>;
+			using Proc = std::function<void(GLuint*, GLuint*, int)>;
 
 			/*
 			virtual ~DoubleBuffered() {
@@ -28,6 +29,10 @@ namespace ncl {
 			virtual Shape* self() = 0;
 
 			virtual std::vector<int> attributes() const = 0;
+
+			virtual std::vector<int> copyFrom() const {
+				return {};
+			}
 
 			virtual void enableDoubleBuffering() {
 				auto shape = self();
@@ -48,9 +53,11 @@ namespace ncl {
 					for (int j = 0; j < attributes().size(); j++) {
 						GLuint* vbos = new GLuint[2];
 						auto attribute = attributes()[j];
+
+						auto source = copyFrom().empty() ? attribute : copyFrom()[j];
 						
 						vbos[0] = shape->getBuffers()[i][attribute];
-						vbos[1] = copy(shape->getBuffers()[i][attribute]);
+						vbos[1] = copy(shape->getBuffers()[i][source]);
 
 						glBindBuffer(GL_ARRAY_BUFFER, vbos[1]);
 						glEnableVertexAttribArray(attribute);
@@ -65,6 +72,8 @@ namespace ncl {
 				}
 			}
 
+			// CHANGE this to only create double buffers
+			// other logic to xforms f
 			virtual void useDoubleBuffer(Proc proc) {
 				auto no_of_buffers = attributes().size();
 				auto no_of_meshes = vaoIds.size();
@@ -73,11 +82,16 @@ namespace ncl {
 					auto vaos = vaoIds[i];
 					auto mBuffers = vboIds[i];
 					glBindVertexArray(vaos[_fronts[i]]);
-					GLuint* bufs = new GLuint[no_of_buffers];
-					for (int j = 0; j < no_of_buffers; j++) bufs[j] = mBuffers[j][_backs[i]];
-					proc(bufs, no_of_buffers);
+					GLuint* front_bufs = new GLuint[no_of_buffers];
+					GLuint* back_bufs = new GLuint[no_of_buffers];
+					for (int j = 0; j < no_of_buffers; j++) {
+						front_bufs[j] = mBuffers[j][_fronts[i]];
+						back_bufs[j] = mBuffers[j][_backs[i]];
+					}
+					proc(front_bufs, back_bufs, no_of_buffers);
 					glBindVertexArray(0);
-					delete[] bufs;
+					delete[] front_bufs;
+					delete[] back_bufs;
 					swapBuffers(i);
 				}
 			}
@@ -94,21 +108,15 @@ namespace ncl {
 				return _backs[index];
 			}
 
-		protected:
-			GLuint copy(GLuint bufferId) {
-				GLint size;
-				glBindBuffer(GL_COPY_READ_BUFFER, bufferId); CHECK_GL_ERRORS
-					glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size); CHECK_GL_ERRORS
+			GLuint* frontBufs(int index = 0) {
 
-					GLuint copyBufferId;
-				glGenBuffers(1, &copyBufferId); CHECK_GL_ERRORS
-					glBindBuffer(GL_COPY_WRITE_BUFFER, copyBufferId); CHECK_GL_ERRORS
-					glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_DYNAMIC_COPY); CHECK_GL_ERRORS
-					glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size); CHECK_GL_ERRORS
-
-					return copyBufferId;
 			}
 
+			GLuint* backBufs(int index = 0) {
+
+			}
+
+		protected:
 			std::vector<GLuint*> vaoIds;
 			std::vector<int> _fronts;
 			std::vector<int> _backs;

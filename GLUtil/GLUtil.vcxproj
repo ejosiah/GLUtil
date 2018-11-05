@@ -36,7 +36,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -81,6 +81,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;C:\Program Files %28x86%29\3Dconnexion\3DxWare SDK\Inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\3Dconnexion\3DxWare SDK\Lib\x86;C:\Users\Josiah\OneDrive\cpp\lib\release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -169,6 +171,7 @@
     <ClInclude Include="include\ncl\gl\Cloth.h" />
     <ClInclude Include="include\ncl\gl\common.h" />
     <ClInclude Include="include\ncl\gl\compute.h" />
+    <ClInclude Include="include\ncl\gl\CopyBuffer.h" />
     <ClInclude Include="include\ncl\gl\CrossHair.h" />
     <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h" />
     <ClInclude Include="include\ncl\gl\geometry.h" />
@@ -263,6 +266,7 @@
     <None Include="shaders\identity.vert" />
     <None Include="shaders\lightMap.frag" />
     <None Include="shaders\lightMap.vert" />
+    <None Include="shaders\mass_spring.comp" />
     <None Include="shaders\noise.frag" />
     <None Include="shaders\noise3d.frag" />
     <None Include="shaders\noise3d.vert" />

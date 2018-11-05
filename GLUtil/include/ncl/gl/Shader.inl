@@ -331,8 +331,8 @@ namespace ncl {
 		}
 
 		void Shader::sendUniform1ui(const std::string& name, GLuint v0) {
-			GLint location = findUniformLocation(name); CHECK_GL_ERRORS
-			glUniform1ui(location, v0); CHECK_GL_ERRORS
+			GLint location = findUniformLocation(name); // CHECK_GL_ERRORS
+			glUniform1ui(location, v0); //CHECK_GL_ERRORS
 		}
 
 		void Shader::sendUniform2ui(const std::string& name, GLuint v0, GLuint v1) {

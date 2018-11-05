@@ -68,7 +68,7 @@ namespace ncl {
 			void sendTo(Shader& shader) {
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_2D, buffer);
-				shader.sendUniform1ui(_name, _id);
+				shader.sendUniform1i(_name, _id);
 				glActiveTexture(TEXTURE(0));
 			}
 
@@ -276,9 +276,9 @@ namespace ncl {
 		public:
 			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0): 
 				_id(id), _buffer(buffer), _format(format), _name(name) {
-			//	if (glIsBuffer(_buffer) == GL_FALSE) {
+				if (glIsBuffer(_buffer) == GL_FALSE) {
 					glGenTextures(1, &_buffer);
-			//	}
+				}
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_2D, _buffer);
 				glTexStorage2D(GL_TEXTURE_2D, 1, _format, width, height);

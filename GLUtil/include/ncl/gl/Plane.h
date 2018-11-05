@@ -14,13 +14,13 @@ namespace ncl {
 			
 			}
 
-			Plane(int r, int c, float l, float w, const glm::vec4& color = randomColor(), bool mapUVtoSize = true)
-			:Shape(createMesh(w, l, r, c, mapUVtoSize, color)){
+			Plane(int r, int c, float l, float w, const glm::vec4& color = randomColor(), bool mapUVtoSize = true, glm::mat4 transform = glm::mat4(1))
+			:Shape(createMesh(w, l, r, c, mapUVtoSize, color, transform)){
 
 			}
 
 			std::vector<Mesh> from(const geom::Plane& plane, float s, const glm::vec4& color) {
-				std::vector<Mesh> meshes = createMesh(1.0f, 1.0f, 10.0f, 10.0f, false, color);
+				std::vector<Mesh> meshes = createMesh(1.0f, 1.0f, 10.0f, 10.0f, false, color, glm::mat4(1));
 				Mesh& m = meshes.at(0);
 				
 				glm::vec3 n1 = plane.n;
@@ -49,17 +49,18 @@ namespace ncl {
 				return meshes;
 			}
 
-			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, const glm::vec4& color) {
+			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, const glm::vec4& color, glm::mat4 transform) {
 				float halfLength = l / 2;
 				float halfWidth = w / 2;
 				Mesh mesh;
 				for (int j = 0; j <= r; j++) {
 					for (int i = 0; i <= c; i++) {
 						glm::vec3 pos{
-							(float(i) / (c - 2) * 2 - 1) * halfWidth
+							((float(i) / (c - 1)) * 2 - 1) * halfWidth
 							, 0
-							, (float(j) / (r - 1) * 2 - 1) * halfLength
+							, ((float(j) / (r - 1)) * 2 - 1) * halfLength
 						};
+
 						glm::vec3 normal = glm::vec3(0, 1, 0);
 						glm::vec2 uv;
 
@@ -70,6 +71,8 @@ namespace ncl {
 						else {
 							uv = { float(i) / c, float(j) / r };
 						}
+
+						pos = glm::vec3((transform * glm::vec4(pos, 1.0f)));
 
 						mesh.positions.push_back(pos);
 						mesh.normals.push_back(normal);

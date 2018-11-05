@@ -20,16 +20,17 @@ public:
 	Logger logger = Logger::get("3D Motion Event");
 
 	virtual void onMotion(const _3DMotionEvent& event) override {
-		string msg;
-		msg = "translation[" + to_string(event.translation.x) + ", " + to_string(event.translation.y) + ", " + to_string(event.translation.z) +  "]";
-		logger.info(msg);
-		msg = "rotation[" + to_string(event.rotation.x) + ", " + to_string(event.rotation.y) + ", " + to_string(event.rotation.z) + "]";
-		logger.info(msg);
+		//string msg;
+		//msg = "translation[" + to_string(event.translation.x) + ", " + to_string(event.translation.y) + ", " + to_string(event.translation.z) +  "]";
+		//logger.info(msg);
+		//msg = "rotation[" + to_string(event.rotation.x) + ", " + to_string(event.rotation.y) + ", " + to_string(event.rotation.z) + "]";
+		//logger.info(msg);
 		auto trans = event.translation * vec3 {1, -1, 1};
-	//	cam.view = translate(cam.view, event.translation * vec3(1, 1, -1) * 0.0011f);
+		
 		cam.view = rotate(cam.view, radians(event.rotation.z * 0.001f), vec3(0, 0, 1));
 		cam.view = rotate(cam.view, radians(event.rotation.y * 0.001f), vec3(0, 1, 0));
 		cam.view = rotate(cam.view, radians(event.rotation.x * 0.001f), vec3(1, 0, 0));
+		cam.view = translate(cam.view, event.translation * (vec3(1, 1, -1) * 0.00011f));
  	};
 	virtual void onNoMotion() override {};
 
@@ -52,7 +53,7 @@ public:
 	virtual void init() override {
 		delete _motionEventHandler;
 		_motionEventHandler = new _3DMotionEventLogger(cam);
-		cam.view = glm::lookAt(vec3(1.0f, 1.5f, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+		cam.view = glm::lookAt(vec3(0.0, 0.0, 1.25f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 		font = Font::Arial(20, 0, BLACK);
 		sphere = new Sphere(0.1, 20, 20);
 		teapot = new Teapot(8);
@@ -60,14 +61,14 @@ public:
 		cylinder = new Cylinder;
 		cone = new Cone;
 
-		geom::Plane p{ { 1, 1, 0 }, 0 };
+		geom::Plane p{ { 0, 1, 0 }, 0 };
 
 		plane = new Plane(p, 5.0f, BLACK);
 	//	plane = new Plane(10, 10, 1, 1, BLACK);
 	//	v = new Vector(vec3{4, 5, 0});
-		x = new Vector(vec3{ 1, 0, 0 }, vec3(0), 1, RED);
-		y = new Vector(vec3{ 0, 1, 0 }, vec3(0), 1, GREEN);
-		z = new Vector(vec3{ 0, 0, -1 }, vec3(0), 1, BLUE);
+		x = new Vector(vec3{ 1, 0, 0 }, vec3(0), 0.5, RED);
+		y = new Vector(vec3{ 0, 1, 0 }, vec3(0), 0.5, GREEN);
+		z = new Vector(vec3{ 0, 0, -1 }, vec3(0), 0.5, BLUE);
 		model = new Model("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\models\\bigship1.obj", true);
 		lightModel.twoSided = false;
 		lightModel.colorMaterial = true;
@@ -95,8 +96,9 @@ public:
 			s.send(lightModel);
 			s.sendUniformLight("light[0]", light[0]);
 			s.sendComputed(cam);
+		//	shade(plane);
 		//	cylinder->draw(s);
-			sphere->draw(s);
+			//sphere->draw(s);
 			
 			//cam.model = translate(mat4(1), { 0, 0, -2 });
 			//s.sendComputed(cam);
@@ -109,12 +111,12 @@ public:
 		});
 
 		shader("flat")([&]() {
-			send(cam);
-			shade(aabb);
+	//		send(cam);
+	//		shade(aabb);
 	//		glFrontFace(GL_CW);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			shade(plane);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	//		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//		shade(plane);
+	//		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		});
 
 //		cam.model = translate(mat4(1), { 0, 1, 0 });

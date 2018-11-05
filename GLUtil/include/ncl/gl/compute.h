@@ -11,7 +11,7 @@ namespace ncl {
 	namespace gl {
 		class Compute {
 		public:
-			Compute(glm::ivec3 workers, std::vector<Image2D> images, Shader* shader)
+			Compute(glm::ivec3 workers, std::vector<Image2D> images = {}, Shader* shader = nullptr)
 				:_workers(workers), _shader(shader), _images(images) {
 
 			}
@@ -35,21 +35,21 @@ namespace ncl {
 
 			virtual void compute() {
 				(*_shader)([&] {
-					preRun();
+					preCompute();
 					for (auto& img : _images) {
 						img.computeMode();
 						img.sendTo(*_shader);
 					}
 					glDispatchCompute(_workers.x, _workers.y, _workers.z);
 				});
-				postRun();
+				postCompute();
 			}
 
-			virtual void preRun() {
+			virtual void preCompute() {
 
 			}
 
-			virtual void postRun() {
+			virtual void postCompute() {
 
 			}
 
@@ -70,7 +70,7 @@ namespace ncl {
 				, _w(w), _h(h), _ca(ca), _cb(cb)
 			{}
 
-			virtual void preRun() override {
+			virtual void preCompute() override {
 				send("a", _ca);
 				send("b", _cb);
 			}

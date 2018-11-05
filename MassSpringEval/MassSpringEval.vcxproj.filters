@@ -15,26 +15,23 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ComputeScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="ComputeExample.cpp">
+    <ClCompile Include="MassSpringEval.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MassSpringScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compute.comp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\plain.frag">
+    <None Include="shaders\point.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\plain.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\lerp.comp">
+    <None Include="shaders\point.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -9,4 +9,5 @@ out vec4 fragColor;
 void main(){
 //	fragColor = texture(scene_img, vec2(gl_FragCoord.xy)/ vec2(textureSize(scene_img, 0)));
 	fragColor = texture(scene_img, uv);
+
 }

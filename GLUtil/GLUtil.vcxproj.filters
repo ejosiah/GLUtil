@@ -267,6 +267,9 @@
     <ClInclude Include="include\ncl\gl\compute.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\CopyBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -426,6 +429,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="include\shaders\wireframe_geom.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\mass_spring.comp">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
