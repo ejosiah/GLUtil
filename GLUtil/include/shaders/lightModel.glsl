@@ -37,3 +37,4 @@ struct Material{
 uniform LightSource light[MAX_LIGHT_SOURCES];
 uniform LightModel lightModel;
 uniform Material material[2];
+uniform int numLights = 1;

@@ -3,7 +3,7 @@ struct ToonShader{
 	float scaleFactor;
 } toonShader;
 
-uniform int diffuseType;
+uniform int diffuseType = 0;
 
 vec4 asdDiffuse(vec3 L, vec3 N, LightSource light, Material m){
 	return  max(dot(L, N), 0)  * light.diffuse * getDiffuse(m);

@@ -10,9 +10,6 @@ layout(binding = 14) uniform sampler2D displacementMap;
 layout(binding = 15) uniform sampler2D reflectionMap;
 layout(binding = 16) uniform sampler2D ambiantOcclusionMap;
 
-
-uniform int numLights = 1;
-
 vec4 getAmbience(Material m);
 vec4 getDiffuse(Material m);
 vec4 getSpecular(Material m);

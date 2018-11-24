@@ -4,7 +4,6 @@
 
 uniform mat3 normalMatrix;
 uniform bool useObjectSpace;
-uniform int numLights = 1;
 mat3 OLM;
 
 vec4 getLightDirection(vec4 pos, mat4 M, in LightSource light){
