@@ -212,10 +212,13 @@ namespace ncl {
 					register3DMotionEventHandler(scene.motionEventHandler());
 #endif
 					Mouse* mouse = nullptr;
+
+					bool cursorHidden = scene.hideCursor();
+
 					if (scene.requireMouse()) {
 						glfwSetMouseButtonCallback(window, onMouseClick);
 						glfwSetCursorPosCallback(window, onMouseMove);
-						if (scene.hideCursor()) {
+						if (cursorHidden) {
 							glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 						}
 						mouse = &Mouse::get();
@@ -255,7 +258,18 @@ namespace ncl {
 						glfwSwapBuffers(window);
 
 						if (mouse) {
-							recenter(window, *mouse);
+							if (scene.hideCursor() != cursorHidden) {
+								cursorHidden = scene.hideCursor();
+								if (cursorHidden) {
+									glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+								}
+								else {
+									glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+								}
+							}
+							if (cursorHidden) {
+								recenter(window, *mouse);
+							}
 						}
 #ifdef CONNECT_3D
 						handle3DConnexionEvents();

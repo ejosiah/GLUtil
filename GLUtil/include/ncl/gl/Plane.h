@@ -4,23 +4,24 @@
 #include "..\geom\Plane.h"
 #include "..\..\glm\vec_util.h"
 #include <glm\glm.hpp>
+#include "WithTangent.h"
 
 namespace ncl {
 	namespace gl {
-		class Plane : public Shape {
+		class Plane : public Shape, public WithTangent  {
 		public:
-			Plane(const geom::Plane& plane, float scale = 1.0f, const glm::vec4& color = randomColor())
-				:Shape(from(plane, scale, color)){
+			Plane(const geom::Plane& plane, int r, int c, float l, float w, float numTiles = 0, const glm::vec4& color = randomColor())
+				:Shape(from(plane, r, c, l, w, numTiles, color)){
 			
 			}
 
-			Plane(int r, int c, float l, float w, const glm::vec4& color = randomColor(), bool mapUVtoSize = true, glm::mat4 transform = glm::mat4(1))
-			:Shape(createMesh(w, l, r, c, mapUVtoSize, color, transform)){
+			Plane(int r, int c, float l, float w, float numTiles, const glm::vec4& color = randomColor(), bool mapUVtoSize = true, glm::mat4 transform = glm::mat4(1))
+			:Shape(createMesh(w, l, r, c, numTiles, color, transform)){
 
 			}
 
-			std::vector<Mesh> from(const geom::Plane& plane, float s, const glm::vec4& color) {
-				std::vector<Mesh> meshes = createMesh(1.0f, 1.0f, 10.0f, 10.0f, false, color, glm::mat4(1));
+			std::vector<Mesh> from(const geom::Plane& plane, int r, int c, float l, float w, float numTiles, const glm::vec4& color) {
+				std::vector<Mesh> meshes = createMesh(w, l, r, c, numTiles, color, glm::mat4(1));
 				Mesh& m = meshes.at(0);
 				
 				glm::vec3 n1 = plane.n;
@@ -32,7 +33,6 @@ namespace ncl {
 
 				float angle = -glm::degrees(glm::acos(dot(n1, n2)));
 
-				auto scale = glm::scale(glm::mat4(1), { s, s, s });
 				auto translate = glm::translate(glm::mat4(1), plane.d * n1);
 				auto rotate = glm::mat4_cast(fromAxisAngle(axis, angle));
 				if (n1 == n2) {
@@ -43,16 +43,22 @@ namespace ncl {
 
 				for (int i = 0; i < size; i++) {
 					auto& p = m.positions[i];
-					m.positions[i] =  (translate * rotate * scale *  glm::vec4(p, 1.0f)).xyz;
+					m.positions[i] =  (translate * rotate *  glm::vec4(p, 1.0f)).xyz;
 					m.normals[i] = plane.n;
 				}
 				return meshes;
 			}
 
-			 std::vector<Mesh> createMesh(float w, float l, float r, float c, bool mapUVtoSize, const glm::vec4& color, glm::mat4 transform) {
+			 std::vector<Mesh> createMesh(float w, float l, float r, float c, float nt, const glm::vec4& color, glm::mat4 transform) {
 				float halfLength = l / 2;
 				float halfWidth = w / 2;
 				Mesh mesh;
+				float u = nt;
+				float v = nt;
+				if (nt == 0) {
+					u = w;
+					v = l;
+				}
 				for (int j = 0; j <= r; j++) {
 					for (int i = 0; i <= c; i++) {
 						glm::vec3 pos{
@@ -62,21 +68,13 @@ namespace ncl {
 						};
 
 						glm::vec3 normal = glm::vec3(0, 1, 0);
-						glm::vec2 uv;
-
-						if (mapUVtoSize) {
-							uv = glm::vec2((float(i) / c) * w, (float(j) / r) * l);
-							mesh.uvs[1].push_back({ float(i) / c, float(j) / r });
-						}
-						else {
-							uv = { float(i) / c, float(j) / r };
-						}
 
 						pos = glm::vec3((transform * glm::vec4(pos, 1.0f)));
 
 						mesh.positions.push_back(pos);
 						mesh.normals.push_back(normal);
-						mesh.uvs[0].push_back(uv);
+						mesh.uvs[0].push_back({ float(i) / c, float(j) / r });
+						mesh.uvs[1].push_back({ (float(i) / c) * u, (float(j) / r) * v });
 					}
 				}
 				mesh.material.diffuse = color;
@@ -107,6 +105,9 @@ namespace ncl {
 						}
 					}
 				}
+
+				addTangent(mesh, true);
+
 				return std::vector<Mesh>(1, mesh);
 			}
 		};

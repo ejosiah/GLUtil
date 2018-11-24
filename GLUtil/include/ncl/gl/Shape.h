@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <set>
 #include "WithTriangleAdjacency.h"
+#include "WithTangent.h"
 #include "common.h"
 #include "textures.h"
 #include "TransformFeedBack.h"

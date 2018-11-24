@@ -2,21 +2,31 @@
 #pragma include("lightModel.glsl")
 #pragma include("vertex_in.glsl")
 
-layout(binding=10) uniform sampler2D ambientMap;
-layout(binding=11) uniform sampler2D diffuseMap;
-layout(binding=13) uniform sampler2D normalMap;
+layout(binding = 10) uniform sampler2D ambientMap;
+layout(binding = 11) uniform sampler2D diffuseMap;
+layout(binding = 12) uniform sampler2D specularMap;
+layout(binding = 13) uniform sampler2D normalMap;
+layout(binding = 14) uniform sampler2D displacementMap;
+layout(binding = 15) uniform sampler2D reflectionMap;
+layout(binding = 16) uniform sampler2D ambiantOcclusionMap;
+
+
+uniform int numLights = 1;
 
 vec4 getAmbience(Material m);
 vec4 getDiffuse(Material m);
+vec4 getSpecular(Material m);
 vec4 diffuseContrib(vec3 L, vec3 N, LightSource light, Material m);
 
 float daf(float dist, LightSource light){
+	if (light.w == 0) return 1;
 	return 1.0 / (light.kc + light.ki * dist + light.kq * dist * dist);
 }
 
-float saf(LightSource light, vec3 lightDirection, mat4 M){
+float saf(LightSource light, vec3 lightDirection){
+	if (light.w == 0) return 1;
 	vec3 l = normalize(lightDirection);
-	vec3 d =   normalize(mat3(M) * light.spotDirection.xyz);
+	vec3 d =   normalize(light.spotDirection.xyz);
 	float h = light.spotExponent;
 	
 	if(light.spotAngle >= 180) 	return 1.0;
@@ -30,7 +40,7 @@ float saf(LightSource light, vec3 lightDirection, mat4 M){
 }
 
 
-vec4 apply(LightSource light, vec4 direction, Material m, mat4 M){
+vec4 apply(LightSource light, vec4 direction, Material m){
 	if(!light.on) return vec4(0);
 	vec3 n = gl_FrontFacing ? normalize(vertex_in.normal) : normalize(-vertex_in.normal);
 	vec3 N = lightModel.useObjectSpace ? (2.0 * texture(normalMap, vertex_in.texCoord) - 1.0).xyz : n;
@@ -39,7 +49,7 @@ vec4 apply(LightSource light, vec4 direction, Material m, mat4 M){
 		
 	float _daf = daf(length(L), light);
 
-	float _saf = saf(light, L, M);
+	float _saf = saf(light, L);
 	
 	vec4 ambient = light.ambient * m.ambient;
 	
@@ -56,8 +66,8 @@ vec4 phongLightModel(mat4 M){
 	Material m = !lightModel.twoSided ?  material[0] : gl_FrontFacing ? material[0] : material[1];
 	vec4 color = m.emission + lightModel.globalAmbience * getAmbience(m);
 
-	for(int i = 0; i < light.length(); i++ ) 
-		color += apply(light[i], vertex_in.lightDirection[i], m, M);
+	for(int i = 0; i < numLights; i++ )
+		color += apply(light[i], vertex_in.lightDirection[i], m);
 
 	return color;
 }
@@ -69,5 +79,10 @@ vec4 getAmbience(Material m){
 
 vec4 getDiffuse(Material m){
     vec4 color = m.diffuseMap ? m.diffuse * texture(diffuseMap, vertex_in.texCoord) : m.diffuse;
+	return lightModel.colorMaterial ? vertex_in.color : color;
+}
+
+vec4 getSpecular(Material m) {
+	vec4 color = m.specularMap ? m.specular * texture(specularMap, vertex_in.texCoord) : m.specular;
 	return lightModel.colorMaterial ? vertex_in.color : color;
 }

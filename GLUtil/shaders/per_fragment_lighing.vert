@@ -10,6 +10,7 @@ layout(location=2) in vec3 tangent;
 layout(location=3) in vec3 bitangent;
 layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
+layout(location=6) in vec2 uv1;
 
 uniform struct LightSource{
 	vec4 position;
@@ -53,6 +54,8 @@ uniform LightModel lightModel;
 uniform mat3 normalMatrix;
 uniform bool useObjectSpace;
 uniform bool capture;
+uniform bool uvMappedToSize;
+uniform int numLights = 1;
 
 layout(xfb_buffer=0, xfb_offset=0) out vec3 capture_position;
 
@@ -64,18 +67,12 @@ mat3 NM;
 vec4 getLightDirection(vec4 pos, in LightSource light){
 	vec4 direction = vec4(0);
 	if(light.position.w == 0){	// directional light
-		if(light.transform){
-			direction = V * light.position;
-		}
+
 		direction = light.position;
 	}
 	else{	// positional light
 		vec4 lightPos = (light.position/light.position.w);
-		if(light.transform){
-			direction = (V*light.position) - pos;
-		}else{
-			direction = light.position - pos;
-		}
+		direction = (V*light.position) - pos;
 	}
 	return normalize(vec4( OLM * direction.xyz, 1.0));
 }
@@ -96,13 +93,13 @@ void main(){
 	
 	OLM = !lightModel.useObjectSpace ? mat3(1) : mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
 
-	for(int i = 0; i < light.length(); i++){
+	for(int i = 0; i < numLights; i++){
 		vertex.lightDirection[i] = getLightDirection(pos, light[i]);
 	}
 
 	vertex.eyes =  OLM * (lightModel.localViewer ? normalize(-pos.xyz) : vec3(0, 0, 1));
 
-	vertex.texCoord = uv;
+	vertex.texCoord = uvMappedToSize ? uv1 : uv;
 	vertex.color = color;
 	gl_Position = MVP * vec4(position, 1);
 }

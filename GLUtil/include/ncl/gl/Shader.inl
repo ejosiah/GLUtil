@@ -379,7 +379,7 @@ namespace ncl {
 			sendUniform4fv(name + ".spotDirection", 1, &light.spotDirection[0]);
 			sendUniform1f(name + ".spotAngle", light.spotAngle);
 			sendUniform1f(name + ".spotExponent", light.spotExponent);
-			sendUniform1ui(name + ".transform", light.transform);
+			sendUniform1i(name + ".transform", light.transform);
 			sendUniform1i(name + ".on", light.on);
 			sendUniform1f(name + ".kc", light.kc);
 			sendUniform1f(name + ".ki", light.ki);

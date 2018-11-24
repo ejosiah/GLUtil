@@ -131,8 +131,9 @@ namespace ncl {
 				background = new glm::vec4(color);
 			}
 
-			void render(const std::string& text, float x, float y, float d = -1) {
-				
+			void render(const std::string& text, float x, float y, float d = -1) {				
+				y = _height - y;
+
 				shader.use();
 				glActiveTexture(GL_TEXTURE10);
 				shader.sendUniform1i("glyph", 10);
@@ -182,7 +183,6 @@ namespace ncl {
 						x += (ch.advance >> 6);
 					}
 					
-
 				});
 				if (blendingOff) glDisable(GL_BLEND);
 				if (depthTestOn) glEnable(GL_DEPTH_TEST);
@@ -196,8 +196,8 @@ namespace ncl {
 				glm::ivec2 res{ 0 };
 				for (char c : text) {
 					auto xter = character[c];
-					res.x += xter.size.x;
-					res.y += xter.size.y;
+					res.x += (xter.advance >> 6);
+					res.y  = glm::max(res.y, xter.size.y);
 				}
 				return res;
 			}
@@ -237,15 +237,17 @@ namespace ncl {
 			}
 
 			void resize(int w, int h) {
-				width = w;
-				height = h;
+				_width = w;
+				_height = h;
 				shader.use();
-				projection = glm::ortho(0.0f, width, 0.0f, height);
+				projection = glm::ortho(0.0f, _width, 0.0f, _height);
 				shader.sendUniformMatrix4fv("P", 1, GL_FALSE, glm::value_ptr(projection));
 				shader.unUse();
 			}
 
-		private:
+			glm::vec2 fontSize = glm::vec2(0);
+
+		public:
 			static std::map<std::string, std::string> location;
 			static GLuint vaoId;
 			static GLuint bufferId;
@@ -267,6 +269,8 @@ namespace ncl {
 			glm::vec4 color;
 			glm::mat4 projection;
 			glm::vec4* background = nullptr;
+			float _width;
+			float _height;
 			
 
 			static std::string getFontName(std::string name, int style) {

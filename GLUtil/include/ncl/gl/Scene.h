@@ -2,6 +2,7 @@
 
 #include <map>
 #include <algorithm>
+#include <sstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -22,6 +23,7 @@
 #include "textures.h"
 #include "TransformFeedBack.h"
 #include "Resolution.h"
+#include "UserCameraController.h"
 #include <boost/filesystem.hpp>
 
 
@@ -99,10 +101,6 @@ namespace ncl {
 			* scene cleanup 
 			*/
 			virtual ~Scene() {
-				if (_motionEventHandler) {
-					delete _motionEventHandler;
-					_motionEventHandler = nullptr;
-				}
 			}
 
 			/**
@@ -138,13 +136,16 @@ namespace ncl {
 				glEnable(GL_DEPTH_TEST);
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
-
+				initDefaultCamera();
 				init();
 
 				_keyListeners.push_back([&](const Key& key) {
+					if (cameraControlActive) {
+						getActiveCameraController().processUserInput();
+					}
 					processInput(key);
 				});
-				
+				sFont = Font::Arial(10, 0, getForeGround());				
 			}
 
 			void loadShaderImplicity() {
@@ -197,11 +198,25 @@ namespace ncl {
 			void display0() {
 				glClear(fBuffer);
 				display();
+				if (camInfoOn) {
+					sbr << "Camera Settings:" << std::endl;
+					sbr << "\tType: " << activeCamera().modeAsString() << std::endl;;
+					sbr << "\tPosition: " << activeCamera().getPosition() << std::endl;
+					sbr << "\tVelocity: " << activeCamera().getVelocity() << std::endl;
+
+					sFont->render(sbr.str(), 10, 10);
+					sbr.str("");
+					sbr.clear();
+				}
+
 			}
 
 			void update0(float elapsedTime) {
 				updateFrameRate(elapsedTime);
 				update(elapsedTime);
+				if (cameraControlActive) {
+					getActiveCameraController().update(elapsedTime);
+				}
 			}
 
 			void updateFrameRate(float elapsedTime) {
@@ -438,14 +453,54 @@ namespace ncl {
 				return _foreground;
 			}
 
-			glm::vec3 mousePositionInScene() {
+			glm::vec3 mousePositionInScene(glm::mat4 model, glm::mat4 projection) {
 				Mouse& mouse = Mouse::get();
 				float winZ = 0;
 				float x = mouse.pos.x;
 				float y = _height - mouse.pos.y;
 				glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winZ);
-				return unProject(glm::vec3(x, y, winZ), cam.view, cam.projection, glm::vec4(0, 0, _width, _height));
+				return unProject(glm::vec3(x, y, winZ), model, projection, glm::vec4(0, 0, _width, _height));
 			}
+
+			void add(CameraController& camera) {
+				cameras.push_back(&camera);
+			}
+
+			void setActiveCamera(int id) {
+				activeCam = id;
+			}
+
+			void initDefaultCamera() {
+				CameraController* cameraController = new CameraController{ Mesurements{ float(_width), float(_height) }, Camera::SPECTATOR };
+
+				cameraController->setModelHeight(3);
+				cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
+
+				cameraController->init();
+				cameraController->getCamera().setAcceleration(glm::vec3(6.0f));
+				cameraController->getCamera().setRotationSpeed(0.01f);
+				add(*cameraController);
+			}
+
+			CameraController& getActiveCameraController() {
+				return *cameras[activeCam];
+			}
+
+			Camera& activeCamera() const {
+				return (*cameras[activeCam]).getCamera();
+			}
+
+			void deactivateCameraControl() {
+				cameraControlActive = false;
+			}
+
+			void activateCameraControl() {
+				cameraControlActive = true;
+			}
+
+			GlmCam cam;
+			_3DMotionEventHandler* _motionEventHandler;
+
 
 		protected:
 			int _width;
@@ -454,24 +509,28 @@ namespace ncl {
 			std::map<std::string, std::vector<ShaderSource>> _sources;
 			std::map <std::string, Shader*> _shaders;
 			GLbitfield fBuffer;
-			bool _requireMouse = false;
-			bool _hideCursor = false;
+			bool _requireMouse = true;
+			bool _hideCursor = true;
 			float aspectRatio;
 			glm::vec2 _center;
 			std::vector<KeyListener> _keyListeners;
 			std::vector<MouseClickListner> _mouseClickListners;
 			std::vector<MouseMoveListner> _mouseMoveListner;
-			GlmCam cam;
+			std::vector<CameraController*> cameras;
 			LightSource light[MAX_LIGHT_SOURCES];
 			LightModel lightModel;
-			_3DMotionEventHandler* _motionEventHandler;
 			bool _useImplictShaderLoad = false;
 			bool implicityLoaded = false;
 			bool _fullScreen = false;
 			bool _vsync = true;
 			glm::vec4 _background;
 			glm::vec4 _foreground;
+			int activeCam = 0;
 			float fps;
+			bool cameraControlActive = true;
+			bool camInfoOn = true;
+			Font* sFont;
+			std::stringstream sbr;
 		};
 	}
 }

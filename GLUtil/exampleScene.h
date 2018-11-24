@@ -63,7 +63,7 @@ public:
 
 		geom::Plane p{ { 0, 1, 0 }, 0 };
 
-		plane = new Plane(p, 5.0f, BLACK);
+		plane = new Plane(p, 10, 10, 5, 5, 1, BLACK);
 	//	plane = new Plane(10, 10, 1, 1, BLACK);
 	//	v = new Vector(vec3{4, 5, 0});
 		x = new Vector(vec3{ 1, 0, 0 }, vec3(0), 0.5, RED);
@@ -79,6 +79,7 @@ public:
 		cam.model = mat4(1);
 		copyCube();
 		aabb = new AABBShape(*sphere);
+		light[0].spotAngle = 30.0f;
 	}
 
 	virtual void resized() override {
@@ -97,7 +98,7 @@ public:
 			s.sendUniformLight("light[0]", light[0]);
 			s.sendComputed(cam);
 		//	shade(plane);
-		//	cylinder->draw(s);
+			cylinder->draw(s);
 			//sphere->draw(s);
 			
 			//cam.model = translate(mat4(1), { 0, 0, -2 });

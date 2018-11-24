@@ -18,6 +18,7 @@ static const int MAX_INT = numeric_limits<int>::max();
 class EllipseScene : public Scene {
 public:
 	EllipseScene(const Resolution& res) :Scene("Ellipse", res) {
+		_hideCursor = false;
 		_requireMouse = true;
 	}
 
@@ -57,7 +58,7 @@ public:
 
 		_mouseClickListners.push_back([&](Mouse& mouse) {
 			if (mouse.left.status == Mouse::Button::PRESSED) {
-				vec3 p = mousePositionInScene();
+				vec3 p = mousePositionInScene(cam.view, cam.projection);
 				point->update2<vec3>(VAOObject::Position, [&p](vec3* oldPos) {
 					*oldPos = vec3(p.xy, 0);
 				});
@@ -94,6 +95,7 @@ public:
 	}
 
 	void display() override {
+		Mouse::get()._recenter = false;
 		shader("flat")([&] {
 			send(cam);
 			shade(circle);
@@ -138,6 +140,7 @@ public:
 	void resized() override {
 		cam.projection = glm::ortho(-1.2f, 1.2f, -1.2f, 1.2f);
 	}
+
 private:
 	ProvidedMesh * circle;
 	ProvidedMesh* point;

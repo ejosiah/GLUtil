@@ -33,7 +33,7 @@ namespace ncl {
 
 
 		private:
-			ncl::Logger logger = ncl::Logger::get("WithTriangleAdjacency");
+			ncl::Logger logger = ncl::Logger::get("WithTriangulation");
 		};
 	}
 }

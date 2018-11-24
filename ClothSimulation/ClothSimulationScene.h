@@ -7,16 +7,46 @@
 #include "../GLUtil/include/ncl/gl/CopyBuffer.h"
 #include "../GLutil/include/ncl/gl/shaders.h"
 #include "../GLutil/include/ncl/gl/shader_binding.h"
+#include "../GLutil/include/ncl/gl/util.h"
 
 using namespace std;
 using namespace ncl;
 using namespace gl;
 using namespace glm;
 
+const string USERNAME = getEnv("username");
+
+class lightController : public _3DMotionEventHandler {
+public:
+	lightController(vec4& pos) :pos{ pos } {
+		velocity = vec3(5.0f);
+	}
+
+	Logger logger = Logger::get("3D Motion Event");
+
+	virtual void onMotion(const _3DMotionEvent& event) override {
+		direction = clamp(event.translation, vec3(-1), vec3(1));
+	};
+	virtual void onNoMotion() override {
+		direction = vec3(0);
+	};
+
+	virtual void update(float dt) {
+		auto v = velocity * direction;
+		vec3 newP = pos.xyz + v * dt;
+		pos = vec4(newP, pos.w);
+	}
+
+private:
+	vec4 & pos;
+	vec3 direction;
+	vec3 velocity;
+};
+
 class Cloth : public Compute, public CopyBuffer {
 public:
-	Cloth(int rows, int cols, int size, const glm::vec4& color = randomColor(), mat4 transform = mat4(1)):
-		Compute(ivec3(1)), _rows(rows), _cols(cols), _size(size), xform(transform){
+	Cloth(int rows, int cols, int size, vec4& lc, const glm::vec4& color = randomColor(),  mat4 transform = mat4(1)):
+		Compute(ivec3(1)), _rows(rows), _cols(cols), _size(size), xform(transform), lightCenter(lc){
 		string source = mass_spring_comp_shader;
 		auto colPos = source.find("$cols");	
 		source = source.replace(colPos, 5, to_string(cols + 1));
@@ -27,7 +57,7 @@ public:
 	}
 
 	void initShader(int rows, int cols, int size) {
-		vec2 patch_size{ float(size) / cols, float(size) / cols };
+		vec2 patch_size{ float(size) / (cols+1), float(size) / (cols+1) };
 		vec3 gravity{ 0.0f, -0.00981f, 0.0f };
 	//	vec3 gravity{ 0.0f, -1.666f, 0.0f };
 		(*_shader)([&] {
@@ -38,10 +68,10 @@ public:
 	}
 
 	virtual void init() {
-
 	//	pos_buffer[0] = copy(pos);
 	//	pos_buffer[1] = copy(pos);
 
+		
 		auto positions = vector<vec4>();
 		auto indicies = vector<GLuint>();
 
@@ -122,7 +152,9 @@ public:
 	}
 
 
-	virtual void postCompute() override {
+	virtual void preCompute() override {
+		_shader->sendUniform1f("r", (float(_size)/(_cols+1)) * 1.2);
+		_shader->sendUniform4fv("c", 1, &lightCenter.x);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, pos_buffer[front]);
@@ -137,7 +169,7 @@ public:
 	virtual void compute() override {
 		for (int i = 0; i < numIterations; i++) {
 			Compute::compute();
-			swapBuffers();
+		//	swapBuffers();
 		}
 	}
 
@@ -145,10 +177,13 @@ public:
 		std::swap(front, back);
 	}
 
-	 void render() {
+	 void render(Shader& shader) {
+		 
 		 glBindVertexArray(vaoId[front]);
 		 glDrawElements(GL_TRIANGLES, num_indices, GL_UNSIGNED_INT, 0);
 		 glBindVertexArray(0);
+		 
+		// plane->draw(shader);
 	}
 
 
@@ -188,6 +223,8 @@ private:
 	GLuint back = 1;
 	GLuint vaoId[2];
 	GLuint num_indices;
+	Plane* plane;
+	vec4& lightCenter;
 };
 
 
@@ -198,52 +235,127 @@ public:
 	}
 
 	void init() override {
-		light[0].position = { 0, 5, 0, 1 };
-		plane = new Plane({ {0, 1, 0} , 0 }, 100, WHITE);
-		mat4 mat = translate(mat4(1), { 0, 4, 0 });
-		cloth = new Cloth(21, 21, 4, BLACK, mat);
+		auto noOfPoints = 21;
+		auto size = 4.f;
+		auto patch_size = size / (noOfPoints + 1);
+		auto lightRadius = patch_size * 1.2;
+		light[0].position = { 0, 2, 2, 0 };
+		light[0].transform = true;
+		light[0].spotAngle = 180.0f;
+		light[0].spotDirection = { 0, -1, -1, 1 };
+	//	lightModel.localViewer = true;
+		lightModel.colorMaterial = false;
+		lightModel.useObjectSpace = true;
+		lightObj = new Sphere(lightRadius, 10, 10, WHITE);
+		delete _motionEventHandler;
+		_motionEventHandler = new lightController(light[0].position);
+
+		plane = new Plane({ {0, 1, 0} , 0 }, 40, 40, 100, 100, 0, WHITE);
+		wallPlane = new Plane({ {0, 0, 1}, -2 }, 40, 40, 30, 30, 2, WHITE);
+		wallPlane->material().specular = vec4{ 0.1f, 0.1f, 0.1f, 1.0f };
+		wallPlane->material().shininess = 0.0f;
+		globe = new Hemisphere(20, 50, 50, RED);
+		globe->material().ambient = vec4(0);
+		globe->material().diffuse = vec4(0.5, 0, 0, 1);
+		globe->material().specular = vec4(0.7, 0.6, 0.6, 1.0);
+		globe->material().shininess = 0.25f;
+		mat4 mat = translate(mat4(1), { 0, 5, 0 });
+		cloth = new Cloth(21, 21, 4, light[0].position, BLACK, mat);
 		cloth->init();
-		board = new CheckerBoard_gpu(1024, 1024);
-		board->compute();
+	//	board = new CheckerBoard_gpu(1024, 1024);
+	//	board->compute();
 		glPointSize(5.0);
+		
+		getActiveCameraController().setModelHeight(2);
+		activeCamera().lookAt({ 0, 0, 11 }, vec3(0), { 0, 1, 0 });
+		setBackGroundColor(GRAY);
+		wood_floor = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\wood_floor.jpg", 0, "image0", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		wood_floor_nm = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\wood_floor_nm.jpg", 1, "image1", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		
+		wall = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\Stone_Wall\\STW_sq_001_2048x2048.jpg", 2, "image2", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		wall_nmap = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\Stone_Wall\\STW_sq_001_2048x2048_normal_map.jpg", 1, "image3", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+
+		cube = new Cube(30);
+
 	}
 
 	void display() override {
 
-		cam.view = translate(mat4(1), { 0.0f, 0.0f, dist });
-		cam.view = rotate(cam.view, radians(pitch), { 1.0f, 0.0f, 0.0f });
-		cam.view = rotate(cam.view, radians(yaw), { 0.0f, 1.0f, 0.0f });
-
 		cloth->compute();
+		auto cam0 = activeCamera();
+		light[0].spotDirection = vec4(activeCamera().getViewDirection(), 1.0);
+		light[0].ki = 0;
+		light[0].kq = 0;
 
-		shader("flat")([&] {
-			send(cam);
+		shader("flat")([&](Shader& s) {
+			send(activeCamera());
+			glDisable(GL_CULL_FACE);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			cloth->render();
+			cloth->render(s);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glEnable(GL_CULL_FACE);
+		});
+
+		glDisable(GL_CULL_FACE);
+		shader("default")([&] {	
+			send("activeTextures[0]", true);
+			send(light[0]);
+			send(activeCamera());
+			send(lightModel);
+
+			send("uvMappedToSize", true);
+			send(wood_floor);
+			send(wood_floor_nm);
+			shade(plane);
 		});
 
 		shader("default")([&] {
-			send("activeTextures[0]", true);
+			send("activeTextures[0]", false);
+			send("activeTextures[2]", true);
 			send(light[0]);
-			send(cam);
-			board->images().front().renderMode();
-			send(&board->images().front());
-			shade(plane);
+			send(activeCamera());
+			send(lightModel);
+			send("uvMappedToSize", true);
+			send(wall);
+			send(wall_nmap);
+			shade(wallPlane);
 		});
+
+		
+		if (light[0].on) {
+			shader("flat")([&] {
+				mat4 mat = translate(mat4(1), vec3(light[0].position));
+				send(activeCamera(), mat);
+				shade(lightObj);
+			});
+		}
 
 	}
 
 	void update(float dt) override {
+		dynamic_cast<lightController*>(_motionEventHandler)->update(dt);
 	} 
 
 	void resized() override {
 		cam.projection = perspective(radians(60.f), aspectRatio, 1.0f, 100.f);
+		activeCamera().perspective(60.f, aspectRatio, 1.0f, 100.f);
+	}
+
+	void processInput(const Key& key) override {
+		if ((key.value() == 'o' || key.value() == 'O') && key.pressed()) lightModel.useObjectSpace = !lightModel.useObjectSpace;
 	}
 
 private:
 	Plane * plane;
+	Plane* wallPlane;
+	Texture2D* wall;
+	Texture2D* wall_nmap;
+	Texture2D* wood_floor;
+	Texture2D* wood_floor_nm;
 	Cloth* cloth;
+	Sphere* lightObj;
+	Hemisphere* globe;
+	Cube* cube;
 	CheckerBoard_gpu* board;
 	float yaw = 0;
 	float pitch = 10;

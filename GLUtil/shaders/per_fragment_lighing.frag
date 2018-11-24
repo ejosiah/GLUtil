@@ -70,6 +70,7 @@ uniform bool wireframe;
 uniform LightModel lightModel;
 uniform bool activeTextures[MAX_TEXTURES];
 uniform int blendTex[MAX_TEXTURES - 1];
+uniform int numLights = 1;
 
 ToonShader toonShader;
 
@@ -94,12 +95,15 @@ vec4 getDiffuse(Material m){
 }
 
 float daf(float dist, LightSource light){
+	if(light.position.w == 0) return 1;
 	return 1.0 / (light.kc + light.ki * dist + light.kq * dist * dist);
 }
 
 float saf(LightSource light, vec3 lightDirection){
+	if(light.position.w == 0) return 1;
 	vec3 l = normalize(lightDirection);
-	vec3 d =   normalize(mat3(V) * light.spotDirection.xyz);
+	//vec3 d =   normalize(mat3(V) * light.spotDirection.xyz);
+	vec3 d =   normalize(light.spotDirection.xyz);
 	float h = light.spotExponent;
 	
 	if(light.spotAngle >= 180) 	return 1.0;
@@ -140,14 +144,14 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	vec3 s = normalize(l + e);	// half way vector between light direction and eyes
 	vec4 specular = pow(max(dot(s, n), 0), f) * light.specular * m.specular;
 
-	return  _daf * _saf * ((ambient + diffuse) + specular); 
+	return  _daf * _saf * (ambient + diffuse + specular); 
 }
 
 vec4 phongLightModel(){
 	Material m = !lightModel.twoSided ?  material[0] : gl_FrontFacing ? material[0] : material[1];
 	vec4 color = m.emission + lightModel.globalAmbience * getAmbience(m);
 
-	for(int i = 0; i < light.length(); i++ ) 
+	for(int i = 0; i < numLights; i++ ) 
 		color += apply(light[i], vertex.lightDirection[i], m);
 
 	return color;
@@ -181,6 +185,6 @@ vec4 texColor(){
 
 void main(){
 	fragColor = phongLightModel() * texColor();
-	fragColor = wireframe ? mix(line.color, fragColor, getLineMixColor()) : fragColor;
+	//fragColor = wireframe ? mix(line.color, fragColor, getLineMixColor()) : fragColor;
 //	fragColor = texture(image0, vertex.texCoord);
 }

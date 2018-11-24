@@ -36,17 +36,19 @@ const unsigned int Logger::level = LEVEL_DEBUG;
 
 int main()
 {
+	Resolution res = Resolution::HD;
 	Options ops;
 	ops.hideCursor = true;
 	ops.requireMouse = true;
 	ops.useDefaultShader = false;
 	ops.fullscreen = false;
 	ops.vSync = false;
+	ops.dimensions = { res.width, res.height };
 	
 	GLVersion version{ 4, 5 };
 //	Scene* scene = new ImageViewer();
-	Scene* scene = new TestScene("Test Scene", ops);
- //   Scene* scene = new ExampleScene(ops);
+//	Scene* scene = new TestScene("Test Scene", ops);
+    Scene* scene = new ExampleScene(ops);
 //	Scene* scene = new FontTest();
 	GlfwApp app(*scene, version);
 	app.run();

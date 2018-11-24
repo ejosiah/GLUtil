@@ -1,6 +1,9 @@
 #pragma once
 #include <algorithm>
 #include "common.h"
+#include <iostream>
+#include <cstdlib>
+#include <vector>
 
 namespace ncl {
 	namespace gl {
@@ -191,6 +194,7 @@ namespace ncl {
 			}
 
 			updateViewMatrix();
+
 		}
 
 		void Camera::rotateSmoothly(float headingDegrees, float pitchDegrees, float rollDegrees)
@@ -257,7 +261,7 @@ namespace ncl {
 			// Continuously update the Camera's velocity vector even if the Camera
 			// hasn't moved during this call. When the Camera is no longer being moved
 			// the Camera is decelerating back to its stationary state.
-
+			
 			updateVelocity(direction, elapsedTimeSec);
 		}
 
@@ -493,6 +497,9 @@ namespace ncl {
 			using namespace glm;
 			accumPitchDegrees += pitchDegrees;
 
+			static std::vector<float> pRots;
+			if (pitchDegrees != 0) pRots.push_back(pitchDegrees);
+
 			if (accumPitchDegrees > 90.0f)
 			{
 				pitchDegrees = 90.0f - (accumPitchDegrees - pitchDegrees);
@@ -511,16 +518,17 @@ namespace ncl {
 			// Note the order the Orientationernions are multiplied. That is important!
 			if (headingDegrees != 0.0f)
 			{
-				rot = fromAxisAngle(WORLD_YAXIS, radians(headingDegrees)); // TODO 
-				orientation = rot * orientation;
+				rot = fromAxisAngle(WORLD_YAXIS, headingDegrees); // TODO 
+				orientation = orientation * rot;
+				
 			}
 
 			// Rotate Camera about its local x axis.
 			// Note the order the Orientationernions are multiplied. That is important!
 			if (pitchDegrees != 0.0f)
 			{
-				rot = fromAxisAngle(WORLD_XAXIS, radians(pitchDegrees));
-				orientation = orientation * rot;
+				rot = fromAxisAngle(WORLD_XAXIS, pitchDegrees);
+				orientation = rot * orientation;
 			}
 		}
 
@@ -537,7 +545,7 @@ namespace ncl {
 				accumPitchDegrees += 360.0f;
 
 			Orientation rot = Orientation({ radians(pitchDegrees), radians(headingDegrees), radians(rollDegrees) });
-			orientation *= rot;
+			orientation = rot * orientation;
 		}
 
 		void Camera::rotateOrbit(float headingDegrees, float pitchDegrees, float rollDegrees)
@@ -560,19 +568,19 @@ namespace ncl {
 				if (headingDegrees != 0.0f)
 				{
 					rot = fromAxisAngle(targetYAxis, headingDegrees);
-					orientation = rot * orientation;
+					orientation =  orientation * rot;
 				}
 
 				if (pitchDegrees != 0.0f)
 				{
 					rot = fromAxisAngle(WORLD_XAXIS, pitchDegrees);
-					orientation = orientation * rot;
+					orientation = rot * orientation;
 				}
 			}
 			else
 			{
 				rot = Orientation({ radians(pitchDegrees), radians(headingDegrees), radians(rollDegrees) });
-				orientation *= rot;
+				orientation = rot * orientation;
 			}
 		}
 
@@ -679,7 +687,7 @@ namespace ncl {
 			xAxis = vec3(row(viewMatrix, 0));	// TODO verify that this is correct
 			yAxis = vec3(row(viewMatrix, 1));
 			zAxis = vec3(row(viewMatrix, 2));
-			viewDir = -zAxis;
+			viewDir = -zAxis; 
 
 			if (mode == ORBIT)
 			{

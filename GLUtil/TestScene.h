@@ -18,6 +18,7 @@
 #include "include/ncl/gl/shaders.h"
 #include "include/ncl/gl/Camera.h"
 #include "include/ncl/gl/UserCameraController.h"
+#include "include/glm/vec_util.h"
 
 using namespace std;
 using namespace ncl;
@@ -166,7 +167,7 @@ public:
 		loadBrickTexture();
 		loadLightMapTexture();
 		shader.unUse();
-		plane = new Plane(40, 40, 8.0f, 8.0f, vec4(1), true);
+		plane = new Plane(40, 40, 8.0f, 8.0f, 1, vec4(1), true);
 	}
 
 	void initShader() {
@@ -176,7 +177,7 @@ public:
 	}
 
 	void loadBrickTexture() {
-		floorTex = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\floor_color_map.tga", 0, "image0", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
+		floorTex = new Texture2D("C:\\Users\\" + USERNAME + "\\OneDrive\\media\\textures\\wood_floor.jpg", 0, "image0", GL_RGBA8, GL_RGBA, glm::ivec2{ GL_REPEAT }, glm::ivec2{ GL_NEAREST });
 		shader.sendUniform1i("image0", floorTex->id());
 		
 	}
@@ -222,6 +223,7 @@ private:
 class TestScene : public Scene {
 public:
 	TestScene(const char* title, Options ops) :Scene(title, ops) {	
+		_vsync = true;
 	}
 
 	virtual void init() {
@@ -277,7 +279,7 @@ public:
 		using namespace glm;
 		using namespace std;
 		static std::stringstream sbr;
-		font->render(msg(), 10, _height - 20);
+		
 	//	font->render("FPS: " + to_string(fps), 10, _height - 10);
 		const Camera& camera = cameraController.getCamera();
 		vec3 target = camera.getPosition();
@@ -289,6 +291,7 @@ public:
 			spaceShip->draw();
 		}
 		floor->draw();
+		font->render(msg(), 10, 20);
 
 		/*glViewport(_width / 2, 0, _width / 2, _height );
 		spaceShip->drawWith(cam2);
@@ -313,15 +316,20 @@ public:
 		stringstream sbr;
 		
 		const vec3& pos = cameraController.getCamera().getPosition();
+		const vec3& vel = cameraController.getCamera().getVelocity();
+		const float rotSpeed = cameraController.getCamera().getRotationSpeed();
 
 		sbr << "FPS: " << fps << "\n\nCamera" << endl;
-		sbr << "\tPosition: x:" << setprecision(2) << pos.x << " y:" << pos.y << " z:" << pos.z << endl;
-		sbr << "\tVelocity: x:velX y:velY z:velZ" << endl;
+		sbr << setprecision(2);
+		sbr << "\tPosition:" << pos << endl;
+		sbr << "\tVelocity: " << vel << endl;
 		sbr << "\tMode: " << cameraController.getCamera().modeAsString() << endl;
-		sbr << "\tRotation speed: ?" << endl;
+		sbr << "\tRotation speed: " << rotSpeed << endl;
 		sbr << "\n\nMouse" << endl;
-		sbr << "Smoothing enabled" << endl;
-		sbr << "Sensitivity: 0.20" << endl;
+		sbr << "\tmouse pos: " << Mouse::get().pos << endl;
+		sbr << "\trelative pos: " << Mouse::get().relativePos << endl;
+		sbr << "\tSmoothing enabled" << endl;
+		sbr << "\tSensitivity: 0.20" << endl;
 
 		sbr << "\n\nPress H to display help";
 

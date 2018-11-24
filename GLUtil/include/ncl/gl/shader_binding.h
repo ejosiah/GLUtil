@@ -224,7 +224,7 @@ namespace ncl {
 
 		inline void send(const Camera& camera, const glm::mat4& model = glm::mat4(1)){
 			ensureShaderbound();
-			Shader::boundShader->sendComputed(camera);
+			Shader::boundShader->sendComputed(camera, model);
 		}
 
 		inline void send(GlmCam& cam) {

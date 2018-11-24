@@ -4,6 +4,8 @@
 #include "input.h"
 #include "mesh.h"
 #include "Model.h"
+#include <cstdlib>
+#include "../geom/Plane.h"
 
 namespace ncl {
 	namespace gl {
@@ -29,6 +31,8 @@ namespace ncl {
 			Camera camera;
 			float floorWidth;
 			float floorHeight;
+			float cameraFloorOffset;
+			geom::Plane ground;
 			float fovx;
 			float zNear;
 			float zFar;
@@ -85,6 +89,8 @@ namespace ncl {
 				this->sceneDimentions = sceneDimentions;
 				this->direction = glm::vec3(0);
 				this->floor = floor;
+				this->ground = geom::Plane({ 0, 1, 0 }, 0);
+				this->cameraFloorOffset = 1;
 
 			}
 
@@ -93,9 +99,9 @@ namespace ncl {
 				float aspectRatio = sceneDimentions.width / sceneDimentions.height;
 				camera.perspective(fovx, aspectRatio, zNear, zFar);
 
-				float offset = modelHeight * 0.5f;
+				
 					
-				camera.setPosition(glm::vec3(0.0f, offset, 0.0f));
+				camera.setPosition(glm::vec3(0.0f, cameraFloorOffset, 0.0f));
 				camera.setOrbitMinZoom(minZoom);
 				camera.setOrbitMaxZoom(maxZoom);
 				camera.setOrbitOffsetDistance(minZoom);
@@ -107,12 +113,13 @@ namespace ncl {
 				camera.setVelocity(velocty);
 				updateMode(mode);
 
-				bounds.max = { floor.width / 2.0f, 4.0f, floor.length / 2.0f };
-				bounds.min = { -floor.width / 2.0f, offset, -floor.length / 2.0f };
+				bounds.max = { floor.width / 2.0f, 1000.0f, floor.length / 2.0f };
+				bounds.min = { -floor.width / 2.0f, 0, -floor.length / 2.0f };
 			}
 
 			void setModelHeight(float h) {
-				this->modelHeight = h;
+				modelHeight = h;
+				cameraFloorOffset = modelHeight * 0.5f;
 			}
 
 			void setFloorMeasurement(Mesurements floor) {
@@ -145,23 +152,20 @@ namespace ncl {
 				glm::mat4 m = glm::mat4_cast(model.orientation);
 				glm::mat4 v = camera.getViewMatrix();
 				glm::mat4 p = camera.getProjectionMatrix();
-				m[3][0] = model.position.x;
-				m[3][1] = model.position.y;
-				m[3][2] = model.position.z;
+				m = translate(m, model.position);
 
 				return p * v * m;
 			}
 
 			const glm::mat4 modelTrans() const {
 				glm::mat4 m = glm::mat4_cast(model.orientation);
-				m[3][0] = model.position.x;
-				m[3][1] = model.position.y;
-				m[3][2] = model.position.z;
+				m = translate(m, model.position);
 
 				return m;
 			}
 
 			virtual void update(float elapsedTime)  {
+			
 				Mouse& mouse = Mouse::get();
 				float dx;
 				float dy;
@@ -247,6 +251,11 @@ namespace ncl {
 
 					if (pos.z < bounds.min.z)
 						newPos.z = bounds.min.z;
+
+					float depth = glm::dot(ground.n, pos);
+					if (depth < (ground.d + cameraFloorOffset)) {
+						newPos.y = cameraFloorOffset;
+					}
 
 					camera.setPosition(newPos);
 				}
@@ -352,6 +361,10 @@ namespace ncl {
 
 			virtual void updateAspectRation(float ratio)  {
 				camera.perspective(ratio);
+			}
+
+			Camera& getCamera() {
+				return camera;
 			}
 
 			const Camera& getCamera() const {

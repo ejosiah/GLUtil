@@ -36,6 +36,8 @@ uniform vec2 patch_length;
 uniform float dt = 0.016666666666666;
 uniform vec3 gravity = vec3(0, 9.8, 0);
 uniform float m;
+uniform float r;
+uniform vec4 c;
 
 const uvec3 CLOTH_SIZE = (gl_NumWorkGroups * gl_WorkGroupSize);
 
@@ -108,9 +110,21 @@ void main(){
 	vec3 acceleration = vec3(0);
 	if(mass != 0) acceleration = force/mass;
 
+	vec3 curr_pos = pos;
+	vec3 next_pos = integrate(pos, prev_pos, acceleration, dt);
 
-	pos.y = max(0, pos.y);
 
-	prev_positionsOut[loc] = pos;
-	positionsOut[loc] = integrate(pos, prev_pos, acceleration, dt);
+	next_pos.y = max(0, next_pos.y);
+
+	vec3 delta = next_pos - c.xyz;
+	float pd = dot(delta, delta);
+
+	if(pd < r * r){
+		vec3 dir = normalize(delta);
+		next_pos = c.xyz + dir * r;
+	}
+
+
+	prev_positionsIn[loc] = curr_pos;
+	positionsIn[loc] = next_pos;
 }

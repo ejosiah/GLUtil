@@ -41,8 +41,21 @@ inline bool operator<(const glm::vec3& a, const glm::vec3& b) {
 	return glm::dot(a, a) < glm::dot(b, b);
 }
 
+
+inline std::ostream& operator<<(std::ostream& out, const glm::vec2& v) {
+	out << std::setprecision(3);
+	out << "[ " << v.x << ", " << v.y << " ]";
+	return out;
+}
+
 inline std::ostream& operator<<(std::ostream& out, const glm::vec3& v) {
 	out << std::setprecision(3);
 	out << "[ " << v.x << ", " << v.y << ", " << v.z << " ]";
+	return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const glm::vec4& v) {
+	out << std::setprecision(3);
+	out << "[ " << v.x << ", " << v.y << ", " << v.z << ", " << v.z << " ]";
 	return out;
 }
