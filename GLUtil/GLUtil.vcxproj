@@ -255,14 +255,12 @@
     <None Include="include\shaders\lighting.frag.glsl" />
     <None Include="include\shaders\lighting.vert.glsl" />
     <None Include="include\shaders\lightModel.glsl" />
-    <None Include="include\shaders\lightModel.vert" />
     <None Include="include\shaders\normal_calculator.glsl" />
     <None Include="include\shaders\simple_light.vert" />
     <None Include="include\shaders\toon_diffuse.glsl" />
     <None Include="include\shaders\vertex_in.glsl" />
     <None Include="include\shaders\vertex_in_array.glsl" />
     <None Include="include\shaders\vertex_out.glsl" />
-    <None Include="include\shaders\vertex_out.vert" />
     <None Include="include\shaders\vertex_out_array.glsl" />
     <None Include="include\shaders\wireframe.glsl" />
     <None Include="include\shaders\wireframe_geom.glsl" />
@@ -284,6 +282,8 @@
     <None Include="shaders\pass_through.tes" />
     <None Include="shaders\pass_through.vert" />
     <None Include="shaders\per_fragment_lighing.vert" />
+    <None Include="shaders\per_fragment_lighting2.frag" />
+    <None Include="shaders\per_fragment_lighting2.vert" />
     <None Include="shaders\phong_lighting2.vert" />
     <None Include="shaders\per_fragment_lighing.frag" />
     <None Include="shaders\phong_lighting.vert" />

@@ -69,7 +69,7 @@ namespace ncl {
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_2D, buffer);
 				shader.sendUniform1i(_name, _id);
-				glActiveTexture(TEXTURE(0));
+				//glActiveTexture(TEXTURE(0));
 			}
 
 		private:
@@ -274,8 +274,8 @@ namespace ncl {
 
 		class Image2D {
 		public:
-			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0): 
-				_id(id), _buffer(buffer), _format(format), _name(name) {
+			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0, GLuint img_id = 0): 
+				_id(id), _buffer(buffer), _img_id(img_id), _format(format), _name(name) {
 				if (glIsBuffer(_buffer) == GL_FALSE) {
 					glGenTextures(1, &_buffer);
 				}
@@ -299,10 +299,14 @@ namespace ncl {
 				mode = Mode::RENDER;
 			}
 
+			GLuint buffer() {
+				return _buffer;
+			}
+
 			void sendTo(Shader& shader) {
 				if (mode == Mode::COMPUTE) {
-					glBindImageTexture(_id, _buffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, _format);
-					shader.sendUniform1i(_name, _id);
+					glBindImageTexture(_img_id, _buffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, _format);
+					shader.sendUniform1i(_name, _img_id);
 				}
 				else {
 					glActiveTexture(TEXTURE(_id));
@@ -317,6 +321,7 @@ namespace ncl {
 		private:
 			GLuint _id;
 			GLuint _buffer;
+			GLuint _img_id;
 			GLenum _format;
 			std::string _name;
 			Mode mode;

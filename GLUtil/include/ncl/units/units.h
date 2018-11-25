@@ -5,64 +5,56 @@
 namespace ncl {
 	namespace unit {
 
-		inline long double operator ""_mm(long double v) {
-			return v * 0.1;
+		// length
+
+		inline long double operator ""_mm(long double l) {
+			return l * 0.001;
+		}
+		
+		inline long double operator ""_cm(long double l) {
+			return l * 0.01;
 		}
 
-		inline long double operator ""_milimeters(long double v) {
-			return v * 0.1;
+		inline long double operator ""_m(long double l) {
+			return l;
 		}
 
-		inline long double operator  ""_cm(long double v) {
-			return v;
+		inline long double operator ""_km(long double l) {
+			return l * 1000;
 		}
 
-		inline long double operator  ""_centimeters(long double v) {
-			return v;
+		inline long double operator ""_in(long double l) {
+			return l * 0.0254;
 		}
 
-		inline long double operator ""_m(long double v) {
-			return v * 100;
+		inline long double operator ""_ft(long double l) {
+			return l * 0.3048;
 		}
 
-		inline long double operator ""_meters(long double v) {
-			return v * 100;
+		inline long double operator ""_mi(long double l) {
+			return l * 1609.344;
 		}
 
-		inline long double operator ""_km(long double v) {
-			return v * 100000;
+		// mass
+		inline long double operator ""_mg(long double m) {
+			return 0.000001 * m;
 		}
 
-		inline long double operator ""_kilometers(long double v) {
-			return v * 100000;
+		inline long double operator ""_g(long double m) {
+			return 0.001 * m;
 		}
 
-		inline long double operator ""_in(long double v) {
-			return v * 2.54;
+		inline long double operator ""_kg(long double m) {
+			return m;
 		}
 
-		inline long double operator ""_inches(long double v) {
-			return v * 2.54;
+		inline long double operator ""_lb(long double m) {
+			return 0.453592 * m;
 		}
 
-		inline long double operator ""_ft(long double v) {
-			return v * 30.48;
+		inline long double operator ""_st(long double m) {
+			return 6.350293 * m;
 		}
 
-		inline long double operator ""_feet(long double v) {
-			return v * 30.48;
-		}
-
-		inline long double operator ""_mi(long double v) {
-			return v * 160934;
-		}
-
-		inline long double operator ""_miles(long double v) {
-			return v * 160934;
-		}
-
-		inline long double operator ""_deg(long double v) {
-			return v;
-		}
 	}
 }

@@ -400,6 +400,7 @@ namespace ncl {
 			sendUniform1f(name + ".shininess", material.shininess);
 			send(name + ".ambientMap", material.ambientMat != -1);
 			send(name + ".diffuseMap", material.diffuseMat != -1);
+			send(name + ".specularMap", material.specularMat != -1);
 		}
 
 		void Shader::sendUniformMaterials(const std::string& name, Material materials[]) {

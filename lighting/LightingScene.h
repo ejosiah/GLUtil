@@ -142,7 +142,6 @@ public:
 			spot_panel->init();
 			float h = spot_panel->height();
 			arcSlider = new ArcSlider(scene, "Spot Angle", 30, 90, 100.0f, { 30, 70 });
-			arcSlider->angle = light.spotAngle;
 			//	arcSlider->setForGroundColor(getForeGround());
 			arcSlider->init();
 
@@ -286,7 +285,7 @@ public:
 class Light {
 public:
 	Light(LightSource& source, Scene& scene, State& state, bool& gammaCorrect) : source(source), scene(scene) {
-		sphere = new Sphere(0.5, 10, 10, WHITE);
+		sphere = new Sphere(10.0_in, 10, 10, WHITE);
 		lightPanel = new LightUI(source, scene, state, gammaCorrect);
 		lightPanel->hide();		
 	}
@@ -298,6 +297,7 @@ public:
 		scene.shader("flat")([&] {
 			mat4 model = translate(mat4(1), vec3(source.position));
 			send(scene.activeCamera(), model);
+
 			shade(sphere);
 		});
 		lightPanel->draw();
@@ -335,18 +335,30 @@ public:
 	}
 
 	void init() override {
-		plane = new Plane({ { 0, 1.0_cm, 0 }, 0 }, 100, 100, 1000, 1000, 0, WHITE);
-		checkerboard = new CheckerBoard_gpu(512, 512, WHITE, GRAY);
-		checkerboard->compute();
-		checkerboard->images().front().renderMode();
+	//	texture = new CheckerTexture(1, "diffuseMap");
+		floor = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_COL_VAR2_3K.jpg", 1, "diffuseMap");
+		floor = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_NRM_3K.jpg", 1, "normalMap");
+	//	checkerboard = new CheckerBoard_gpu(256, 256, WHITE, GRAY, 1, "diffuseMap");
+	//	checkerboard->compute();
+	//	checkerboard->images().front().renderMode();
+
+		//shader("default")([&] {
+		//	glActiveTexture(GL_TEXTURE1);
+		//	glBindTexture(GL_TEXTURE_2D, checkerboard->images().front().buffer());
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		//});
+		
+		plane = new Plane({ { 0, 1, 0 }, 0 }, 100, 100, 100.0_ft, 100.0_ft, 10, WHITE);
+		plane->material().diffuseMat = floor->bufferId();   //checkerboard->images().front().buffer();
+
 		setBackGroundColor(BLACK);
 		setForeGroundColor(WHITE);
-		//light[0].transform = true;
-		//light[0].on = true;
-		light[0].position = { 0, 10, 0, 0 };
+		light[0].on = true;
+		light[0].position = { 0, 10.0_ft, 0, 1 };
 		light[0].spotDirection = { 0, -1, 0, 0 };
 		light0 = new Light(light[0], *this, state, gammaCorrect);
-		activeCamera().lookAt({ 0, 0, 5 }, vec3(0), { 0, 1, 0 });
+		activeCamera().lookAt({ 0, 1, 1 }, vec3(0), { 0, 1, 0 });
 		
 		lightController = new LightController(light[0].position, state);
 
@@ -382,12 +394,12 @@ public:
 	void createObjects() {
 		auto n = paths.size();
 		auto step = two_pi<float>() / n;
-		float r = 10;
+		float r = 10.0_ft;
 		for (int i = 0, theta = 0; i < n; i++, theta += step) {
 			float x = r * cos(theta);
 			float y = r * sin(theta);
 			auto position = vec3(x, 0, y);
-			auto object = new Object(paths[i], 5, *this, position);
+			auto object = new Object(paths[i], 6.0_ft, *this, position);
 			objects.push_back(object);
 		}
 	}
@@ -402,15 +414,12 @@ public:
 			send("gammaCorrect", gammaCorrect);
 			send(lightModel);
 			send(light[0]);
-			send("activeTextures[0]", true);
 			send(activeCamera());
 
 
 			send("uvMappedToSize", false);
-			send(&checkerboard->images().front());
 			shade(plane);
 
-			send("activeTextures[0]", false);
 			for (auto obj : objects) obj->draw();
 		});
 
@@ -424,7 +433,7 @@ public:
 	}
 
 	void resized() override {
-		activeCamera().perspective(60.f, aspectRatio, 1.0_cm, 10.0_m);
+		activeCamera().perspective(60.f, aspectRatio, 1.0_m, 1.0_km);
 	}
 
 	void processInput(const Key& key) override {
@@ -442,6 +451,8 @@ public:
 	}
 
 private:
+	Texture2D * floor;
+	Texture2D* normal;
 	CheckerBoard_gpu* checkerboard;
 	Plane* plane;
 	Light* light0;

@@ -12,7 +12,7 @@ vec4 asdDiffuse(vec3 L, vec3 N, LightSource light, Material m){
 vec4 toonDiffuse(vec3 L, vec3 N, LightSource light, Material m){
 	toonShader.levels = 3;
 	toonShader.scaleFactor = 1.0 / toonShader.levels;
-	return floor(max(dot(l, n), 0) * toonShader.levels) * toonShader.scaleFactor * light.diffuse *  getDiffuse(m);
+	return floor(max(dot(L, N), 0) * toonShader.levels) * toonShader.scaleFactor * light.diffuse *  getDiffuse(m);
 }
 
 vec4 hemisphereDiffuse(vec3 L, vec3 N, LightSource light, Material m){

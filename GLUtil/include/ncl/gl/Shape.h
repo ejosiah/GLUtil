@@ -41,16 +41,23 @@ namespace ncl {
 
 					
 					Material& material = materials[i];
-					/*if (material.ambientMat != -1) {
+					
+					if (material.ambientMat != -1) {
 						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-						glActiveTexture(GL_TEXTURE10);
-						shader.sendUniform1ui("ambientMap", 10);
+						glActiveTexture(GL_TEXTURE0);
+						shader.sendUniform1i("ambientMap", 0);
 					}
 					if (material.diffuseMat != -1) {
 						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-						glActiveTexture(GL_TEXTURE11);
-						shader.sendUniform1ui("diffuseMap", 11);
-					}*/
+						glActiveTexture(GL_TEXTURE1);
+						shader.sendUniform1i("diffuseMap", 1);
+					}
+					if (material.specularMat != -1) {
+						glBindTexture(GL_TEXTURE_2D, material.specularMat);
+						glActiveTexture(GL_TEXTURE2);
+						shader.sendUniform1i("specularMap", 2);
+					}
+
 					shader.sendUniformMaterial("material[0]", material);
 					
 					if (tfb != nullptr) {

@@ -65,8 +65,8 @@ namespace ncl {
 
 		class CheckerBoard_gpu : public Compute {
 		public:
-			CheckerBoard_gpu(int w = 256, int h = 256, glm::vec4 ca = WHITE, glm::vec4 cb = BLACK)
-				:Compute({ w, h, 1 }, { Image2D(w, h) }, sourceTemplate)
+			CheckerBoard_gpu(int w = 256, int h = 256, glm::vec4 ca = WHITE, glm::vec4 cb = BLACK, GLuint id = 0, std::string name = "")
+				:Compute({ w, h, 1 }, { Image2D(w, h, GL_RGBA32F, name, id) }, sourceTemplate)
 				, _w(w), _h(h), _ca(ca), _cb(cb)
 			{}
 

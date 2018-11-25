@@ -16,7 +16,7 @@ task compileShaders << {
 	src.findAll{ !it.text.contains("#pragma nocomp") }.each{
 		def name = it.name.replace(".", "_")
 		dest << "const std::string ${name}_shader = \""
-		it.eachLine{ line -> dest << "$line\\n"   }
+		it.eachLine{ line -> dest << "${line.replace("\"", "\\\"")}\\n"   }
 		dest << '";\n'
 	}
 }

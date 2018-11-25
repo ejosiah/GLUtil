@@ -9,7 +9,7 @@
 #include "include/ncl/gl/Shader.h"
 #include "include/ncl/gl/textures.h"
 #include "include/ncl/gl/Noise.h"
-
+#include "include/ncl/gl/compute.h"
 
 using namespace std;
 using namespace glm;
@@ -44,14 +44,17 @@ public:
 
 
 	void loadTextures() {
-
-		WorleyNoise2D noise(Euclidean, invertLayout);
+		board = new CheckerBoard_gpu(256, 256, WHITE, GRAY, 1, "image1");
+		board->compute();
+		board->images().front().renderMode();
+	//	WorleyNoise2D noise(Euclidean, invertLayout);
 	//	texture0 = new NoiseTex2D;
 	//	texture1 = new NoiseTex3D();
-		shader("image").use();
-	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
-		texture0->sendTo(shader("image"));
-		texture0 = new CheckerTexture(0, "image");
+	//	shader("image").use();
+	//	texture0 = new CheckerTexture(1, "image");
+	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 5);
+	//	texture0->sendTo(shader("image"));
+	//	shader("image").unUse();
 	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
 	//	shader("image").sendUniform1ui("image0", texture0->id());
 	//	_shader.sendUniform1ui("image1", texture1->id());
@@ -83,6 +86,8 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader("image")([&](Shader& s) {
+		//	send(texture0);
+			send(&board->images().front());
 			s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
 			plane->draw(s);
 		});
@@ -98,5 +103,6 @@ private:
 	Cube* cube;
 	Texture3D* texture1;
 	Texture2D* texture0;
+	CheckerBoard_gpu* board;
 	Shader _shader;
 };

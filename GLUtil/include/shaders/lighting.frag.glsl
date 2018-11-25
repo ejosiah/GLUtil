@@ -2,13 +2,13 @@
 #pragma include("lightModel.glsl")
 #pragma include("vertex_in.glsl")
 
-layout(binding = 10) uniform sampler2D ambientMap;
-layout(binding = 11) uniform sampler2D diffuseMap;
-layout(binding = 12) uniform sampler2D specularMap;
-layout(binding = 13) uniform sampler2D normalMap;
-layout(binding = 14) uniform sampler2D displacementMap;
-layout(binding = 15) uniform sampler2D reflectionMap;
-layout(binding = 16) uniform sampler2D ambiantOcclusionMap;
+layout(binding = 0) uniform sampler2D ambientMap;
+layout(binding = 1) uniform sampler2D diffuseMap;
+layout(binding = 2) uniform sampler2D specularMap;
+layout(binding = 3) uniform sampler2D normalMap;
+layout(binding = 4) uniform sampler2D displacementMap;
+layout(binding = 5) uniform sampler2D reflectionMap;
+layout(binding = 6) uniform sampler2D ambiantOcclusionMap;
 
 vec4 getAmbience(Material m);
 vec4 getDiffuse(Material m);
@@ -16,24 +16,27 @@ vec4 getSpecular(Material m);
 vec4 diffuseContrib(vec3 L, vec3 N, LightSource light, Material m);
 
 float daf(float dist, LightSource light){
-	if (light.w == 0) return 1;
+	if (light.position.w == 0) return 1;
 	return 1.0 / (light.kc + light.ki * dist + light.kq * dist * dist);
 }
 
 float saf(LightSource light, vec3 lightDirection){
-	if (light.w == 0) return 1;
+	if (light.position.w == 0) return 1;
 	vec3 l = normalize(lightDirection);
 	vec3 d =   normalize(light.spotDirection.xyz);
 	float h = light.spotExponent;
 	
 	if(light.spotAngle >= 180) 	return 1.0;
+	if (light.spotAngle <= 0) return 0.0;
 	
 	float _LdotD = dot(-l, d);
-	float cos_spotAngle = cos(radians(light.spotAngle));
+
+	float inner = cos(radians(light.spotAngle - 5));
+	float outter = cos(radians(light.spotAngle));
 	
-	if(_LdotD < cos_spotAngle) return 0.0;
-	
-	return pow(_LdotD, h); 
+	float sl = smoothstep(outter, inner, _LdotD);
+
+	return pow(sl, h); 
 }
 
 

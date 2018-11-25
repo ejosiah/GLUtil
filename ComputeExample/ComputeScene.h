@@ -13,6 +13,7 @@ class ComputeScene : public Scene {
 public:
 	ComputeScene():Scene("Compute Scene", 1024, 1024){
 		_useImplictShaderLoad = true;
+		_requireMouse = false;
 	//	_fullScreen = true;
 	}
 
