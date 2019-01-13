@@ -20,11 +20,10 @@ float daf(float dist, LightSource light){
 	return 1.0 / (light.kc + light.ki * dist + light.kq * dist * dist);
 }
 
-float saf(LightSource light, vec3 lightDirection){
+float saf(LightSource light, vec3 spotDirection, vec3 lightDirection, float h){
 	if (light.position.w == 0) return 1;
 	vec3 l = normalize(lightDirection);
-	vec3 d =   normalize(light.spotDirection.xyz);
-	float h = light.spotExponent;
+	vec3 d =   normalize(spotDirection);
 	
 	if(light.spotAngle >= 180) 	return 1.0;
 	if (light.spotAngle <= 0) return 0.0;
@@ -40,7 +39,7 @@ float saf(LightSource light, vec3 lightDirection){
 }
 
 
-vec4 apply(LightSource light, vec4 direction, Material m){
+vec4 apply(LightSource light, vec3 spotDirection, vec4 direction, Material m){
 	if(!light.on) return vec4(0);
 	vec3 n = gl_FrontFacing ? normalize(vertex_in.normal) : normalize(-vertex_in.normal);
 	vec3 N = lightModel.useObjectSpace ? (2.0 * texture(normalMap, vertex_in.texCoord) - 1.0).xyz : n;
@@ -49,7 +48,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 		
 	float _daf = daf(length(L), light);
 
-	float _saf = saf(light, L);
+	float _saf = saf(light, spotDirection, L, light.spotExponent);
 	
 	vec4 ambient = light.ambient * m.ambient;
 	
@@ -57,7 +56,7 @@ vec4 apply(LightSource light, vec4 direction, Material m){
 	
 	vec3 E = normalize(vertex_in.eyes);
 	vec3 S = normalize(L + E);	// half way vector between light direction and eyes
-	vec4 specular = pow(max(dot(S, N), 0), f) * light.specular * m.specular;
+	vec4 specular = pow(max(dot(S, N), 0), f) * light.specular * getSpecular(m);
 
 	return  _daf * _saf * ((ambient + diffuse) + specular); 
 }
@@ -67,7 +66,7 @@ vec4 phongLightModel(mat4 M){
 	vec4 color = m.emission + lightModel.globalAmbience * getAmbience(m);
 
 	for(int i = 0; i < numLights; i++ )
-		color += apply(light[i], vertex_in.lightDirection[i], m);
+		color += apply(light[i], vertex_in.spotDirection[i], vertex_in.lightDirection[i], m);
 
 	return color;
 }
@@ -78,8 +77,8 @@ vec4 getAmbience(Material m){
 }
 
 vec4 getDiffuse(Material m){
-    vec4 color = m.diffuseMap ? m.diffuse * texture(diffuseMap, vertex_in.texCoord) : m.diffuse;
-	return lightModel.colorMaterial ? vertex_in.color : color;
+    vec3 color = m.diffuseMap ? m.diffuse.xyz * pow(texture(diffuseMap, vertex_in.texCoord).xyz, vec3(2.2)) : m.diffuse.xyz;
+	return lightModel.colorMaterial ? vertex_in.color : vec4(color, 1);
 }
 
 vec4 getSpecular(Material m) {

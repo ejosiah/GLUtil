@@ -43,6 +43,9 @@
     <Filter Include="Header Files\ui">
       <UniqueIdentifier>{e39b33ad-eaac-434a-884c-c8b87da33b46}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\environment">
+      <UniqueIdentifier>{9fc1b373-767d-48de-83da-fd0599b4012b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -300,6 +303,24 @@
     <ClInclude Include="include\ncl\ui\RadioButton.h">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\SkyBox.h">
+      <Filter>Header Files\environment</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\bvh2.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\aabb2.h">
+      <Filter>Header Files\geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\detail\bvh2.inl">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\MeshLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\MeshNormalizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -464,6 +485,16 @@
     <None Include="shaders\per_fragment_lighting2.frag">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\skybox.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\skybox.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\triangle_ray_intersection.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\aabb.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

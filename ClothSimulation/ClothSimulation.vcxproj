@@ -23,7 +23,7 @@
     <ProjectGuid>{A9C27F15-CC45-4C27-BBD3-AD10C8D0AAB8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ClothSimulation</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

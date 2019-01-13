@@ -82,7 +82,7 @@ namespace ncl {
 			if (activePrograms.empty()) activePrograms.push(0);
 		}
 
-		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level = 0, bool storeIntermidate = false);
+		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level = 0);
 
 		void Shader::load(const ShaderSource& source) {
 			loadFromstring(source.ShaderType, source.data, source.filename);
@@ -92,7 +92,7 @@ namespace ncl {
 			GLuint shader = glCreateShader(type);
 
 			std::set<std::string> loaded;
-			const std::string newSource = preprocess(source, filename, loaded, 0, _storePreprocessedShaders);
+			const std::string newSource = preprocess(source, filename, loaded, 0);
 
 			const char * ptmp = newSource.c_str();
 			glShaderSource(shader, 1, &ptmp, NULL);
@@ -467,9 +467,10 @@ namespace ncl {
 			send("lightModel.colorMaterial", lightModel.colorMaterial);
 			sendUniform4fv("lightModel.globalAmbience", 1, (float*)&lightModel.globalAmbience[0]);
 		}
+
 #ifndef SHADER_PROCESS
 #define SHADER_PROCESS
-		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level, bool storeIntermidate) {
+		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level) {
 			static unsigned num = 0;
 			if (level > 32) {
 				throw "header inclusion depth limit reached, might be caused by cyclic header inclusion";
@@ -478,6 +479,8 @@ namespace ncl {
 			using namespace std;
 			static const regex INCLUDE_PATTERN("^#pragma\\s*include\\s*\\(\\s*\"([A-Za-z0-9_.-]+\\.[A-za-z]+)\"\\.*\\)\\.*");
 			const regex DEBUG_MODE_REGEX("^#pragma\\s*storeIntermediate\\(on\\)");
+			const regex IGNORE_BEGIN("^#pragma\\s*ignore\\(on\\)");
+			const regex IGNORE_END("^#pragma\\s*ignore\\(off\\)");
 			stringstream in;
 			stringstream out;
 			in << source;
@@ -485,23 +488,49 @@ namespace ncl {
 			size_t line_number = 1;
 			smatch matches;
 			smatch debug_match;
+			smatch ignore_match_on;
+			smatch ignore_match_off;
+
+			auto find = [](string name) -> string {
+				std::vector<boost::filesystem::path> shader_loc = {
+					"shaders\\" + name,
+					"..\\shaders\\" + name,
+					"C:\\Users\\" + username + "\\OneDrive\\cpp\\include\\shaders\\" + name
+				};
+				for (auto path : shader_loc) {
+					if (boost::filesystem::exists(path)) return path.string();
+				}
+				throw std::runtime_error(("unable to find shader: " + name).c_str());
+				 
+			};
+
+			bool storeIntermidate = false;
+			bool ignore = false;
 
 			string line;
 			while (getline(in, line)) {
 				if (regex_search(line, debug_match, DEBUG_MODE_REGEX) && level == 0) {
 					storeIntermidate = true;
 				}
+				if (regex_search(line, ignore_match_on, IGNORE_BEGIN)) {
+					ignore = true;
+				}
+
 				if (regex_search(line, matches, INCLUDE_PATTERN)) {
 					string file = matches[1];
-					string include_file = "C:\\Users\\" + username + "\\OneDrive\\cpp\\include\\shaders\\" + file;
+					string include_file = find(file);
 					auto itr = loaded.find(include_file);
 					if (itr != loaded.end()) continue;	
 					loaded.insert(include_file);
 					string include_string = ncl::getText(include_file);
 					out << preprocess(include_string, include_file, loaded, level + 1) << endl;
 				}
-				else {
+				else if(!ignore) {
 					out << line << endl;
+				}
+
+				if (regex_search(line, ignore_match_off, IGNORE_END)) {
+					ignore = false;
 				}
 				++line_number;
 			}

@@ -6,11 +6,11 @@ namespace ncl {
 	namespace gl {
 		class CrossHair : public Shape {
 		public:
-			CrossHair(float size = 1.0f)
-				:Shape(createMesh(size / 2)) {}
+			CrossHair(float size = 1.0f, glm::vec4 color = BLACK)
+				:Shape(createMesh(size / 2, color)) {}
 
 
-			std::vector<Mesh> createMesh(float halfSize) {
+			std::vector<Mesh> createMesh(float halfSize, glm::vec4 color) {
 				using namespace glm;
 				const int NO_VERTICES = 8;
 

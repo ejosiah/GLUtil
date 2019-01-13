@@ -19,7 +19,7 @@ namespace ncl {
 
 		void loadTexture(GLenum target, GLuint& buffer, GLuint id, glm::vec2 wrap, glm::vec2 minMagfilter, LoadData loadData, bool optimize = true) {
 			glGenTextures(1, &buffer);
-			glActiveTexture(TEXTURE(id));
+		//	glActiveTexture(TEXTURE(id));
 			glBindTexture(target, buffer);
 			loadData();
 			if (optimize) {
@@ -32,7 +32,8 @@ namespace ncl {
 
 		class Texture2D {
 		public:
-			Texture2D(std::string path, GLuint id = nextId++, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
+			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST })
+				: _id(id) {
 				Image img(path);
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, img.width(), img.height(), 0, format, GL_UNSIGNED_BYTE, img.data()); };
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
@@ -41,7 +42,8 @@ namespace ncl {
 				_name = name;
 			}
 
-			Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) : _id(id) {
+			Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = 0, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) 
+				: _id(id) {
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, width, height, 0, format, dataType, data); };
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
 				_width = width;
@@ -59,6 +61,8 @@ namespace ncl {
 
 			GLuint id() { return _id; }
 
+			GLuint unit() { return _id; }
+
 			GLuint bufferId() { return buffer; }
 
 			GLuint width() { return _width; }
@@ -66,9 +70,10 @@ namespace ncl {
 			GLuint height() { return _height; }
 
 			void sendTo(Shader& shader) {
-				glActiveTexture(TEXTURE(_id));
-				glBindTexture(GL_TEXTURE_2D, buffer);
-				shader.sendUniform1i(_name, _id);
+				//glActiveTexture(TEXTURE(_id));
+				//glBindTexture(GL_TEXTURE_2D, buffer);
+				glBindTextureUnit(_id, buffer);
+				if(!_name.empty()) shader.sendUniform1i(_name, _id);
 				//glActiveTexture(TEXTURE(0));
 			}
 
@@ -131,7 +136,7 @@ namespace ncl {
 
 		class NoiseTex2D : public Texture2D {
 		public:
-			NoiseTex2D(std::string name = "", unsigned id = nextId++, const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
+			NoiseTex2D(std::string name = "", GLuint id = 0, const Noise2D& noise = Perlin2D, float freq = 4.0f, float ampl = 0.5f, int width = 128, int height = 128)
 				:Texture2D(noise(width, height, freq, ampl).get(), width, height, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 
 			}
@@ -196,7 +201,7 @@ namespace ncl {
 
 		class CheckerTexture : public Texture2D {
 		public:
-			CheckerTexture(unsigned id = nextId++, std::string name = "", const glm::vec4& colorA = WHITE, const glm::vec4& colorB = BLACK)
+			CheckerTexture(GLuint id = 0, std::string name = "", const glm::vec4& colorA = WHITE, const glm::vec4& colorB = BLACK)
 				: Texture2D(generate(colorA, colorB).get(), 256, 256, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 			}
 

@@ -44,18 +44,18 @@ public:
 
 
 	void loadTextures() {
-		board = new CheckerBoard_gpu(256, 256, WHITE, GRAY, 1, "image1");
-		board->compute();
-		board->images().front().renderMode();
+	//	board = new CheckerBoard_gpu(256, 256, WHITE, GRAY, 1, "image1");
+	//	board->compute();
+	//	board->images().front().renderMode();
 	//	WorleyNoise2D noise(Euclidean, invertLayout);
 	//	texture0 = new NoiseTex2D;
 	//	texture1 = new NoiseTex3D();
 	//	shader("image").use();
 	//	texture0 = new CheckerTexture(1, "image");
-	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 5);
+		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
 	//	texture0->sendTo(shader("image"));
 	//	shader("image").unUse();
-	//	texture1 = new Texture2D("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\Butterfiles\\media\\butterfly-for-imaginal-cells.png", 1);
+		texture1 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\old_leather.jpg", 1);
 	//	shader("image").sendUniform1ui("image0", texture0->id());
 	//	_shader.sendUniform1ui("image1", texture1->id());
 	}
@@ -84,10 +84,25 @@ public:
 
 	virtual void display() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		auto texId0 = texture0->bufferId();
+		auto texId1 = texture1->bufferId();
 
 		shader("image")([&](Shader& s) {
-		//	send(texture0);
-			send(&board->images().front());
+			
+			//glActiveTexture(GL_TEXTURE0);
+
+		//	glBindTextureUnit(0, texId0);
+		//	glBindTexture(GL_TEXTURE_2D, texture0->bufferId());
+		//	s.sendUniform1i("image0", texture0->unit());
+
+		//	glActiveTexture(GL_TEXTURE1);
+		//	glBindTexture(GL_TEXTURE_2D, texture1->bufferId());
+		//	s.sendUniform1i("image1", texture1->unit());
+		//	glBindTextureUnit(1, texId1);
+			
+			send(texture1);
+			send(texture0);
+		//	send(&board->images().front());
 			s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
 			plane->draw(s);
 		});
@@ -101,7 +116,7 @@ private:
 	ProvidedMesh* plane;
 	mat4 projection;
 	Cube* cube;
-	Texture3D* texture1;
+	Texture2D* texture1;
 	Texture2D* texture0;
 	CheckerBoard_gpu* board;
 	Shader _shader;

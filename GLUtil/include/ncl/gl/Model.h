@@ -68,7 +68,7 @@ namespace ncl {
 					aiMesh* aiMesh = scene->mMeshes[node->mMeshes[i]];
 					Mesh mesh;
 					mesh.name = aiMesh->mName.C_Str();
-					mesh.primitiveType = aiMesh->mPrimitiveTypes;
+					mesh.primitiveType = toGL(aiMesh->mPrimitiveTypes);
 					for (unsigned j = 0; j < aiMesh->mNumVertices; j++) {
 						aiVector3D aiv = aiMesh->mVertices[j];
 

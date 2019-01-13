@@ -9,8 +9,8 @@ namespace ncl {
 	namespace gl {
 		class Cube : public Shape {
 		public:
-			Cube(float size = 1.0f, float grids = 10, const glm::vec4& color = randomColor())
-				:Shape(createMesh(size/2, color), true) {}
+			Cube(float size = 1.0f, float grids = 10, const glm::vec4& color = randomColor(), bool cullface = true)
+				:Shape(createMesh(size/2, color), cullface) {}
 
 
 			std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color) {

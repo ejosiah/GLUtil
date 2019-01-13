@@ -43,18 +43,18 @@ namespace ncl {
 					Material& material = materials[i];
 					
 					if (material.ambientMat != -1) {
-						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
 						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
 						shader.sendUniform1i("ambientMap", 0);
 					}
 					if (material.diffuseMat != -1) {
-						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
 						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
 						shader.sendUniform1i("diffuseMap", 1);
 					}
 					if (material.specularMat != -1) {
-						glBindTexture(GL_TEXTURE_2D, material.specularMat);
 						glActiveTexture(GL_TEXTURE2);
+						glBindTexture(GL_TEXTURE_2D, material.specularMat);
 						shader.sendUniform1i("specularMap", 2);
 					}
 
@@ -96,13 +96,14 @@ namespace ncl {
 			}
 
 			void enableTransformFeedBack(GLuint buf) {
-				captureBuffer = buf;
-				tfb = new TransformFeebBack("xbf:shape" + std::to_string(buf), false);
+				if (!xbfEnabled && tfb == nullptr) {
+					captureBuffer = buf;
+					tfb = new TransformFeebBack("xbf:shape" + std::to_string(buf), false);
+				}
 			}
 
 			void disableTransformFeedBack() {
-				delete tfb;
-				tfb = nullptr;
+				xbfEnabled = false;
 			}
 
 			void update(int attribute, std::function<void(float*)> consume) {
@@ -371,6 +372,7 @@ namespace ncl {
 
 		private:
 			bool cullface;
+			bool xbfEnabled = false;
 			unsigned instanceCount;
 			TransformFeebBack* tfb;	
 			GLuint captureBuffer;

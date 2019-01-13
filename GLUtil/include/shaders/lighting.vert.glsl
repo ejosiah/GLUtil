@@ -31,6 +31,7 @@ void applyLight(mat4 MV, mat4 V, vec3 position, vec3 normal, vec3 tangent, vec3 
 
 	for(int i = 0; i < numLights; i++){
 		vertex_out.lightDirection[i] = getLightDirection(pos, V, light[i]);
+		vertex_out.spotDirection[i] = OLM * light[i].spotDirection.xyz;
 	}
 
 	vertex_out.eyes =  OLM * (lightModel.localViewer ? normalize(-pos.xyz) : vec3(0, 0, 1));

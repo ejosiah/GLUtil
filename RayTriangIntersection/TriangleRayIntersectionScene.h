@@ -59,10 +59,29 @@ public:
 		m1.primitiveType = GL_LINES;
 		lMesh = new ProvidedMesh(m1);
 
+		auto w = l.p0 - t.a;
+		auto x = l.p0 - l.p1;
+		auto y = t.b - t.a;
+		auto z = t.c - t.a;
+
+		M = mat3(
+			x.x, y.x, z.x,
+			x.y, y.y, z.y,
+			x.z, y.z, z.z
+		);
+
 		Mesh m2;
-		m2.positions = { l.p0, l.p1, t.a, t.b, t.c };
-		m2.colors = vector<vec4>(5, BLACK);
+		ap = new Vector(x);
+		ab = new Vector(y);
+		ac = new Vector(z);
+		ww = new Vector(w);
+		auto tvw = inverse(M) * w;
+		auto tt = tvw.x;
+		auto p = l.p0 - x * tt;
+		m2.positions = { l.p0, l.p1, t.a, t.b, t.c, p };
+		m2.colors = vector<vec4>(6, BLACK);
 		m2.colors[0] = RED;
+		m2.colors[m2.colors.size() - 1] = GREEN;
 		m2.primitiveType = GL_POINTS;
 		points = new ProvidedMesh(m2);
 		glPointSize(5.0);
@@ -74,9 +93,13 @@ public:
 		shader("flat")([&]() {
 			cam.view = lookAt({ -2, 2, 5 }, vec3(0), { 0, 1, 0 });
 			send(cam);
-			shade(tMesh);
+		//	shade(tMesh);
 			shade(lMesh);
 			shade(points);
+			shade(ww);
+			shade(ap);
+			shade(ab);
+			shade(ac);
 		});
 
 		shader("flat")([&]() {
@@ -138,7 +161,7 @@ public:
 		ss << "\tC [" << t.c.x << ", " << t.c.y << ", " << t.c.z << "]\n";
 
 		font->resize(_width / 2, _height);
-		font->render(ss.str(), 10, _height - 10);
+		font->render(ss.str(), 10, 10);
 	}
 
 	virtual void resized() override {
@@ -156,4 +179,9 @@ private:
 	ProvidedMesh* points;
 	Font* font;
 	InputManager* inputMgr;
+	mat3 M;
+	Vector* ap;
+	Vector* ab;
+	Vector* ac;
+	Vector* ww;
 };

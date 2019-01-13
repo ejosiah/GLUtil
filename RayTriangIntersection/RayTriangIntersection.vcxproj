@@ -23,7 +23,7 @@
     <ProjectGuid>{F3D7A379-6FA7-4F43-909C-37E6412D2E45}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>RayTriangIntersection</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

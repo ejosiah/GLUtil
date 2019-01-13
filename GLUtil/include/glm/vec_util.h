@@ -56,6 +56,6 @@ inline std::ostream& operator<<(std::ostream& out, const glm::vec3& v) {
 
 inline std::ostream& operator<<(std::ostream& out, const glm::vec4& v) {
 	out << std::setprecision(3);
-	out << "[ " << v.x << ", " << v.y << ", " << v.z << ", " << v.z << " ]";
+	out << "[ " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << " ]";
 	return out;
 }

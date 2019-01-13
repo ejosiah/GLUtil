@@ -4,6 +4,7 @@
 #include "../GLUtil/include/ncl/gl/compute.h"
 #include "../GLUtil/include/ncl/ui/ui.h"
 #include "../GLUtil/include/ncl/units/units.h"
+#include "../GLUtil/include/ncl/gl/SkyBox.h"
 
 using namespace std;
 using namespace ncl;
@@ -24,11 +25,14 @@ public:
 		model = new Model(path, true, size);
 		position.y = (model->bound->max().y - model->bound->min().y) / 2;
 		local = translate(mat4(1), position);
+		lightModel.useObjectSpace = false;
+		lightModel.localViewer = true;
 	}
 
 	void draw() {
 		auto& camera = scene.activeCamera();
 		send(camera, local);
+		send(lightModel);
 		shade(model);
 	}
 
@@ -36,6 +40,7 @@ private:
 	Model * model;
 	mat4 local;
 	Scene& scene;
+	LightModel lightModel;
 };
 
 class LightUI {
@@ -329,15 +334,21 @@ public:
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\stanford_buddha\\buddha.obj");
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\stanford-dragon\\stanford-dragon.obj");
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\Armadillo.obj");
-		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\bunny.obj");
+		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\Game_model\\Game_model.obj");
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\ChineseDragon.obj");
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\Lucy-statue\\metallic-lucy-statue-stanford-scan.obj");
+		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
+		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
+		camInfoOn = true;
+		
 	}
 
 	void init() override {
 	//	texture = new CheckerTexture(1, "diffuseMap");
 		floor = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_COL_VAR2_3K.jpg", 1, "diffuseMap");
-		floor = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_NRM_3K.jpg", 1, "normalMap");
+		specular = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_GLOSS_3K.jpg", 2, "specularMap");
+		normal = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_NRM_3K.jpg", 3, "normalMap");
+		
 	//	checkerboard = new CheckerBoard_gpu(256, 256, WHITE, GRAY, 1, "diffuseMap");
 	//	checkerboard->compute();
 	//	checkerboard->images().front().renderMode();
@@ -348,9 +359,11 @@ public:
 		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		//});
-		
+	//	skybox = new Cube(50, 10, WHITE, false);
 		plane = new Plane({ { 0, 1, 0 }, 0 }, 100, 100, 100.0_ft, 100.0_ft, 10, WHITE);
 		plane->material().diffuseMat = floor->bufferId();   //checkerboard->images().front().buffer();
+		plane->material().specularMat = specular->bufferId();
+		plane->material().shininess = 10;
 
 		setBackGroundColor(BLACK);
 		setForeGroundColor(WHITE);
@@ -358,6 +371,10 @@ public:
 		light[0].position = { 0, 10.0_ft, 0, 1 };
 		light[0].spotDirection = { 0, -1, 0, 0 };
 		light0 = new Light(light[0], *this, state, gammaCorrect);
+
+		lightModel.localViewer = false;	// TODO per object settings
+		lightModel.useObjectSpace = true;
+
 		activeCamera().lookAt({ 0, 1, 1 }, vec3(0), { 0, 1, 0 });
 		
 		lightController = new LightController(light[0].position, state);
@@ -389,6 +406,7 @@ public:
 	
 		});
 		createObjects();
+		initSkyBox();
 	}
 
 	void createObjects() {
@@ -404,11 +422,88 @@ public:
 		}
 	}
 
+	void initSkyBox() {
+		createSkyBox();
+		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+		//glGenTextures(1, &skyBoxId);
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxId);
+		//
+		//for (int i = 0; i < 6; i++) {
+		//	auto name = skyTextures[i];
+		//	auto path = root + name;
+		//	auto img = Image(path, IL_ORIGIN_UPPER_LEFT);
+		//	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
+		//}
+	
+
+		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path){
+			return root + path;
+		});
+
+		skybox = SkyBox::create(skyTextures, 7, *this, 50);
+	}
+
+	void createSkyBox() {
+		Mesh m;
+		m.positions = {
+			vec3(-1.0f,  1.0f, -1.0f),
+			vec3(-1.0f, -1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f),
+			vec3(1.0f,  1.0f, -1.0f),
+			vec3(-1.0f,  1.0f, -1.0f),
+
+			vec3(-1.0f, -1.0f,  1.0f),
+			vec3(-1.0f, -1.0f, -1.0f),
+			vec3(-1.0f,  1.0f, -1.0f),
+			vec3(-1.0f,  1.0f, -1.0f),
+			vec3(-1.0f,  1.0f,  1.0f),
+			vec3(-1.0f, -1.0f,  1.0f),
+
+			vec3(1.0f, -1.0f, -1.0f),
+			vec3(1.0f, -1.0f,  1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(1.0f,  1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f),
+
+			vec3(-1.0f, -1.0f,  1.0f),
+			vec3(-1.0f,  1.0f,  1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(1.0f, -1.0f,  1.0f),
+			vec3(-1.0f, -1.0f,  1.0f),
+
+			vec3(-1.0f,  1.0f, -1.0f),
+			vec3(1.0f,  1.0f, -1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(1.0f,  1.0f,  1.0f),
+			vec3(-1.0f,  1.0f,  1.0f),
+			vec3(-1.0f,  1.0f, -1.0f),
+
+			vec3(-1.0f, -1.0f, -1.0f),
+			vec3(-1.0f, -1.0f,  1.0f),
+			vec3(1.0f, -1.0f, -1.0f),
+			vec3(1.0f, -1.0f, -1.0f),
+			vec3(-1.0f, -1.0f,  1.0f),
+			vec3(1.0f, -1.0f,  1.0f)
+		};
+		transform(m.positions.begin(), m.positions.end(), m.positions.begin(), [](vec3 v) { return v * 50.0f; });
+		m.colors = vector<vec4>{ m.positions.size(), WHITE };
+		m.primitiveType = GL_TRIANGLES;
+		skybox2 = new ProvidedMesh(m);
+	}
+
 	void display() override {
 		if (!cameraControlActive) {
 			Mouse::get()._recenter = false;
 		}
-
+		
 		light0->draw();
 		shader("default")([&] {
 			send("gammaCorrect", gammaCorrect);
@@ -416,14 +511,29 @@ public:
 			send(light[0]);
 			send(activeCamera());
 
-
-			send("uvMappedToSize", false);
+		//	send("material[0].diffuseMap", 1);
+			
+			//send(floor);
+		//	send(specular);
+			send(normal);
 			shade(plane);
+			
+			send("uvMappedToSize", false);
 
 			for (auto obj : objects) obj->draw();
 		});
-
-		
+		skybox->render();
+		//shader("skybox")([&](Shader& s) {
+		//	glDepthFunc(GL_LEQUAL);
+		//	mat4 MVP = activeCamera().getProjectionMatrix() * mat4(mat3(activeCamera().getViewMatrix()));
+		//	//	mat4 MVP = activeCamera().getProjectionMatrix() * activeCamera().getViewMatrix();
+		//	glBindTextureUnit(7, skyBoxId);
+		//	//	send("skybox", 7);
+		//	//send(activeCamera());
+		//	s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, value_ptr(MVP));
+		//	shade(skybox);
+		//	glDepthFunc(GL_LESS);
+		//});
 
 	}
 
@@ -451,8 +561,11 @@ public:
 	}
 
 private:
+	//Cube * skybox;
+	ProvidedMesh* skybox2;
 	Texture2D * floor;
 	Texture2D* normal;
+	Texture2D* specular;
 	CheckerBoard_gpu* checkerboard;
 	Plane* plane;
 	Light* light0;
@@ -462,4 +575,12 @@ private:
 	bool gammaCorrect;
 	vector<Object*> objects;
 	vector<string> paths;
+	GLuint skyBoxId;
+	SkyBox* skybox;
+	vector<string> skyTextures = vector<string>{
+		"right.jpg", "left.jpg",
+		"top.jpg", "bottom.jpg",
+		"front.jpg", "back.jpg"
+	};
+	
 };

@@ -37,7 +37,7 @@ namespace ncl {
 #pragma pack (push, 1)
 			struct Box {
 				glm::vec4 min = glm::vec4(std::numeric_limits<float>::max());
-				glm::vec4 max = glm::vec4(std::numeric_limits<float>::min());
+				glm::vec4 max = glm::vec4(std::numeric_limits<float>::lowest());
 			};
 #pragma pack (pop)
 

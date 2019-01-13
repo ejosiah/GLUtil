@@ -85,6 +85,8 @@ namespace ncl {
 				}
 				addShader("flat", GL_VERTEX_SHADER, identity_vert_shader);
 				addShader("flat", GL_FRAGMENT_SHADER, identity_frag_shader);
+				addShader("old_default", GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
+				addShader("old_default", GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 			}
 
 			/**

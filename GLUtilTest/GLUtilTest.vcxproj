@@ -23,7 +23,7 @@
     <ProjectGuid>{A5D01F42-D699-4C99-A958-8C4AD3A22B75}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>GLUtilTest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
     <ProjectSubType>NativeUnitTestProject</ProjectSubType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

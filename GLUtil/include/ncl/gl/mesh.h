@@ -16,6 +16,7 @@ namespace ncl { namespace gl{
 		std::vector<glm::vec3> tangents;
 		std::vector<glm::vec3> bitangents;
 		std::vector<glm::vec4> colors;
+		std::string textures[10];
 		std::array<std::vector<glm::vec2>, MAX_UVS> uvs;
 		std::vector<unsigned int> indices;
 		Material material;

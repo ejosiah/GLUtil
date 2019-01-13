@@ -17,8 +17,8 @@ in VERTEX {
 out vec4 fragColor;
 
 void main(){
-	vec4 color = texture(image1, vertex.texCoord);
+	vec4 color = texture(image0, vertex.texCoord);
 	vec4 oldLeather = texture(image1, vertex.texCoord);
-	fragColor = mix(color, oldLeather, oldLeather.a);
+	fragColor = mix(color, oldLeather, 0.3);
 	fragColor = color;
 }

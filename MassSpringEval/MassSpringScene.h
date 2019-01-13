@@ -29,7 +29,7 @@ public:
 	}
 
 	void init() override {
-		plane = new Plane(4, 4, 1, 1, WHITE);
+		plane = new Plane(4, 4, 1, 1, 0, WHITE);
 		points = new ProvidedMesh(*plane, GL_POINTS, WHITE);
 
 		Mesh m;

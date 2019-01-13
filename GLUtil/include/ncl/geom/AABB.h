@@ -66,6 +66,30 @@ namespace ncl {
 					return _max;
 				}
 
+				glm::vec3 diagonal() const {
+					return _max - _min;
+				}
+
+				float surfaceArea() const {
+					auto d = diagonal();
+					return 2.0f * (d.x * d.y + d.x * d.z + d.y * d.z);
+				}
+
+				float volume() const {
+					auto d = diagonal();
+					return d.x * d.y * d.z;
+				}
+
+				int maxExtent() const {
+					auto d = diagonal();
+					if (d.x > d.y && d.x > d.z) 
+						return 0;
+					else if (d.y > d.z) 
+						return 1;
+					else 
+						return 2;
+				}
+
 			private:
 				glm::vec3 _min;
 				glm::vec3 _max;

@@ -22,7 +22,7 @@
     <ProjectGuid>{80127958-2E60-44D4-BF4A-58A40123707A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>GLUtil</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -158,8 +158,11 @@
     <ClInclude Include="include\ncl\configured_logger.h" />
     <ClInclude Include="include\ncl\data_structure\binary_tree.h" />
     <ClInclude Include="include\ncl\geom\AABB.h" />
+    <ClInclude Include="include\ncl\geom\aabb2.h" />
     <ClInclude Include="include\ncl\geom\bounding_volumn.h" />
     <ClInclude Include="include\ncl\geom\bvh.h" />
+    <ClInclude Include="include\ncl\geom\bvh2.h" />
+    <ClInclude Include="include\ncl\geom\detail\bvh2.inl" />
     <ClInclude Include="include\ncl\geom\Plane.h" />
     <ClInclude Include="include\ncl\geom\Ray.h" />
     <ClInclude Include="include\ncl\geom\Triangle.h" />
@@ -177,6 +180,8 @@
     <ClInclude Include="include\ncl\gl\geometry.h" />
     <ClInclude Include="include\ncl\gl\gl_commands.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
+    <ClInclude Include="include\ncl\gl\MeshLoader.h" />
+    <ClInclude Include="include\ncl\gl\MeshNormalizer.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
@@ -184,6 +189,7 @@
     <ClInclude Include="include\ncl\gl\Resolution.h" />
     <ClInclude Include="include\ncl\gl\shaders.h" />
     <ClInclude Include="include\ncl\gl\shader_binding.h" />
+    <ClInclude Include="include\ncl\gl\SkyBox.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
     <ClInclude Include="include\ncl\gl\Cylinder.h" />
@@ -249,6 +255,7 @@
     <None Include="build.gradle" />
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
+    <None Include="include\shaders\aabb.glsl" />
     <None Include="include\shaders\ads_diffuse.glsl" />
     <None Include="include\shaders\composite_diffuse.glsl" />
     <None Include="include\shaders\constants.glsl" />
@@ -258,6 +265,7 @@
     <None Include="include\shaders\normal_calculator.glsl" />
     <None Include="include\shaders\simple_light.vert" />
     <None Include="include\shaders\toon_diffuse.glsl" />
+    <None Include="include\shaders\triangle_ray_intersection.glsl" />
     <None Include="include\shaders\vertex_in.glsl" />
     <None Include="include\shaders\vertex_in_array.glsl" />
     <None Include="include\shaders\vertex_out.glsl" />
@@ -290,6 +298,8 @@
     <None Include="shaders\quad.tes" />
     <None Include="shaders\quad.vert" />
     <None Include="shaders\simple_light.frag" />
+    <None Include="shaders\skybox.frag" />
+    <None Include="shaders\skybox.vert" />
     <None Include="shaders\teapot.frag" />
     <None Include="shaders\teapot.tcs" />
     <None Include="shaders\teapot.tes" />

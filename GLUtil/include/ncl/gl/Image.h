@@ -20,14 +20,14 @@ namespace ncl {
 			Status status;
 
 		public:
-			Image(std::string filename) {
+			Image(std::string filename, ILenum origin = IL_ORIGIN_LOWER_LEFT) {
 				if (!devilInit) {
 					ilInit();
 				}
 				ilGenImages(1, &id);
 				ilBindImage(id);
 				ilEnable(IL_ORIGIN_SET);
-				ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+				ilOriginFunc(origin);
 				ILboolean success = ilLoadImage(filename.c_str());
 				if (success) {
 					success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
