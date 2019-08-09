@@ -245,7 +245,7 @@ public:
 		light[0].spotDirection = { 0, -1, -1, 1 };
 	//	lightModel.localViewer = true;
 		lightModel.colorMaterial = false;
-		lightModel.useObjectSpace = true;
+		lightModel.useObjectSpace = false;
 		lightObj = new Sphere(lightRadius, 10, 10, WHITE);
 		delete _motionEventHandler;
 		_motionEventHandler = new lightController(light[0].position);

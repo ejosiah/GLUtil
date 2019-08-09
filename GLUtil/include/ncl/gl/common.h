@@ -39,6 +39,10 @@ namespace ncl {
 		const color CYAN = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
 		const color MAGENTA = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
 
+		glm::vec4 iColor(int r, int g, int b) {
+			return { float(r)/255, float(g)/255, float(b)/255, 0};
+		}
+
 		glm::vec4 randomColor() {
 			return glm::vec4(RNG.vector(glm::vec3(0), glm::vec3(1)), 1);
 		}

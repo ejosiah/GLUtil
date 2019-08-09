@@ -4,6 +4,7 @@
 #include "bounding_volumn.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_access.hpp>
+#include <limits>
 
 namespace ncl {
 	namespace geom {
@@ -18,7 +19,7 @@ namespace ncl {
 					}
 				}
 
-				AABB(glm::vec3 min = glm::vec3(0), glm::vec3 max = glm::vec3(0)) :_min(min), _max(max) {
+				AABB(glm::vec3 min = glm::vec3(std::numeric_limits<float>::max()), glm::vec3 max = glm::vec3(std::numeric_limits<float>::lowest())) :_min(min), _max(max) {
 
 				}
 
@@ -88,6 +89,11 @@ namespace ncl {
 						return 1;
 					else 
 						return 2;
+				}
+
+				void add(glm::vec3 p) {
+					_min = glm::min(_min, p);
+					_max = glm::max(_max, p);
 				}
 
 			private:
