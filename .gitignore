@@ -280,3 +280,4 @@ ipch/**
 .gradle/
 **/*.intermediate.*
 *.cfg
+**/*.vcxproj

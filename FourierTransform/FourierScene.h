@@ -507,6 +507,10 @@ public:
 		return abs(x) < 0.5 ? 1 : 0;
 	}
 
+	float sinc(float x) {
+		return sin(x * pi<float>()) / (x * pi<float>());
+	}
+
 	float delta(float x) {
 		return x != 0 ? 0 : 1;
 	}
@@ -516,7 +520,7 @@ public:
 		float _2revs = 2 * glm::two_pi<float>();
 		float _4revs = 4 * TWO_PI;
 		float _5revs = 5 * TWO_PI;
-	//	return 0.3 * (cos(_3revs * t) + cos(_2revs * t) + 1.8);
+		return 0.3 * (cos(_3revs * t) + cos(_2revs * t) + 1.8);
 	//	return 0.5 * (cos(_5revs * t) + 1);
 	//	return cos(TWO_PI * 3 * t) * exp(-PI * t * t);
 	//	return (sin(TWO_PI * 2 * t) + sin(TWO_PI * 3 * t)) * exp(-3.0f * t);
@@ -527,7 +531,7 @@ public:
 
 	//	return 0.5 * cos(TWO_PI * dist(engine) * t) + 0.5;
 	//	return box(t);
-		return ceil(cos(_5revs * t));
+	//	return sinc(_2revs * t);
 	}
 
 	vec2 e2PIi(float f, float t) {
