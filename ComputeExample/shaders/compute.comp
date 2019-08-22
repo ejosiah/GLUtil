@@ -18,7 +18,7 @@ void main(void){
 
 	uv *= 10;
 
-	vec2 ipos;
+	vec2 ipos = vec2(0);
 	vec2 fpos = modf(uv, ipos);
 
 

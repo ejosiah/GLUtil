@@ -1,0 +1,25 @@
+#version 450 core
+#pragma debug(on)
+#pragma optimize(off)
+
+#define PI 3.14159265359
+
+layout (local_size_x = 32, local_size_y = 32) in;
+layout (rgba32f, binding=0) uniform image2D img;
+
+float plot(vec2 st, float pct){
+	return smoothstep(pct - 0.02, pct, st.y) - smoothstep(pct, pct + 0.02, st.y);
+}
+
+void main(){
+	vec2 st = vec2(gl_GlobalInvocationID)/(vec2(gl_NumWorkGroups * gl_WorkGroupSize) - vec2(1));
+
+	float y =  sin(st.x * PI * 4);
+
+	vec3 color = vec3(y);
+
+	float t = plot(st, y);
+
+	color = mix(color, vec3(0, 1, 0), t);
+	imageStore(img, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1));
+}

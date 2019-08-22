@@ -9,12 +9,12 @@ using namespace glm;
 using namespace ncl;
 using namespace gl;
 
-class ComputeScene : public Scene {
+class MacBethChartScene : public Scene {
 public:
-	ComputeScene():Scene("Compute Scene", 1024, 1024){
+	MacBethChartScene() :Scene("Compute Scene", 384, 256) {
 		_useImplictShaderLoad = true;
 		_requireMouse = false;
-	//	_fullScreen = true;
+		//	_fullScreen = true;
 	}
 
 	void init() override {
@@ -47,7 +47,7 @@ public:
 		shader("compute")([&](Shader& s) {
 			image->computeMode();
 			image->sendTo(s);
-			glDispatchCompute(_width/32, _height/32, 1);
+			glDispatchCompute(_width / 32, _height / 32, 1);
 		});
 
 		shader("plain")([&](Shader& s) {
@@ -66,6 +66,6 @@ public:
 	}
 
 private:
-	Image2D* image;
+	Image2D * image;
 	ProvidedMesh* quad;
 };
