@@ -11,7 +11,7 @@ using namespace gl;
 
 class MacBethChartScene : public Scene {
 public:
-	MacBethChartScene() :Scene("Compute Scene", 384, 256) {
+	MacBethChartScene() :Scene("Compute Scene", 192 * factor, 128 * factor) {
 		_useImplictShaderLoad = true;
 		_requireMouse = false;
 		//	_fullScreen = true;
@@ -21,6 +21,16 @@ public:
 		initQuad();
 
 		image = new Image2D(_width, _height, GL_RGBA32F);
+
+		shader("compute")([&](Shader& s) {
+			s.sendUniform1i("factor", factor);
+			image->computeMode();
+			image->sendTo(s);
+			glDispatchCompute(_width / (patchSize), _height / (patchSize), 1);
+		});
+
+		mat3(1, 1, 1, 1, 1, 1, 1, 1, 1) * vec3(0);
+		mat4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1) * vec4(0);
 	}
 
 	void initQuad() {
@@ -44,11 +54,6 @@ public:
 	}
 
 	void display() override {
-		shader("compute")([&](Shader& s) {
-			image->computeMode();
-			image->sendTo(s);
-			glDispatchCompute(_width / 32, _height / 32, 1);
-		});
 
 		shader("plain")([&](Shader& s) {
 			image->renderMode();
@@ -68,4 +73,9 @@ public:
 private:
 	Image2D * image;
 	ProvidedMesh* quad;
+	static int factor;
+	static int patchSize;
 };
+
+int MacBethChartScene::factor = 4;
+int MacBethChartScene::patchSize = 32;
