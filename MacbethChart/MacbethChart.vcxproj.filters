@@ -15,26 +15,29 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MacBethChartScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MacBethChartScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="MacbethChart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MacbethChart.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\compute.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lerp.comp">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\plain.frag">

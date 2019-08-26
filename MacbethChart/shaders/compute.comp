@@ -40,10 +40,6 @@ const float spectralData[24][36] = {
     {0.031, 0.032, 0.032, 0.033, 0.033, 0.033, 0.033, 0.033, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.032, 0.033}
 };
 
-float rand(vec2 st){
-	return fract(sin(dot(st.xy,vec2(12.9898,78.233)))*43758.5453123);
-}
-
 void spectrumToXYZ(uint colorIndex, out vec3 XYZ)
 {
     float S = 0;
@@ -58,12 +54,6 @@ void spectrumToXYZ(uint colorIndex, out vec3 XYZ)
     XYZ.z /= S;
 }
 
-//const mat3 XYZ_TO_RGB = mat3(
-//	2.3706743, -0.9000405, -0.4706338,
-//	-0.5138850,  1.4253036,  0.0885814,
-//	0.0052982, -0.0146949,  1.0093968
-//);
-
 const mat3 XYZ_TO_RGB = mat3(
 	2.3706743, -0.5138850, 0.0052982,
 	-0.9000405, 1.4253036, -0.0146949,
@@ -73,11 +63,7 @@ const mat3 XYZ_TO_RGB = mat3(
 const float gamma = 1;
 
 void main(void){
-//	vec4 color = vec4(vec2(gl_GlobalInvocationID.xy)/vec2(gl_NumWorkGroups * gl_WorkGroupSize).xy, 0, 1);
-	vec4 color = vec4(vec2(gl_WorkGroupID.xy/factor)/vec2(gl_NumWorkGroups/factor).xy, 0, 1);
 
-
-	//int patch = j + w * i
 	uvec2 dim = gl_NumWorkGroups.xy/factor;
 	uvec2 ij = gl_WorkGroupID.xy/factor;
 	uint i = ij.x + dim.x * ij.y;
@@ -86,11 +72,8 @@ void main(void){
 	spectrumToXYZ(i, xyz);
 
 	vec3 rgb =  max(vec3(0), XYZ_TO_RGB * xyz);
-//	rgb = pow(rgb, vec3(1/gamma));
-
-//	vec3 rgb;
-	//XYZtoRGB(xyz.x, xyz.y, xyz.z, rgb);
 	rgb = pow(rgb, vec3(1/gamma));
+
 
 	imageStore(data, ivec2(gl_GlobalInvocationID.xy), vec4(rgb, 1));
 }

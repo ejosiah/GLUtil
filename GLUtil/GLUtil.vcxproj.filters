@@ -321,6 +321,9 @@
     <ClInclude Include="include\ncl\gl\MeshNormalizer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\spectrum.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

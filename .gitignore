@@ -564,5 +564,3 @@ ipch/**
 .gradle/
 **/*.intermediate.*
 *.cfg
->>>>>>> Stashed changes
-**/*.vcxproj

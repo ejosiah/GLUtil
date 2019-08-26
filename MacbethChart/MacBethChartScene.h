@@ -21,6 +21,8 @@ public:
 		initQuad();
 
 		image = new Image2D(_width, _height, GL_RGBA32F);
+	//	tfb = new TransformFeebBack("", true, varyings, 1, &shader("compute"));
+	//	patchBuffer = new TextureBuffer("patch_color", nullptr, sizeof(vec4) * 32 * 32 * 6 * 4, GL_RGBA32F, 0, 2, GL_DYNAMIC_READ);
 
 		shader("compute")([&](Shader& s) {
 			s.sendUniform1i("factor", factor);
@@ -29,8 +31,7 @@ public:
 			glDispatchCompute(_width / (patchSize), _height / (patchSize), 1);
 		});
 
-		mat3(1, 1, 1, 1, 1, 1, 1, 1, 1) * vec3(0);
-		mat4(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1) * vec4(0);
+		
 	}
 
 	void initQuad() {
@@ -54,7 +55,6 @@ public:
 	}
 
 	void display() override {
-
 		shader("plain")([&](Shader& s) {
 			image->renderMode();
 			image->sendTo(s);
@@ -75,7 +75,10 @@ private:
 	ProvidedMesh* quad;
 	static int factor;
 	static int patchSize;
+	const char* varyings[1] = { "patch_color" };
+	TransformFeebBack* tfb;
+	TextureBuffer* patchBuffer;
 };
 
-int MacBethChartScene::factor = 4;
+int MacBethChartScene::factor = 1;
 int MacBethChartScene::patchSize = 32;
