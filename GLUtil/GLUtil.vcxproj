@@ -203,6 +203,8 @@
     <ClInclude Include="include\ncl\gl\WithTangent.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
+    <ClInclude Include="include\ncl\sampling\Sampler.h" />
+    <ClInclude Include="include\ncl\sampling\sampling.h" />
     <ClInclude Include="include\ncl\space_partition\bsp_tree.h" />
     <ClInclude Include="include\ncl\ui\arcSlider.h" />
     <ClInclude Include="include\ncl\ui\lineSlider.h" />
@@ -256,6 +258,7 @@
     <None Include="build.gradle" />
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
+    <None Include="include\ncl\sampling\Sampler.inl" />
     <None Include="include\shaders\aabb.glsl" />
     <None Include="include\shaders\ads_diffuse.glsl" />
     <None Include="include\shaders\composite_diffuse.glsl" />

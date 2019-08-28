@@ -46,6 +46,9 @@
     <Filter Include="Header Files\environment">
       <UniqueIdentifier>{9fc1b373-767d-48de-83da-fd0599b4012b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sampling">
+      <UniqueIdentifier>{469d5029-82cd-47d6-a053-c0b55ecb2e5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -324,6 +327,12 @@
     <ClInclude Include="include\ncl\gl\spectrum.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\sampling\sampling.h">
+      <Filter>Header Files\sampling</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\sampling\Sampler.h">
+      <Filter>Header Files\sampling</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -498,6 +507,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="include\shaders\aabb.glsl" />
+    <None Include="include\ncl\sampling\Sampler.inl">
+      <Filter>Header Files\sampling</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

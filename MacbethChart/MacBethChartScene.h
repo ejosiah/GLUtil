@@ -80,5 +80,5 @@ private:
 	TextureBuffer* patchBuffer;
 };
 
-int MacBethChartScene::factor = 1;
+int MacBethChartScene::factor = 4;
 int MacBethChartScene::patchSize = 32;
