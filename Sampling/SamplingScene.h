@@ -31,6 +31,7 @@ public:
 	}
 
 	void display() override {
+		glViewport(0, _height/2, _width / 2, _height / 2);
 		shader("sampling")([&](Shader& s) {
 			send(cam);
 			shade(points);

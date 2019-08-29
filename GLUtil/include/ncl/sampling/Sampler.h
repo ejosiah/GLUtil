@@ -24,6 +24,14 @@ namespace ncl {
 		private:
 			std::function<float()> rng;
 		};
+
+		class GLSLSampler : public Sampler {
+		public:
+			GLSLSampler(int seed = std::random_device()());
+			virtual ~GLSLSampler();
+			virtual float get1D() override;
+			virtual glm::vec2 get2D() override;
+		};
 	}
 }
 
