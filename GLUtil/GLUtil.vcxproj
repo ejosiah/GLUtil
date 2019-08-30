@@ -203,6 +203,7 @@
     <ClInclude Include="include\ncl\gl\WithTangent.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
+    <ClInclude Include="include\ncl\sampling\hash.h" />
     <ClInclude Include="include\ncl\sampling\Sampler.h" />
     <ClInclude Include="include\ncl\sampling\sampling.h" />
     <ClInclude Include="include\ncl\space_partition\bsp_tree.h" />

@@ -31,7 +31,7 @@ public:
 	}
 
 	void display() override {
-		glViewport(0, _height/2, _width / 2, _height / 2);
+	//	glViewport(0, _height/2, _width / 2, _height / 2);
 		shader("sampling")([&](Shader& s) {
 			send(cam);
 			shade(points);
@@ -60,7 +60,7 @@ public:
 	}
 
 private:
-	RandomSampler sampler;
+	GLSLSampler sampler;
 	ProvidedMesh* points;
 	const int numPoints = 1000;
 };

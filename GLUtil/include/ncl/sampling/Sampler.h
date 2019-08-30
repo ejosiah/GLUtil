@@ -27,10 +27,14 @@ namespace ncl {
 
 		class GLSLSampler : public Sampler {
 		public:
-			GLSLSampler(int seed = std::random_device()());
-			virtual ~GLSLSampler();
+			GLSLSampler();
+			virtual ~GLSLSampler() = default;
 			virtual float get1D() override;
 			virtual glm::vec2 get2D() override;
+		private:
+			glm::vec2 xySeed;
+			float seed;
+			const float Max = 1e10;
 		};
 	}
 }
