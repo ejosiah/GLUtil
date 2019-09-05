@@ -2,6 +2,8 @@
 #pragma debug(on)
 #pragma optimize(off)
 
+#extension GL_NV_gpu_shader5 : enable
+
 #define TWO_PI 6.283185307179586476925286766559
 
 layout (points) in;
@@ -10,6 +12,7 @@ layout (line_strip, max_vertices=128) out;
 uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
+uniform float time;
 
 // gl_Position = P * V * M * vec4(position, 1);
 
