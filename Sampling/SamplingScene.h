@@ -11,6 +11,11 @@ using namespace gl;
 using namespace glm;
 using namespace sampling;
 
+static const float PI = pi<float>();
+static const float PI_OVER4 = PI / 4.f;
+static const float PI_OVER2 = PI / 2.f;
+static const float TWO_PI = two_pi<float>();
+
 class SamplingScene : public Scene {
 public:
 	SamplingScene() :Scene("Sampling", Resolution::QHD.height, Resolution::QHD.height) {
@@ -96,6 +101,9 @@ public:
 
 	vec3 sampleHemisphere() {
 		vec2 u = rngSampler.get2D();
+
+		if (useCosine) return cosineSampleHemisphere(u);
+
 		float r = 1 - u.x * u.x;
 		float phi = two_pi<float>() * u.y;
 		return vec3{
@@ -103,6 +111,39 @@ public:
 			u.x,
 			sin(phi) * sqrt(r)
 		};
+	}
+
+	vec2 sampleDisk(const vec2& u) {
+		float r = sqrt(u.x);
+		float theta = TWO_PI * u.y;
+		return vec2(r * cos(theta), r * sin(theta));
+	 }
+
+	vec2 concentricSampleDisk(const vec2& u) {
+		auto uOffset = 2.f * u - vec2(1);
+
+		if (uOffset.x == 0 && uOffset.y == 0) return vec2(0);
+
+		float theta, r;
+		if (abs(uOffset.x) > abs(uOffset.y)) {
+			r = uOffset.x;
+			theta = PI_OVER4 * (uOffset.y / uOffset.x);
+		}
+		else {
+			r = uOffset.y;
+			theta = PI_OVER2 - PI_OVER4 * (uOffset.x / uOffset.y);
+		}
+		return r * vec2(cos(theta), sin(theta));
+	}
+
+	vec3 cosineSampleHemisphere(const vec2& u) {
+		vec2 d = concentricSampleDisk(u);
+		float y = sqrt(std::max(0.f, 1 - d.x * d.x - d.y * d.y));
+		return { d.x, y, d.y };
+	}
+
+	void processInput(const Key& key) override {
+		if (key.value() == 'h' && key.released()) useCosine = !useCosine;
 	}
 
 private:
@@ -114,5 +155,6 @@ private:
 	Hemisphere* hemisphere;
 	vector<Vector*> dw;
 	LightModel lightModel;
+	bool useCosine = true;
 	
 };

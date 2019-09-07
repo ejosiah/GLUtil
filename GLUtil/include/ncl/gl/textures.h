@@ -287,7 +287,7 @@ namespace ncl {
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_2D, _buffer);
 				glTexStorage2D(GL_TEXTURE_2D, 1, _format, width, height);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Todo pass in gl_tex_params
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 				if (_name == "") _name = std::string("image") + std::to_string(id);

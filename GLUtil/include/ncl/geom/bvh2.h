@@ -31,7 +31,7 @@ namespace ncl {
 			public:
 				BVHBuilder(const std::vector<Primitive> &prims, int maxDepth = 7, SplitMethod sMethod = SplitMethod::SAH);
 
-				void buildLinearBVH(BVHBuildNode* bvh, BVH_SSO& sso, BVH_TRI_INDEX& bvi_index);
+				void buildLinearBVH(BVHBuildNode* bvh, BVH_SSO& sso, BVH_TRI_INDEX& bvi_index, int rootIdx = 0);
 			
 			protected:
 				BVHBuildNode* recursiveBuild(std::vector<BVHPrimitiveInfo>& primitiveInfo, int start, int end, int *totalNodes, int depth, std::vector<Primitive> &orderedPrims);

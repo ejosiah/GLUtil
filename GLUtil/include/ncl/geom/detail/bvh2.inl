@@ -244,11 +244,11 @@ namespace ncl {
 				return node;
 			}
 
-			void BVHBuilder::buildLinearBVH(BVHBuildNode* node, BVH_SSO& sso, BVH_TRI_INDEX& bvi_index) {
-				sso.nodes.resize(totalNodes);
+			void BVHBuilder::buildLinearBVH(BVHBuildNode* node, BVH_SSO& sso, BVH_TRI_INDEX& bvi_index, int rootIdx) {
+				sso.nodes.resize(totalNodes + sso.nodes.size());
 
 				if (nullptr == node) return;
-				int id = -1;
+				int id = rootIdx - 1 ;
 				std::function<int()> nextId = [&id]() { return ++id; };
 
 				std::function<BVHBuildNode*(std::stack<std::pair<BVHBuildNode*, LinearBVHNode>>)> peek = [](std::stack<std::pair<BVHBuildNode*, LinearBVHNode>> stack) {
