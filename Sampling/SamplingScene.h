@@ -37,6 +37,7 @@ public:
 		points = new ProvidedMesh(m);
 		generatePoints();
 		initializeHemisphereSampling();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 	
 	void initializeHemisphereSampling() {
@@ -44,7 +45,7 @@ public:
 		dw.resize(50);
 		generate(dw.begin(), dw.end(), [&]() { return new Vector(sampleHemisphere() * 3.0f, vec3(0));  });
 
-		hemisphere = new Hemisphere(1, 50, 50, RED);
+		hemisphere = new Hemisphere(1, 50, 50, vec4(1, 0, 0, 0.2));
 	}
 
 	void display() override {
@@ -64,11 +65,20 @@ public:
 		light[0].position = { 0, 0, 1, 0 };
 
 		shader("default")([&](Shader& s) {
+			send("gammaCorrect", false);
 			send(light[0]);
 			send(cam);
 			send(lightModel);
-			shade(hemisphere);
 			for (auto v : dw) shade(v);
+
+			glEnable(GL_BLEND);
+			glDisable(GL_DEPTH_TEST);
+			glDepthMask(false);
+			shade(hemisphere);
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
+			glDepthMask(true);
+
 		});
 	}
 

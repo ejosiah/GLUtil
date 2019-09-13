@@ -13,7 +13,7 @@ namespace ncl {
 			Vector(glm::vec3 value, glm::vec3 origin = glm::vec3(0), float s = 1.0, glm::vec4 color = randomColor()) {
 				using namespace glm;
 				
-				vec3 v1(0, 0, -1);
+				vec3 v1(0, 0, -1);	// primitives face towards -z, so we have to rotate (0,0,-1) to v2
 				vec3 v2 = normalize(value);
 				vec3 axis = normalize(cross(v1, v2));
 				if(abs(v1) == abs(v2)){
