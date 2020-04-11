@@ -154,11 +154,11 @@ public:
 	}
 
 	virtual void draw(ncl::gl::Shader& shader) override {
-		//for (auto& v : vectors) {
-		//	v->draw(shader);
-		//}
-		vHeads->draw(shader);
-		vTails->draw(shader);
+		for (auto& v : vectors) {
+			v->draw(shader);
+		}
+	//	vHeads->draw(shader);
+	//	vTails->draw(shader);
 	}
 private:
 	std::vector<std::unique_ptr<ncl::gl::Vector>> vectors;

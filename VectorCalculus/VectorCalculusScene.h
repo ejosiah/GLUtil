@@ -18,16 +18,16 @@ public:
 	virtual ~CustomScalaField() {};
 
 	virtual double sample(const vec3& p) const override {
-		return 3 + cos(p.x/2) * sin(p.y/2);
+		return pow(p.x, 2) * sin( 5 * p.y);
 	}
 
 	virtual glm::vec3 gradient(const vec3& p) const override {
 
-		return { 0.5 * -sin(p.x/2) * sin(p.z/2), 0, cos(p.x/2) * 0.5 * cos(p.z/2) };
+		return { 2 * p.x * sin(5 * p.z), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
 	}
 
 	virtual double laplacian(const glm::vec3& p) const {
-		return  0.5 * 0.5 * -cos(p.x / 2) * sin(p.z / 2) + cos(p.x / 2) * 0.5 * 0.5 * -sin(p.z / 2);
+		return  (2 - p.y * p.y) + (p.x * p.x - 2);
 	}
 };
 
@@ -177,11 +177,11 @@ public:
 
 	void display() override {
 		sFont->render("fps: " + to_string(fps), 20, 20);
-		//renderHeatMap();
+		renderHeatMap();
 		//renderSeparator();
-		//renderScalaField();
-		//renderGradiantField();
-		renderVectorField();
+		renderScalaField();
+		renderGradiantField();
+	//	renderVectorField();
 	
 	}
 
@@ -257,7 +257,7 @@ public:
 			cam.projection = ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
 			send(cam);
 			send("id", 1);
-			send(laplacianMap.get());
+			send(heatMap.get());
 			shade(canvas.get());
 		});
 

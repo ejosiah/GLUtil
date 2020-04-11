@@ -154,7 +154,7 @@ namespace ncl {
 			T* _ptr;
 			T* _begin;
 			T* _end;
-			unsigned int _size;
+			int _size;
 			VaoId _vaoId;
 			BufferId _bufferId;
 		};
