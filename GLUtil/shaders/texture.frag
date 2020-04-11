@@ -7,8 +7,6 @@ layout(binding = 1) uniform sampler2D image1;
 
 in VERTEX {
 	smooth vec3 position;
-
-
 	smooth vec3 normal;
 	smooth vec2 texCoord;
 	smooth vec4 color;

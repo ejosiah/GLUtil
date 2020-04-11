@@ -42,6 +42,10 @@ namespace ncl {
 				}
 				return values[1];
 			}
+
+			bool isNumber() const {
+				return values[0] > 47 && values[0] < 58;
+			}
 		};
 
 		class Keyboard {

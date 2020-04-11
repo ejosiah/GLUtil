@@ -16,6 +16,7 @@ namespace ncl { namespace gl{
 		std::vector<glm::vec3> tangents;
 		std::vector<glm::vec3> bitangents;
 		std::vector<glm::vec4> colors;
+		std::vector<glm::mat4> xforms;
 		std::string textures[10];
 		std::array<std::vector<glm::vec2>, MAX_UVS> uvs;
 		std::vector<unsigned int> indices;
@@ -27,6 +28,7 @@ namespace ncl { namespace gl{
 		bool hasColors() { return !colors.empty(); }
 		bool hasTexCoords() { return std::any_of(uvs.begin(), uvs.end(), [](std::vector<glm::vec2>& uvs) { return !uvs.empty(); }); }
 		bool hasIndices() { return !indices.empty(); }
+		bool hasXforms() { return !xforms.empty(); }
 
 		int numTexCoords() {
 			return std::count_if(uvs.begin(), uvs.end(), [](std::vector<glm::vec2>& uvs) { return !uvs.empty(); });

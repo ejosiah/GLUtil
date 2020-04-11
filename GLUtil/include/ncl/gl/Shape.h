@@ -5,16 +5,20 @@
 #include <functional>
 #include <algorithm>
 #include <set>
+#include <iterator>
 #include "WithTriangleAdjacency.h"
 #include "WithTangent.h"
 #include "common.h"
 #include "textures.h"
 #include "TransformFeedBack.h"
+#include "buffer_iterator.h"
 
 namespace ncl {
 	namespace gl {
 		class Shape : public VAOObject, public Drawable {
 		public:
+			Shape() = default;
+
 			Shape(std::vector<Mesh> meshes, bool cullface = true, unsigned instanceCount = 1) 
 				:VAOObject(meshes)
 				, cullface(cullface)
@@ -59,6 +63,9 @@ namespace ncl {
 					}
 
 					shader.sendUniformMaterial("material[0]", material);
+					if (xforms[i]) {
+						shader.send("useXform", true);
+					}
 					
 					if (tfb != nullptr) {
 						shader.send("capture", true);
@@ -149,7 +156,7 @@ namespace ncl {
 				glBindVertexArray(0);
 			}
 
-			GLuint bufferFor(int vaoId, int attribute) const {
+			GLuint bufferFor(int meshId, int attribute) const {
 				if (attribute < Position || attribute > Indices)
 					throw std::runtime_error("invalid attribute id");
 				int bufferId = 0;
@@ -161,15 +168,17 @@ namespace ncl {
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
-						if (attributes[vaoId][i]) {
+						if (attributes[meshId][i]) {
 							bufferId++;
 						}
 					}
 				}
-				return buffers[vaoId][bufferId];
+				return buffers[meshId][bufferId];
 			}
 
+
 			template<typename T>
+		//	[[deprecated("Replaced by get(unsigned int, int, std::function<void(buffer_iterator<true, T>)>), which has an improved interface")]]
 			void get(unsigned int meshId, int attribute, std::function<void(T*)> use) const {
 				// FIX might fail if we have multiple texture buffers
 				if (attribute < Position || attribute > Indices)
@@ -193,6 +202,13 @@ namespace ncl {
 				use(data);
 				glUnmapNamedBuffer(buffers[meshId][bufferId]);
 				glBindVertexArray(0);
+			}
+
+			template<typename T>
+			void get(unsigned int meshId, int attribute, std::function<void(GlBuffer<T>)> use) const {
+				auto vaoId = vaoIds[meshId];
+				auto bufferId = bufferFor(meshId, attribute);
+				use(GlBuffer<T>{ vaoId, bufferId });
 			}
 
 			 glm::vec3 getFirstVertex() const {
@@ -231,6 +247,7 @@ namespace ncl {
 				GLint size;
 				glBindBuffer(GL_ARRAY_BUFFER, buffers[meshId][Position]);
 				glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				return size / sizeof(glm::vec3);
 			}
 
@@ -239,6 +256,7 @@ namespace ncl {
 				GLint size;
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferFor(meshId, Indices));
 				glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 				return size/sizeof(unsigned int);
 			}
 
@@ -279,6 +297,7 @@ namespace ncl {
 						});
 					}
 					mesh.material = materials[i];
+					mesh.primitiveType = primitiveType[i];
 					meshes.push_back(mesh);
 				}
 				return meshes;

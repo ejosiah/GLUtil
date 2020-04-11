@@ -5,6 +5,20 @@
 namespace ncl {
 	namespace unit {
 
+
+		// time
+		inline long double operator ""_ns(long double t) {
+			return t * 0.000000001;
+		}
+
+		inline long double operator ""_ms(long double t) {
+			return t * 0.001;
+		}
+
+		inline long double operator ""_s(long double t) {
+			return t;
+		}
+
 		// length
 
 		inline long double operator ""_mm(long double l) {

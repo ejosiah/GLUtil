@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <sstream>
 #include <regex>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include "common.h"
 
 namespace ncl {
@@ -492,13 +492,13 @@ namespace ncl {
 			smatch ignore_match_off;
 
 			auto find = [](string name) -> string {
-				std::vector<boost::filesystem::path> shader_loc = {
+				std::vector<std::filesystem::path> shader_loc = {
 					"shaders\\" + name,
 					"..\\shaders\\" + name,
 					"C:\\Users\\" + username + "\\OneDrive\\cpp\\include\\shaders\\" + name
 				};
 				for (auto path : shader_loc) {
-					if (boost::filesystem::exists(path)) return path.string();
+					if (std::filesystem::exists(path)) return path.string();
 				}
 				throw std::runtime_error(("unable to find shader: " + name).c_str());
 				 

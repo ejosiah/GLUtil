@@ -13,6 +13,8 @@ namespace ncl {
 
 		class VBOObject{
 		public:
+			VBOObject() = default;
+
 			VBOObject(std::vector<Mesh>& meshes) {
 				int no_of_meshes = meshes.size();
 				normals = std::vector<bool>(no_of_meshes, false);
@@ -21,9 +23,9 @@ namespace ncl {
 				for (std::vector<bool>& txc : texCoords) {
 					txc = std::vector<bool>(no_of_meshes, false);
 				}
+				xforms = std::vector<bool>(no_of_meshes, false);
 				indices = std::vector<bool>(no_of_meshes, false);
-				int cololBuffer = 1;
-				numBuffers = calculateNoOfBuffers(meshes[0]) + cololBuffer;
+				numBuffers = calculateNoOfBuffers(meshes[0]);
 
 				for (int i = 0; i < no_of_meshes; i++) {
 					Mesh mesh = meshes[i];
@@ -33,6 +35,7 @@ namespace ncl {
 					if (mesh.colors.empty()) {
 						size_t n = mesh.positions.size();
 						mesh.colors = std::vector<glm::vec4>(n, mesh.material.diffuse);
+						numBuffers++;
 					}
 
 
@@ -87,6 +90,12 @@ namespace ncl {
 
 					}
 
+					if (mesh.hasXforms()) {
+						xforms[i] = true;
+						glBindBuffer(GL_ARRAY_BUFFER, *(++nextBuffer));
+						glBufferData(GL_ARRAY_BUFFER, _sizeof(mesh.xforms), &mesh.xforms[0], GL_STATIC_DRAW);
+					}
+
 
 					if (mesh.hasIndices()) {
 						indices[i] = true;
@@ -132,6 +141,9 @@ namespace ncl {
 				if (mesh.hasIndices()) {
 					numBuffers += 1;
 				}
+				if (mesh.hasXforms()) {
+					numBuffers += 1;
+				}
 				return numBuffers;
 			}
 
@@ -147,6 +159,7 @@ namespace ncl {
 			std::vector<bool> normals;
 			std::vector<bool> colors;
 			std::vector<bool> tangents;
+			std::vector<bool> xforms;
 			std::vector<std::vector<bool>> attributes;
 			std::array<std::vector<bool>, MAX_UVS> texCoords;
 			std::vector<bool> indices;

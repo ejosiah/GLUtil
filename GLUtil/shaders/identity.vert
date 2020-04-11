@@ -13,6 +13,7 @@ layout(location=2) in vec3 tangent;
 layout(location=3) in vec3 bitangent;
 layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
+layout(location=14) in mat4 xform;
 
 out VERTEX {
 	smooth vec3 position;

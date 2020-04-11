@@ -9,8 +9,11 @@ namespace ncl {
 	namespace gl {
 		class VAOObject : public VBOObject {	
 		public:
-			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices };
+			// XForm = TexCoord + MAX_UVS + 1;
+			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices, XForms = 8};
 			friend class DoubleBufferedObj;
+
+			VAOObject() = default;
 
 			VAOObject(std::vector<Mesh>& meshes)
 				:VBOObject(meshes) {
@@ -56,6 +59,14 @@ namespace ncl {
 							glBindBuffer(GL_ARRAY_BUFFER, *(++buffer));
 							glEnableVertexAttribArray(TexCoord + j);
 							glVertexAttribPointer(TexCoord + j, 2, GL_FLOAT, GL_FALSE, 0, 0);
+						}
+					}
+					if (xforms[i]) {
+						glBindBuffer(GL_ARRAY_BUFFER, *(++buffer));
+						for (int i = 0; i < 4; i++) {
+							glEnableVertexAttribArray(XForms + i);
+							glVertexAttribPointer(XForms + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), BUFFER_OFFSET((sizeof(glm::vec4) * i)));
+							glVertexAttribDivisor(XForms + i, 1);
 						}
 					}
 

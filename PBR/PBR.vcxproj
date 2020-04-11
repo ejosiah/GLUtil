@@ -69,7 +69,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Josiah\OneDrive\cpp\lib\debug;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -115,6 +118,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="interaction.h" />
+    <ClInclude Include="pbrScene.h" />
+    <ClInclude Include="pbr_models.h" />
+    <ClInclude Include="rr_tracer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GLUtil\GLUtil.vcxproj">
+      <Project>{80127958-2e60-44d4-bf4a-58a40123707a}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pbr.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="specular_bsdf.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+#include <tuple>
 
 const float _EPSILON = 1E-6;
 
@@ -59,3 +60,16 @@ inline std::ostream& operator<<(std::ostream& out, const glm::vec4& v) {
 	out << "[ " << v.x << ", " << v.y << ", " << v.z << ", " << v.w << " ]";
 	return out;
 }
+
+inline std::tuple<float, float> toTuple(const glm::vec2& v) {
+	return std::make_tuple(v.x, v.y);
+}
+
+inline std::tuple<float, float, float> toTuple(const glm::vec3& v) {
+	return std::make_tuple(v.x, v.y, v.z);
+}
+
+inline std::tuple<float, float, float, float> toTuple(const glm::vec4& v) {
+	return std::make_tuple(v.x, v.y, v.z, v.w);
+}
+

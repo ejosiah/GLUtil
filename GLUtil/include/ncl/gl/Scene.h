@@ -24,7 +24,7 @@
 #include "TransformFeedBack.h"
 #include "Resolution.h"
 #include "UserCameraController.h"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 
 namespace ncl {
@@ -42,7 +42,7 @@ namespace ncl {
 			bool fullscreen = false;
 		};
 
-		static boost::filesystem::path shader_loc[] = {
+		static std::filesystem::path shader_loc[] = {
 			"shaders",
 			"..\\shaders",
 		};
@@ -154,7 +154,7 @@ namespace ncl {
 				if (!_useImplictShaderLoad) return;
 
 				using namespace std;
-				using namespace boost::filesystem;
+				using namespace std::filesystem;
 
 				for (auto& p : shader_loc) {
 					if (exists(p) && is_directory(p) && !p.empty()) {
@@ -475,7 +475,7 @@ namespace ncl {
 			void initDefaultCamera() {
 				CameraController* cameraController = new CameraController{ Mesurements{ float(_width), float(_height) }, Camera::SPECTATOR };
 
-				cameraController->setModelHeight(3);
+				cameraController->setModelHeight(_modelHeight);
 				cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
 
 				cameraController->init();
@@ -532,6 +532,7 @@ namespace ncl {
 			bool cameraControlActive = true;
 			bool camInfoOn = false;
 			Font* sFont;
+			float _modelHeight = 3;
 			std::stringstream sbr;
 		};
 	}
