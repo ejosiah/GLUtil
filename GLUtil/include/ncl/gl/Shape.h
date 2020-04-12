@@ -26,12 +26,22 @@ namespace ncl {
 				, tfb(nullptr){
 			}
 
+		//	Shape(Shape&& source) {}
+
+		//	Shape(const Shape& shape) = delete;
+
+
 			virtual ~Shape() {
 				if (tfb != nullptr) {
 					delete tfb;
 				}
 			}
 
+
+		//	Shape& operator=(const Shape& shape) = delete;
+
+		//	Shape& operator=(Shape&& source);
+			
 			virtual void draw(Shader& shader) override {
 				bool cullingDisabled = false;
 				if (!cullface && glIsEnabled(GL_CULL_FACE)) {

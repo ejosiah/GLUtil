@@ -56,6 +56,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fsim", "fsim\fsim.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tessellation", "Tessellation\Tessellation.vcxproj", "{3F49462B-73F6-4017-933A-B21B8826A3B8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Maze", "Maze\Maze.vcxproj", "{D4A091E9-C4FC-4992-9036-61240CD8A09E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -256,6 +258,14 @@ Global
 		{3F49462B-73F6-4017-933A-B21B8826A3B8}.Release|x64.Build.0 = Release|x64
 		{3F49462B-73F6-4017-933A-B21B8826A3B8}.Release|x86.ActiveCfg = Release|Win32
 		{3F49462B-73F6-4017-933A-B21B8826A3B8}.Release|x86.Build.0 = Release|Win32
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Debug|x64.ActiveCfg = Debug|x64
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Debug|x64.Build.0 = Debug|x64
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Debug|x86.ActiveCfg = Debug|Win32
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Debug|x86.Build.0 = Debug|Win32
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Release|x64.ActiveCfg = Release|x64
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Release|x64.Build.0 = Release|x64
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Release|x86.ActiveCfg = Release|Win32
+		{D4A091E9-C4FC-4992-9036-61240CD8A09E}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

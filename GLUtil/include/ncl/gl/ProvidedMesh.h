@@ -8,14 +8,14 @@ namespace ncl {
 		public:
 			ProvidedMesh() = default;
 
-			ProvidedMesh(Mesh mesh, bool adjacency = false, unsigned int instanceCount = 1) :ProvidedMesh(std::vector<Mesh>(1, mesh), adjacency, instanceCount) {
+			explicit ProvidedMesh(Mesh mesh, bool adjacency = false, unsigned int instanceCount = 1) :ProvidedMesh(std::vector<Mesh>(1, mesh), adjacency, instanceCount) {
 			}
 
-			ProvidedMesh(std::vector<Mesh> meshes, bool adjacency = false, unsigned int instanceCount = 1)
+			explicit ProvidedMesh(std::vector<Mesh> meshes, bool adjacency = false, unsigned int instanceCount = 1)
 				:Shape(preprocess(meshes, adjacency), true, instanceCount) {
 			}
 
-			ProvidedMesh(Shape& shape, GLenum primitiveType, const color& color = glm::vec4(1), unsigned int instanceCount = 1)	// TODO add bitfields of what to copy
+			explicit ProvidedMesh(Shape& shape, GLenum primitiveType, const color& color = glm::vec4(1), unsigned int instanceCount = 1)	// TODO add bitfields of what to copy
 				:Shape(copyMesh(shape, primitiveType, color), true, instanceCount) {
 
 			}
