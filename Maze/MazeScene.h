@@ -5,7 +5,7 @@
 #include <memory>
 #include "../GLUtil/include/glm/vec_util.h"
 #include <tuple>
-#include "maze_generator.h"
+#include "MazeObj.h"
 
 using namespace std;
 using namespace ncl;
@@ -13,7 +13,7 @@ using namespace gl;
 using namespace glm;
 using namespace fsim;
 
-constexpr static int NumCells = 5;
+constexpr static int NumCells = 20;
 constexpr static float CellWidth = 1.0/NumCells;
 constexpr static float HalfCellWidth = CellWidth * 0.5f;
 
@@ -28,6 +28,7 @@ public:
 		setBackGroundColor(BLACK);
 		setForeGroundColor(WHITE);
 		createPoints();
+		maze.init();
 		glPointSize(5);
 	}
 
@@ -49,11 +50,12 @@ public:
 		cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
 		shader("flat")([&](Shader& s) {
 			send(cam);
-			shade(points.get());
+			//shade(points.get());
+			shade(&maze);
 		});
 	}
 
 private:
 	unique_ptr<ProvidedMesh> points;
-	Maze<NumCells, NumCells> maze;
+	MazeObject<NumCells, NumCells> maze;
 };
