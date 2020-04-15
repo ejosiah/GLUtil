@@ -13,7 +13,7 @@ using namespace gl;
 using namespace glm;
 using namespace fsim;
 
-constexpr static int NumCells = 3;
+constexpr static int NumCells = 20;
 constexpr static float CellWidth = 1.0/NumCells;
 constexpr static float HalfCellWidth = CellWidth * 0.5f;
 

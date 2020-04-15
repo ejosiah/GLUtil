@@ -59,6 +59,10 @@ struct Cell {
 
     Cell(int i, int j) : id{ i, j } {}
 
+    ~Cell() {
+        auto x = id;
+    }
+
     template<size_t rows, size_t cols>
     void addNeighbours(Maze<rows, cols>& maze);
 
@@ -257,21 +261,15 @@ struct Maze {
     Cell grid[rows][cols];
 };
 
-template<size_t rows, size_t cols>
-class MazeGenerator {
-public:
-    virtual ~MazeGenerator() = default;
 
-    virtual Maze<rows, cols> generate() = 0;
-};
 
 auto pickRandom = [](std::vector<Cell*> cells) {
     auto loc = rng(cells.size());
     return cells.at(loc());
 };
 
-template<size_t rows, size_t cols>
-class RecursiveBackTrackingMazeGenerator : public MazeGenerator<rows, cols> {
+
+class RecursiveBackTrackingMazeGenerator {
 public:
     RecursiveBackTrackingMazeGenerator(Picker picker = pickRandom) :pick{ picker } {
 
@@ -279,8 +277,8 @@ public:
 
     virtual ~RecursiveBackTrackingMazeGenerator() = default;
 
-    Maze<rows, cols> generate() override {
-        Maze<rows, cols> maze;
+    template<size_t rows, size_t cols>
+    void generate(Maze<rows, cols>& maze) {
         maze.init();
 
         auto grid = maze.grid;
@@ -301,8 +299,6 @@ public:
                 next.push(neighbour);
             }
         }
-
-        return maze;
    }
 
     std::vector<Cell*> unvisted(std::vector<Cell*> cells) {

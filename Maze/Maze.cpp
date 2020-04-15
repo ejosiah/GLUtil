@@ -6,6 +6,8 @@
 
 using namespace std;
 
+static Cell* noCell = nullptr;
+
 void checkWallBetween() {
 	Cell a{0, 0};
 	Cell b{0, 1};
@@ -98,7 +100,7 @@ void checkInitializeMaze() {
 		}
 	}
 
-	Cell* noCell = nullptr;
+	
 
 	Cell cell00 = cells[0][0];
 	assert(cell00.neighbours.size() == 2);
@@ -161,11 +163,11 @@ void checkInitializeMaze() {
 
 void testGenerator() {
 	
-	
+	Maze<3, 3> maze;
 	Id path[9]{ {0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1} };
 
 	int i = 0;
-	RecursiveBackTrackingMazeGenerator<3, 3> generator([&](std::vector<Cell*> cells) {
+	RecursiveBackTrackingMazeGenerator generator([&](std::vector<Cell*> cells) {
 		auto id = path[++i];
 		auto itr = std::find_if(cells.begin(), cells.end(), [&](Cell* cell) {
 			return cell->id.row == id.row && cell->id.col == id.col;
@@ -173,9 +175,9 @@ void testGenerator() {
 		return *itr;
 	});
 
-	auto maze = generator.generate();
+	generator.generate(maze);
 
-	auto walls = maze.grid[0][0].walls;
+	//auto walls = maze.grid[0][0].walls;
 
 	for (int i = 0; i < 8; i++) {
 		auto a = maze.cellAt(path[i]);
@@ -187,6 +189,7 @@ void testGenerator() {
 	assert(maze.cellAt({ 1, 0 })->hasWallBetween(maze.cellAt({ 1, 1 })));
 	assert(maze.cellAt({ 2, 1 })->hasWallBetween(maze.cellAt({ 1, 1 })));
 	assert(maze.cellAt({ 1, 2})->hasWallBetween(maze.cellAt({ 1, 1 })));
+	assert(maze.cellAt({ 0, 1 })->wallAt(Location::Bottom)->borders(noCell));
 }
 
 void MazeTestSuit() {
@@ -202,5 +205,5 @@ int main() {
 	auto scene = new MazeScene;
 	start(scene);
 	return 0;
-//	MazeTestSuit();
+	MazeTestSuit();
 }

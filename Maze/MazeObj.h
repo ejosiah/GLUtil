@@ -11,20 +11,14 @@ using namespace ncl;
 using namespace gl;
 using namespace glm;
 
+static Id path[9]{ {0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1} };
+
+static int i = 0;
+
 template<size_t rows, size_t cols>
 class MazeObject : public Drawable {
 public:
 	MazeObject() {
-		static Id path[9]{ {0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1} };
-
-		static int i = 0;
-		generator = std::make_unique<RecursiveBackTrackingMazeGenerator<rows, cols>>([&](std::vector<Cell*> cells) {
-			auto id = path[++i];
-			auto itr = std::find_if(cells.begin(), cells.end(), [&](Cell* cell) {
-				return cell->id.row == id.row && cell->id.col == id.col;
-				});
-			return *itr;
-		});
 	}
 
 	void init() {
@@ -38,7 +32,9 @@ public:
 		const float halfWidth = CellWidth * 0.5;
 		const float halfHeight = CellHeight * 0.5;
 		std::set<Wall*> processed;
-		auto maze = generator->generate();
+		Maze<rows, cols> maze;
+		generator.generate(maze);
+
 		for (int j = 0; j < rows; j++) {
 			for (int i = 0; i < cols; i++) {
 				vec2 c{ i * CellWidth, j * CellHeight };
@@ -47,7 +43,7 @@ public:
 				std::list<Wall*> walls = cell.walls;
 				
 				for (Wall* wall : walls) {
-					if (processed.find(wall) != processed.end()) break;
+					if (processed.find(wall) != processed.end()) continue;
 					vec3 p0, p1;
 					switch (cell.locationOf(*wall)) {
 					case Location::Top:
@@ -85,7 +81,7 @@ public:
 	}
 
 private:
-	std::unique_ptr<MazeGenerator<rows, cols>> generator;
+	RecursiveBackTrackingMazeGenerator generator;
 	std::unique_ptr<ProvidedMesh> map;
 	GlmCam cam;
 	Logger& logger = Logger::get("maze");
