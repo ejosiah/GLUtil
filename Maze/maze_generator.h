@@ -9,6 +9,8 @@
 #include <utility>
 #include <stack>
 #include <iostream>
+#include <array>
+#include <functional>
 
 static std::random_device rnd;
 
@@ -19,306 +21,302 @@ inline std::function<int()> rng(int size) {
     return std::bind(dist, eng);
 }
 
-enum class Location{ Top, Right, Bottom, Left, Null};
+enum class Location { Top, Right, Bottom, Left, Null };
 
-class Wall;
-
-class Cell {
-public:
-    std::vector<Cell*> neighbours;
-    friend class Wall;  // TODO find out why protected inheritance not working
-    unsigned i, j = -1;
-public:
-    virtual ~Cell() = default;
-
-    virtual void add(Cell* neighbour, Location location = Location::Null, bool withWall = false);
-
-    virtual Wall* wallBetween(Cell* neighbour);
-
-    virtual bool hasWallBetween(Cell* neighbour) {
-        return wallBetween(neighbour) != nullptr;
-    }
-
-    virtual void remove(Wall* wall);
-
-    virtual std::set<Cell*> getNeighbours();
-
-    virtual std::set<Wall*> walls();
-
-    virtual Location location(const Wall* wal) const;
-
-    friend std::ostream& operator<<(std::ostream& out, const Cell& cell) {
-        out << "cell[" << cell.i << ", " << cell.j << "]";
-        return out;
-    }
-};
-
-class NullCell : public Cell {
-public:
-    NullCell() {
-        i = j = -2;
-    };
-
-    virtual ~NullCell() = default;
-
-    void add(Cell* neighbour, Location location, bool withWall) override {
-
-    }
-
-    Wall* wallBetween(Cell* neighbour) override {
-        return nullptr;
-    }
-
-    bool hasWallBetween(Cell* neighbour) override {
-        return false;
-    }
-
-    void remove(Wall* wall) override {
-
-    }
-
-    std::set<Cell*> getNeighbours() override {
-        return {};
-    }
-
-    std::set<Wall*> walls() override {
-        return {};
-    }
-
-    Location location(const Wall* wal) const override {
-        return Location::Null;
-    }
-};
-
-class Wall : public Cell {
-public:
-    Cell* left;
-    Cell* right;
-	Location location;
-
-    Wall(Cell* l, Cell* r, Location loc) :left(l), right(r), location(loc) {
-        i = -1;
-        j = -1;
-        left->neighbours.push_back(this);
-        right->neighbours.push_back(this);
-    }
-
-    virtual ~Wall() {
-        left->remove(this);
-        right->remove(this);
-
-        left->add(right);
-        right->add(left);
-    }
-
-	Cell* otherSideOf(Cell* cell) {
-		if (cell == left) {
-			return right;
-		}
-		else {
-			return left;
-		}
-	}
-};
-
-void Cell::add(Cell* neighbour, Location location, bool withWall) {
-    if (withWall) {
-        if (!hasWallBetween(neighbour)) {
-            new Wall(this, neighbour, location);
-        }
-    }
-    else {
-        neighbours.push_back(neighbour);
+inline Location flip(Location loc) {
+    switch (loc) {
+    case Location::Top:
+        return Location::Bottom;
+    case Location::Bottom:
+        return Location::Top;
+    case Location::Left:
+        return Location::Right;
+    case Location::Right:
+        return Location::Left;
     }
 }
 
-//Wall* Cell::wallBetween(Cell* neighbour) {
-//    auto itr = std::find_if(neighbour->neighbours.begin(), neighbour->neighbours.end(), [&](Cell* wallOrCell) {
-//        Wall* wall = dynamic_cast<Wall*>(wallOrCell);
-//        return wall && (wall->left == this || wall->right == this);
-//    });
-//    if (itr != neighbour->neighbours.end()) {
-//        return dynamic_cast<Wall*>((*itr));
-//    }
-//    return nullptr;
-//}
 
-Wall* Cell::wallBetween(Cell* neighbour) {
-    auto itr = std::find_if(neighbours.begin(), neighbours.end(), [&](Cell* cell) {
-        return cell == neighbour;
-    });
-    if (itr != neighbours.end()) {
+struct Id {
+    int row, col;
+};
+
+struct Wall;
+struct Cell;
+
+template<size_t rows, size_t cols>
+struct Maze;
+
+using Picker = std::function<Cell* (std::vector<Cell*>)>;
+
+struct Cell {
+
+    Id id;
+    std::vector<Cell*> neighbours;
+    std::list<Wall*> walls;
+
+    Cell() = default;
+
+    Cell(int i, int j) : id{ i, j } {}
+
+    template<size_t rows, size_t cols>
+    void addNeighbours(Maze<rows, cols>& maze);
+
+    bool hasWallBetween(const Cell* neighbour) const {
+        return wallBetween(neighbour) != nullptr;
+    }
+
+    Cell* neighbourAt(Location loc) {
         return nullptr;
     }
-    auto walls = this->walls();
-    auto itr2 = std::find_if(walls.begin(), walls.end(), [&](Wall* wall) {
-        return wall->left == neighbour || wall->right == neighbour;
-    });
-    if (itr2 != walls.end()) {
-        return *itr2;
+
+    Wall* wallBetween(const Cell* neighbour) const;
+
+    Wall* wallAt(Location loc) const;
+
+    bool operator==(const Cell& other) {
+        return id.col == other.id.col && id.row == other.id.row;
+    }
+
+    Location locationOf(const Wall& wall) const;
+};
+
+inline bool operator<(const Cell& a, const Cell& b) {
+    return a.id.col < b.id.col && a.id.row < b.id.row;
+}
+
+struct Wall {
+
+    Wall() = default;
+
+    Wall(Cell* left, Cell* right, Location loc) :
+        left{ left }, right{ right }, location{ loc } {
+        if (left) {
+            left->walls.push_back(this);
+        }
+        if (right) {
+            right->walls.push_back(this);
+        }
+    }
+
+    Wall(Cell* cell, Location loc) :Wall(cell, nullptr, loc) {
+
+    }
+
+    ~Wall() {
+        if (left) {
+            left->walls.remove(this);
+        }
+        if (right) {
+            right->walls.remove(this);
+        }
+    }
+
+    bool borders(Cell* cell) {
+        
+        return (left == cell || right == cell) 
+            || (*left == *cell || *right == *cell);
+    }
+
+    Cell* left;
+    Cell* right;
+    Location location;
+};
+
+inline bool operator==(const Wall& a, const Wall& b) {
+    return ((a.left == b.left && a.right == b.right) 
+            || (*(a.left) == *(b.left) && *(a.right) == *(b.right))) 
+            && a.location == b.location;
+}
+
+template<size_t rows, size_t cols>
+void Cell::addNeighbours(Maze<rows, cols>& maze) {
+    int i = id.row;
+    int j = id.col;
+    int k = i + 1;
+    if (k < rows) {
+        Cell* topNeighbour = &maze.grid[k][j];
+        if (!this->hasWallBetween(topNeighbour)) {
+            neighbours.push_back(topNeighbour);
+            topNeighbour->neighbours.push_back(this);
+            new Wall(this, topNeighbour, Location::Top);
+        }
+    }
+    else {
+        new Wall(this, Location::Top);
+    }
+
+    k = j + 1;
+    if (k < cols) {
+        Cell* rightNeighbour = &maze.grid[i][k];
+        if (!this->hasWallBetween(rightNeighbour)) {
+            neighbours.push_back(rightNeighbour);
+            rightNeighbour->neighbours.push_back(this);
+            new Wall(this, rightNeighbour, Location::Right);
+        }
+    }
+    else {
+        new Wall(this, Location::Right);
+    }
+
+    k = i - 1;
+    if (k > -1) {
+        Cell* bottomNeighbour = &maze.grid[k][j];
+        if (!this->hasWallBetween(bottomNeighbour)) {
+            neighbours.push_back(bottomNeighbour);
+            bottomNeighbour->neighbours.push_back(this);
+            new Wall(this, bottomNeighbour, Location::Bottom);
+        }
+    }
+    else {
+        new Wall(this, Location::Bottom);
+    }
+
+    k = j - 1;
+    if (k > -1) {
+        Cell* leftNeighbour = &maze.grid[i][k];
+        if (!this->hasWallBetween(leftNeighbour)) {
+            neighbours.push_back(leftNeighbour);
+            leftNeighbour->neighbours.push_back(this);
+            new Wall(this, leftNeighbour, Location::Left);
+        }
+    }
+    else {
+        new Wall(this, Location::Left);
+    }
+}
+
+Wall* Cell::wallBetween(const Cell* neighbour) const {
+    if (this == neighbour) return nullptr;
+    for (auto myWall : walls) {
+        for (auto theirWall : neighbour->walls) {
+            if (theirWall == myWall) return myWall;
+        }
     }
     return nullptr;
 }
 
+Wall* Cell::wallAt(Location loc) const{
+    auto itr = std::find_if(walls.begin(), walls.end(), [&](Wall* wall) {
+        bool res =  (wall->location == loc && *(wall->left) == *this) || (flip(wall->location) == loc && *(wall->right) == *this);
+        return res;
+    });
 
-void Cell::remove(Wall* wall) {
-    auto itr = std::find_if(neighbours.begin(), neighbours.end(), [&](Cell* cell) {
-        return wall == cell;
-     });
-    if (itr != neighbours.end()) {
-        neighbours.erase(itr);
+
+    if (itr != walls.end()) {
+        auto wall = *itr;
+        return *itr;
     }
+    return nullptr;
 }
 
-std::set<Cell*> Cell::getNeighbours() {
-    std::set<Cell*> result;
-    for (Cell* neighbour : neighbours) {
-        Wall* wall = dynamic_cast<Wall*>(neighbour);
-        if (wall) {
-            if (wall->left == this) {
-                result.insert(wall->right);
-            }
-            else if(wall->right == this){
-                result.insert(wall->left);
-            }
-        }
-        else{
-            if (!dynamic_cast<NullCell*>(neighbour)) {
-                result.insert(neighbour);
-            }
-        }
-    }
-    return result;
+Location Cell::locationOf(const Wall& wall) const {
+    if (wall.left == this) return wall.location;
+    else return flip(wall.location);
 }
-
-std::set<Wall*> Cell::walls() {
-	std::set<Wall*> rtVal;
-	for (Cell* neighbour : neighbours) {
-		Wall* wall = dynamic_cast<Wall*>(neighbour);
-		if (wall) {
-			rtVal.insert(wall);
-		}
-	}
-	return rtVal;
-}
-
-Location Cell::location(const Wall* wal) const {
-	return Location::Null;
-}
-
 
 template<size_t rows, size_t cols>
-class Maze {
-public:
-    Cell grid[rows][cols];
-    std::set<Cell*> unvisited;
-    std::stack<Cell*> stack;
-    NullCell* nullCell = new NullCell;
-    std::stringstream ss;
+struct Maze {
+    friend struct Cell;
+
+    ~Maze() {
+        // delete all wals
+    }
 
     void init() {
-        bool withWall = true;
-        
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                Cell* current = &grid[i][j];
-                Cell* cNull = nullCell;
-                current->i = i;
-                current->j = j;
-                unvisited.insert(current);
-                int k = j - 1;
-                if (k > -1) {
-                    Cell* leftNeighbour = &grid[i][k];
-                    current->add(leftNeighbour, Location::Left, withWall);
-				}
-				else {
-					current->add(new Wall(cNull, current, Location::Left));
-				}
-                k = j + 1;
-                if (k < cols) {
-                    Cell* rightNeighbour = &grid[i][k];
-                    current->add(rightNeighbour, Location::Right, withWall);
-				}
-				else {
-					current->add(new Wall(current, cNull, Location::Right));
-				}
-                k = i + 1;
-                if (k < rows) {
-                    Cell* topNeighbour = &grid[k][j];
-                    current->add(topNeighbour, Location::Top, withWall);
-				}
-				else {
-                    current->add(new Wall(cNull, current, Location::Top));
-				}
-                k = i - 1;
-                if (k > -1) {
-                    Cell* bottomNeighbour = &grid[k][j];
-                    current->add(bottomNeighbour, Location::Bottom, withWall);
-				}
-				else {
-					current->add(new Wall(current, cNull, Location::Bottom));
-				}
-                ss << *current << " ";
+                Cell* cell = &grid[i][j];
+                cell->id = { i, j };
+                cell->addNeighbours(*this);
             }
-            ss << "\n";
         }
-
     }
 
+    const Cell* cellAt(const Id& id) const {
+        assert(id.row >= 0 && id.row < rows);
+        assert(id.col >= 0 && id.col < cols);
+        return &grid[id.row][id.col];
+    }
+
+    const Cell* operator[](const Id& id) const {
+        return cellAt(id);
+    }
+
+    std::set<Wall*> walls() {
+        std::set<Wall*> rtVal;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Cell* cell = &grid[i][j];
+                cell->id = { i, j };
+                rtVal.insert(cell->walls.begin(), cell->walls.end());
+            }
+        }
+    }
+
+    Cell grid[rows][cols];
+};
+
+template<size_t rows, size_t cols>
+class MazeGenerator {
 public:
-    Maze() {
-        init();
-    }
-    void generate() {
-        using namespace std;
-        Cell* current = &grid[0][0];
-        while (!unvisited.empty()) {
-            unvisited.erase(current);
-            auto neighbours = unvisitedNeighbours(current); // remove duplicate neighbours
-            if (!neighbours.empty()) {
-                Cell* neighbour = pickRandom(neighbours);
-                Wall* wall = current->wallBetween(neighbour);
-                delete wall;
-                stack.push(current);
-                current = neighbour;
-            }
-            else if (!stack.empty()) {
-                current = stack.top();
-                stack.pop();
-            }
-        }
+    virtual ~MazeGenerator() = default;
+
+    virtual Maze<rows, cols> generate() = 0;
+};
+
+auto pickRandom = [](std::vector<Cell*> cells) {
+    auto loc = rng(cells.size());
+    return cells.at(loc());
+};
+
+template<size_t rows, size_t cols>
+class RecursiveBackTrackingMazeGenerator : public MazeGenerator<rows, cols> {
+public:
+    RecursiveBackTrackingMazeGenerator(Picker picker = pickRandom) :pick{ picker } {
+
     }
 
-    std::vector<Cell*> unvisitedNeighbours(Cell* cell) {
-        std::set<Cell*> neighbours = cell->getNeighbours();
-        std::vector<Cell*> result;
-        for (Cell* neighbour : neighbours) {
-            if (unvisited.find(neighbour) != unvisited.end()) {
-                result.push_back(neighbour);
+    virtual ~RecursiveBackTrackingMazeGenerator() = default;
+
+    Maze<rows, cols> generate() override {
+        Maze<rows, cols> maze;
+        maze.init();
+
+        auto grid = maze.grid;
+        visted.insert(&grid[0][0]);
+        next.push(&grid[0][0]);
+
+        while (!next.empty()) {
+            auto current = next.top();
+            next.pop();
+
+            auto neighbours = unvisted(current->neighbours);
+            if (!neighbours.empty()) {
+                next.push(current);
+                auto neighbour = pick(neighbours);
+                auto wall = current->wallBetween(neighbour);
+                delete wall;
+                visted.insert(neighbour);
+                next.push(neighbour);
             }
         }
+
+        return maze;
+   }
+
+    std::vector<Cell*> unvisted(std::vector<Cell*> cells) {
+        std::vector<Cell*> result{ cells.size() };
+        auto itr = std::copy_if(cells.begin(), cells.end(), result.begin(), [&](Cell* cell) {
+            return visted.find(cell) == visted.end();
+        });
+
+        result.resize(std::distance(result.begin(), itr));
         return result;
     }
 
-
-    Cell* pickRandom(std::vector<Cell*> cells) {
-        size_t n = cells.size();
-        int i = rng(n)();
-        return cells[i];
-    }
-
-    Cell* operator[](const unsigned i) {
-        return grid[i];
-    }
-
-    std::tuple<unsigned, unsigned> location(const Cell* cell) const {
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (&grid[i][j] == cell) {
-                    return std::make_tuple(i, j);
-                }
-            }
-        }
-        return std::make_tuple(-1, -1);
-    }
+private:
+    std::set<Cell*> visted;
+    std::stack<Cell*> next;
+    Picker pick;
 };
