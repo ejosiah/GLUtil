@@ -5,11 +5,15 @@
 #include "../GLUtil/include/ncl/gl/Drawable.h"
 #include "../GLUtil/include/ncl/gl/ProvidedMesh.h"
 #include "../GLUtil/include/ncl/gl/mesh.h"
+#include "../GLUtil/include/ncl/util/profile.h"
 #include "maze_generator.h"
+#include <chrono>
+
 
 using namespace ncl;
 using namespace gl;
 using namespace glm;
+using namespace std;
 
 
 template<size_t rows, size_t cols>
@@ -30,8 +34,10 @@ public:
 		const float halfHeight = CellHeight * 0.5;
 		std::set<Wall*> processed;
 		Maze<rows, cols> maze;
-		generator.generate(maze);
 
+		auto duration = profile([&]() { generator.generate(maze);  });
+
+		logger.info("maze generated in " + print(duration));
 
 		auto bottomLeft = maze.cellAt({ 0, 0 });
 		delete bottomLeft->wallAt(Location::Bottom);

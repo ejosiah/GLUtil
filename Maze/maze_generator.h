@@ -11,6 +11,7 @@
 #include <iostream>
 #include <array>
 #include <functional>
+#include <chrono>
 
 static std::random_device rnd;
 

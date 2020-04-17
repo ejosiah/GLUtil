@@ -217,6 +217,7 @@
     <ClInclude Include="include\ncl\ui\component.h" />
     <ClInclude Include="include\ncl\ui\ui.h" />
     <ClInclude Include="include\ncl\units\units.h" />
+    <ClInclude Include="include\ncl\util\profile.h" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />
