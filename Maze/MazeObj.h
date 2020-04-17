@@ -11,9 +11,6 @@ using namespace ncl;
 using namespace gl;
 using namespace glm;
 
-static Id path[9]{ {0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1} };
-
-static int i = 0;
 
 template<size_t rows, size_t cols>
 class MazeObject : public Drawable {
@@ -34,6 +31,14 @@ public:
 		std::set<Wall*> processed;
 		Maze<rows, cols> maze;
 		generator.generate(maze);
+
+
+		auto bottomLeft = maze.cellAt({ 0, 0 });
+		delete bottomLeft->wallAt(Location::Bottom);
+
+		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
+		delete topRight->wallAt(Location::Right);
+
 
 		for (int j = 0; j < rows; j++) {
 			for (int i = 0; i < cols; i++) {
@@ -81,7 +86,9 @@ public:
 	}
 
 private:
-	RecursiveBackTrackingMazeGenerator generator;
+//	RecursiveBackTrackingMazeGenerator generator;
+//	RandomizedKrushkalMazeGenerate generator;
+	RandomizedPrimsMazeGenerator generator;
 	std::unique_ptr<ProvidedMesh> map;
 	GlmCam cam;
 	Logger& logger = Logger::get("maze");

@@ -48,6 +48,7 @@ template<size_t rows, size_t cols>
 struct Maze;
 
 using Picker = std::function<Cell* (std::vector<Cell*>)>;
+using Use = std::function<void(Cell*)>;
 
 struct Cell {
 
@@ -77,6 +78,9 @@ struct Cell {
     Wall* wallBetween(const Cell* neighbour) const;
 
     Wall* wallAt(Location loc) const;
+
+    std::list<Wall*> getWalls();
+
 
     bool operator==(const Cell& other) {
         return id.col == other.id.col && id.row == other.id.row;
@@ -120,6 +124,10 @@ struct Wall {
         
         return (left == cell || right == cell) 
             || (*left == *cell || *right == *cell);
+    }
+
+    bool isBetweenCells() {
+        return left != nullptr && right != nullptr;
     }
 
     Cell* left;
@@ -219,6 +227,18 @@ Location Cell::locationOf(const Wall& wall) const {
     else return flip(wall.location);
 }
 
+std::list<Wall*> Cell::getWalls() {
+    std::list<Wall*> rtVal;
+    for (auto wall : walls) {
+        if (wall->isBetweenCells()) {
+            rtVal.push_back(wall);
+        }
+    }
+    rtVal.unique();
+    return rtVal;
+}
+
+
 template<size_t rows, size_t cols>
 struct Maze {
     friend struct Cell;
@@ -254,6 +274,15 @@ struct Maze {
                 Cell* cell = &grid[i][j];
                 cell->id = { i, j };
                 rtVal.insert(cell->walls.begin(), cell->walls.end());
+            }
+        }
+        return rtVal;
+    }
+
+    void foreach(Use use) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                use(&grid[i][j]);
             }
         }
     }
@@ -315,4 +344,137 @@ private:
     std::set<Cell*> visted;
     std::stack<Cell*> next;
     Picker pick;
+};
+
+class RandomizedKrushkalMazeGenerate {
+public:
+
+    template<size_t rows, size_t cols>
+    void generate(Maze<rows, cols>& maze) {
+        maze.init();
+
+        auto walls = shuffleWalls(maze);
+        std::vector<Wall*> markedForDelete;
+        setPerCell(maze);
+        
+        for (Wall* wall : walls) {
+            if (belongsToDistinctSet(wall->left, wall->right)) {
+                joinSets(wall->left, wall->right);
+                markedForDelete.push_back(wall);
+            }
+        }
+
+        auto size = markedForDelete.size();
+        for (int i = 0; i < size; i++) {
+            delete markedForDelete[i];
+        }
+
+    }
+
+    template<size_t rows, size_t cols>
+    std::list<Wall*> shuffleWalls(Maze<rows, cols>& maze) {
+        auto walls = maze.walls();
+        std::vector<Wall*> temp{ walls.begin(), walls.end() };
+        std::shuffle(temp.begin(), temp.end(), std::default_random_engine(rnd()));
+
+        return std::list<Wall*>{temp.begin(), temp.end()};
+    }
+
+    template<size_t rows, size_t cols>
+    void setPerCell(Maze<rows, cols>& maze) {
+        maze.foreach([&](Cell* cell) {
+            std::set<Cell*> set{ cell };
+            cells.insert(set);
+         });
+    }
+
+    bool belongsToDistinctSet(Cell* a, Cell* b) {
+        if (a == nullptr || b == nullptr) return false;
+
+        int count = std::count_if(cells.begin(), cells.end(), [&](std::set<Cell*> set) {
+            return set.find(a) != set.end() && set.find(b) != set.end();
+        });
+        return count == 0;
+    }
+
+    void joinSets(Cell* a, Cell* b) {
+
+        auto itr0 = std::find_if(cells.begin(), cells.end(), [&](std::set<Cell*> set) {
+            return set.find(a) != set.end();
+        });
+        assert(itr0 != cells.end());
+
+        auto itr1 = std::find_if(cells.begin(), cells.end(), [&](std::set<Cell*> set) {
+            return set.find(b) != set.end();
+        });
+        assert(itr1 != cells.end());
+       
+        std::set<Cell*> join;
+
+        join.insert(itr0->begin(), itr0->end());
+        join.insert(itr1->begin(), itr1->end());
+        cells.insert(join);
+
+        cells.erase(itr0);
+        cells.erase(itr1);
+
+
+        processed.push_back(a);
+        processed.push_back(b);
+        called++;
+    }
+
+private:
+    int called = 0;
+    std::list<Wall*> walls;
+    std::set<std::set<Cell*>> cells;
+    std::vector<Cell*> processed;
+};
+
+class RandomizedPrimsMazeGenerator {
+public:
+
+    template<size_t rows, size_t cols>
+    void generate(Maze<rows, cols>& maze) {
+        maze.init();
+
+        std::set<Cell*> visted;
+        std::list<Wall*> walls;
+
+        int i = rng(rows)();
+        int j = rng(cols)();
+
+        Cell* initial = &maze.grid[i][j];
+        visted.insert(initial);
+        auto iWalls = initial->getWalls();
+        walls.insert(walls.begin(), iWalls.begin(), iWalls.end());
+
+        while (visted.size() < rows * cols) {
+            Wall* wall = random(walls);
+            auto itr0 = visted.find(wall->left);
+            auto itr1 = visted.find(wall->right);
+
+            if (itr0 != visted.end() && itr1 != visted.end())  continue;
+
+            Cell* current = itr0 == visted.end() ?  wall->left : wall->right;
+            visted.insert(current);
+
+            walls.remove(wall);
+            delete wall;
+
+            auto cWalls = current->getWalls();
+            for (auto w : cWalls) { walls.push_back(w); }
+
+            walls.unique();
+        }
+
+    }
+
+    Wall* random(std::list<Wall*> walls) {
+        std::vector<Wall*> temp{ walls.begin(), walls.end() };
+        return temp[rng(walls.size())()];
+    }
+
+private:
+
 };

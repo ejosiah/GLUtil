@@ -2,6 +2,7 @@
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/textures.h"
 #include "../fsim/fields.h"
+#include "../GLUtil/include/ncl/gl/SkyBox.h"
 #include <memory>
 #include "../GLUtil/include/glm/vec_util.h"
 #include <tuple>
@@ -21,12 +22,19 @@ class MazeScene : public Scene {
 public:
 	MazeScene() :Scene("Maze Generator") {
 		_requireMouse = false;
+		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
+		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 
 	}
 
 	void init() override {
 		setBackGroundColor(BLACK);
 		setForeGroundColor(WHITE);
+		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
+			return root + path;
+			});
+		skybox = unique_ptr<SkyBox>{ SkyBox::create(skyTextures, 7, *this, 50) };
 		createPoints();
 		maze.init();
 		glPointSize(5);
@@ -53,9 +61,16 @@ public:
 			//shade(points.get());
 			shade(&maze);
 		});
+	//	skybox->render();
 	}
 
 private:
 	unique_ptr<ProvidedMesh> points;
 	MazeObject<NumCells, NumCells> maze;
+	unique_ptr<SkyBox> skybox;
+	vector<string> skyTextures = vector<string>{
+		"right.jpg", "left.jpg",
+		"top.jpg", "bottom.jpg",
+		"front.jpg", "back.jpg"
+	};
 };
