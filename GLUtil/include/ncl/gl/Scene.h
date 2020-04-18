@@ -147,7 +147,7 @@ namespace ncl {
 					}
 					processInput(key);
 				});
-				sFont = Font::Arial(10, 0, getForeGround());				
+				sFont = Font::Arial(_fontSize, 0, getForeGround());				
 			}
 
 			void loadShaderImplicity() {
@@ -403,6 +403,14 @@ namespace ncl {
 				return _motionEventHandler;
 			}
 
+			/**
+			  @brief set font size for default font 
+			  @param size font size
+			*/
+			void fontSize(int size) {
+				_fontSize = size;
+			}
+
 			void useImplictShaderLoad(bool flag) {
 				_useImplictShaderLoad = flag;
 			}
@@ -532,6 +540,7 @@ namespace ncl {
 			bool cameraControlActive = true;
 			bool camInfoOn = false;
 			Font* sFont;
+			int _fontSize = 10;
 			float _modelHeight = 3;
 			std::stringstream sbr;
 		};

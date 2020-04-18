@@ -26,13 +26,14 @@ public:
 		useImplictShaderLoad(true);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
-
+		camInfoOn = true;
+		_fullScreen = true;
 	}
 
 	void init() override {
-		setBackGroundColor(BLACK);
-		setForeGroundColor(WHITE);
-		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+		setBackGroundColor(WHITE);
+		setForeGroundColor(BLACK);
+		string root = "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\skybox\\001\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
 			});
@@ -43,7 +44,10 @@ public:
 		floor = make_unique<Floor>(100, 1100, *this);
 		floor->init();
 
-		glPointSize(5);
+		light[0].on = true;
+		light[0].position = { 0, 1, 0, 0 };
+		lightModel.useObjectSpace = false;
+		lightModel.localViewer = true;
 	}
 
 	void createPoints() {
@@ -67,16 +71,15 @@ public:
 			//shade(points.get());
 		//	shade(&maze);
 		});
-	//	skybox->render();
+		
 		shader("floor")([&](Shader& s) {
 
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			cam.view = lookAt({ 0, 100, 3 }, vec3(0), { 0, 1, 0 });
-			cam.projection = perspective(half_pi<float>() / 2.0f, aspectRatio, 0.1f, 1000.0f);
-			//cam.projection = ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+			send(light[0]);
+			send(lightModel);
 			send(activeCamera());
 			floor->draw(s);
 		});
+		skybox->render();
 	}
 
 private:

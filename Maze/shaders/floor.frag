@@ -12,7 +12,7 @@ uniform bool gammaCorrect;
 const float gamma = 2.2;
 
 void main(){
-//	vec4 color = phongLightModel(mat4(1));
-//	fragColor = gammaCorrect ? vec4(pow(color.rgb, vec3(1/gamma)), 1.0) : color;
-	fragColor = vec4(1);
+	vec4 color = phongLightModel(mat4(1));
+	fragColor = gammaCorrect ? vec4(pow(color.rgb, vec3(1/gamma)), 1.0) : color;
+//	fragColor = vec4(1);
 }
