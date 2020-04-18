@@ -24,10 +24,24 @@
     <ClInclude Include="MazeObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Floor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Maze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\floor.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\floor.tes">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\floor.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

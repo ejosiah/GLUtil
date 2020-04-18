@@ -7,6 +7,7 @@
 #include "../GLUtil/include/glm/vec_util.h"
 #include <tuple>
 #include "MazeObj.h"
+#include "Floor.h"
 
 using namespace std;
 using namespace ncl;
@@ -21,7 +22,8 @@ constexpr static float HalfCellWidth = CellWidth * 0.5f;
 class MazeScene : public Scene {
 public:
 	MazeScene() :Scene("Maze Generator") {
-		_requireMouse = false;
+		_requireMouse = true;
+		useImplictShaderLoad(true);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 
@@ -37,6 +39,10 @@ public:
 		skybox = unique_ptr<SkyBox>{ SkyBox::create(skyTextures, 7, *this, 50) };
 		createPoints();
 		maze.init();
+
+		floor = make_unique<Floor>(100, 1100, *this);
+		floor->init();
+
 		glPointSize(5);
 	}
 
@@ -57,14 +63,24 @@ public:
 	void display() override {
 		cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
 		shader("flat")([&](Shader& s) {
-			send(cam);
+		//	send(cam);
 			//shade(points.get());
-			shade(&maze);
+		//	shade(&maze);
 		});
 	//	skybox->render();
+		shader("floor")([&](Shader& s) {
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			cam.view = lookAt({ 0, 100, 3 }, vec3(0), { 0, 1, 0 });
+			cam.projection = perspective(half_pi<float>() / 2.0f, aspectRatio, 0.1f, 1000.0f);
+			//cam.projection = ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+			send(activeCamera());
+			floor->draw(s);
+		});
 	}
 
 private:
+	unique_ptr<Floor> floor;
 	unique_ptr<ProvidedMesh> points;
 	MazeObject<NumCells, NumCells> maze;
 	unique_ptr<SkyBox> skybox;

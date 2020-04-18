@@ -141,12 +141,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Floor.h" />
     <ClInclude Include="MazeObj.h" />
     <ClInclude Include="MazeScene.h" />
     <ClInclude Include="maze_generator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Maze.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\floor.frag" />
+    <None Include="shaders\floor.tes" />
+    <None Include="shaders\floor.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

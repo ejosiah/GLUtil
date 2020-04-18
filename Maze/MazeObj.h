@@ -92,9 +92,9 @@ public:
 	}
 
 private:
-//	RecursiveBackTrackingMazeGenerator generator;
+	RecursiveBackTrackingMazeGenerator generator;
 //	RandomizedKrushkalMazeGenerate generator;
-	RandomizedPrimsMazeGenerator generator;
+//	RandomizedPrimsMazeGenerator generator;
 	std::unique_ptr<ProvidedMesh> map;
 	GlmCam cam;
 	Logger& logger = Logger::get("maze");
