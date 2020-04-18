@@ -27,7 +27,7 @@ public:
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 		camInfoOn = true;
-		_fullScreen = true;
+		_fullScreen = false;
 	}
 
 	void init() override {
@@ -48,6 +48,8 @@ public:
 		light[0].position = { 0, 1, 0, 0 };
 		lightModel.useObjectSpace = false;
 		lightModel.localViewer = true;
+
+		cube = make_unique<Model>("C:\\Users\\Josiah\\Documents\\one_meter_cube.obj");
 	}
 
 	void createPoints() {
@@ -79,6 +81,12 @@ public:
 			send(activeCamera());
 			floor->draw(s);
 		});
+		shader("default")([&](Shader& s) {
+			send(light[0]);
+			send(lightModel);
+			send(activeCamera());
+			shade(cube.get());
+		});
 		skybox->render();
 	}
 
@@ -87,6 +95,7 @@ private:
 	unique_ptr<ProvidedMesh> points;
 	MazeObject<NumCells, NumCells> maze;
 	unique_ptr<SkyBox> skybox;
+	unique_ptr<Model> cube;
 	vector<string> skyTextures = vector<string>{
 		"right.jpg", "left.jpg",
 		"top.jpg", "bottom.jpg",
