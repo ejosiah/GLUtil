@@ -487,6 +487,7 @@ namespace ncl {
 				cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
 
 				cameraController->init();
+				cameraController->getCamera().setVelocity(5, 5, 5);
 				cameraController->getCamera().setAcceleration(glm::vec3(6.0f));
 				cameraController->getCamera().setRotationSpeed(0.01f);
 				add(*cameraController);

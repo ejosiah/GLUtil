@@ -10,6 +10,8 @@ layout(binding = 4) uniform sampler2D displacementMap;
 layout(binding = 5) uniform sampler2D reflectionMap;
 layout(binding = 6) uniform sampler2D ambiantOcclusionMap;
 
+uniform bool flipNormal = false;
+
 vec4 getAmbience(Material m);
 vec4 getDiffuse(Material m);
 vec4 getSpecular(Material m);
@@ -41,7 +43,8 @@ float saf(LightSource light, vec3 spotDirection, vec3 lightDirection, float h){
 
 vec4 apply(LightSource light, vec3 spotDirection, vec4 direction, Material m){
 	if(!light.on) return vec4(0);
-	vec3 n = gl_FrontFacing ? normalize(vertex_in.normal) : normalize(-vertex_in.normal);
+	vec3 n = normalize(vertex_in.normal);
+	n = (!gl_FrontFacing && flipNormal) ? -n : n;
 	vec3 N = lightModel.useObjectSpace ? (2.0 * texture(normalMap, vertex_in.texCoord) - 1.0).xyz : n;
 	vec3 L = normalize(direction.xyz);
 	float f = m.shininess;
