@@ -40,6 +40,19 @@ inline Location flip(Location loc) {
     }
 }
 
+inline std::string toString(Location loc) {
+    switch (loc) {
+    case Location::Top:
+        return "Top";
+    case Location::Bottom:
+        return "Bottom";
+    case Location::Left:
+        return "Left";
+    case Location::Right:
+        return "Right";
+    }
+}
+
 
 struct Id {
     int row, col;
@@ -312,8 +325,6 @@ public:
 
     template<size_t rows, size_t cols>
     void generate(Maze<rows, cols>& maze) {
-        maze.init();
-
         auto grid = maze.grid;
         visted.insert(&grid[0][0]);
         next.push(&grid[0][0]);
@@ -355,8 +366,6 @@ public:
 
     template<size_t rows, size_t cols>
     void generate(Maze<rows, cols>& maze) {
-        maze.init();
-
         auto walls = shuffleWalls(maze);
         std::vector<Wall*> markedForDelete;
         setPerCell(maze);
@@ -440,8 +449,6 @@ public:
 
     template<size_t rows, size_t cols>
     void generate(Maze<rows, cols>& maze) {
-        maze.init();
-
         std::set<Cell*> visted;
         std::list<Wall*> walls;
 

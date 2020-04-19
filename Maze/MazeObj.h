@@ -32,7 +32,13 @@ public:
 		maze.init();
 		auto duration = profile([&]() { generator.generate(maze);  });
 
-	//	logger.info("maze generated in " + print(duration));
+//		logger.info("maze generated in " + print(duration));
+
+		auto bottomLeft = maze.cellAt({ 0, 0 });
+		delete bottomLeft->wallAt(Location::Bottom);
+
+		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
+		delete topRight->wallAt(Location::Right);
 
 		buildMap(maze);
 		build3dMaze(maze);
@@ -40,12 +46,6 @@ public:
 
 	template<size_t rows, size_t cols>
 	void buildMap(Maze<rows, cols>& maze) {
-	//	auto bottomLeft = maze.cellAt({ 0, 0 });
-	//	delete bottomLeft->wallAt(Location::Bottom);
-
-		//auto topRight = maze.cellAt({ rows - 1, cols - 1 });
-		//delete topRight->wallAt(Location::Right);
-
 		Mesh mesh;
 		const float CellWidth = 1.0 / cols;
 		const float CellHeight = 1.0 / rows;
@@ -148,10 +148,17 @@ public:
 					model = translate(model, c);
 					model = orient(location, model, c);
 					model = rotate(model, glm::half_pi<float>(), { 1, 0, 0 });
-					model = scale(model, { CellWidth, 0, CellWidth });
+					model = scale(model, { CellWidth, 1, CellWidth });
 
 					vec4 p = model * vec4(0, 0, 0, 1);
 
+					//stringstream ss;
+					//if (wall->location == Location::Top || wall->location == Location::Bottom) {
+					//	ss << "cell[" << cell.id.col << ", " << cell.id.row << "], wall: " << toString(wall->location);
+					//	ss << ", p[" << p.x << ", " << p.y << ", " << p.z << "]";
+					//}
+
+					//logger.info(ss.str());
 					models.push_back(model);
 					processed.insert(wall);
 				}
@@ -184,13 +191,13 @@ public:
 		float x = 0;
 		switch (location) {
 		case Location::Top:
-			return translate(xform, { 0, 0, -w });
+			return translate(xform, { 0, 0, w });
 			break;
 		case Location::Right:
 			model = translate(xform, {w, 0, 0});
 			break;
 		case Location::Bottom:
-			model = translate(xform, { 0, 0, w });
+			model = translate(xform, { 0, 0, -w });
 			break;
 		case Location::Left:
 			model = translate(xform, { -w, 0, 0 });
@@ -200,8 +207,14 @@ public:
 	}
 
 	void draw(Shader& shader) override {
-		//map->draw(shader);
-		wall->draw(shader);
+		map->draw(shader);
+		//wall->draw(shader);
+	}
+
+	vec3 collidesWith(vec3 pos) {
+		mat4 mat = inverse(scale(mat4(1), { 4, 1, 4 }));
+		vec3 p = vec3(mat * vec4(pos, 1));
+		return p;
 	}
 
 private:

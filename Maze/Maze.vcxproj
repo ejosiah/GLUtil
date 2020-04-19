@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Floor.h" />
+    <ClInclude Include="MazeMap.h" />
     <ClInclude Include="MazeObj.h" />
     <ClInclude Include="MazeScene.h" />
     <ClInclude Include="maze_generator.h" />
