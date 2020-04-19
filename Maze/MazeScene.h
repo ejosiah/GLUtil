@@ -42,8 +42,8 @@ public:
 		skybox = unique_ptr<SkyBox>{ SkyBox::create(skyTextures, 7, *this, 50) };
 		createPoints();
 
-		maze = make_unique<MazeObject<NumCells, NumCells>>(*this);
-		maze->init();
+		_3dMaze = make_unique<MazeObject<NumCells, NumCells>>(*this);
+		_3dMaze->init();
 
 
 		mazeMap = make_unique<MazeMap<NumCells, NumCells>>(*this);
@@ -112,7 +112,7 @@ public:
 	}
 
 	void update(float t) override {
-		p = maze->collidesWith(activeCamera().getPosition());
+		p = _3dMaze->collidesWith(activeCamera().getPosition());
 		pos->update2<vec3>(VAOObject::Position, [&](vec3* v) { 
 			v->x = p.x;
 			v->y = -p.z;
@@ -123,8 +123,9 @@ private:
 	unique_ptr<Floor> floor;
 	unique_ptr<Floor> wall;
 	unique_ptr<ProvidedMesh> pos;
-	unique_ptr<MazeObject<NumCells, NumCells>> maze;
+	unique_ptr<MazeObject<NumCells, NumCells>> _3dMaze;
 	unique_ptr<MazeMap<NumCells, NumCells>> mazeMap;
+
 	unique_ptr<SkyBox> skybox;
 	unique_ptr<Model> cube;
 	unique_ptr<Sphere> sphere;
