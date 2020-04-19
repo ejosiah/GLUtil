@@ -27,14 +27,16 @@ public:
 		useImplictShaderLoad(true);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
-		camInfoOn = true;
+		addShader("mazeMap", GL_VERTEX_SHADER, identity_vert_shader);
+		addShader("mazeMap", GL_FRAGMENT_SHADER, identity_frag_shader);
+		camInfoOn = false;
 		_fullScreen = false;
 		_modelHeight = 1;
 	}
 
 	void init() override {
 		setBackGroundColor(BLACK);
-		setForeGroundColor(WHITE);
+		setForeGroundColor(BLACK);
 		string root = "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\skybox\\001\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
@@ -63,7 +65,7 @@ public:
 		floor->init();
 
 		light[0].on = true;
-		light[0].position = { 0, 1, 0, 0 };
+		
 		lightModel.useObjectSpace = false;
 		lightModel.localViewer = true;
 
@@ -82,40 +84,38 @@ public:
 	}
 
 	void display() override {
-		shader("flat")([&](Shader& s) {
-			cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
-			send(cam);
-			shade(pos.get());
-			shade(mazeMap.get());
+		skybox->render();
+		shader("floor")([&](Shader& s) {
+		//	glViewportIndexedf(1, 0, 0, _width, _height);
+			light[0].position = vec4(activeCamera().getPosition(), 1);
+			auto p = activeCamera().getViewMatrix() * light[0].position;
+			send(light[0]);
+			send(lightModel);
+			send(activeCamera());
+			shade(_3dMaze.get());
+			floor->draw(s);
 		});
-		
-		//shader("floor")([&](Shader& s) {
 
-		//	send(light[0]);
-		//	send(lightModel);
-		//	send(activeCamera());
-		////	wall->draw(s
-		//	shade(maze.get());
-		//	floor->draw(s);
-		//});
-		//shader("default")([&](Shader& s) {
-		//	send(light[0]);
-		//	send(lightModel);
-		//	send(activeCamera());
-		//	shade(sphere.get());
-		//});
-		//skybox->render();
+
+
+		//shader("mazeMap")([&](Shader& s) {
+////	glViewportIndexedf(0, 0, 0, 200, 200);
+//	cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
+//	send(cam);
+//	send("id", 0);
+//	shade(pos.get());
+//	shade(mazeMap.get());
+//});
 		stringstream ss;
 		ss << "positin in maze: " << p;
 		sFont->render(ss.str(), 10, 60);
-
 	}
 
 	void update(float t) override {
 		p = _3dMaze->collidesWith(activeCamera().getPosition());
 		pos->update2<vec3>(VAOObject::Position, [&](vec3* v) { 
 			v->x = p.x;
-			v->y = -p.z;
+			v->y = p.z;
 		});
 	}
 
@@ -125,7 +125,7 @@ private:
 	unique_ptr<ProvidedMesh> pos;
 	unique_ptr<MazeObject<NumCells, NumCells>> _3dMaze;
 	unique_ptr<MazeMap<NumCells, NumCells>> mazeMap;
-
+	unique_ptr<ProvidedMesh> background;
 	unique_ptr<SkyBox> skybox;
 	unique_ptr<Model> cube;
 	unique_ptr<Sphere> sphere;

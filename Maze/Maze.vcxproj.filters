@@ -46,5 +46,11 @@
     <None Include="shaders\floor.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="mazeMap.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\floor.geom">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

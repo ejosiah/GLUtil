@@ -196,7 +196,8 @@ public:
 			bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
 			if (blendingOff) glEnable(GL_BLEND);
 			if (depthTestOn) glDisable(GL_DEPTH_TEST);
-			glViewportIndexedf(0, 0, 0, width() * 0.65f, height());
+			glViewportIndexedf(0, 0, 0, width(), height());
+		//	glViewportIndexedf(0, 0, 0, width() * 0.65f, height());
 			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
 			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
 			cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });

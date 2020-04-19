@@ -40,50 +40,7 @@ public:
 		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
 		delete topRight->wallAt(Location::Right);
 
-		buildMap(maze);
 		build3dMaze(maze);
-	}
-
-	template<size_t rows, size_t cols>
-	void buildMap(Maze<rows, cols>& maze) {
-		Mesh mesh;
-		const float CellWidth = 1.0 / cols;
-		const float CellHeight = 1.0 / rows;
-		const float halfWidth = CellWidth * 0.5;
-		const float halfHeight = CellHeight * 0.5;
-
-		auto walls = maze.walls();
-		for (auto wall : walls) {
-			Cell& cell = *wall->left;
-			vec2 c{ cell.id.col * CellWidth, cell.id.row * CellHeight };
-			vec3 p0, p1;
-			switch (wall->location) {
-			case Location::Top:
-				p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
-				p1 = { c.x + halfWidth, c.y + halfHeight, 0 };
-				break;
-			case Location::Right:
-				p0 = { c.x + halfWidth, c.y + halfWidth, 0 };
-				p1 = { c.x + halfWidth, c.y - halfHeight, 0 };
-				break;
-			case Location::Bottom:
-				p0 = { c.x - halfHeight, c.y - halfHeight, 0 };
-				p1 = { c.x + halfHeight, c.y - halfHeight, 0 };
-				break;
-			case Location::Left:
-				p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
-				p1 = { c.x - halfWidth, c.y - halfHeight, 0 };
-				break;
-			}
-			mesh.positions.push_back(p0);
-			mesh.positions.push_back(p1);
-			mesh.colors.push_back(WHITE);
-			mesh.colors.push_back(WHITE);
-
-		}
-
-		mesh.primitiveType = GL_LINES;
-		map = std::make_unique<ProvidedMesh>(mesh);
 	}
 
 	template<size_t rows, size_t cols>
@@ -207,8 +164,7 @@ public:
 	}
 
 	void draw(Shader& shader) override {
-		map->draw(shader);
-		//wall->draw(shader);
+		wall->draw(shader);
 	}
 
 	vec3 collidesWith(vec3 pos) {
@@ -221,7 +177,6 @@ private:
 	RecursiveBackTrackingMazeGenerator generator;
 //	RandomizedKrushkalMazeGenerate generator;
 //	RandomizedPrimsMazeGenerator generator;
-	std::unique_ptr<ProvidedMesh> map;
 	Texture2D* color_tex;
 	unique_ptr<Floor> wall;
 	GlmCam cam;

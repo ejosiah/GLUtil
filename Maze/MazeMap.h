@@ -30,7 +30,7 @@ public:
 	void createMap() {
 		Maze<rows, cols> maze;
 		maze.init();
-		auto duration = profile([&]() { generator.generate(maze);  });
+	//	auto duration = profile([&]() { generator.generate(maze);  });
 
 		//		logger.info("maze generated in " + print(duration));
 
@@ -41,6 +41,20 @@ public:
 		delete topRight->wallAt(Location::Right);
 
 		buildMap(maze);
+		buildBackground();
+	}
+
+	void buildBackground() {
+		Mesh mesh;
+		mesh.positions.push_back(vec3(-1, 1, 0));
+		mesh.positions.push_back(vec3(-1,-1, 0));
+		mesh.positions.push_back(vec3(1, 1, 0));
+		mesh.positions.push_back(vec3(1, -1, 0));
+		mesh.colors = vector<vec4>(4, BLACK);
+		mesh.material.diffuse = vec4(1, 0, 0, 1);
+		mesh.primitiveType = GL_TRIANGLE_STRIP;
+
+		background = make_unique<ProvidedMesh>(vector<Mesh>(1, mesh));
 	}
 
 	template<size_t rows, size_t cols>
@@ -88,6 +102,7 @@ public:
 
 	void draw(Shader& shader) override {
 		map->draw(shader);
+		background->draw(shader);
 	}
 
 private:
@@ -95,6 +110,7 @@ private:
 	//	RandomizedKrushkalMazeGenerate generator;
 	//	RandomizedPrimsMazeGenerator generator;
 	std::unique_ptr<ProvidedMesh> map;
+	unique_ptr<ProvidedMesh> background;
 	const Scene& scene;
 	Logger& logger = Logger::get("maze");
 };
