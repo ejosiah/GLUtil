@@ -28,6 +28,7 @@ public:
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 		camInfoOn = true;
 		_fullScreen = false;
+		_modelHeight = 1;
 	}
 
 	void init() override {
@@ -36,12 +37,24 @@ public:
 		string root = "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\skybox\\001\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
-			});
+		});
 		skybox = unique_ptr<SkyBox>{ SkyBox::create(skyTextures, 7, *this, 50) };
 		createPoints();
-		maze.init();
 
-		floor = make_unique<Floor>(100, 1100, *this);
+		maze = make_unique<MazeObject<NumCells, NumCells>>(*this);
+		maze->init();
+
+		color_tex = new CheckerTexture(1, "diffuse", RED, RED);
+		//auto model = translate(mat4(1), { 0, 2, 0 }) * scale(mat4(1), { 6, 4, 1 }) * rotate(mat4(1), half_pi<float>(), { 1, 0, 0 });
+		auto model = translate(mat4(1), { 0, 2, 0 });
+		model = scale(model, { 6, 4, 1 });
+		model = rotate(model, half_pi<float>(), { 1, 0, 0 });
+
+		wall = make_unique<Floor>(10, *this, model);
+		wall->init(color_tex);
+
+		model = scale(mat4(1), vec3(1000));
+		floor = make_unique<Floor>(100, *this, model);
 		floor->init();
 
 		light[0].on = true;
@@ -49,7 +62,7 @@ public:
 		lightModel.useObjectSpace = false;
 		lightModel.localViewer = true;
 
-		cube = make_unique<Model>("C:\\Users\\Josiah\\Documents\\one_meter_cube.obj");
+		cube = make_unique<Model>("C:\\Users\\" + username + "\\OneDrive\\media\\models\\one_meter_cube.obj");
 	}
 
 	void createPoints() {
@@ -67,35 +80,39 @@ public:
 	}
 
 	void display() override {
-		cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
-		shader("flat")([&](Shader& s) {
+		//shader("flat")([&](Shader& s) {
+		//	cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
 		//	send(cam);
-			//shade(points.get());
-		//	shade(&maze);
-		});
+		//	shade(points.get());
+		//	shade(maze.get());
+		//});
 		
 		shader("floor")([&](Shader& s) {
 
 			send(light[0]);
 			send(lightModel);
 			send(activeCamera());
+		//	wall->draw(s
+			shade(maze.get());
 			floor->draw(s);
 		});
-		shader("default")([&](Shader& s) {
-			send(light[0]);
-			send(lightModel);
-			send(activeCamera());
-			shade(cube.get());
-		});
+		//shader("default")([&](Shader& s) {
+		//	send(light[0]);
+		//	send(lightModel);
+		//	send(activeCamera());
+		//	shade(cube.get());
+		//});
 		skybox->render();
 	}
 
 private:
 	unique_ptr<Floor> floor;
+	unique_ptr<Floor> wall;
 	unique_ptr<ProvidedMesh> points;
-	MazeObject<NumCells, NumCells> maze;
+	unique_ptr<MazeObject<NumCells, NumCells>> maze;
 	unique_ptr<SkyBox> skybox;
 	unique_ptr<Model> cube;
+	Texture2D* color_tex;
 	vector<string> skyTextures = vector<string>{
 		"right.jpg", "left.jpg",
 		"top.jpg", "bottom.jpg",

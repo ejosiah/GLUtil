@@ -6,6 +6,7 @@
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/shader_binding.h"
 #include <memory>
+#include <glm/glm.hpp>
 
 namespace ncl {
 	namespace gl {
@@ -16,8 +17,11 @@ namespace ncl {
 
 		class Floor : public Drawable {
 		public:
-			Floor(int grids, int length, const Scene& scene)
-				:grids{ grids }, length{ length }, scene{ scene }{}
+			Floor(int grids, const Scene& scene, glm::mat4 model = glm::mat4(1)) 
+				:Floor(grids, scene, std::vector<glm::mat4>{ model }) {}
+
+			Floor(int grids, const Scene& scene, std::vector<glm::mat4> models)
+				:grids{ grids }, scene{ scene }, models{ models }{}
 
 			void init(Texture2D* text = defaultText()) {
 				texture = std::unique_ptr<Texture2D>{ text };
@@ -27,14 +31,16 @@ namespace ncl {
 				glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, inner);
 				glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, outer);
 
-				float h = length * 0.5;
+				float h = 1 * 0.5;
 				Mesh mesh;
+				mesh.xforms = models;
 				mesh.positions.emplace_back(-h, 0, h);
 				mesh.positions.emplace_back(h, 0, h);
 				mesh.positions.emplace_back(h, 0, -h);
 				mesh.positions.emplace_back(-h, 0, -h);
+
 				mesh.primitiveType = GL_PATCHES;
-				plane = std::make_unique<ProvidedMesh>(mesh);
+				plane = std::make_unique<ProvidedMesh>(mesh, false, models.size());
 				Material& mat = plane->material();
 				mat.ambient = { 0.0f,0.0f,0.0f,1.0f };
 				mat.diffuse = { 0.55f,0.55f,0.55f,1.0f };
@@ -44,6 +50,7 @@ namespace ncl {
 			}
 			
 			virtual void draw(Shader& shader) override {
+				send("s", 100.0f);
 				send(texture.get());
 				shade(plane.get());
 			}
@@ -51,9 +58,9 @@ namespace ncl {
 		private:
 			std::unique_ptr<Texture2D> texture;
 			std::unique_ptr<ProvidedMesh> plane;
-			const Scene& scene;
 			int grids;
-			int length;
+			const Scene& scene;
+			std::vector<glm::mat4> models;
 		};
 	};
 }

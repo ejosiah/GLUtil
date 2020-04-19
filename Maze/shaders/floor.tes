@@ -12,10 +12,14 @@ uniform mat4 P;
 uniform mat4 MV;
 uniform mat4 MVP;
 
-out VERTEX {
+uniform float s = 1;	// uv multipler
+
+
+in VERTEX {
 	smooth vec3 position;
 	smooth vec4 color;
-} v_in;
+	smooth mat4 xform;
+} v_in[];
 
 void main(){
 	float u = gl_TessCoord.x;
@@ -33,14 +37,13 @@ void main(){
 			 p3 * v * i_u +
 			 p2 * u * v;
 
-
 	vec3 t = vec3(1, 0, 0);
 	vec3 n = vec3(0, 1, 0);
 	vec3 bi = vec3(0, 0, 1);
 	applyLight(MV, V, p.xyz, n, t, bi);
 	
-	vertex_out.texCoord = vec2(u * 10, v * 10);
-	vertex_out.color = v_in.color;
+	vertex_out.texCoord = vec2(u * s, v * s);
+	vertex_out.color = v_in[0].color;
 
-	gl_Position = MVP * p;
+	gl_Position = MVP * v_in[0].xform * p;
 }

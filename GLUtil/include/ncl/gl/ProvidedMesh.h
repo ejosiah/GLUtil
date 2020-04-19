@@ -12,11 +12,11 @@ namespace ncl {
 			}
 
 			explicit ProvidedMesh(std::vector<Mesh> meshes, bool adjacency = false, unsigned int instanceCount = 1)
-				:Shape(preprocess(meshes, adjacency), true, instanceCount) {
+				:Shape(preprocess(meshes, adjacency), false, instanceCount) {
 			}
 
 			explicit ProvidedMesh(Shape& shape, GLenum primitiveType, const color& color = glm::vec4(1), unsigned int instanceCount = 1)	// TODO add bitfields of what to copy
-				:Shape(copyMesh(shape, primitiveType, color), true, instanceCount) {
+				:Shape(copyMesh(shape, primitiveType, color), false, instanceCount) {
 
 			}
 

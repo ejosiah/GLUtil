@@ -73,7 +73,7 @@ namespace ncl {
 				//glActiveTexture(TEXTURE(_id));
 				//glBindTexture(GL_TEXTURE_2D, buffer);
 				glBindTextureUnit(_id, buffer);
-				if(!_name.empty()) shader.sendUniform1i(_name, _id);
+			//	if(!_name.empty()) shader.sendUniform1i(_name, _id);
 				//glActiveTexture(TEXTURE(0));
 			}
 

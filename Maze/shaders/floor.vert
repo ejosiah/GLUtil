@@ -4,17 +4,19 @@
 
 layout(location=0) in vec3 position;
 layout(location=4) in vec4 color;
+layout(location=8) in mat4 xform;
 
 out VERTEX {
 	smooth vec3 position;
 	smooth vec4 color;
+	smooth mat4 xform;
 } v_out;
 
-uniform bool useXform;
-
 void main(){
-	v_out.position = position;
+	vec4 p = vec4(position, 1);
+	v_out.position = p.xyz;
 	v_out.color = color;
+	v_out.xform = xform;
 
-	gl_Position = vec4(position, 1);
+	gl_Position = p;
 }

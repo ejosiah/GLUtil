@@ -15,8 +15,11 @@
 
 static std::random_device rnd;
 
+static unsigned long seed = 1587228929;
+
 inline std::function<int()> rng(int size) {
-    std::default_random_engine eng(rnd());
+    //std::default_random_engine eng(rnd());
+    std::default_random_engine eng(seed++);
     std::uniform_int_distribution<int> dist{ 0, size - 1 };
 
     return std::bind(dist, eng);

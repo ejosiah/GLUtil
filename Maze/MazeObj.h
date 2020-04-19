@@ -7,6 +7,7 @@
 #include "../GLUtil/include/ncl/gl/mesh.h"
 #include "../GLUtil/include/ncl/util/profile.h"
 #include "maze_generator.h"
+#include "Floor.h"
 #include <chrono>
 
 
@@ -19,7 +20,7 @@ using namespace std;
 template<size_t rows, size_t cols>
 class MazeObject : public Drawable {
 public:
-	MazeObject() {
+	MazeObject(const Scene& scene):scene{ scene }{
 	}
 
 	void init() {
@@ -27,68 +28,180 @@ public:
 	}
 
 	void createMap() {
-		Mesh mesh;	
+		Maze<rows, cols> maze;
+		maze.init();
+		auto duration = profile([&]() { generator.generate(maze);  });
+
+	//	logger.info("maze generated in " + print(duration));
+
+		buildMap(maze);
+		build3dMaze(maze);
+	}
+
+	template<size_t rows, size_t cols>
+	void buildMap(Maze<rows, cols>& maze) {
+	//	auto bottomLeft = maze.cellAt({ 0, 0 });
+	//	delete bottomLeft->wallAt(Location::Bottom);
+
+		//auto topRight = maze.cellAt({ rows - 1, cols - 1 });
+		//delete topRight->wallAt(Location::Right);
+
+		Mesh mesh;
 		const float CellWidth = 1.0 / cols;
 		const float CellHeight = 1.0 / rows;
 		const float halfWidth = CellWidth * 0.5;
 		const float halfHeight = CellHeight * 0.5;
-		std::set<Wall*> processed;
-		Maze<rows, cols> maze;
 
-		auto duration = profile([&]() { generator.generate(maze);  });
-
-		logger.info("maze generated in " + print(duration));
-
-		auto bottomLeft = maze.cellAt({ 0, 0 });
-		delete bottomLeft->wallAt(Location::Bottom);
-
-		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
-		delete topRight->wallAt(Location::Right);
-
-
-		for (int j = 0; j < rows; j++) {
-			for (int i = 0; i < cols; i++) {
-				vec2 c{ i * CellWidth, j * CellHeight };
-				
-				Cell& cell = maze.grid[j][i];
-				std::list<Wall*> walls = cell.walls;
-				
-				for (Wall* wall : walls) {
-					if (processed.find(wall) != processed.end()) continue;
-					vec3 p0, p1;
-					switch (cell.locationOf(*wall)) {
-					case Location::Top:
-						p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
-						p1 = { c.x + halfWidth, c.y + halfHeight, 0 };
-						break;
-					case Location::Right:
-						p0 = { c.x + halfWidth, c.y + halfWidth, 0 };
-						p1 = { c.x + halfWidth, c.y - halfHeight, 0 };
-						break;
-					case Location::Bottom:
-						p0 = { c.x - halfHeight, c.y - halfHeight, 0 };
-						p1 = { c.x + halfHeight, c.y - halfHeight, 0 };
-						break;
-					case Location::Left:
-						p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
-						p1 = { c.x - halfWidth, c.y - halfHeight, 0 };
-						break;
-					}
-					mesh.positions.push_back(p0);
-					mesh.positions.push_back(p1);
-					mesh.colors.push_back(WHITE);
-					mesh.colors.push_back(WHITE);
-					processed.insert(wall);
-				}
-				
+		auto walls = maze.walls();
+		for (auto wall : walls) {
+			Cell& cell = *wall->left;
+			vec2 c{ cell.id.col * CellWidth, cell.id.row * CellHeight };
+			vec3 p0, p1;
+			switch (wall->location) {
+			case Location::Top:
+				p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
+				p1 = { c.x + halfWidth, c.y + halfHeight, 0 };
+				break;
+			case Location::Right:
+				p0 = { c.x + halfWidth, c.y + halfWidth, 0 };
+				p1 = { c.x + halfWidth, c.y - halfHeight, 0 };
+				break;
+			case Location::Bottom:
+				p0 = { c.x - halfHeight, c.y - halfHeight, 0 };
+				p1 = { c.x + halfHeight, c.y - halfHeight, 0 };
+				break;
+			case Location::Left:
+				p0 = { c.x - halfWidth, c.y + halfHeight, 0 };
+				p1 = { c.x - halfWidth, c.y - halfHeight, 0 };
+				break;
 			}
+			mesh.positions.push_back(p0);
+			mesh.positions.push_back(p1);
+			mesh.colors.push_back(WHITE);
+			mesh.colors.push_back(WHITE);
+
 		}
+
 		mesh.primitiveType = GL_LINES;
 		map = std::make_unique<ProvidedMesh>(mesh);
 	}
 
+	template<size_t rows, size_t cols>
+	void build3dMaze(Maze<rows, cols>& maze) {
+
+		Mesh mesh;
+		const float CellWidth = 4;
+		const float CellHeight = 3;
+		const float halfWidth = CellWidth * 0.5;
+		const float halfHeight = CellHeight * 0.5;
+
+		std::vector<mat4> models;
+
+		//auto walls = maze.walls();
+		//for (auto wall : walls) {
+		//	Cell& cell = *wall->left;
+		//	if (wall->location == Location::Top || wall->location == Location::Bottom) continue;
+		//	vec3 c{ cell.id.col * 0.5, 0, cell.id.row * 0.5 };
+
+		//	glm::mat4 model{ 1 };
+
+		//	//model = move(wall->location, model, halfWidth);
+		//	//model = translate(model, { 0, halfHeight, 0 });
+		////	model = scale(model, { CellWidth, CellHeight, 1 });
+		//	
+		//	model = translate(model, { 0, 0.5, 0 });
+		//	model = move(wall->location, model, 0.5);
+		//	model = translate(model, c);
+		//	model = orient(wall->location, model, c);
+		//	model = rotate(model, glm::half_pi<float>(), { 1, 0, 0 });
+		//	models.push_back(model);
+		//	stringstream ss;
+		//	ss << "id: [" << cell.id.col << ", "  << cell.id.row << "], " << "c: [" << c.x << ", " << c.y << ", " << c.z << "]";
+		//	logger.info(ss.str());
+		//}
+
+		std::set<Wall*> processed;
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < cols; j++) {
+
+				Cell& cell = maze.grid[i][j];
+			//	Cell& cell = maze.grid[0][0];
+			//	vec3 c{ cell.id.col * 0.5, 0, cell.id.row * 0.5 };
+
+				std::list<Wall*> walls = cell.walls;
+
+				for (Wall* wall : walls) {
+					auto flag = processed.find(wall) != processed.end();
+					if (processed.find(wall) != processed.end()) continue;
+					auto location = cell.locationOf(*wall);
+					
+					vec3 c{ 0 };
+
+					glm::mat4 model{ 1 };
+
+					//model = move(wall->location, model, halfWidth);
+					//model = translate(model, { 0, halfHeight, 0 });
+
+					model = translate(model, { cell.id.col * CellWidth, 0, cell.id.row * CellWidth });
+					model = translate(model, { 0, halfHeight, 0 });
+					model = move(location, model, halfWidth, cell.id);
+					model = translate(model, c);
+					model = orient(location, model, c);
+					model = rotate(model, glm::half_pi<float>(), { 1, 0, 0 });
+					model = scale(model, { CellWidth, 0, CellWidth });
+
+					vec4 p = model * vec4(0, 0, 0, 1);
+
+					models.push_back(model);
+					processed.insert(wall);
+				}
+
+			}
+		}
+
+		color_tex = new CheckerTexture(1, "diffuse", RED, RED);
+		wall = make_unique<Floor>(4, scene, models);
+		wall->init(color_tex);
+	}
+
+	glm::mat4 orient(Location location, glm::mat4 xform, vec3 c) {
+		glm::mat4 res = xform;
+		if (location == Location::Left) {
+	//		res = translate(xform, c);
+			res = rotate(res, half_pi<float>(), { 0, 1, 0 });
+		//	res = translate(res, -c);
+		}
+		else if (location == Location::Right) {
+	//		res = translate(res, c);
+			res = rotate(res, -half_pi<float>(), { 0, 1, 0 });
+	//		res = translate(res, -c);
+		}
+		return res;
+	}
+
+	glm::mat4 move(Location location, glm::mat4 xform, float w, Id id) {
+		glm::mat4 model;
+		float x = 0;
+		switch (location) {
+		case Location::Top:
+			return translate(xform, { 0, 0, -w });
+			break;
+		case Location::Right:
+			model = translate(xform, {w, 0, 0});
+			break;
+		case Location::Bottom:
+			model = translate(xform, { 0, 0, w });
+			break;
+		case Location::Left:
+			model = translate(xform, { -w, 0, 0 });
+			break;
+		}
+		return model;
+	}
+
 	void draw(Shader& shader) override {
-		map->draw(shader);
+		//map->draw(shader);
+		wall->draw(shader);
 	}
 
 private:
@@ -96,6 +209,9 @@ private:
 //	RandomizedKrushkalMazeGenerate generator;
 //	RandomizedPrimsMazeGenerator generator;
 	std::unique_ptr<ProvidedMesh> map;
+	Texture2D* color_tex;
+	unique_ptr<Floor> wall;
 	GlmCam cam;
+	const Scene& scene;
 	Logger& logger = Logger::get("maze");
 };
