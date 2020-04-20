@@ -158,6 +158,7 @@
     <ClInclude Include="include\glm\vec_util.h" />
     <ClInclude Include="include\ncl\configured_logger.h" />
     <ClInclude Include="include\ncl\data_structure\binary_tree.h" />
+    <ClInclude Include="include\ncl\data_structure\quad_tree.h" />
     <ClInclude Include="include\ncl\geom\AABB.h" />
     <ClInclude Include="include\ncl\geom\aabb2.h" />
     <ClInclude Include="include\ncl\geom\bounding_volumn.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="include\ncl\gl\CrossHair.h" />
     <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h" />
     <ClInclude Include="include\ncl\gl\geometry.h" />
+    <ClInclude Include="include\ncl\gl\gl.h" />
     <ClInclude Include="include\ncl\gl\gl_commands.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\MeshLoader.h" />
@@ -189,6 +191,7 @@
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h" />
     <ClInclude Include="include\ncl\gl\Resolution.h" />
+    <ClInclude Include="include\ncl\gl\SceneObject.h" />
     <ClInclude Include="include\ncl\gl\shaders.h" />
     <ClInclude Include="include\ncl\gl\shader_binding.h" />
     <ClInclude Include="include\ncl\gl\SkyBox.h" />

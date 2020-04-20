@@ -138,8 +138,9 @@ namespace ncl {
 				glEnable(GL_DEPTH_TEST);
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
-				initDefaultCamera();
 				init();
+				initDefaultCamera();
+				initCameras();
 
 				_keyListeners.push_back([&](const Key& key) {
 					if (cameraControlActive) {
@@ -477,20 +478,47 @@ namespace ncl {
 			}
 
 			void setActiveCamera(int id) {
+				assert(id >= 0 && id < cameras.size());
 				activeCam = id;
 			}
 
 			void initDefaultCamera() {
-				CameraController* cameraController = new CameraController{ Mesurements{ float(_width), float(_height) }, Camera::SPECTATOR };
+				if (cameras.empty()) {
+					CameraController* cameraController = new CameraController{ Mesurements{ float(_width), float(_height) }, Camera::SPECTATOR };
 
-				cameraController->setModelHeight(_modelHeight);
-				cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
+					cameraController->setModelHeight(_modelHeight);
+					cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
 
-				cameraController->init();
-				cameraController->getCamera().setVelocity(5, 5, 5);
-				cameraController->getCamera().setAcceleration(glm::vec3(6.0f));
-				cameraController->getCamera().setRotationSpeed(0.01f);
-				add(*cameraController);
+					cameraController->init();
+					cameraController->getCamera().setVelocity(5, 5, 5);
+					cameraController->getCamera().setAcceleration(glm::vec3(6.0f));
+					cameraController->getCamera().setRotationSpeed(0.01f);
+					add(*cameraController);
+
+					//CameraSettings settings;
+					//settings.sceneDimentions = Mesurements{ float(_width), float(_height) };
+					//settings.mode = Camera::SPECTATOR;
+					//settings.modelHeight = _modelHeight;
+					//settings.velocty = { 5, 5, 5 };
+					//settings.acceleration = { 6, 6, 6 };
+					//settings.orbitRollSpeed = 0.01f;
+
+					//addCamera(settings);
+				}
+			}
+
+			void initCameras() {
+				//for (auto camera : cameras) camera->init();
+			}
+
+			void addCamera(const CameraSettings& settings) {
+				CameraController* camCtrl = new CameraController(settings);
+				add(*camCtrl);
+			}
+
+			void updateCamera(int index, const CameraSettings& settings) {
+				assert(index < cameras.size());
+				// TODO update camera
 			}
 
 			CameraController& getActiveCameraController() {

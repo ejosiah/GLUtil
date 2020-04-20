@@ -6,9 +6,12 @@
 #include "../GLUtil/include/ncl/gl/ProvidedMesh.h"
 #include "../GLUtil/include/ncl/gl/mesh.h"
 #include "../GLUtil/include/ncl/util/profile.h"
+#include "../GLUtil/include/ncl/geom/Plane.h"
 #include "maze_generator.h"
 #include "Floor.h"
 #include <chrono>
+#include "player.h"
+#include "../GLUtil/include/ncl/data_structure/quad_tree.h"
 
 
 using namespace ncl;
@@ -16,11 +19,23 @@ using namespace gl;
 using namespace glm;
 using namespace std;
 
+struct Collision {
+	bool happened;
+	vec3 point;
+	Cell* cell;
+};
+
 
 template<size_t rows, size_t cols>
 class MazeObject : public Drawable {
 public:
-	MazeObject(const Scene& scene):scene{ scene }{
+	MazeObject(const Scene& scene, Maze<rows, cols>& maze, float cellWidth = 4, float cellHeight = 3)
+		:scene{ scene }
+		, maze{ maze }
+		, cellWidth{ cellWidth }
+		, cellHeight{ cellHeight }{
+
+		
 	}
 
 	void init() {
@@ -28,29 +43,45 @@ public:
 	}
 
 	void createMap() {
-		Maze<rows, cols> maze;
-		maze.init();
-		auto duration = profile([&]() { generator.generate(maze);  });
+	//	auto duration = profile([&]() { generator.generate(maze);  });
 
 //		logger.info("maze generated in " + print(duration));
 
-		auto bottomLeft = maze.cellAt({ 0, 0 });
-		delete bottomLeft->wallAt(Location::Bottom);
+		//auto bottomLeft = maze.cellAt({ 0, 0 });
+		//delete bottomLeft->wallAt(Location::Bottom);
 
-		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
-		delete topRight->wallAt(Location::Right);
-
+		//auto topRight = maze.cellAt({ rows - 1, cols - 1 });
+		//delete topRight->wallAt(Location::Right);
+		buildQuadTree();
 		build3dMaze(maze);
+	}
+
+	void buildQuadTree() {
+		maze.foreach([&](Cell* cell) {
+			vec2 c = vec2{ cell->id.col * cellWidth, cell->id.row * cellWidth };
+			auto dl = cellWidth / 2;
+			cell->bounds.min = vec2{ c.x - dl, c.y - dl };
+			cell->bounds.max = vec2{ c.x + dl, c.y + dl };
+			cell->center = c;
+
+		});
+
+		auto min = maze.cellAt({ 0, 0 })->bounds.min;
+		auto max = maze.cellAt({ rows - 1, cols - 1 })->bounds.max;
+
+		quadTree = ds::quad_tree<Cell>{ min, max };
+
+		maze.foreach([&](Cell* cell) {
+			quadTree.insert(new ds::Node<Cell>{ cell->center, cell });
+		});
 	}
 
 	template<size_t rows, size_t cols>
 	void build3dMaze(Maze<rows, cols>& maze) {
 
 		Mesh mesh;
-		const float CellWidth = 4;
-		const float CellHeight = 3;
-		const float halfWidth = CellWidth * 0.5;
-		const float halfHeight = CellHeight * 0.5;
+		const float halfWidth = cellWidth * 0.5;
+		const float halfHeight = cellHeight * 0.5;
 
 		std::vector<mat4> models;
 
@@ -64,7 +95,7 @@ public:
 
 		//	//model = move(wall->location, model, halfWidth);
 		//	//model = translate(model, { 0, halfHeight, 0 });
-		////	model = scale(model, { CellWidth, CellHeight, 1 });
+		////	model = scale(model, { cellWidth, cellHeight, 1 });
 		//	
 		//	model = translate(model, { 0, 0.5, 0 });
 		//	model = move(wall->location, model, 0.5);
@@ -92,20 +123,17 @@ public:
 					if (processed.find(wall) != processed.end()) continue;
 					auto location = cell.locationOf(*wall);
 					
-					vec3 c{ 0 };
-
 					glm::mat4 model{ 1 };
 
 					//model = move(wall->location, model, halfWidth);
 					//model = translate(model, { 0, halfHeight, 0 });
 
-					model = translate(model, { cell.id.col * CellWidth, 0, cell.id.row * CellWidth });
+					model = translate(model, { cell.id.col * cellWidth, 0, cell.id.row * cellWidth });
 					model = translate(model, { 0, halfHeight, 0 });
 					model = move(location, model, halfWidth, cell.id);
-					model = translate(model, c);
-					model = orient(location, model, c);
+					model = orient(location, model);
 					model = rotate(model, glm::half_pi<float>(), { 1, 0, 0 });
-					model = scale(model, { CellWidth, 1, CellWidth });
+					model = scale(model, { cellWidth, 1, cellWidth });
 
 					vec4 p = model * vec4(0, 0, 0, 1);
 
@@ -128,17 +156,13 @@ public:
 		wall->init(color_tex);
 	}
 
-	glm::mat4 orient(Location location, glm::mat4 xform, vec3 c) {
+	glm::mat4 orient(Location location, glm::mat4 xform) {
 		glm::mat4 res = xform;
 		if (location == Location::Left) {
-	//		res = translate(xform, c);
 			res = rotate(res, half_pi<float>(), { 0, 1, 0 });
-		//	res = translate(res, -c);
 		}
 		else if (location == Location::Right) {
-	//		res = translate(res, c);
 			res = rotate(res, -half_pi<float>(), { 0, 1, 0 });
-	//		res = translate(res, -c);
 		}
 		return res;
 	}
@@ -148,7 +172,7 @@ public:
 		float x = 0;
 		switch (location) {
 		case Location::Top:
-			return translate(xform, { 0, 0, w });
+			model = translate(xform, { 0, 0, w });
 			break;
 		case Location::Right:
 			model = translate(xform, {w, 0, 0});
@@ -167,10 +191,82 @@ public:
 		wall->draw(shader);
 	}
 
-	vec3 collidesWith(vec3 pos) {
-		mat4 mat = inverse(scale(mat4(1), { 4, 1, 4 }));
-		vec3 p = vec3(mat * vec4(pos, 1));
-		return p;
+	Collision collidesWith(vec3 pos) {
+		vec2 p{ 0.58, 0.646 };
+		ds::Node<Cell>* node = quadTree.search(p);
+
+		if (node) {
+			Cell& cell = *node->data;
+
+			if (&cell == &maze.grid[0][0]) {
+				logger.info("at cell zero");
+			}
+
+			if (cell.contains(pos)) {
+				auto wallPlanes = wallsOf(cell);
+
+				for (auto wall : wallPlanes) {
+					float depth = dot(wall.n, pos);
+					if (depth < (wall.d + 0.2f)) {
+						auto p = projectToPlane(pos, wall, 0.2f);
+						return { true, p, &cell };	// TODO project point to wall
+					}
+				}
+			}
+		}
+		else {
+			logger.info("outside tree");
+		}
+
+		return { false, vec3(0) };
+	}
+
+	Collision collidesWith(const Player& player) {
+		return collidesWith(player.position());
+	}
+
+	vector<geom::Plane> wallsOf(Cell& cell) {
+		vector<geom::Plane> rtVal;
+		for (auto wall : cell.walls) {
+			auto xform = xformOf(cell, *wall);
+			vec3 p = (xform * vec4(0, 0, 0, 1)).xyz;
+			vec3 n = normalOf(cell.locationOf(*wall));
+			rtVal.push_back(geom::Plane{ n, dot(n, p) });
+		}
+		return rtVal;
+	}
+
+	mat4 xformOf(Cell& cell, Wall& wall) {
+		// TODO get the data from wall xform attribute
+		const float halfWidth = cellWidth * 0.5;
+		const float halfHeight = cellHeight * 0.5;
+
+		glm::mat4 model{ 1 };
+
+		//model = move(wall->location, model, halfWidth);
+		//model = translate(model, { 0, halfHeight, 0 });
+		auto location = cell.locationOf(wall);
+		model = translate(model, { cell.id.col * cellWidth, 0, cell.id.row * cellWidth });
+		model = translate(model, { 0, halfHeight, 0 });
+		model = move(location, model, halfWidth, cell.id);
+		model = orient(location, model);
+		model = rotate(model, glm::half_pi<float>(), { 1, 0, 0 });
+		model = scale(model, { cellWidth, 1, cellWidth });
+
+		return model;
+	}
+
+	vec3 normalOf(Location location) {
+		switch (location) {
+		case Location::Top:
+			return { 0, 0, -1 };
+		case Location::Right:
+			return { -1, 0, 0 };
+		case Location::Bottom:
+			return { 0, 0, 1 };
+		case Location::Left:
+			return { 1, 0, 0 };
+		}
 	}
 
 private:
@@ -181,5 +277,8 @@ private:
 	unique_ptr<Floor> wall;
 	GlmCam cam;
 	const Scene& scene;
+	Maze<rows, cols>& maze;
+	float cellWidth, cellHeight;
 	Logger& logger = Logger::get("maze");
+	ds::quad_tree<Cell> quadTree;
 };

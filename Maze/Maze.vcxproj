@@ -142,10 +142,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Floor.h" />
+    <ClInclude Include="forward_declare.h" />
     <ClInclude Include="MazeMap.h" />
     <ClInclude Include="MazeObj.h" />
     <ClInclude Include="MazeScene.h" />
     <ClInclude Include="maze_generator.h" />
+    <ClInclude Include="player.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Maze.cpp" />

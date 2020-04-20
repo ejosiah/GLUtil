@@ -41,4 +41,9 @@ namespace ncl {
 			return true;
 		}
 	}
+
+	inline glm::vec3 projectToPlane(const glm::vec3& p, const geom::Plane& plane, float offset = 0.0f) {
+		float t = glm::dot(plane.n, p) - (plane.d+offset);
+		return p - t * plane.n;
+	}
 }

@@ -26,6 +26,22 @@ namespace ncl {
 		static const glm::vec3   CAMERA_ACCELERATION(4.0f, 4.0f, 4.0f);
 		static const glm::vec3   CAMERA_VELOCITY(1.0f);
 
+		struct CameraSettings {
+			Mesurements sceneDimentions = {};
+			Camera::Mode mode = Camera::SPECTATOR;
+			float modelHeight = 1;
+			Mesurements floor = { FLOOR_WIDTH , FLOOR_HEIGHT };
+			float fovx = CAMERA_FOVX;
+			float zNear = CAMERA_ZNEAR;
+			float zFar = CAMERA_ZFAR;
+			float maxZoom = CAMERA_ZOOM_MAX;
+			float minZoom = CAMERA_ZOOM_MIN;
+			float flightYawSpeed = CAMERA_SPEED_FLIGHT_YAW;
+			float orbitRollSpeed = CAMERA_SPEED_ORBIT_ROLL;
+			glm::vec3 acceleration = CAMERA_ACCELERATION;
+			glm::vec3 velocty = CAMERA_VELOCITY;
+		};
+
 		class CameraController {
 		private:
 			Camera camera;
@@ -57,6 +73,25 @@ namespace ncl {
 			} bounds;
 
 		public:
+			CameraController(const CameraSettings settings) :
+				CameraController(
+					settings.sceneDimentions,
+					settings.mode,
+					settings.modelHeight,
+					settings.floor,
+					settings.fovx,
+					settings.zNear,
+					settings.zFar,
+					settings.maxZoom,
+					settings.minZoom,
+					settings.flightYawSpeed,
+					settings.orbitRollSpeed,
+					settings.acceleration,
+					settings.velocty
+				) {
+
+			}
+
 			CameraController(
 				Mesurements sceneDimentions = {},
 				Camera::Mode mode = Camera::SPECTATOR,

@@ -9,6 +9,7 @@
 #include "MazeObj.h"
 #include "Floor.h"
 #include "MazeMap.h"
+#include "player.h"
 
 using namespace std;
 using namespace ncl;
@@ -16,7 +17,7 @@ using namespace gl;
 using namespace glm;
 using namespace fsim;
 
-constexpr static int NumCells = 10;
+constexpr static int NumCells = 2;
 constexpr static float CellWidth = 1.0/NumCells;
 constexpr static float HalfCellWidth = CellWidth * 0.5f;
 
@@ -29,14 +30,14 @@ public:
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 		addShader("mazeMap", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("mazeMap", GL_FRAGMENT_SHADER, identity_frag_shader);
-		camInfoOn = false;
+		camInfoOn = true;
 		_fullScreen = false;
-		_modelHeight = 1;
+		_modelHeight = 2.6;
 	}
 
 	void init() override {
 		setBackGroundColor(BLACK);
-		setForeGroundColor(BLACK);
+		setForeGroundColor(WHITE);
 		string root = "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\skybox\\001\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
@@ -44,7 +45,8 @@ public:
 		skybox = unique_ptr<SkyBox>{ SkyBox::create(skyTextures, 7, *this, 50) };
 		createPoints();
 
-		_3dMaze = make_unique<MazeObject<NumCells, NumCells>>(*this);
+		maze.init();
+		_3dMaze = make_unique<MazeObject<NumCells, NumCells>>(*this, maze);
 		_3dMaze->init();
 
 
@@ -72,6 +74,11 @@ public:
 		cube = make_unique<Model>("C:\\Users\\" + username + "\\OneDrive\\media\\models\\one_meter_cube.obj");
 		sphere = make_unique<Sphere>(0.3, 10, 10);
 		sphere->material().diffuse = GREEN;
+		initDefaultCamera();
+		player.camera = &activeCamera();
+		player.currentCell = &maze.grid[0][0];
+
+		player.updatePosition(vec3(player.currentCell->center.x, 0, player.currentCell->center.y));
 	}
 
 	void createPoints() {
@@ -112,17 +119,22 @@ public:
 	}
 
 	void update(float t) override {
-		p = _3dMaze->collidesWith(activeCamera().getPosition());
-		pos->update2<vec3>(VAOObject::Position, [&](vec3* v) { 
-			v->x = p.x;
-			v->y = p.z;
-		});
+		auto collision = _3dMaze->collidesWith(player);
+		if (collision.happened) {
+			//pos->update2<vec3>(VAOObject::Position, [&](vec3* v) {
+			//	v->x = p.x;
+			//	v->y = p.z;
+			//});
+
+			player.updatePosition(collision.point);
+		}
 	}
 
 private:
 	unique_ptr<Floor> floor;
 	unique_ptr<Floor> wall;
 	unique_ptr<ProvidedMesh> pos;
+	Maze<NumCells, NumCells> maze;
 	unique_ptr<MazeObject<NumCells, NumCells>> _3dMaze;
 	unique_ptr<MazeMap<NumCells, NumCells>> mazeMap;
 	unique_ptr<ProvidedMesh> background;
@@ -136,4 +148,5 @@ private:
 		"front.jpg", "back.jpg"
 	};
 	vec3 p;
+	Player player;
 };

@@ -12,6 +12,8 @@
 #include <array>
 #include <functional>
 #include <chrono>
+#include <glm/glm.hpp>
+#include "forward_declare.h"
 
 static std::random_device rnd;
 
@@ -58,12 +60,6 @@ struct Id {
     int row, col;
 };
 
-struct Wall;
-struct Cell;
-
-template<size_t rows, size_t cols>
-struct Maze;
-
 using Picker = std::function<Cell* (std::vector<Cell*>)>;
 using Use = std::function<void(Cell*)>;
 
@@ -72,6 +68,11 @@ struct Cell {
     Id id;
     std::vector<Cell*> neighbours;
     std::list<Wall*> walls;
+    glm::vec2 center;
+    struct {
+        glm::vec2 min;
+        glm::vec2 max;
+    } bounds;
 
     Cell() = default;
 
@@ -104,6 +105,12 @@ struct Cell {
     }
 
     Location locationOf(const Wall& wall) const;
+
+    bool contains(glm::vec3 p) const{
+        glm::vec2 min = bounds.min;
+        glm::vec2 max = bounds.max;
+        return  (p.x <= max.x&& p.z <= max.y) && (p.x >= min.x && p.z >= min.y);
+    }
 };
 
 inline bool operator<(const Cell& a, const Cell& b) {

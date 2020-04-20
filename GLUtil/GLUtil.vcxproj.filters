@@ -342,6 +342,15 @@
     <ClInclude Include="include\ncl\util\profile.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\SceneObject.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\gl.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\data_structure\quad_tree.h">
+      <Filter>Header Files\data_structure</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
