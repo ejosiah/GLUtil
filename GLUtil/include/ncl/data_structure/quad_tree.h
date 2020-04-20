@@ -5,9 +5,11 @@
 namespace ncl {
 	namespace ds {
 
+		using Point = glm::vec2;
+
 		template<typename Data>
 		struct Node {
-			glm::vec2 pos;
+			Point pos;
 			Data* data;
 
             Node() = default;
@@ -19,21 +21,22 @@ namespace ncl {
 
 		template<typename Data>
 		class quad_tree {
-			glm::vec2 topLeft;
-			glm::vec2 botRight;
+			Point min;
+			Point max;
 
 			using Quad = quad_tree<Data>;
-            using Point = glm::vec2;
-
-            Quad* topLeftTree = nullptr;
-            Quad* topRightTree = nullptr;
-            Quad* botLeftTree = nullptr;
-            Quad* botRightTree = nullptr;
+           
+			Quad* topLeftTree = nullptr;
+			Quad* topRightTree = nullptr;
+			Quad* botLeftTree = nullptr;
+			Quad* botRightTree = nullptr;
 
 			Node<Data>* n;
+			float unit;
 
 		public:
-            quad_tree(Point topLeft = { 0, 0 }, Point botRight = { 0, 0 }) :topLeft{ topLeft }, botRight{ botRight } {
+            quad_tree(Point min = { 0, 0 }, Point max = { 0, 0 }, float unit = 1.f) 
+				:min{ min }, max{ max }, unit{ unit } {
                 topLeftTree = nullptr;
                 topRightTree = nullptr;
                 botLeftTree = nullptr;
@@ -58,24 +61,24 @@ namespace ncl {
 
             // We are at a quad of unit area 
             // We cannot subdivide this quad further 
-            if (abs(topLeft.x - botRight.x) <= 1 &&
-                abs(topLeft.y - botRight.y) <= 1)
+            if (abs(min.x - max.x) <= unit &&
+                abs(min.y - max.y) <= unit)
             {
                 if (n == nullptr)
                     n = node;
                 return;
             }
 
-            if ((topLeft.x + botRight.x) / 2 >= node->pos.x)
+            if ((min.x + max.x) / 2 >= node->pos.x)
             {
                 // Indicates topLeftTree 
-                if ((topLeft.y + botRight.y) / 2 >= node->pos.y)
+                if ((min.y + max.y) / 2 >= node->pos.y)
                 {
                     if (topLeftTree == nullptr)
                         topLeftTree = new Quad(
-                            Point(topLeft.x, topLeft.y),
-                            Point((topLeft.x + botRight.x) / 2,
-                                (topLeft.y + botRight.y) / 2));
+                            Point(min.x, min.y),
+                            Point((min.x + max.x) / 2,
+                                (min.y + max.y) / 2), unit);
                     topLeftTree->insert(node);
                 }
 
@@ -84,24 +87,24 @@ namespace ncl {
                 {
                     if (botLeftTree == nullptr)
                         botLeftTree = new Quad(
-                            Point(topLeft.x,
-                                (topLeft.y + botRight.y) / 2),
-                            Point((topLeft.x + botRight.x) / 2,
-                                botRight.y));
+                            Point(min.x,
+                                (min.y + max.y) / 2),
+                            Point((min.x + max.x) / 2,
+                                max.y), unit);
                     botLeftTree->insert(node);
                 }
             }
             else
             {
                 // Indicates topRightTree 
-                if ((topLeft.y + botRight.y) / 2 >= node->pos.y)
+                if ((min.y + max.y) / 2 >= node->pos.y)
                 {
                     if (topRightTree == nullptr)
                         topRightTree = new Quad(
-                            Point((topLeft.x + botRight.x) / 2,
-                                topLeft.y),
-                            Point(botRight.x,
-                                (topLeft.y + botRight.y) / 2));
+                            Point((min.x + max.x) / 2,
+                                min.y),
+                            Point(max.x,
+                                (min.y + max.y) / 2), unit);
                     topRightTree->insert(node);
                 }
 
@@ -110,9 +113,9 @@ namespace ncl {
                 {
                     if (botRightTree == nullptr)
                         botRightTree = new Quad(
-                            Point((topLeft.x + botRight.x) / 2,
-                                (topLeft.y + botRight.y) / 2),
-                            Point(botRight.x, botRight.y));
+                            Point((min.x + max.x) / 2,
+                                (min.y + max.y) / 2),
+                            Point(max.x, max.y), unit);
                     botRightTree->insert(node);
                 }
             }
@@ -130,10 +133,10 @@ namespace ncl {
             if (n != nullptr)
                 return n;
 
-            if ((topLeft.x + botRight.x) / 2 >= p.x)
+            if ((min.x + max.x) / 2 >= p.x)
             {
                 // Indicates topLeftTree 
-                if ((topLeft.y + botRight.y) / 2 >= p.y)
+                if ((min.y + max.y) / 2 >= p.y)
                 {
                     if (topLeftTree == nullptr)
                         return nullptr;
@@ -151,7 +154,7 @@ namespace ncl {
             else
             {
                 // Indicates topRightTree 
-                if ((topLeft.y + botRight.y) / 2 >= p.y)
+                if ((min.y + max.y) / 2 >= p.y)
                 {
                     if (topRightTree == nullptr)
                         return nullptr;
@@ -170,10 +173,10 @@ namespace ncl {
 
 		template<typename Data>
 		bool quad_tree<Data>::inBoundary(Point p) {
-            return (p.x >= topLeft.x &&
-                p.x <= botRight.x &&
-                p.y >= topLeft.y &&
-                p.y <= botRight.y);
+            return (p.x >= min.x &&
+                p.x <= max.x &&
+                p.y >= min.y &&
+                p.y <= max.y);
 		}
 
 	}

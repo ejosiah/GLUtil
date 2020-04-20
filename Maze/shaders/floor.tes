@@ -37,11 +37,14 @@ void main(){
 			 p3 * v * i_u +
 			 p2 * u * v;
 
-	p = v_in[0].xform * p;
 
-	vec3 t = vec3(1, 0, 0);
-	vec3 n = vec3(0, 1, 0);
-	vec3 bi = vec3(0, 0, 1);
+	mat4 xform = v_in[0].xform;
+	p = xform * p;
+
+	mat3 nform = inverse(transpose(mat3(xform)));
+	vec3 t =  normalize(nform * vec3(1, 0, 0));
+	vec3 n = normalize(nform * vec3(0, 1, 0));
+	vec3 bi = normalize(nform * vec3(0, 0, 1));
 	applyLight(MV, V, p.xyz, n, t, bi);
 	
 	vertex_out.texCoord = vec2(u * s, v * s);

@@ -39,24 +39,23 @@ public:
 	}
 
 	void init() {
-		createMap();
-	}
-
-	void createMap() {
-	//	auto duration = profile([&]() { generator.generate(maze);  });
-
-//		logger.info("maze generated in " + print(duration));
-
-		//auto bottomLeft = maze.cellAt({ 0, 0 });
-		//delete bottomLeft->wallAt(Location::Bottom);
-
-		//auto topRight = maze.cellAt({ rows - 1, cols - 1 });
-		//delete topRight->wallAt(Location::Right);
+		auto duration = profile([&]() { generator.generate(maze);  });
+		logger.info("maze generated in " + print(duration));
+		setMazeExits();
+		buildMazeCoordinates();
 		buildQuadTree();
 		build3dMaze(maze);
 	}
 
-	void buildQuadTree() {
+	void setMazeExits() {
+		auto bottomLeft = maze.cellAt({ 0, 0 });
+		delete bottomLeft->wallAt(Location::Bottom);
+
+		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
+		delete topRight->wallAt(Location::Right);
+	}
+
+	void buildMazeCoordinates() {
 		maze.foreach([&](Cell* cell) {
 			vec2 c = vec2{ cell->id.col * cellWidth, cell->id.row * cellWidth };
 			auto dl = cellWidth / 2;
@@ -65,11 +64,13 @@ public:
 			cell->center = c;
 
 		});
+	}
 
+	void buildQuadTree() {
 		auto min = maze.cellAt({ 0, 0 })->bounds.min;
 		auto max = maze.cellAt({ rows - 1, cols - 1 })->bounds.max;
 
-		quadTree = ds::quad_tree<Cell>{ min, max };
+		quadTree = ds::quad_tree<Cell>{ min, max, cellWidth };
 
 		maze.foreach([&](Cell* cell) {
 			quadTree.insert(new ds::Node<Cell>{ cell->center, cell });
@@ -164,6 +165,9 @@ public:
 		else if (location == Location::Right) {
 			res = rotate(res, -half_pi<float>(), { 0, 1, 0 });
 		}
+		else if (location == Location::Top) {
+			res = rotate(res, pi<float>(), { 1, 0, 0 });
+		}
 		return res;
 	}
 
@@ -192,15 +196,10 @@ public:
 	}
 
 	Collision collidesWith(vec3 pos) {
-		vec2 p{ 0.58, 0.646 };
-		ds::Node<Cell>* node = quadTree.search(p);
+		ds::Node<Cell>* node = quadTree.search(pos.xz);
 
 		if (node) {
 			Cell& cell = *node->data;
-
-			if (&cell == &maze.grid[0][0]) {
-				logger.info("at cell zero");
-			}
 
 			if (cell.contains(pos)) {
 				auto wallPlanes = wallsOf(cell);

@@ -17,7 +17,7 @@ using namespace gl;
 using namespace glm;
 using namespace fsim;
 
-constexpr static int NumCells = 2;
+constexpr static int NumCells = 10;
 constexpr static float CellWidth = 1.0/NumCells;
 constexpr static float HalfCellWidth = CellWidth * 0.5f;
 
@@ -31,7 +31,7 @@ public:
 		addShader("mazeMap", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("mazeMap", GL_FRAGMENT_SHADER, identity_frag_shader);
 		camInfoOn = true;
-		_fullScreen = false;
+		_fullScreen = true;
 		_modelHeight = 2.6;
 	}
 
@@ -65,8 +65,6 @@ public:
 		model = scale(mat4(1), vec3(1000));
 		floor = make_unique<Floor>(100, *this, model);
 		floor->init();
-
-		light[0].on = true;
 		
 		lightModel.useObjectSpace = false;
 		lightModel.localViewer = true;
@@ -79,6 +77,10 @@ public:
 		player.currentCell = &maze.grid[0][0];
 
 		player.updatePosition(vec3(player.currentCell->center.x, 0, player.currentCell->center.y));
+
+		light[0].on = true;
+		light[0].position = { 0, 1, 0, 1 };
+		
 	}
 
 	void createPoints() {
@@ -94,8 +96,7 @@ public:
 		skybox->render();
 		shader("floor")([&](Shader& s) {
 		//	glViewportIndexedf(1, 0, 0, _width, _height);
-			light[0].position = vec4(activeCamera().getPosition(), 1);
-			auto p = activeCamera().getViewMatrix() * light[0].position;
+			send("flipNormal", false);
 			send(light[0]);
 			send(lightModel);
 			send(activeCamera());
