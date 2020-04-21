@@ -153,11 +153,11 @@
     <ClCompile Include="Maze.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="mazeMap.geom" />
     <None Include="shaders\floor.frag" />
     <None Include="shaders\floor.geom" />
     <None Include="shaders\floor.tes" />
     <None Include="shaders\floor.vert" />
+    <None Include="shaders\mazeMap.geom" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

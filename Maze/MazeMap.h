@@ -20,28 +20,27 @@ using namespace std;
 template<size_t rows, size_t cols>
 class MazeMap : public Drawable {
 public:
-	MazeMap(const Scene& scene) :scene{ scene } {
+	MazeMap(const Scene& scene, Maze<rows, cols>& maze, float cellWidth) 
+		:scene{ scene }
+		, maze{ maze }
+		, cellWidth{ cellWidth }{
 	}
 
 	void init() {
-		createMap();
-	}
-
-	void createMap() {
-		Maze<rows, cols> maze;
-		maze.init();
-	//	auto duration = profile([&]() { generator.generate(maze);  });
-
-		//		logger.info("maze generated in " + print(duration));
-
-		auto bottomLeft = maze.cellAt({ 0, 0 });
-		delete bottomLeft->wallAt(Location::Bottom);
-
-		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
-		delete topRight->wallAt(Location::Right);
-
 		buildMap(maze);
 		buildBackground();
+		build3dTo2dMatrix();
+	}
+
+	void build3dTo2dMatrix() {
+		float dx = cellWidth * 0.5f;
+		mat4 _3dxform = translate(mat4{ 1 }, { -dx, 0, -dx });
+		_3dxform = scale(_3dxform, { cellWidth * cols, 1, cellWidth * cols });	// TODO move to MazeObj
+
+		dx = (1.0 / cols) * 0.5f;
+		_2dXform = translate(mat4{ 1 }, { -dx, 0, -dx });
+
+		_2dXform = _2dXform * inverse(_3dxform);
 	}
 
 	void buildBackground() {
@@ -64,6 +63,9 @@ public:
 		const float CellHeight = 1.0 / rows;
 		const float halfWidth = CellWidth * 0.5;
 		const float halfHeight = CellHeight * 0.5;
+
+		//vec3 min = vec3{ numeric_limits<float>::max()};
+		//vec3 max = vec3{ numeric_limits<float>::min()};
 
 		auto walls = maze.walls();
 		for (auto wall : walls) {
@@ -93,6 +95,11 @@ public:
 			mesh.colors.push_back(WHITE);
 			mesh.colors.push_back(WHITE);
 
+			//min = glm::min(min, p0);
+			//min = glm::min(min, p1);
+			//max = glm::max(max, p0);
+			//max = glm::max(max, p1);
+
 		}
 
 		mesh.primitiveType = GL_LINES;
@@ -100,9 +107,14 @@ public:
 	}
 
 
+	vec2 to2dPoint(vec3 p) {
+		vec2 res = (_2dXform * vec4(p, 1)).xz;
+		return res;
+	}
+
 	void draw(Shader& shader) override {
 		map->draw(shader);
-		background->draw(shader);
+	//	background->draw(shader);
 	}
 
 private:
@@ -112,5 +124,8 @@ private:
 	std::unique_ptr<ProvidedMesh> map;
 	unique_ptr<ProvidedMesh> background;
 	const Scene& scene;
+	Maze<rows, cols>& maze;
+	float cellWidth;
+	mat4 _2dXform;
 	Logger& logger = Logger::get("maze");
 };

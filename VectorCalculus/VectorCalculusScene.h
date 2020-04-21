@@ -82,6 +82,7 @@ public:
 		creatLaplacianMap();
 		createImageCanvas();
 		lightModel.colorMaterial = true;
+		initDefaultCamera();
 		activeCamera().setMode(Camera::Mode::FLIGHT);
 		
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

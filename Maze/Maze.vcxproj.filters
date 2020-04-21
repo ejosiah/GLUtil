@@ -52,10 +52,10 @@
     <None Include="shaders\floor.frag">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="mazeMap.geom">
+    <None Include="shaders\floor.geom">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\floor.geom">
+    <None Include="shaders\mazeMap.geom">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

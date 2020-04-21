@@ -8,35 +8,14 @@ layout(triangle_strip, max_vertices = 3) out;
 
 #pragma include("constants.glsl")
 #pragma include("lightModel.glsl")
-in VERTEX{
-	smooth vec3 position;
-	smooth vec3 normal;
-	smooth vec3 tangent;
-    smooth vec3 bitangent;
-	smooth vec2 texCoord;
-	smooth vec4 color;
-	smooth vec3 eyes;
-	smooth vec4 lightDirection[MAX_LIGHT_SOURCES];
-	smooth vec3 spotDirection[MAX_LIGHT_SOURCES];
-} vertex_in[3];
-
-out VERTEX {
-	smooth vec3 position;
-	smooth vec3 normal;
-	smooth vec3 tangent;
-    smooth vec3 bitangent;
-	smooth vec2 texCoord;
-	smooth vec4 color;
-	smooth vec3 eyes;
-	smooth vec4 lightDirection[MAX_LIGHT_SOURCES];
-	smooth vec3 spotDirection[MAX_LIGHT_SOURCES];
-} vertex_out;
+#pragma include("vertex_in_array.glsl")
+#pragma include("vertex_out.glsl")
 
 uniform int id;
 
 void main(){
 	for(int i = 0; i < gl_in.length(); i++){
-		gl_ViewportIndex = 1;
+		gl_ViewportIndex = id;
 		gl_Position = gl_in[i].gl_Position;
 		vertex_out.position = vertex_in[i].position;
 		vertex_out.normal = vertex_in[i].normal;

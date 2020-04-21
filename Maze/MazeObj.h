@@ -22,7 +22,6 @@ using namespace std;
 struct Collision {
 	bool happened;
 	vec3 point;
-	Cell* cell;
 };
 
 
@@ -71,7 +70,6 @@ public:
 		auto max = maze.cellAt({ rows - 1, cols - 1 })->bounds.max;
 
 		quadTree = ds::quad_tree<Cell>{ min, max, cellWidth };
-
 		maze.foreach([&](Cell* cell) {
 			quadTree.insert(new ds::Node<Cell>{ cell->center, cell });
 		});
@@ -120,7 +118,6 @@ public:
 				std::list<Wall*> walls = cell.walls;
 
 				for (Wall* wall : walls) {
-					auto flag = processed.find(wall) != processed.end();
 					if (processed.find(wall) != processed.end()) continue;
 					auto location = cell.locationOf(*wall);
 					
@@ -137,7 +134,6 @@ public:
 					model = scale(model, { cellWidth, 1, cellWidth });
 
 					vec4 p = model * vec4(0, 0, 0, 1);
-
 					//stringstream ss;
 					//if (wall->location == Location::Top || wall->location == Location::Bottom) {
 					//	ss << "cell[" << cell.id.col << ", " << cell.id.row << "], wall: " << toString(wall->location);
@@ -202,22 +198,34 @@ public:
 			Cell& cell = *node->data;
 
 			if (cell.contains(pos)) {
-				auto wallPlanes = wallsOf(cell);
-
-				for (auto wall : wallPlanes) {
-					float depth = dot(wall.n, pos);
-					if (depth < (wall.d + 0.2f)) {
-						auto p = projectToPlane(pos, wall, 0.2f);
-						return { true, p, &cell };	// TODO project point to wall
-					}
+				auto walls = cell.walls;
+				for (auto wall : walls) {
+					auto collision = test(*wall, cell, pos);
+					if (collision.happened) return collision;
 				}
 			}
 		}
 		else {
-			logger.info("outside tree");
+
+			ss.str("");
+			ss.clear();
+			ss << "position: " << pos << ", outside maze";
+			logger.info(ss.str());
 		}
 
 		return { false, vec3(0) };
+	}
+
+	Collision test(Wall& wall, Cell& cell, vec3 pos) {
+		auto plane = planeOf(wall, cell);
+		float t = dot(plane.n, pos);
+		if (t < (plane.d + 0.2f)) {
+			auto p = projectToPlane(pos, plane, 0.2f);
+			return { true, p };
+		}
+		else {
+			return { false, vec3(0) };
+		}
 	}
 
 	Collision collidesWith(const Player& player) {
@@ -233,6 +241,13 @@ public:
 			rtVal.push_back(geom::Plane{ n, dot(n, p) });
 		}
 		return rtVal;
+	}
+
+	geom::Plane planeOf(Wall& wall, Cell& cell) {
+		auto xform = xformOf(cell, wall);
+		vec3 p = (xform * vec4(0, 0, 0, 1)).xyz;
+		vec3 n = normalOf(cell.locationOf(wall));
+		return { n, dot(n, p) };
 	}
 
 	mat4 xformOf(Cell& cell, Wall& wall) {
@@ -268,6 +283,10 @@ public:
 		}
 	}
 
+	float getCellWidth() {
+		return cellWidth;
+	}
+
 private:
 	RecursiveBackTrackingMazeGenerator generator;
 //	RandomizedKrushkalMazeGenerate generator;
@@ -280,4 +299,5 @@ private:
 	float cellWidth, cellHeight;
 	Logger& logger = Logger::get("maze");
 	ds::quad_tree<Cell> quadTree;
+	stringstream ss;
 };

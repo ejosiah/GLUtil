@@ -2,14 +2,9 @@
 #pragma degub(on)
 #pragma optimize(off)
 
-layout(triangles) in;
+layout(lines) in;
 
-layout(triangle_strip, max_vertices = 3) out;
-
-uniform mat4 M;
-uniform mat4 V;
-uniform mat4 P;
-uniform mat4 MVP;
+layout(line_strip, max_vertices = 2) out;
 
 uniform int id;
 
@@ -30,10 +25,12 @@ out VERTEX {
 
 void main(){
 	for(int i = 0; i < gl_in.length(); i++){
-		gl_ViewportIndex = 0;
+		gl_ViewportIndex = id;
 		gl_Position = gl_in[i].gl_Position;
 		vertex_out.position = vertex_in[i].position;
 		vertex_out.color = vertex_in[i].color;
+		vertex_out.texCoord = vertex_in[i].texCoord;
+		vertex_out.normal = vertex_in[i].normal;
 		EmitVertex();
 	}
 	EndPrimitive();
