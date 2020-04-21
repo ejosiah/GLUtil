@@ -531,6 +531,9 @@
     <None Include="shaders\skybox.geom">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\viewport.point.glsl">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

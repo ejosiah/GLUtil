@@ -319,6 +319,7 @@
     <None Include="shaders\texture.frag" />
     <None Include="shaders\ui.frag" />
     <None Include="shaders\ui.vert" />
+    <None Include="shaders\viewport.point.glsl" />
     <None Include="shaders\wireframe.geom" />
   </ItemGroup>
   <ItemGroup>
