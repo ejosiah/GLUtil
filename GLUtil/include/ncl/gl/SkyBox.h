@@ -61,6 +61,7 @@ namespace ncl {
 				glDepthFunc(GL_LEQUAL);
 				glm::mat4 MVP = camera.getProjectionMatrix() * glm::mat4(glm::mat3(camera.getViewMatrix()));
 				glBindTextureUnit(unit, buffer);
+				Shader::boundShader->sendUniform1i("id", 0);
 				s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, value_ptr(MVP));
 				cube->draw(s);
 				glDepthFunc(GL_LESS);

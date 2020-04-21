@@ -310,6 +310,7 @@
     <None Include="shaders\quad.vert" />
     <None Include="shaders\simple_light.frag" />
     <None Include="shaders\skybox.frag" />
+    <None Include="shaders\skybox.geom" />
     <None Include="shaders\skybox.vert" />
     <None Include="shaders\teapot.frag" />
     <None Include="shaders\teapot.tcs" />

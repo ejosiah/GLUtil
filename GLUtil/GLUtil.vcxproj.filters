@@ -528,6 +528,9 @@
     <None Include="include\ncl\sampling\Sampler.inl">
       <Filter>Header Files\sampling</Filter>
     </None>
+    <None Include="shaders\skybox.geom">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">
