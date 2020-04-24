@@ -49,6 +49,12 @@
     <Filter Include="Header Files\sampling">
       <UniqueIdentifier>{469d5029-82cd-47d6-a053-c0b55ecb2e5e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{e6891054-6a00-4e0b-8de8-f0fa311acd54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core\detail">
+      <UniqueIdentifier>{49543a69-0ffb-4340-b648-9f87a7f63fd0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -351,6 +357,18 @@
     <ClInclude Include="include\ncl\data_structure\quad_tree.h">
       <Filter>Header Files\data_structure</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\util\SphericalCoord.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\gl_enums.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\FrameBuffer.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\StorageBufferObj.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -533,6 +551,9 @@
     </None>
     <None Include="shaders\viewport.point.glsl">
       <Filter>shaders</Filter>
+    </None>
+    <None Include="include\ncl\gl\detail\FrameBuffer.inl">
+      <Filter>Header Files\core\detail</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,7 @@
 #include <string>
 #include "gl_commands.h"
 #include <glm/vec2.hpp>
+#include <variant>
 #include <functional>
 #include <algorithm>
 #include "Image.h"
@@ -32,7 +33,30 @@ namespace ncl {
 
 		class Texture2D {
 		public:
-			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST })
+			struct Data {
+				void* contents;
+				GLsizei width;
+				GLsizei height;
+			};
+
+			using PathOrData = std::variant<std::string, Data>;
+
+			struct Config {
+				PathOrData data;
+				GLsizei width;
+				GLsizei height;
+				std::string name = "";
+				GLuint id = 0;
+				GLuint internalFmt = GL_RGBA8;
+				GLuint format = GL_RGBA;
+				GLenum wrapS = GL_REPEAT;
+				GLenum wrapT = GL_REPEAT;
+				GLenum minFilter = GL_NEAREST;
+				GLenum magFilter = GL_NEAREST;
+			};
+
+
+			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST })
 				: _id(id) {
 				Image img(path);
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, img.width(), img.height(), 0, format, GL_UNSIGNED_BYTE, img.data()); };
@@ -51,12 +75,31 @@ namespace ncl {
 				_name = name;
 			}
 
-			Texture2D(GLuint width, GLuint height, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA) {
+			Texture2D(Config c) :config{ c } {
 
+			}
+
+			Texture2D(Texture2D&& source) noexcept {
+				swap(source, *this);
 			}
 
 			virtual ~Texture2D() {
 				glDeleteTextures(1, &buffer);
+			}
+
+			Texture2D& operator=(Texture2D&& source) noexcept {
+				swap(source, *this);
+				return *this;
+			}
+
+			inline void swap(Texture2D& source, Texture2D& dest) {
+				dest._id = source._id;
+				dest.buffer = source.buffer;
+				dest._width = source._width;
+				dest._height = source._height;
+				dest._name = source._name;
+
+				source.buffer = 0;
 			}
 
 			GLuint id() { return _id; }
@@ -83,6 +126,7 @@ namespace ncl {
 			GLuint _width;
 			GLuint _height;
 			std::string _name;
+			Config config;
 
 
 		};
@@ -205,6 +249,8 @@ namespace ncl {
 				: Texture2D(generate(colorA, colorB).get(), 256, 256, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 			}
 
+			CheckerTexture(CheckerTexture&& source) :Texture2D(static_cast<Texture2D&&>(source)) {}
+
 			static std::unique_ptr<GLubyte[]> generate(const glm::vec4& a, const glm::vec4& b) {
 				// TODO cache texture
 				GLubyte* data = new GLubyte[256 * 256 * 4];
@@ -220,6 +266,11 @@ namespace ncl {
 					}
 				}
 				return std::unique_ptr<GLubyte[]>{data};
+			}
+
+			CheckerTexture& operator=(CheckerTexture&& source) {
+				Texture2D::operator=(static_cast<Texture2D&&>(source));
+				return *this;
 			}
 
 		};

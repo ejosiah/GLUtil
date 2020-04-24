@@ -25,6 +25,7 @@
 #include "Resolution.h"
 #include "UserCameraController.h"
 #include <filesystem>
+#include "FrameBuffer.h"
 
 
 namespace ncl {
@@ -85,6 +86,7 @@ namespace ncl {
 				}
 				addShader("flat", GL_VERTEX_SHADER, identity_vert_shader);
 				addShader("flat", GL_FRAGMENT_SHADER, identity_frag_shader);
+			//	addShader("flat", GL_GEOMETRY_SHADER, viewport_point_glsl_shader);
 				addShader("old_default", GL_VERTEX_SHADER, per_fragment_lighing_vert_shader);
 				addShader("old_default", GL_FRAGMENT_SHADER, per_fragment_lighing_frag_shader);
 			}

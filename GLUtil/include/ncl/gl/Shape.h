@@ -338,8 +338,8 @@ namespace ncl {
 				return v / 3;
 			}
 
-			Material& material() {
-				return materials[0];
+			Material& material(int index = 0) {
+				return materials[index];
 			}
 
 			void changePrimitiveType(GLenum newType) {

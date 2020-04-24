@@ -2,6 +2,7 @@
 
 #include "Shader.h"
 #include "textures.h"
+#include "StorageBufferObj.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <initializer_list>
@@ -51,11 +52,18 @@ namespace ncl {
 		}
 
 
+
+
 		inline void send(const std::string& name, GLfloat* value) {
 			ensureShaderbound();
 			Shader::boundShader->sendUniform1fv(name, 1, value);
 		}
 
+		inline void sendArray(const std::string& name, GLfloat* arr, GLsizei size) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1fv(name, size, arr);
+		}
+		
 		inline void send(const std::string& name, GLsizei count, GLfloat* value) {
 			ensureShaderbound();
 			Shader::boundShader->sendUniform1fv(name, count, value);
@@ -253,6 +261,11 @@ namespace ncl {
 			for (auto* drawable : drawables) {
 				shade(drawable);
 			}
+		}
+
+		template<typename T>
+		inline void  send(const StorageBufferObj<T>& obj) {
+			obj.sendToGPU();
 		}
 
 	}

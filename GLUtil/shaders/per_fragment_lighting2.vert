@@ -1,7 +1,7 @@
 #version 450 core
 #pragma debug(on)
 #pragma optimize(off)
-
+#pragma storeIntermediate(on)
 #pragma include("lighting.vert.glsl")
 
 layout(location=0) in vec3 position;

@@ -180,9 +180,11 @@
     <ClInclude Include="include\ncl\gl\CopyBuffer.h" />
     <ClInclude Include="include\ncl\gl\CrossHair.h" />
     <ClInclude Include="include\ncl\gl\DoubleBufferedObj.h" />
+    <ClInclude Include="include\ncl\gl\FrameBuffer.h" />
     <ClInclude Include="include\ncl\gl\geometry.h" />
     <ClInclude Include="include\ncl\gl\gl.h" />
     <ClInclude Include="include\ncl\gl\gl_commands.h" />
+    <ClInclude Include="include\ncl\gl\gl_enums.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\MeshLoader.h" />
     <ClInclude Include="include\ncl\gl\MeshNormalizer.h" />
@@ -196,6 +198,7 @@
     <ClInclude Include="include\ncl\gl\shader_binding.h" />
     <ClInclude Include="include\ncl\gl\SkyBox.h" />
     <ClInclude Include="include\ncl\gl\spectrum.h" />
+    <ClInclude Include="include\ncl\gl\StorageBufferObj.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
     <ClInclude Include="include\ncl\gl\Cylinder.h" />
@@ -221,6 +224,7 @@
     <ClInclude Include="include\ncl\ui\ui.h" />
     <ClInclude Include="include\ncl\units\units.h" />
     <ClInclude Include="include\ncl\util\profile.h" />
+    <ClInclude Include="include\ncl\util\SphericalCoord.h" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />
@@ -264,6 +268,7 @@
   <ItemGroup>
     <None Include="build.gradle" />
     <None Include="include\ncl\gl\camera.inl" />
+    <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
     <None Include="include\ncl\sampling\Sampler.inl" />
     <None Include="include\shaders\aabb.glsl" />
