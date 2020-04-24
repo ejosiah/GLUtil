@@ -11,20 +11,26 @@
 namespace ncl {
 	namespace gl {
 
-		static inline Texture2D* defaultText() {
-			return new CheckerTexture(1, "diffuse", WHITE, GRAY);
-		}
-
 		class Floor : public Drawable {
 		public:
-			Floor(int grids, const Scene& scene, glm::mat4 model = glm::mat4(1)) 
-				:Floor(grids, scene, std::vector<glm::mat4>{ model }) {}
+			Floor(int grids, const Scene& scene, glm::mat4 model = glm::mat4(1), Texture2D* tex = nullptr, float uv = 1) 
+				:Floor(grids, scene, std::vector<glm::mat4>{ model }) {
+			
+				if (tex) {
+					textures.push_back(tex);
+				}
+				else {
+					textures.push_back(new CheckerTexture(1, "diffuse", WHITE, GRAY));
+				}
+				uvScale = uv;
+			}
 
-			Floor(int grids, const Scene& scene, std::vector<glm::mat4> models)
-				:grids{ grids }, scene{ scene }, models{ models }{}
+			Floor(int grids, const Scene& scene, std::vector<glm::mat4> models, std::vector<Texture2D*> textures = {}, float uv = 1)
+				:grids{ grids }, scene{ scene }, models{ models }, uvScale{ uv }{
+				this->textures = std::move(textures);
+			}
 
-			void init(Texture2D* text = defaultText()) {
-				texture = std::unique_ptr<Texture2D>{ text };
+			void init() {
 				float inner[2]{ grids, grids };
 				float outer[4]{ grids, grids, grids, grids };
 				glPatchParameteri(GL_PATCH_VERTICES, 4);
@@ -50,17 +56,22 @@ namespace ncl {
 			}
 			
 			virtual void draw(Shader& shader) override {
-				send("s", 100.0f);
-				send(texture.get());
+				send("s", uvScale);
+				for (auto tex : textures) send(tex);
 				shade(plane.get());
 			}
 
+			Material& material() {
+				return plane->material();
+			}
+
 		private:
-			std::unique_ptr<Texture2D> texture;
 			std::unique_ptr<ProvidedMesh> plane;
 			int grids;
 			const Scene& scene;
+			std::vector<Texture2D*> textures;
 			std::vector<glm::mat4> models;
+			float uvScale;
 		};
 	};
 }

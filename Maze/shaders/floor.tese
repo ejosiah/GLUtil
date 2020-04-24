@@ -6,6 +6,10 @@ layout(quads, fractional_even_spacing, ccw) in;
 
 #pragma include("lighting.vert.glsl")
 
+layout(binding = 4) uniform sampler2D displacementMap;
+
+uniform bool displace = false;
+
 uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
@@ -27,6 +31,8 @@ void main(){
 	float i_u = 1 - u;
 	float i_v = 1 - v;
 
+	vec2 uv = vec2(u * s, v * s);
+
 	vec4 p0 = gl_in[0].gl_Position;
 	vec4 p1 = gl_in[1].gl_Position;
 	vec4 p2 = gl_in[2].gl_Position;
@@ -36,7 +42,6 @@ void main(){
 			 p1 * u * i_v + 
 			 p3 * v * i_u +
 			 p2 * u * v;
-
 
 	mat4 xform = v_in[0].xform;
 	p = xform * p;

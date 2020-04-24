@@ -7,6 +7,7 @@
 #include "../GLUtil/include/ncl/gl/mesh.h"
 #include "../GLUtil/include/ncl/util/profile.h"
 #include "../GLUtil/include/ncl/geom/Plane.h"
+#include "../GLUtil/include/ncl/gl/shader_binding.h"
 #include "maze_generator.h"
 #include "Floor.h"
 #include <chrono>
@@ -47,8 +48,8 @@ public:
 	}
 
 	void setMazeExits() {
-		auto bottomLeft = maze.cellAt({ 0, 0 });
-		delete bottomLeft->wallAt(Location::Bottom);
+		//auto bottomLeft = maze.cellAt({ 0, 0 });
+		//delete bottomLeft->wallAt(Location::Bottom);
 
 		auto topRight = maze.cellAt({ rows - 1, cols - 1 });
 		delete topRight->wallAt(Location::Right);
@@ -148,9 +149,69 @@ public:
 			}
 		}
 
-		color_tex = new CheckerTexture(1, "diffuse", RED, RED);
-		wall = make_unique<Floor>(4, scene, models);
-		wall->init(color_tex);
+		auto textures = buildTextures();
+		auto floor = new Floor(20, scene, models, textures);
+		wall = std::unique_ptr<Floor>(floor);
+		wall->init();
+		wall->material().specularMat = 2;
+		wall->material().shininess = 2.0;
+	}
+
+	vector<Texture2D*> buildTextures() {
+		/*
+			layout(binding = 0) uniform sampler2D ambientMap;
+			layout(binding = 1) uniform sampler2D diffuseMap;
+			layout(binding = 2) uniform sampler2D specularMap;
+			layout(binding = 3) uniform sampler2D normalMap;
+			layout(binding = 4) uniform sampler2D displacementMap;
+			layout(binding = 5) uniform sampler2D reflectionMap;
+			layout(binding = 6) uniform sampler2D ambiantOcclusionMap;
+		*/
+		vector<Texture2D*> textures;
+		// Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST })
+/*		textures.push_back(new Texture2D("textures\\bricks\\Bricks01_COL_VAR2_1K.jpg", 1, "diffuseMap"));
+		textures.push_back(new Texture2D("textures\\bricks\\Bricks01_GLOSS_1K.jpg", 2, "specularMap"));
+		textures.push_back(new Texture2D("textures\\bricks\\Bricks01_NRM_1K.jpg", 3, "normalMap"));
+		textures.push_back(new Texture2D("textures\\bricks\\Bricks01_DISP_1K.jpg", 4, "displacementMap"));*/		
+		textures.push_back(new Texture2D("textures\\bricks0\\bricks2.jpg", 1, "diffuseMap"));
+	//	textures.push_back(new Texture2D("textures\\bricks0\\Bricks01_GLOSS_1K.jpg", 2, "specularMap"));
+		textures.push_back(new Texture2D("textures\\bricks0\\bricks2_normal.jpg", 3, "normalMap"));
+		textures.push_back(new Texture2D("textures\\bricks0\\bricks2_disp_inv.jpg", 4, "displacementMap"));
+		//logImage();
+		return textures;
+
+	}
+
+	void logImage() {
+		/*
+							glm::vec4 color;
+				for (int i = 0; i<256; i++) {
+					for (int j = 0; j < 256; j++) {
+						int idx = (i * 256 + j) * 4;
+						color = (((i / 8) % 2) && ((j / 8) % 2)) || (!((i / 8) % 2) && !((j / 8) % 2)) ? b : a;
+						data[idx] = color.r * 255;
+						data[idx + 1] = color.g * 255;
+						data[idx + 2] = color.b * 255;
+						data[idx + 3] = color.a * 255;
+					}
+				}
+		*/
+
+		Image img{ "textures\\bricks\\Bricks01_DISP_1K.jpg" };
+		auto data = img.data();
+		stringstream ss;
+		for (int i = 0; i < 256; i++) {
+			for (int j = 0; j < 256; j++) {
+				int idx = (i * 256 + j) * 4;
+				auto c = vec4(data[idx],
+					data[idx + 1],
+					data[idx + 2],
+					data[idx + 3]) / vec4(255);
+
+				ss << c << "\n";
+			}
+		}
+		logger.info(ss.str());
 	}
 
 	glm::mat4 orient(Location location, glm::mat4 xform) {
@@ -188,7 +249,9 @@ public:
 	}
 
 	void draw(Shader& shader) override {
+		send("displace", false);
 		wall->draw(shader);
+		send("displace", false);
 	}
 
 	Collision collidesWith(vec3 pos) {
@@ -291,7 +354,6 @@ private:
 	RecursiveBackTrackingMazeGenerator generator;
 //	RandomizedKrushkalMazeGenerate generator;
 //	RandomizedPrimsMazeGenerator generator;
-	Texture2D* color_tex;
 	unique_ptr<Floor> wall;
 	GlmCam cam;
 	const Scene& scene;

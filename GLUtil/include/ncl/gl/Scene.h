@@ -118,7 +118,7 @@ namespace ncl {
 					loadShaderImplicity();
 				}
 				vector<ShaderSource> sources;
-				sources.push_back(ShaderSource{ GL_VERTEX_SHADER,  per_fragment_lighting2_vert_shader , "default.vert" });
+			//	sources.push_back(ShaderSource{ GL_VERTEX_SHADER,  per_fragment_lighting2_vert_shader , "default.vert" });
 			//	sources.push_back(ShaderSource{ GL_GEOMETRY_SHADER,  wireframe_geom_shader , "default.geom" });
 				sources.push_back(ShaderSource{ GL_FRAGMENT_SHADER,  per_fragment_lighting2_frag_shader , "default.frag" });
 				_sources.insert(make_pair("default", sources));

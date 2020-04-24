@@ -155,7 +155,7 @@
   <ItemGroup>
     <None Include="shaders\floor.frag" />
     <None Include="shaders\floor.geom" />
-    <None Include="shaders\floor.tes" />
+    <None Include="shaders\floor.tese" />
     <None Include="shaders\floor.vert" />
     <None Include="shaders\mazeMap.geom" />
   </ItemGroup>

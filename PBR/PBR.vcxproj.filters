@@ -37,5 +37,14 @@
     <None Include="specular_bsdf.glsl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="shaders\ndf.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\spec_brdf.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\pbr.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

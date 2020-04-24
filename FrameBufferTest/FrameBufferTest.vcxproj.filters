@@ -15,47 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MazeScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="maze_generator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MazeObj.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Floor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MazeMap.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="player.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="forward_declare.h">
+    <ClInclude Include="FrameBufferScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Maze.cpp">
+    <ClCompile Include="Framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\floor.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\floor.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\floor.geom">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\mazeMap.geom">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\floor.tese">
+    <None Include="shaders\screen.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

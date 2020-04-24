@@ -31,7 +31,6 @@ public:
 		addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
 		addShader("mazeMap", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("mazeMap", GL_FRAGMENT_SHADER, identity_frag_shader);
-		addShader("flat", GL_GEOMETRY_SHADER, viewport_point_glsl_shader);
 		camInfoOn = false;
 		_fullScreen = false;
 		_modelHeight = 2.6;
@@ -60,15 +59,11 @@ public:
 		auto model = translate(mat4(1), { 0, 2, 0 });
 		model = scale(model, { 6, 4, 1 });
 		model = rotate(model, half_pi<float>(), { 1, 0, 0 });
-
-		wall = make_unique<Floor>(10, *this, model);
-		wall->init(color_tex);
-
 		model = scale(mat4(1), vec3(1000));
-		floor = make_unique<Floor>(100, *this, model);
+		floor = std::unique_ptr< Floor>(new Floor{ 100, *this, model, nullptr, 100.0f });
 		floor->init();
 		
-		lightModel.useObjectSpace = false;
+		lightModel.useObjectSpace = true;
 		lightModel.localViewer = true;
 
 		cube = make_unique<Model>("C:\\Users\\" + username + "\\OneDrive\\media\\models\\one_meter_cube.obj");
@@ -82,6 +77,7 @@ public:
 		player.updatePosition(vec3(player.currentCell->center.x, 0, player.currentCell->center.y));
 
 		light[0].on = true;
+	//	light[0].spotAngle = 30;
 		light[0].position = { 0, 1, 0, 0 };
 		
 	}
@@ -103,21 +99,29 @@ public:
 			light[0].position = vec4(player.position(), 1);
 			light[0].spotDirection = vec4(player.camera->getViewDirection(), 0);
 			send(light[0]);
+
+			lightModel.useObjectSpace = true;
 			send(lightModel);
 			send(activeCamera());
 			shade(_3dMaze.get());
+
+			lightModel.useObjectSpace = false;
+			send(lightModel);
 			floor->draw(s);
 		});
 
 
-
+		glDepthFunc(GL_ALWAYS);
 		shader("mazeMap")([&](Shader& s) {
 			glViewportIndexedf(1, _width - 250, _height - 250, 200, 200);
 			cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
 			send(cam);
 			send("id", 1);
+			send("height_scale", heightScale);
 			shade(mazeMap.get());
 		});
+		
+
 		shader("flat")([&](Shader& s) {
 			glViewportIndexedf(1, _width - 250, _height - 250, 200, 200);
 			cam.projection = ortho(-CellWidth, 1.0f, -CellWidth, 1.0f, -1.0f, 1.0f);
@@ -125,6 +129,8 @@ public:
 			send("id", 1);
 			shade(pos.get());
 		});
+		glDepthFunc(GL_LESS);
+
 		skybox->render();
 /*		stringstream ss;
 		ss << "positin in maze: " << p;
@@ -144,9 +150,19 @@ public:
 		});
 	}
 
+	void processInput(const Key& key) override {
+		if (key.pressed() && key.value() == 'y') {
+			heightScale += 0.1;
+			heightScale = heightScale > 1.0f ? 1.0f : heightScale;
+		}
+		else if (key.pressed() && key.value() == 'h') {
+			heightScale -= 0.1;
+			heightScale = heightScale < 0.01 ? 0.01 : heightScale;
+		}
+	}
+
 private:
 	unique_ptr<Floor> floor;
-	unique_ptr<Floor> wall;
 	unique_ptr<ProvidedMesh> pos;
 	Maze<NumCells, NumCells> maze;
 	unique_ptr<MazeObject<NumCells, NumCells>> _3dMaze;
@@ -163,4 +179,5 @@ private:
 	};
 	vec3 p;
 	Player player;
+	float heightScale = 1.0f;
 };

@@ -339,11 +339,13 @@ public:
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\Lucy-statue\\metallic-lucy-statue-stanford-scan.obj");
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
+		addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
 		camInfoOn = true;
 		
 	}
 
 	void init() override {
+		initDefaultCamera();
 	//	texture = new CheckerTexture(1, "diffuseMap");
 		floor = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_COL_VAR2_3K.jpg", 1, "diffuseMap");
 		specular = new Texture2D("C:\\Users\\Josiah\\OneDrive\\media\\textures\\GroundForest003\\3K\\GroundForest003_GLOSS_3K.jpg", 2, "specularMap");
@@ -425,22 +427,6 @@ public:
 	void initSkyBox() {
 		createSkyBox();
 		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
-		//glGenTextures(1, &skyBoxId);
-		//glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxId);
-		//
-		//for (int i = 0; i < 6; i++) {
-		//	auto name = skyTextures[i];
-		//	auto path = root + name;
-		//	auto img = Image(path, IL_ORIGIN_UPPER_LEFT);
-		//	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
-		//}
-	
-
-		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path){
 			return root + path;
 		});
@@ -523,18 +509,6 @@ public:
 			for (auto obj : objects) obj->draw();
 		});
 		skybox->render();
-		//shader("skybox")([&](Shader& s) {
-		//	glDepthFunc(GL_LEQUAL);
-		//	mat4 MVP = activeCamera().getProjectionMatrix() * mat4(mat3(activeCamera().getViewMatrix()));
-		//	//	mat4 MVP = activeCamera().getProjectionMatrix() * activeCamera().getViewMatrix();
-		//	glBindTextureUnit(7, skyBoxId);
-		//	//	send("skybox", 7);
-		//	//send(activeCamera());
-		//	s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, value_ptr(MVP));
-		//	shade(skybox);
-		//	glDepthFunc(GL_LESS);
-		//});
-
 	}
 
 	void update(float dt) override {
