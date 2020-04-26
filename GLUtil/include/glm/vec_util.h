@@ -8,7 +8,11 @@
 #include <iomanip>
 #include <tuple>
 
+#ifndef EPSI
+#define EPSI
 const float _EPSILON = 1E-6;
+#endif // !EPSI
+
 
 inline bool isClose(float a, float b, float epsilon) { 
 	float absA = fabsf(a);

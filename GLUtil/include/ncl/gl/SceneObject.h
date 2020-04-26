@@ -1,24 +1,38 @@
 #pragma once
 
+#include "Scene.h"
 #include "gl.h"
 
 namespace ncl {
 	namespace gl {
 		class SceneObject {
 		public:
-			SceneObject(const Scene& scene) :scene{ scene } {
+			SceneObject(Scene* scene = nullptr) :_scene{ scene } {
 			}
 
-			void render() {
+			virtual void init() {
 
 			}
 
-			void update(float t) {
+			virtual void render() {
+
+			}
+
+			virtual void update(float t) {
+
+			}
+
+			virtual void processInput(const Key& key) {
 
 			}
 
 		protected:
-			const Scene& scene;
+
+			virtual Scene& scene() {
+				return *_scene;
+			}
+
+			Scene* _scene;
 		};
 	}
 }

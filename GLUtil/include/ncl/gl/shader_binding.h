@@ -1,11 +1,12 @@
 #pragma once
 
-#include "Shader.h"
-#include "textures.h"
-#include "StorageBufferObj.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <initializer_list>
+#include "Shader.h"
+#include "textures.h"
+#include "StorageBufferObj.h"
+#include "pbr.h"
 
 namespace ncl {
 	namespace gl {
@@ -245,10 +246,12 @@ namespace ncl {
 		}
 
 		inline void send(Texture2D* texutre) {
+			ensureShaderbound();
 			texutre->sendTo(*Shader::boundShader);
 		}
 
 		inline void send(Image2D* image) {
+			ensureShaderbound();
 			image->sendTo(*Shader::boundShader);
 		}
 
@@ -258,15 +261,21 @@ namespace ncl {
 		}
 		
 		inline void shade(std::initializer_list<Drawable*> drawables) {
+			ensureShaderbound();
 			for (auto* drawable : drawables) {
 				shade(drawable);
 			}
 		}
 
 		template<typename T>
-		inline void  send(const StorageBufferObj<T>& obj) {
+		inline void  send(StorageBufferObj<T>& obj) {
+			ensureShaderbound();
 			obj.sendToGPU();
 		}
 
+		inline void send(pbr::Material& material) {
+			ensureShaderbound();
+			material.sendTo(*Shader::boundShader);
+		}
 	}
 }

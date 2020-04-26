@@ -54,6 +54,7 @@ namespace ncl {
 		class Scene {
 		public:
 
+			friend class SceneObject;
 
 			/**
 			* Scene constructor

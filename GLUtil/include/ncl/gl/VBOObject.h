@@ -4,6 +4,7 @@
 #include <vector>
 #include <array>
 #include <gl/gl_core_4_5.h>
+#include <glm/glm.hpp>
 #include "mesh.h"
 #include "Drawable.h"
 #include "common.h"
@@ -16,6 +17,10 @@ namespace ncl {
 			VBOObject() = default;
 
 			VBOObject(std::vector<Mesh>& meshes) {
+				for (auto& mesh : meshes) {
+					if (!mesh.hasXforms())
+						mesh.xforms.push_back(glm::mat4(1));
+				}
 				int no_of_meshes = meshes.size();
 				normals = std::vector<bool>(no_of_meshes, false);
 				colors = std::vector<bool>(no_of_meshes, false);

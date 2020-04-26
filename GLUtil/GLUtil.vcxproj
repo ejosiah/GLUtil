@@ -191,6 +191,7 @@
     <ClInclude Include="include\ncl\gl\Noise.h" />
     <ClInclude Include="include\ncl\gl\orientation.h" />
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
+    <ClInclude Include="include\ncl\gl\pbr.h" />
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h" />
     <ClInclude Include="include\ncl\gl\Resolution.h" />
     <ClInclude Include="include\ncl\gl\SceneObject.h" />
@@ -269,6 +270,7 @@
     <None Include="build.gradle" />
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
+    <None Include="include\ncl\gl\detail\StorageBufferObj.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
     <None Include="include\ncl\sampling\Sampler.inl" />
     <None Include="include\shaders\aabb.glsl" />

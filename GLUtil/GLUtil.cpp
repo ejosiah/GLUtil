@@ -39,7 +39,7 @@ int main()
 	Resolution res = { 1280, 960 };
 	Options ops;
 	ops.hideCursor = true;
-	ops.requireMouse = true;
+	ops.requireMouse = false;
 	ops.useDefaultShader = false;
 	ops.fullscreen = false;
 	ops.vSync = false;

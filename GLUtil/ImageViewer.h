@@ -21,9 +21,12 @@ public:
 	
 
 	ImageViewer() :Scene("Image Viewr", 0, 0, false) {
-		Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
-		_width = 512;
-		_height = _width * float(img.width())/ img.height();
+	//	Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
+		Image img("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr");
+		//_width = 512;
+		//_height = _width * float(img.width())/ img.height();
+		_width = img.width();
+		_height = img.height();
 		addShaderFromFile("image", "shaders/identity.vert");
 		addShaderFromFile("image", "shaders/texture.frag");
 	}
@@ -52,7 +55,8 @@ public:
 	//	texture1 = new NoiseTex3D();
 	//	shader("image").use();
 	//	texture0 = new CheckerTexture(1, "image");
-		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
+	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
+		texture0 = load_hdr_texture("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr", 0, "newport_loft");
 	//	texture0->sendTo(shader("image"));
 	//	shader("image").unUse();
 		texture1 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\old_leather.jpg", 1);

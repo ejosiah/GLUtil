@@ -24,6 +24,10 @@ namespace ncl {
 				, cullface(cullface)
 				, instanceCount(instanceCount)
 				, tfb(nullptr){
+
+				for (int i = 0; i < meshes.size(); i++) {
+					meshName[meshes[i].name] = i;
+				}
 			}
 
 		//	Shape(Shape&& source) {}
@@ -91,6 +95,57 @@ namespace ncl {
 				}
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
 				//(GL_TEXTURE0);
+			}
+
+			virtual void draw(Shader& shader, int meshId) {
+				bool cullingDisabled = false;
+				if (!cullface && glIsEnabled(GL_CULL_FACE)) {
+					cullingDisabled = true;
+					glDisable(GL_CULL_FACE);
+				}
+				GLuint vaoId = vaoIds[meshId];
+				glBindVertexArray(vaoId);
+
+
+				Material& material = materials[meshId];
+
+				if (material.ambientMat != -1) {
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, material.ambientMat);
+					shader.sendUniform1i("ambientMap", 0);
+				}
+				if (material.diffuseMat != -1) {
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
+					shader.sendUniform1i("diffuseMap", 1);
+				}
+				if (material.specularMat != -1) {
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D, material.specularMat);
+					shader.sendUniform1i("specularMap", 2);
+				}
+
+				shader.sendUniformMaterial("material[0]", material);
+				if (xforms[meshId]) {
+					shader.send("useXform", true);
+				}
+
+				if (tfb != nullptr) {
+					shader.send("capture", true);
+					tfb->use({ captureBuffer }, 1, primitiveType[meshId], [&]() {
+						drawPrimitive(meshId);
+					});
+				}
+				else {
+					drawPrimitive(meshId);
+				}
+
+				glBindVertexArray(0);
+				if (cullingDisabled) glEnable(GL_CULL_FACE);
+			}
+
+			virtual void draw(Shader& shader, std::string mesh) {
+				draw(shader, meshName[mesh]);
 			}
 
 			void drawPrimitive(int i) {
@@ -405,6 +460,7 @@ namespace ncl {
 			unsigned instanceCount;
 			TransformFeebBack* tfb;	
 			GLuint captureBuffer;
+			std::unordered_map<std::string, int> meshName;
 		};
 	}
 }

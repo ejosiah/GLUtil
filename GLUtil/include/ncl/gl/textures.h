@@ -8,6 +8,9 @@
 #include "Image.h"
 #include "Noise.h"
 #include "Shader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image/stb_image.h>
+#include <glm/vec_util.h>
 
 #define TEXTURE(id) GL_TEXTURE0 + id
 
@@ -382,5 +385,49 @@ namespace ncl {
 			std::string _name;
 			Mode mode;
 		};
+		inline Texture2D* load_hdr_texture(std::string path, GLuint textureUnit, std::string name = "") {
+			auto logger = Logger::get("hdr");
+			stbi_set_flip_vertically_on_load(true);
+			int width, height, nrComponents;
+			float* data = stbi_loadf(path.c_str(), &width, &height, &nrComponents, 0);
+
+			if (data) {
+				std::stringstream ss;
+				for (int i = 0; i < height; i++) {
+					for (int j = 0; j < width; j++) {
+						int index = (i * width + j) * 3;
+						glm::vec3 v{
+							data[index],
+							data[index + 1],
+							data[index + 2]
+						};
+						ss << v << ", ";
+					}
+					logger.info(ss.str());
+					ss.clear();
+					ss.str("");
+				}
+
+				return new Texture2D{
+					data,
+					(GLuint)width,
+					(GLuint)height,
+					name,
+					textureUnit,
+					GL_RGB16F,
+					GL_RGB,
+					GL_FLOAT,
+					{GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE},
+					{GL_LINEAR, GL_LINEAR}
+				};
+				stbi_image_free(data);
+			}
+			else {
+				return nullptr;
+			}
+
+
+		}
 	}
+
 }

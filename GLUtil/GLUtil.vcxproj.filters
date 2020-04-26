@@ -55,6 +55,9 @@
     <Filter Include="Header Files\core\detail">
       <UniqueIdentifier>{49543a69-0ffb-4340-b648-9f87a7f63fd0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pbr">
+      <UniqueIdentifier>{69ac96bc-379d-4e3f-942a-81bd0e0d0894}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -369,6 +372,9 @@
     <ClInclude Include="include\ncl\gl\StorageBufferObj.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\pbr.h">
+      <Filter>Header Files\pbr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -553,6 +559,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="include\ncl\gl\detail\FrameBuffer.inl">
+      <Filter>Header Files\core\detail</Filter>
+    </None>
+    <None Include="include\ncl\gl\detail\StorageBufferObj.inl">
       <Filter>Header Files\core\detail</Filter>
     </None>
   </ItemGroup>
