@@ -27,6 +27,9 @@
     <ClInclude Include="interaction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LightModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pbr.cpp">
@@ -45,6 +48,12 @@
     </None>
     <None Include="shaders\pbr.frag">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\pbr.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="LightModel.inl">
+      <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
 </Project>

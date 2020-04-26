@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="interaction.h" />
+    <ClInclude Include="LightModel.h" />
     <ClInclude Include="pbrScene.h" />
     <ClInclude Include="pbr_models.h" />
     <ClInclude Include="rr_tracer.h" />
@@ -133,7 +134,9 @@
     <ClCompile Include="pbr.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="LightModel.inl" />
     <None Include="shaders\pbr.frag" />
+    <None Include="shaders\pbr.vert" />
     <None Include="shaders\spec_brdf.vert" />
     <None Include="shaders\ndf.vert" />
     <None Include="specular_bsdf.glsl" />

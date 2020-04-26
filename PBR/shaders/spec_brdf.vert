@@ -32,7 +32,8 @@ const int ALL = NORMAL_DISTRIBUTION_FUNC | GEOMETRY_FUNC | FRENEL;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
-uniform float alpha;
+
+uniform float roughness;
 uniform float metalness;
 uniform int bitfield;
 
@@ -81,17 +82,17 @@ void main(){
 	vertex.color = color;
 
 	vec3 pWorld = (M * vec4(position, 1)).xyz;
-	vec3 w0 = viewPos - pWorld;
-	vec3 wi = lightPos - pWorld;
+	vec3 w0 = normalize(viewPos - pWorld);
+	vec3 wi = normalize(lightPos - pWorld);
 	vec3 n = transpose(inverse(mat3(M))) * normal;
 	vec3 h = normalize(w0 + wi);
 
 	vec3 f = vec3(0);
 	if((bitfield & NORMAL_DISTRIBUTION_FUNC) == NORMAL_DISTRIBUTION_FUNC){
-		f = N(n, h, alpha);
+		f = N(n, h, roughness);
 	}
 	if((bitfield & GEOMETRY_FUNC) == GEOMETRY_FUNC){
-		float k = kDirect(alpha);
+		float k = kDirect(roughness);
 		f = G(n, w0, k) * G(n, wi, k);
 	}
 	if((bitfield & FRENEL) == FRENEL){
