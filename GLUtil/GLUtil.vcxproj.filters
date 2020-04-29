@@ -58,6 +58,9 @@
     <Filter Include="Header Files\pbr">
       <UniqueIdentifier>{69ac96bc-379d-4e3f-942a-81bd0e0d0894}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\pbr">
+      <UniqueIdentifier>{d8b1d611-4cb9-44b9-83ed-ec9ebf69f752}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -375,6 +378,9 @@
     <ClInclude Include="include\ncl\gl\pbr.h">
       <Filter>Header Files\pbr</Filter>
     </ClInclude>
+    <ClInclude Include="shaders\irradiance_convolution.vert">
+      <Filter>shaders\pbr</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -563,6 +569,30 @@
     </None>
     <None Include="include\ncl\gl\detail\StorageBufferObj.inl">
       <Filter>Header Files\core\detail</Filter>
+    </None>
+    <None Include="shaders\equi_rectangular_map.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\equi_rectangular_map.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\irradiance_convolution.frag">
+      <Filter>shaders\pbr</Filter>
+    </None>
+    <None Include="shaders\specular_convolution.vert">
+      <Filter>shaders\pbr</Filter>
+    </None>
+    <None Include="shaders\speculuar_convolution.frag">
+      <Filter>shaders\pbr</Filter>
+    </None>
+    <None Include="shaders\brdf.vert">
+      <Filter>shaders\pbr</Filter>
+    </None>
+    <None Include="shaders\bsdf.frag">
+      <Filter>shaders\pbr</Filter>
+    </None>
+    <None Include="shaders\bling_phong.vert">
+      <Filter>shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -18,15 +18,6 @@ layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
 layout(location=8) in mat4 xform;
 
-struct Light{
-	vec3 position;
-	vec3 intensity;
-};
-
-layout(std430, binding=0) buffer SCENE_SSBO{
-	vec3 eyes;
-	Light lights[MAX_SCENE_LIGHTS];
-};
 
 uniform int numLights = 6;
 
@@ -36,8 +27,6 @@ out VERTEX{
 	smooth vec3 tangent;
     smooth vec3 bitangent;
 	smooth vec2 uv;
-	smooth vec3 wo;
-	smooth vec3 wi[MAX_SCENE_LIGHTS];
 } vertex_out;
 
 
@@ -54,11 +43,6 @@ void main(){
 	mat3 olm = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
 
 	vec4 worldPos = M * xform * vec4(position, 1.0);
-	vertex_out.wo = olm * (eyes - worldPos.xyz);
-
-	for(int i = 0; i < numLights; i++){
-		vertex_out.wi[i] = olm * (lights[i].position - worldPos.xyz);
-	}
 
 	vertex_out.position = worldPos.xyz;
 	

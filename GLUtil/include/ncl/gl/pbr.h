@@ -5,8 +5,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "textures.h"
+#include "Scene.h"
 #include "Shader.h"
 #include "StorageBufferObj.h"
+#include "FrameBuffer.h"
+#include "shaders.h"
+#include "mesh.h"
 
 namespace ncl {
 	namespace pbr {
@@ -120,6 +124,8 @@ namespace ncl {
 			GLint height = 256;
 		};
 
+		static gl::Texture2D* generate_brdf_lookup_table(GLuint textureUnit);
+
 		ScalarMaterial::ScalarMaterial(std::string name, glm::vec3 albedo, float metalness, float roughness)
 			: _name{ name }
 			, albedo{ albedo }
@@ -130,9 +136,10 @@ namespace ncl {
 		}
 
 		void ScalarMaterial::sendTo(gl::Shader& shader) {
-			shader.sendUniform3fv("albedo", 1, glm::value_ptr(albedo));
-			shader.sendUniform1f("metalness", metalness);
-			shader.sendUniform1f("roughness", roughness);
+			shader.sendUniform3fv("material.albedo", 1, glm::value_ptr(albedo));
+			shader.sendUniform1f("material.metalness", metalness);
+			shader.sendUniform1f("material.roughness", roughness);
+			shader.sendUniform3fv("material.ao", 1, glm::value_ptr(ambientOcclu));
 			shader.sendUniform1i("glossiness", false);
 			shader.sendUniform1i("invertBlack", false);
 			shader.sendUniform3fv("ao", 1, glm::value_ptr(ambientOcclu));
@@ -249,6 +256,49 @@ namespace ncl {
 		gl::Texture2D* Visitor::operator()(float v) {
 			void* data = TextureMaterial::fill(glm::vec3(v), width, height);
 			return new gl::Texture2D(data, width, height, name, id, iFormat, GL_RGB, GL_UNSIGNED_BYTE, glm::vec2{ GL_CLAMP_TO_EDGE });
+		}
+
+		inline static gl::Texture2D* generate_brdf_lookup_table(GLuint textureUnit) {
+			gl::Mesh mesh;
+
+			mesh.positions.emplace_back(-1.0f, 1.0f, 0.0f);
+			mesh.positions.emplace_back(-1.0f, -1.0f, 0.0f);
+			mesh.positions.emplace_back(1.0f, -1.0f, 0.0f);
+			mesh.positions.emplace_back(-1.0f, 1.0f, 0.0f);
+			mesh.positions.emplace_back(1.0f, -1.0f, 0.0f);
+			mesh.positions.emplace_back(1.0f, 1.0f, 0.0f);
+
+			mesh.uvs[0].emplace_back(0.0f, 1.0f);
+			mesh.uvs[0].emplace_back(0.0f, 0.0f);
+			mesh.uvs[0].emplace_back(1.0f, 0.0f);
+			mesh.uvs[0].emplace_back(0.0f, 1.0f);
+			mesh.uvs[0].emplace_back(1.0f, 0.0f);
+			mesh.uvs[0].emplace_back(1.0f, 1.0f);
+
+			gl::ProvidedMesh* quad = new gl::ProvidedMesh{ mesh };
+
+			gl::Shader shader;
+			shader.load(gl::ShaderSource{ GL_VERTEX_SHADER, brdf_vert_shader, "brdf.vert" });
+			shader.load(gl::ShaderSource{ GL_FRAGMENT_SHADER, bsdf_frag_shader, "brdf.frag" });
+			shader.createAndLinkProgram();
+
+			
+			gl::FrameBuffer::Config config{ 512, 512 };
+			config.clearColor = glm::vec4(1);
+			config.deleteTexture = false;
+			gl::FrameBuffer fbo = gl::FrameBuffer{ config };
+
+			fbo.use([&]() {
+				shader([&]() {
+					shader.sendComputed(gl::GlmCam{});
+					quad->draw(shader);
+				});
+			});
+
+
+
+			
+			return new gl::Texture2D{fbo.texture(), textureUnit};
 		}
 	}
 }

@@ -10,7 +10,6 @@
 #include "Shader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
-#include <glm/vec_util.h>
 
 #define TEXTURE(id) GL_TEXTURE0 + id
 
@@ -80,6 +79,17 @@ namespace ncl {
 
 			Texture2D(Config c) :config{ c } {
 
+			}
+
+			Texture2D(GLuint texture, GLuint unit = 0) {
+				if (glIsTexture(texture) == GL_FALSE) {
+					throw std::to_string(texture) + "is not a valid texture object";
+				}
+				this->buffer = texture;
+				this->_id = unit;
+				this->_width = 0;
+				this->_height = 0;
+				this->_name = "";
 			}
 
 			Texture2D(Texture2D&& source) noexcept {
@@ -386,28 +396,11 @@ namespace ncl {
 			Mode mode;
 		};
 		inline Texture2D* load_hdr_texture(std::string path, GLuint textureUnit, std::string name = "") {
-			auto logger = Logger::get("hdr");
+
 			stbi_set_flip_vertically_on_load(true);
 			int width, height, nrComponents;
-			float* data = stbi_loadf(path.c_str(), &width, &height, &nrComponents, 0);
-
+			void* data = stbi_loadf(path.c_str(), &width, &height, &nrComponents, 0);
 			if (data) {
-				std::stringstream ss;
-				for (int i = 0; i < height; i++) {
-					for (int j = 0; j < width; j++) {
-						int index = (i * width + j) * 3;
-						glm::vec3 v{
-							data[index],
-							data[index + 1],
-							data[index + 2]
-						};
-						ss << v << ", ";
-					}
-					logger.info(ss.str());
-					ss.clear();
-					ss.str("");
-				}
-
 				return new Texture2D{
 					data,
 					(GLuint)width,

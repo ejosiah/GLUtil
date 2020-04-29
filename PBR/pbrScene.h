@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../GLUtil/include/ncl/gl/Scene.h"
+#include "../GLUtil/include/ncl/gl/SkyBox.h"
 #include "../GLUtil/include/ncl/util/SphericalCoord.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +18,8 @@ const int NORMAL_DISTRIBUTION_FUNC = 1 << 0;
 const int GEOMETRY_FUNC = 1 << 1;
 const int FRENEL = 1 << 2;
 const int ALL = NORMAL_DISTRIBUTION_FUNC | GEOMETRY_FUNC | FRENEL;
+const bool INVERT_BLACK = true;
+const bool GLOSSINESS = true;
 
 enum class LightType {
 	BSDF, RENDER_EQU, PHONG, BLING_PHONG
@@ -25,9 +28,21 @@ enum class LightType {
 
 class PbrScene : public Scene {
 public:
-	PbrScene() :Scene("PBR Scene", 1280, 960) {
+	PbrScene() :Scene("PBR Scene", Resolution::QHD.width, Resolution::QHD.height) {
 		useImplictShaderLoad(true);
 		addShader("spec_brdf", GL_FRAGMENT_SHADER, identity_frag_shader);
+		addShader("equi_rect", GL_VERTEX_SHADER, equi_rectangular_map_vert_shader);
+		addShader("equi_rect", GL_FRAGMENT_SHADER, equi_rectangular_map_frag_shader);
+		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
+		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
+		addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
+		addShader("irradiance_convolution", GL_VERTEX_SHADER, irradiance_convolution_vert_shader);
+		addShader("irradiance_convolution", GL_FRAGMENT_SHADER, irradiance_convolution_frag_shader);
+		addShader("prefilter", GL_VERTEX_SHADER, specular_convolution_vert_shader);
+		addShader("prefilter", GL_FRAGMENT_SHADER, speculuar_convolution_frag_shader);
+		addShader("brdf", GL_VERTEX_SHADER, brdf_vert_shader);
+		addShader("brdf", GL_FRAGMENT_SHADER, bsdf_frag_shader);
+		
 		bitfield = NORMAL_DISTRIBUTION_FUNC;
 		currentLightType = LightType::BSDF;
 	}
@@ -37,7 +52,7 @@ public:
 		//auto& cam = activeCamera();
 		ScalarMat =  pbr::ScalarMaterial{ "Scalar", vec3{0, 0, 1}, 0.5f, 0.5f };
 		//tMat = pbr::TextureMaterial{ vec3{0, 1, 0}, 0.5f, 0.5f, 256, 256 };
-
+		equi_rect = load_hdr_texture("textures\\hdr\\newport_loft.hdr", 0, "equirectangularMap");
 		gold = pbr::TextureMaterial{
 			"Gold",
 			pbr::Material::Albedo{"textures\\materials\\gold\\albedo.png"},
@@ -89,21 +104,55 @@ public:
 			"Weaved Metal",
 			pbr::Material::Albedo{"textures\\materials\\weavedMetal\\albedo.jpg"},
 			pbr::Material::Normal{"textures\\materials\\weavedMetal\\normal.jpg"},
-			pbr::Material::Metalness{"textures\\materials\\weavedMetal\\metallic.jpg"},
+			pbr::Material::Metalness{1.0f},
 			pbr::Material::Roughness{"textures\\materials\\weavedMetal\\gloss.jpg"},
 			pbr::Material::AmbientOcculusion{"textures\\materials\\weavedMetal\\ao.jpg"},
-			true,
-			true
+			INVERT_BLACK,
+			GLOSSINESS
 		};
 		chrome = pbr::TextureMaterial{
 				"Chrome",
 				pbr::Material::Albedo{"textures\\materials\\chrome\\albedo.jpg"},
 				pbr::Material::Normal{"textures\\materials\\chrome\\normal.jpg"},
-				pbr::Material::Metalness{"textures\\materials\\chrome\\metallic.jpg"},
+				pbr::Material::Metalness{1.0f},
 				pbr::Material::Roughness{"textures\\materials\\chrome\\gloss.jpg"},
 				pbr::Material::AmbientOcculusion{"textures\\materials\\chrome\\ao.jpg"},
-				true,
-				true
+				INVERT_BLACK,
+				GLOSSINESS
+		};
+
+		brick = pbr::TextureMaterial{
+				"Brick",
+				pbr::Material::Albedo{"textures\\materials\\brick\\albedo.jpg"},
+				pbr::Material::Normal{"textures\\materials\\brick\\normal.jpg"},
+				pbr::Material::Metalness{0.0f},
+				pbr::Material::Roughness{"textures\\materials\\brick\\gloss.jpg"},
+				pbr::Material::AmbientOcculusion{"textures\\materials\\brick\\ao.jpg"},
+				INVERT_BLACK,
+				GLOSSINESS
+		};
+		
+
+		popCornWall = pbr::TextureMaterial{
+				"Dry popcorn wall",
+				pbr::Material::Albedo{"textures\\materials\\popcorn_wall\\albedo.jpg"},
+				pbr::Material::Normal{"textures\\materials\\popcorn_wall\\normal.jpg"},
+				pbr::Material::Metalness{0.0f},
+				pbr::Material::Roughness{"textures\\materials\\popcorn_wall\\gloss.jpg"},
+				pbr::Material::AmbientOcculusion{"textures\\materials\\popcorn_wall\\ao.jpg"},
+				false,
+				GLOSSINESS
+		};
+
+		leather = pbr::TextureMaterial{
+				"Leather",
+				pbr::Material::Albedo{"textures\\materials\\leather\\4k\\albedo.jpg"},
+				pbr::Material::Normal{"textures\\materials\\leather\\4k\\normal.jpg"},
+				pbr::Material::Metalness{0.0f},
+				pbr::Material::Roughness{"textures\\materials\\leather\\4k\\gloss.jpg"},
+				pbr::Material::AmbientOcculusion{"textures\\materials\\leather\\4k\\ao.jpg"},
+				false,
+				GLOSSINESS
 		};
 
 		materials.push_back(&gold);
@@ -113,8 +162,12 @@ public:
 		materials.push_back(&wall);
 		materials.push_back(&weavedMetal);
 		materials.push_back(&chrome);
+		materials.push_back(&brick);
+		materials.push_back(&popCornWall);
+		materials.push_back(&leather);
+		materials.push_back(&ScalarMat);
 
-		currentMaterial = materials[nextMaterial];
+		currentMaterial = &ScalarMat;
 
 		cam.view = lookAt(radius, vec3(0), color());
 		sCoord = cs::SphericalCoord(radius);
@@ -123,13 +176,13 @@ public:
 		lightModel.twoSided = true;
 
 		sphere = new Sphere(0.3f);
-		cube = new Cube(0.7);
+		cube = new Cube(1);
 		objectToWorld = translate(mat4(1), { 0, 2, 0 });
 		worldToObject = inverse(objectToWorld);
-		model = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 1);
+		orb = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 1);
 
-		//for (int i = 0; i < model->numMeshes(); i++) {
-		//	model->material(i).diffuse = RED;
+		//for (int i = 0; i < orb->numMeshes(); i++) {
+		//	orb->material(i).diffuse = RED;
 		//}
 
 		font = Font::Arial(15, Font::BOLD);
@@ -149,10 +202,28 @@ public:
 		scene.lights[4].Intensity = vec3(23.47, 21.31, 20.79);
 		scene.lights[5].position = { -3, 0, 0 };
 		scene.lights[5].Intensity = vec3(23.47, 21.31, 20.79);
-		numLights = 6;
+		numLights = 1;
 		ssboScene = StorageBufferObj<pbr::Scene>{ scene, 0};
 
+		initSkyBox();
 		glDisable(GL_CULL_FACE);
+	}
+
+	void initSkyBox() {
+		defer([&]() {
+			string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+			transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
+				return root + path;
+				});
+
+			//skybox = SkyBox::create(skyTextures, 7, *this);
+			skybox = SkyBox::create("equi_rect", 7, *this, equi_rect);
+			
+			auto texture = new Texture2D(skybox->buffer, 0);
+			irradiance = SkyBox::create("irradiance_convolution", 5, *this, texture, 32, 32);
+			prefilter = SkyBox::preFilter("prefilter", 6, *this, texture);
+			brdfLUT = pbr::generate_brdf_lookup_table(7);
+		});
 	}
 
 	void display() override {
@@ -171,6 +242,7 @@ public:
 			break;
 		}
 
+	//	skybox->render();
 		displayText();
 	}
 
@@ -181,37 +253,36 @@ public:
 			send("lightPos", light[0].position.xyz);
 			send("viewPos", vec3(sCoord));
 			send(cam);
-			shade(model);
-			});
+			shade(orb);
+		});
 	}
 
 	void displayRenderEqu() {
 		shader("pbr")([&](Shader& s) {
-			//	send(material);
 			send(*currentMaterial);
-			//send("albedo", vec3(1, 1, 1));
-			//send("metalness", metalness);
-			//send("roughness", roughness);
-			//send("glossiness", true);
-			//send("invertBlack", true);
+			send("useTexture", useTexture);
 			send("directional", true);
 			send("numLights", numLights);
 			send("useNormalMapping", useNormalMapping);
-			//send("lightPos", ssboScene.get().lights[0].position);
-			//send("intensity", ssboScene.get().lights[0].Intensity);
-		//	send("eyes", eyes);
+			send("ibl", useEnvAmb);
+			glBindTextureUnit(prefilter->unit, prefilter->buffer);
+			glBindTextureUnit(irradiance->unit, irradiance->buffer);
+			send(brdfLUT);
 			send(ssboScene);
 			send(cam);
-			shade(model);
-			//	shade(cube);
-			//	shade(sphere);
-				//model->draw(s, 1);
-				//model->draw(s, 2);
+			shade(orb);
+		});
 
-				//send(gold);
-				//model->draw(s, 3);
-				//model->draw(s, 4);
+		if (ibl) {
+			shader("skybox")([&](Shader& s) {
+				auto& camera = activeCamera();
+				glDepthFunc(GL_LEQUAL);
+				send(cam);
+				glBindTextureUnit(skybox->unit, skybox->buffer);
+				shade(cube);
+				glDepthFunc(GL_LESS);
 			});
+		}
 	}
 
 	void displayPhong() {
@@ -254,9 +325,18 @@ public:
 		ss.str("");
 		ss.clear();
 
+		ss << "Press C for Controls";
+		font->render(ss.str(), _width / 2 - 50, 20);
+		ss.str("");
+		ss.clear();
+
 		ss << "ViewPos: " << vec3(sCoord) << "\n";
 		ss << "RightPos: " << light[0].position.xyz;
 		font->render(ss.str(), _width - 300, 20);
+
+		if (showControls) {
+			controls();
+		}
 	}
 
 	string currentLightTypeName() {
@@ -298,8 +378,37 @@ public:
 
 	void displayRenderEquText() {
 		ss << "Material: " << currentMaterial->name();
-		ss << "\nNormalMapping: " << (useNormalMapping ? "On" : "Off");
+		ss << "\nTexture: " << (useTexture ? "On" : "Off");
+		ss << "\nIBL: " << (ibl ? "On" : "Off");
+		if (ibl) {
+			ss << "\nEnvironment Ambiance: " << (useEnvAmb ? "On" : "Off");
+		}
+
+		if (currentMaterial == &ScalarMat) {
+			ss << "\nAlbedo: " << ScalarMat.albedo;
+			ss << "\nRoughness: " << setw(2) << ScalarMat.roughness;
+			ss << "\nMetalness: " << ScalarMat.metalness;
+		}
+		else {
+			ss << "\nNormalMapping: " << (useNormalMapping ? "On" : "Off");
+		}
 		font->render(ss.str(), 20, 60);
+	}
+
+	void controls() {
+		ss.str("");
+		ss.clear();
+		ss << "Controls: ";
+		ss << "\nLighting Mode:";
+		ss << "\n\tPhong: 6";
+		ss << "\n\tBling Phong: 7";
+		ss << "\n\tCook-Torrance BRDF: 8";
+		ss << "\n\tPhysically Based Rendering: 9";
+		ss << "\n\nContext Controls:";
+
+		font->render(ss.str(), 20, 200);
+		ss.str("");
+		ss.clear();
 	}
 
 	virtual void update(float dt) override {
@@ -327,9 +436,13 @@ public:
 				return;
 			case '8':
 				currentLightType = LightType::BSDF;
+				ibl = false;
 				return;
 			case '9':
 				currentLightType = LightType::RENDER_EQU;
+				return;
+			case 'c':
+				showControls = !showControls;
 				return;
 			}
 
@@ -345,11 +458,13 @@ public:
 			case LightType::BLING_PHONG:
 				break;
 			}
+			if (currentMaterial == &ScalarMat) {
+				processScalarMaterialInput(key);
+			}
 		}
 	}
 
 	void processBSDFInput(const Key& key) {
-		float prevStep = step;
 		if (key.pressed()) {
 			switch (key.value()) {
 			case '0':
@@ -364,31 +479,37 @@ public:
 			case '3':
 				bitfield = ALL;
 				break;
-			case 'r':
-				ScalarMat.roughness += 0.05;
-				break;
-			case 'R':
-				ScalarMat.roughness -= 0.05;
-				break;
-			case 'm':
-				ScalarMat.metalness += 0.05;
-				break;
-			case 'M':
-				ScalarMat.metalness -= 0.05;
-				break;
-			case 'a':
-				step += 0.01;
-				break;
-			case 'A':
-				step -= 0.01;
-				break;
 			}
-			ScalarMat.roughness = glm::clamp(ScalarMat.roughness, 0.1f, 0.9f);
-			ScalarMat.metalness = glm::clamp(ScalarMat.metalness, 0.0f, 1.0f);
-			if (step != prevStep) {
-				step = glm::clamp(step, 0.0f, 1.0f);
-				ScalarMat.albedo = color();
-			}
+		}
+	}
+
+	void processScalarMaterialInput(const Key& key) {
+		float prevStep = step;
+		switch (key.value()) {
+		case 'r':
+			ScalarMat.roughness += 0.05;
+			break;
+		case 'R':
+			ScalarMat.roughness -= 0.05;
+			break;
+		case 'm':
+			ScalarMat.metalness += 0.05;
+			break;
+		case 'M':
+			ScalarMat.metalness -= 0.05;
+			break;
+		case 'a':
+			step += 0.01;
+			break;
+		case 'A':
+			step -= 0.01;
+			break;
+		}
+		ScalarMat.roughness = glm::clamp(ScalarMat.roughness, 0.1f, 0.9f);
+		ScalarMat.metalness = glm::clamp(ScalarMat.metalness, 0.0f, 1.0f);
+		if (step != prevStep) {
+			step = glm::clamp(step, 0.0f, 1.0f);
+			ScalarMat.albedo = color();
 		}
 	}
 
@@ -402,20 +523,50 @@ public:
 	void processRenderEqu(const Key& key) {
 		switch (key.value()) {
 		case 'n':
-			useNormalMapping = !useNormalMapping;
+			if (currentMaterial != &ScalarMat) {
+				useNormalMapping = !useNormalMapping;
+			}
 			break;
 		case 'm':
-			nextMaterial++;
-			nextMaterial %= materials.size();
-			currentMaterial = materials[nextMaterial];
+			if (useTexture) {
+				nextMaterial++;
+				nextMaterial %= materials.size();
+				currentMaterial = materials[nextMaterial];
+				if (currentMaterial == &ScalarMat) {
+					useTexture = false;
+					useNormalMapping = false;
+				}
+			}
+			break;
+		case 'i':
+			ibl = !ibl;
+			if (!ibl) {
+				useEnvAmb = false;
+			}
+			break;
+		case 'e':
+			if (ibl) {
+				useEnvAmb = !useEnvAmb;
+			}
+			break;
+		case 't':
+			useTexture = !useTexture;
+			if (!useTexture) {
+				currentMaterial = &ScalarMat;
+			}
+			if (useTexture && currentMaterial == &ScalarMat) {
+				nextMaterial = 0;
+				currentMaterial = materials[nextMaterial];
+			}
 			break;
 		}
+
 	}
 
 private:
 	Sphere* sphere;
 	Cube* cube;
-	Model* model;
+	Model* orb;
 	mat4 objectToWorld;
 	mat4 worldToObject;
 	LightModel lightModel;
@@ -430,7 +581,11 @@ private:
 	pbr::TextureMaterial wall;
 	pbr::TextureMaterial chrome;
 	pbr::TextureMaterial grass;
+	pbr::TextureMaterial brick;
+	pbr::TextureMaterial popCornWall;
+	pbr::TextureMaterial leather;
 	pbr::Material* currentMaterial;
+	Texture2D* equi_rect;
 	vector<pbr::Material*> materials;
 	int nextMaterial = 0;
 	int bitfield;
@@ -440,4 +595,19 @@ private:
 	StorageBufferObj<pbr::Scene> ssboScene;
 	LightType currentLightType;
 	bool useNormalMapping;
+	bool ibl = false;
+	bool useEnvAmb = false;
+	SkyBox* skybox = nullptr;
+	SkyBox* irradiance;
+	SkyBox* prefilter;
+	Texture2D* brdfLUT;
+	bool useTexture = false;
+	bool showControls;
+	GLuint texture;
+	GLuint unit = 7;
+	vector<string> skyTextures = vector<string>{
+		"right.jpg", "left.jpg",
+		"top.jpg", "bottom.jpg",
+		"front.jpg", "back.jpg"
+	};
 };

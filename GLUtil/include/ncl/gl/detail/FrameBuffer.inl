@@ -62,7 +62,7 @@ namespace ncl {
 		}
 
 		FrameBuffer::~FrameBuffer() {
-			if (glIsTexture(_tex) == GL_TRUE) {
+			if (config.deleteTexture && glIsTexture(_tex) == GL_TRUE) {
 				glDeleteTextures(1, &_tex);
 			}
 			if (glIsRenderbuffer(_rbo) == GL_TRUE) {

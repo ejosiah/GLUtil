@@ -431,7 +431,7 @@ public:
 			return root + path;
 		});
 
-		skybox = SkyBox::create(skyTextures, 7, *this, 50);
+		skybox = SkyBox::create(skyTextures, 7, *this, 1);
 	}
 
 	void createSkyBox() {
@@ -491,6 +491,7 @@ public:
 		}
 		
 		light0->draw();
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader("default")([&] {
 			send("gammaCorrect", gammaCorrect);
 			send(lightModel);

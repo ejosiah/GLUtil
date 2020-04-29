@@ -226,6 +226,7 @@
     <ClInclude Include="include\ncl\units\units.h" />
     <ClInclude Include="include\ncl\util\profile.h" />
     <ClInclude Include="include\ncl\util\SphericalCoord.h" />
+    <ClInclude Include="shaders\irradiance_convolution.vert" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />
@@ -293,10 +294,16 @@
     <None Include="shader.frag" />
     <None Include="shader.vert" />
     <None Include="shaders\basic.frag" />
+    <None Include="shaders\bling_phong.vert" />
+    <None Include="shaders\brdf.vert" />
+    <None Include="shaders\bsdf.frag" />
+    <None Include="shaders\equi_rectangular_map.frag" />
+    <None Include="shaders\equi_rectangular_map.vert" />
     <None Include="shaders\font.frag" />
     <None Include="shaders\font.vert" />
     <None Include="shaders\identity.frag" />
     <None Include="shaders\identity.vert" />
+    <None Include="shaders\irradiance_convolution.frag" />
     <None Include="shaders\lightMap.frag" />
     <None Include="shaders\lightMap.vert" />
     <None Include="shaders\mass_spring.comp" />
@@ -319,6 +326,8 @@
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.geom" />
     <None Include="shaders\skybox.vert" />
+    <None Include="shaders\specular_convolution.vert" />
+    <None Include="shaders\speculuar_convolution.frag" />
     <None Include="shaders\teapot.frag" />
     <None Include="shaders\teapot.tcs" />
     <None Include="shaders\teapot.tes" />

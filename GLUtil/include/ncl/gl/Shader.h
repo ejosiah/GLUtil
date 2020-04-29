@@ -37,7 +37,7 @@ namespace ncl {
 		};
 
 		struct GlmCam {
-			glm::mat4 projection;
+			glm::mat4 projection = glm::ortho(-1, 1, -1, 1);
 			glm::mat4 view = glm::mat4(1);
 			glm::mat4 model = glm::mat4(1);
 			glm::mat4 viewport;

@@ -31,7 +31,6 @@
 namespace ncl {
 	namespace gl {
 		const unsigned MAX_LIGHT_SOURCES = 10;
-
 		struct Options {
 			std::vector<std::string> shaders = {};
 			GLbitfield fBuffer = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
@@ -55,7 +54,7 @@ namespace ncl {
 		public:
 
 			friend class SceneObject;
-
+			friend class GlfwApp;
 			/**
 			* Scene constructor
 			* @param t scene title
@@ -540,6 +539,14 @@ namespace ncl {
 				cameraControlActive = true;
 			}
 
+			/**
+			* @breif Defers execution until framebuffer is active
+			* @param exec execution to deffer
+			*/
+			void defer(Exec exec) {
+				deferred.push_back(exec);
+			}
+
 			GlmCam cam;
 			_3DMotionEventHandler* _motionEventHandler;
 
@@ -575,6 +582,7 @@ namespace ncl {
 			int _fontSize = 10;
 			float _modelHeight = 3;
 			std::stringstream sbr;
+			std::vector<Exec> deferred;
 		};
 	}
 }

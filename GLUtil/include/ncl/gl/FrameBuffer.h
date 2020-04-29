@@ -26,6 +26,7 @@ namespace ncl {
 				bool depthTest = true;
 				bool stencilTest = true;
 				bool depthAndStencil = true;
+				bool deleteTexture = true;
 			};
 
 			enum class Status{ Complete, UnComplete};

@@ -30,11 +30,16 @@ const int GEOMETRY_FUNC = 1 << 1;
 const int FRENEL = 1 << 2;
 const int ALL = NORMAL_DISTRIBUTION_FUNC | GEOMETRY_FUNC | FRENEL;
 
+struct Material{
+	vec3 albedo;
+	float metalness;
+	float roughness;
+	vec3 ao;
+};
+
 uniform vec3 lightPos;
 uniform vec3 viewPos;
-
-uniform float roughness;
-uniform float metalness;
+uniform Material material;
 uniform int bitfield;
 
 vec3 N(vec3 N, vec3 H, float a){
@@ -74,6 +79,8 @@ float kIbl(float a){
 }
 
 void main(){
+	float roughness = material.roughness;
+	float metalness = material.metalness;
 	mat4 MV = V * M;
 	mat3 NM = transpose(inverse(mat3(MV)));
 	vertex.normal = normalize(NM * normal);

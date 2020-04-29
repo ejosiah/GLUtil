@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
+#include "../GLUtil/include/ncl/gl/pbr.h"
 #include <iterator>
 
 using namespace std;
@@ -17,6 +18,8 @@ public:
 		addShader("fbo", GL_FRAGMENT_SHADER, texture_frag_shader);
 
 		addShader("screen", GL_VERTEX_SHADER, identity_vert_shader);
+		addShader("brdf", GL_VERTEX_SHADER, brdf_vert_shader);
+		addShader("brdf", GL_FRAGMENT_SHADER, bsdf_frag_shader);
 	}
 
 	void init() override {
@@ -33,6 +36,10 @@ public:
 		buildFrameBuffer();
 	//	loadFrameBuffer();
 		setBackGroundColor({ 0.1f, 0.1f, 0.1f, 1.0f });
+
+		defer([&]() {
+			brdf_lut = pbr::generate_brdf_lookup_table(0);
+		});
 	}
 
 	void buildPlane() {
@@ -103,7 +110,8 @@ public:
 		});
 
 		shader("screen")([&](Shader& s) {
-			glBindTextureUnit(0, fbo.texture());
+			//glBindTextureUnit(0, fbo.texture());
+			send(brdf_lut);
 			sendArray("kernel", identity, 9);
 			send(cam1);
 			shade(quad);
@@ -167,4 +175,5 @@ private:
 		0, 1, 0,
 		0, 0, 0
 	};
+	Texture2D* brdf_lut;
 };

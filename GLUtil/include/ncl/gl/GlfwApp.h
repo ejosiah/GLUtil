@@ -152,9 +152,9 @@ namespace ncl {
 			}
 
 			void run() {
+				GLFWwindow* window = nullptr;
 				try {
 					Keyboard::init();
-					GLFWwindow* window;
 					double currentTime = 0;
 					glm::dvec2 pos;
 
@@ -239,6 +239,8 @@ namespace ncl {
 
 					if(!scene.vSync()) glfwSwapInterval(0);
 
+					for (auto exec : scene.deferred) exec();
+
 					int oldW = 0, oldH = 0;
 					while (!glfwWindowShouldClose(window)) {
 						int width, height;
@@ -283,6 +285,10 @@ namespace ncl {
 					glfwTerminate();
 				}
 				catch (std::runtime_error& error) {
+					if (window) {
+						glfwSetWindowShouldClose(window, GLFW_TRUE);
+						glfwDestroyWindow(window);
+					}
 					glfwTerminate();
 					std::string msg = "unable to start app:\t";
 					logger.error(msg, error);

@@ -133,5 +133,6 @@ namespace ncl {
 			}
 		};
 
+		using Exec = std::function<void()>;
 	}
 }
