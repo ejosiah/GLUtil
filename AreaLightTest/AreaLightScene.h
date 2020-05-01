@@ -20,15 +20,43 @@ const int AreaSphere = 4;
 const int AreaDisk = 5;
 const int AreaRectangle = 6;
 
+const int SPHERE_SHAPE = 1000 << 0;
+const int DISK_SHAPE = 1000 << 1;
+const int RECTANGLE_SHAPE = 1000 << 2;
+const int TUBE_SHAPE = 1000 << 3;
+
+struct Sphere_L {
+	float radius;
+	vec3 center;
+};
+
+struct Disk_L {
+	float radius;
+	vec3 center;
+};
+
+struct Rectangle_L {
+	vec3 left, top;
+};
+
+struct Tube_L {
+	float height;
+	float radius;
+	vec3 center;
+};
+
+
 struct Light {
 	int unit;
 	int type;
+	int shapeId;
 	float value;
-	vec3 position;
+	vec3 position = glm::vec3(0);
 	vec3 color;
 	vec3 normal = { 0, -1, 0 };
 	Shape* shape;
 	float radius;
+	mat4 localToWorld = glm::mat4{ 1 };
 };
 
 
@@ -36,7 +64,7 @@ class AreaLightScene : public Scene {
 public:
 	AreaLightScene() :Scene("AreaLigth") {
 		_modelHeight = 0.5;
-		_fullScreen = true;
+		_fullScreen = false;
 	}
 
 	void init() override {
@@ -53,7 +81,6 @@ public:
 		activeCamera().lookAt({ 0, 0, 3 }, vec3(0), { 0, 1, 0 });
 		activeCamera().setMode(Camera::Mode::FIRST_PERSON);
 
-		light.position = {2.9, 2,  0};
 		light.type = AreaSphere;
 		light.unit = Luminance;
 		light.value = 700;
@@ -61,11 +88,17 @@ public:
 		light.radius = 0.5f;
 		light.shape = new Sphere(light.radius, 50, 50, WHITE);
 
-		model = rotate(model, glm::radians(-90.0f), { 0, 0, 1 });
-		light.normal = mat3(model) * light.normal;
+	//	light.localToWorld = translate(mat4(1), { 3.9, 2,  0 });
+		light.localToWorld = translate(mat4(1), vec3(0, 3.98, 0));
+	//	light.localToWorld = rotate(light.localToWorld, glm::radians(-90.0f), { 0, 0, 1 });
+		rectangleLightShape.left = { -1.0f, 0, -1.0f };
+		rectangleLightShape.top = { 1.0f, 0, 1.0f };
+		light.shapeId = 2 | RECTANGLE_SHAPE;
+		//light.normal = mat3(light.localToWorld) * light.normal;
 
 		sphere = new Sphere(0.2, 50, 50, RED);
 		createDisk();
+		createRectangle();
 	}
 
 	void createDisk() {
@@ -82,6 +115,20 @@ public:
 		disk = new ProvidedMesh(mesh);
 	}
 
+	void createRectangle() {
+		Mesh mesh;
+		mesh.positions.emplace_back(1.0f, 0.0f, 1.0f);
+		mesh.positions.emplace_back(-1.0f, 0.0f, 1.0f);
+		mesh.positions.emplace_back(-1.0f, 0.0f, -1.0f);
+		mesh.positions.emplace_back(1.0f, 0.0f, 1.0f);
+		mesh.positions.emplace_back(-1.0f, 0.0f, -1.0f);
+		mesh.positions.emplace_back(1.0f, -0.0f, -1.0f);
+		mesh.colors = vector<vec4>(6, lightColor);
+		mesh.primitiveType = GL_TRIANGLES;
+
+		rectangle = new ProvidedMesh(mesh);
+	}
+
 	void display() override {
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader("area_light")([&]() {
@@ -96,17 +143,16 @@ public:
 			//mat4 model = translate(mat4(1), { -3, 2, 0 });
 			//send(activeCamera(), model);
 			//shade(sphere);
-			send("light.normal", light.normal);
+			
 			send("eyes", activeCamera().getPosition().xyz);
 			_send(light);
 		});
 
 		shader("flat")([&]() {
-			auto model = translate(mat4(1), light.position);
-			model = rotate(model, glm::radians(-90.0f), { 0, 0, 1 });
-			send(activeCamera(), model);
+			send(activeCamera(), light.localToWorld);
 			//shade(light.shape);
-			shade(disk);
+			shade(rectangle);
+			shade(rectangle);
 		});
 	}
 
@@ -117,6 +163,11 @@ public:
 		send("light.value", light.value);
 		send("light.color", light.color);
 		send("light.radius", light.radius);
+		send("light.localToWorld", light.localToWorld);
+		send("light.normal", light.normal);
+		send("light.shapeId", light.shapeId);
+		send("rectangleLights[2].left", rectangleLightShape.left);
+		send("rectangleLights[2].top", rectangleLightShape.top);
 	}
 
 	void resized() override {
@@ -129,6 +180,8 @@ private:
 	Light light;
 	Sphere* sphere;
 	ProvidedMesh* disk;
+	ProvidedMesh* rectangle;
+	Rectangle_L rectangleLightShape;
 	vec4 lightColor;
 	float offset;
 };
