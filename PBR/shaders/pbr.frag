@@ -66,9 +66,42 @@ uniform bool invertBlack = false;
 uniform bool useNormalMapping = false;
 uniform bool useTexture = true;
 uniform bool ibl = false;
+uniform int lightType;
+uniform int unit;
+uniform float lightValue;
+uniform vec3 lightColor;
 
-float saturate(float x){
-	return max(x, 0);
+float PowerToIntensity(int type, float power){
+	switch(type){
+		case Point: 
+			return power/(4 * PI);
+		default:
+			return 0;
+	}
+}
+
+float GetIntensity(int type, float value, int unit){
+	switch(unit){
+		case Intensity:
+			return value;
+	    case Power:
+			return PowerToIntensity(type, value);
+	}
+}
+
+vec3 GetRadiance(int type, float value, int unit, vec3 lightDir){
+	switch(type){
+		case Power:
+			float I = GetIntensity(type, value, unit);
+			float d = max(length(lightDir), 0.01);
+			return I / (d * d) * lightColor;
+		default:
+			return vec3(0);
+	}
+}
+
+float Saturate(float x){
+	return clamp(x, 1, 0);
 }
 
 float DistributionGGX(vec3 N, vec3 H, float a){
@@ -91,8 +124,8 @@ float GeometrySchlickGGX(float NdotV, float k){
 }
   
 float GeometrySmith(vec3 N, vec3 V, vec3 L, float k){
-    float NdotV = saturate(dot(N, V));
-    float NdotL = saturate(dot(N, L));
+    float NdotV = Saturate(dot(N, V));
+    float NdotL = Saturate(dot(N, L));
     float ggx1 = GeometrySchlickGGX(NdotV, k);
     float ggx2 = GeometrySchlickGGX(NdotL, k);
 	
@@ -166,7 +199,8 @@ void main(){
 
 		float d = max(directional ? 1.0 : length(lightDir), 0.01);
 		float attenuation = 1.0 / (d * d);
-		vec3 radiance = l.intensity * attenuation;
+		vec3 radiance = lightColor * attenuation;
+//		vec3 radiance = GetRadiance(lightType, lightValue, unit, lightDir);
 
 		float NDF = DistributionGGX(N, H, roughness);
 

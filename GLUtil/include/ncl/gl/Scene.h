@@ -568,7 +568,7 @@ namespace ncl {
 			std::vector<CameraController*> cameras;
 			LightSource light[MAX_LIGHT_SOURCES];
 			LightModel lightModel;
-			bool _useImplictShaderLoad = false;
+			bool _useImplictShaderLoad = true;
 			bool implicityLoaded = false;
 			bool _fullScreen = false;
 			bool _vsync = true;

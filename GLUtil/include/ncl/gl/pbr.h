@@ -44,11 +44,11 @@ namespace ncl {
 
 		class Material {
 		public:
-			using Albedo = std::variant<std::string, glm::vec3>;
-			using Metalness = std::variant<std::string, float>;
-			using Roughness = std::variant<std::string, float>;
-			using Normal = std::variant<std::string, glm::vec3>;
-			using AmbientOcculusion = std::variant<std::string, float>;
+			using Albedo = std::variant<std::string, glm::vec3, gl::Texture2D*>;
+			using Metalness = std::variant<std::string, float, gl::Texture2D*>;
+			using Roughness = std::variant<std::string, float, gl::Texture2D*>;
+			using Normal = std::variant<std::string, glm::vec3, gl::Texture2D*>;
+			using AmbientOcculusion = std::variant<std::string, float, gl::Texture2D*>;
 			virtual void sendTo(gl::Shader& shader) = 0;
 			virtual std::string name() = 0;
 		};
@@ -117,6 +117,10 @@ namespace ncl {
 			gl::Texture2D* operator()(std::string);
 			gl::Texture2D* operator()(float);
 			gl::Texture2D* operator()(glm::vec3);
+			
+			inline gl::Texture2D* operator()(gl::Texture2D* texture) {
+				return texture;
+			}
 
 			std::string name;
 			GLint id, iFormat;

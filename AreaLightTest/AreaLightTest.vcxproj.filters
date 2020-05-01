@@ -24,4 +24,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\area_light.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\area_light.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

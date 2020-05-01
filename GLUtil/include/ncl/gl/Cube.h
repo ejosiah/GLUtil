@@ -11,11 +11,14 @@ namespace ncl {
 		public:
 			Cube() = default;
 
-			Cube(float size, float grids = 10, const glm::vec4& color = randomColor(), bool cullface = true)
-				:Shape(createMesh(size/2, color), cullface) {}
+			Cube(float size, glm::mat4 model, const glm::vec4& color = randomColor())
+				:Cube(size, 0, color, false, { model }) {}
+
+			Cube(float size, float grids = 10, const glm::vec4& color = randomColor(), bool cullface = true, std::vector<glm::mat4> models = { glm::mat4{1} })
+				:Shape(createMesh(size/2, color, models), cullface, models.size()) {}
 
 
-			std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color) {
+			std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color, std::vector<glm::mat4> models) {
 				using namespace glm;
 				const int NO_VERTICES = 24;
 
@@ -137,6 +140,7 @@ namespace ncl {
 				mesh.uvs[0] = std::vector<vec2>(std::begin(texCoords), std::end(texCoords));
 				mesh.indices = std::vector<GLuint>(std::begin(indices), std::end(indices));
 				mesh.primitiveType = GL_TRIANGLES;
+				mesh.xforms = std::vector<glm::mat4>(models);
 
 				return std::vector<Mesh>(1, mesh);
 			}

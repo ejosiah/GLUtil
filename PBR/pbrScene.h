@@ -135,7 +135,8 @@ public:
 
 		popCornWall = pbr::TextureMaterial{
 				"Dry popcorn wall",
-				pbr::Material::Albedo{"textures\\materials\\popcorn_wall\\albedo.jpg"},
+			//	pbr::Material::Albedo{"textures\\materials\\popcorn_wall\\albedo.jpg"},
+				pbr::Material::Albedo{new CheckerTexture()},
 				pbr::Material::Normal{"textures\\materials\\popcorn_wall\\normal.jpg"},
 				pbr::Material::Metalness{0.0f},
 				pbr::Material::Roughness{"textures\\materials\\popcorn_wall\\gloss.jpg"},
@@ -265,6 +266,10 @@ public:
 			send("numLights", numLights);
 			send("useNormalMapping", useNormalMapping);
 			send("ibl", useEnvAmb);
+			send("lightType", 0);
+			send("unit", 1);
+			send("lightValue", 20.0f);
+			send("lightColor", vec3(23.47, 21.31, 20.79));
 			glBindTextureUnit(prefilter->unit, prefilter->buffer);
 			glBindTextureUnit(irradiance->unit, irradiance->buffer);
 			send(brdfLUT);

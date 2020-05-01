@@ -146,6 +146,10 @@
   <ItemGroup>
     <ClCompile Include="AreaLight.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\area_light.frag" />
+    <None Include="shaders\area_light.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
