@@ -5,6 +5,7 @@
 #define PI 3.14159265359 
 #define MAX_SCENE_LIGHTS 10
 
+#define EPSILON 0.000001
 
 const int Power = 0;
 const int Intensity = 1; // power/sr
@@ -94,7 +95,7 @@ float Area(Tube tube){
 }
 
 float Saturate(float x){
-	return max(x, 0.0);
+	return clamp(x, 0.0, 1.0);
 }
 
 float illuminanceSphereOrDisk(float cosTheta, float sinSigmaSqr){
@@ -298,32 +299,61 @@ float RectangleSolidAngle(vec3 worldPos, vec3 p0, vec3 p1, vec3 p2, vec3 p3){
 	return g0 + g1 + g2 + g3 - 2 * PI;
 }
 
-float TraceTriangle(vec3 o, vec3 d, vec3 A, vec3 B, vec3 C){
-	vec3 pN = normalize(cross(B - A, C - B));
-	float t = TracePlane(o, d, A, pN);
+bool TraceTriangle(vec3 a, vec3 b, vec3 c, vec3 o, vec3 dir) {
+	vec3 ba = b - a;
+	vec3 ca = c - a;
+	vec3 pa = o - a;
+	vec3 pq = -dir;
 
-	vec3 p = o + d * t;
+	vec3 n = cross(ba, ca);
+	float d = dot(pq, n);
 
-	vec3 N1 = normalize(cross(B - A, p - B));
-	vec3 N2 = normalize(cross(C - B, p - C));
-	vec3 N3 = normalize(cross(A - C, p - A));
+	if (d <= 0) return false; // ray is either coplainar with triangle abc or facing opposite it
 
-	float d0 = dot(N1, N2);
-	float d1 = dot(N2, N3);
-	float threshold = 1.0f - 0.001f;
-	return (d0 > threshold && d1 > threshold) ? 1.0 : 0.0f;
+	float t = dot(pa, n);
+
+	if (t < 0) return false;     // ray invariant t >= 0
+
+	vec3 e = cross(pq, pa);
+
+	float v = dot(e, ca);
+	if (v < 0.0f || v > d) return false;
+
+	float w = -dot(e, ba);
+	if (w < 0.0f || (v + w) > d) return false;
+
+	return true;
 }
 
-
-float TraceRectangle(vec3 o, vec3 d, vec3 A, vec3 B, vec3 C, vec3 D){
-	return max(TraceTriangle(o, d, A, B, C), TraceTriangle(o, d, C, D, A));
+bool TraceRectangle(vec3 o, vec3 d, vec3 A, vec3 B, vec3 C, vec3 D) {
+	return TraceTriangle(A, B, C, o, d) || TraceTriangle(C, D, A, o, d);
 }
+
+//vec3 ClosestPointOnSegment(vec3 a, vec3 b, vec3 c){
+//	vec3 ab = b - a;
+//	float t = dot(c - a, ab) / dot(ab, ab);
+//	return a + Saturate(t) * ab;
+//}
+
 
 vec3 ClosestPointOnSegment(vec3 a, vec3 b, vec3 c){
 	vec3 ab = b - a;
-	float t = dot(c - a, ab) / dot(ab, ab);
-	return a + Saturate(t) * ab;
+	float t = dot(c - a, ab);
+
+	if(t <= 0){
+		return a;
+	}else{
+		float denom = dot(ab, ab);
+		if(t >= denom){
+			return b;
+		}else{
+			t /= denom;
+			return a + t * ab;
+		}
+	}
 }
+
+
 
 void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting){
 	vec3 worldPos = surface.position;
@@ -335,7 +365,7 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 
 	Rectangle rect = rectangleLights[light.shapeId & ~RECTANGLE_SHAPE];
 
-	if(dot((-lightDir), lightNormal) > 0 ){
+	if(dot((-lightDir), lightNormal) > EPSILON ){
 		float lightWidth = rect.width;
 		float lightLength = rect.height;
 
@@ -355,10 +385,10 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 		float solidAngle = RectangleSolidAngle(worldPos, p0, p1, p2, p3);
 
 		float illuminance = solidAngle * 0.2 * (
-							Saturate(dot(normalize(p0 - worldPos), N)),
-							Saturate(dot(normalize(p1 - worldPos), N)),
-							Saturate(dot(normalize(p2 - worldPos), N)),
-							Saturate(dot(normalize(p3 - worldPos), N)),
+							Saturate(dot(normalize(p0 - worldPos), N)) +
+							Saturate(dot(normalize(p1 - worldPos), N)) +
+							Saturate(dot(normalize(p2 - worldPos), N)) +
+							Saturate(dot(normalize(p3 - worldPos), N)) +
 							Saturate(dot(normalize(lightDir), N))
 							);
 		
@@ -372,40 +402,14 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 			vec3 Na = lightNormal;
 			vec3 R = -reflect(V, N);
 			R = getSpecularDominantDirArea(N, R, roughness);
+			float 
 			specularAttenuation = Saturate(abs(dot(Na, R)));
 
 			if(specularAttenuation > 0){
-				float t = TraceRectangle(worldPos, R, p0, p1, p2, p3);
+				bool hit = TraceRectangle(worldPos, R, p0, p1, p2, p3);
 
-				if( t > 0){
+				if( hit){
 					L = R;
-				}
-				else{
-					vec3 pointOnLightPlane = worldPos + R * TracePlane(worldPos, R, lightPos, Na);
-					
-					vec3 possibleLightPos[4] ={
-						ClosestPointOnSegment(p0, p1, pointOnLightPlane),
-						ClosestPointOnSegment(p1, p2, pointOnLightPlane),
-						ClosestPointOnSegment(p2, p3, pointOnLightPlane),
-						ClosestPointOnSegment(p3, p0, pointOnLightPlane)
-					};
-
-					float dist[4] = {
-						distance(possibleLightPos[0], pointOnLightPlane),
-						distance(possibleLightPos[1], pointOnLightPlane),
-						distance(possibleLightPos[2], pointOnLightPlane),
-						distance(possibleLightPos[3], pointOnLightPlane)
-					};
-
-					lightPos = possibleLightPos[0];
-					float minDist = dist[0];
-					for(int i = 1; i < 4; i++){
-						if(dist[i] < minDist){
-							minDist = dist[i];
-							lightPos = possibleLightPos[i];
-						}
-					}
-					L = normalize(lightPos - worldPos);
 				}
 			}
 		}
@@ -424,7 +428,7 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 		float NdotL = dot(N, L);
 		float NdotV = dot(N, V);
 
-		vec3 specular = (NDF * G * F)/(4.0 * Saturate(dot(N, V)) * Saturate(dot(N, L)));
+		vec3 specular = (NDF * G * F)/(4.0 * Saturate(dot(N, V)) * Saturate(dot(N, L)) + EPSILON);
 	
 		vec3 color = surface.color;
 		lighting.direct.diffuse = max(vec3(0), color/PI * radiance * Saturate(NdotL) * Kd);

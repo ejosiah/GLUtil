@@ -114,10 +114,10 @@ public:
 	void initVectors() {
 		vec3 eyes = activeCamera().getPosition();
 		vec3 lightPos = (light.localToWorld * vec4(light.position, 1)).xyz;
-		vec3 l = normalize(lightPos - x);
+		vec3 l = lightPos - x;
 		vec3 v = normalize(activeCamera().getPosition() - x);
 		vec3 n = { 0, 1, 0 };
-		vec3 r = -reflect(v, n);
+		vec3 r = reflect(v, n);
 		mat3 lightToWorld3 = mat3(transpose(inverse(light.localToWorld)));
 		vec3 na = normalize(lightToWorld3 * light.normal);
 
@@ -125,7 +125,7 @@ public:
 		V = new Vector{ v, x, 1.0f, GREEN };
 		N = new Vector{ n, x, 1.0f, RED};
 		Na = new Vector{ na, lightPos, 1.0f, RED };
-		R = new Vector{ r,lightPos , 1.0, YELLOW };
+		R = new Vector{ r, x , 1.0, YELLOW };
 	}
 
 	void createDisk() {
@@ -210,9 +210,9 @@ public:
 			shade(cube);
 
 			mat4 model = translate(mat4(1), { 0, offset, 0 });
-		//	model = rotate(model, half_pi<float>(), { 0, 1, 0 });
-		//	send(activeCamera(), model);
-		//	shade(orb);
+			model = rotate(model, half_pi<float>(), { 0, 1, 0 });
+			send(activeCamera(), model);
+			shade(orb);
 
 			//mat4 model = translate(mat4(1), { -3, 2, 0 });
 			//send(activeCamera(), model);
@@ -231,13 +231,13 @@ public:
 			//shade(light.shape);
 			shade(rectangle);
 
-			send(activeCamera());
-			shade(pos);
-			shade(L);
-			shade(V);
-			shade(N);
-			shade(Na);
-			shade(R);
+			//send(activeCamera());
+			//shade(pos);
+			//shade(L);
+			//shade(V);
+			//shade(N);
+			//shade(Na);
+			//shade(R);
 		});
 	}
 
@@ -256,7 +256,10 @@ public:
 	}
 
 	void update(float t) {
-		V->update(normalize( activeCamera().getPosition() - x));
+		vec3 v = normalize(activeCamera().getPosition() - x);
+		vec3 r = -reflect(v, { 0, 1, 0 });
+		V->update(v);
+		R->update(r);
 	}
 
 	void resized() override {

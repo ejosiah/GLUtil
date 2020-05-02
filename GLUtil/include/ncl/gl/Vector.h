@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "orientation.h"
+#include <cmath>
 
 namespace ncl {
 	namespace gl {
@@ -44,7 +45,7 @@ namespace ncl {
 				vec3 v2 = normalize(newVec);
 				float angle = degrees(acos(dot(v1, v2)));
 
-				if (abs(v1) == abs(v2) && angle != std::numeric_limits<float>::infinity() && angle < 1.0f) {
+				if (abs(v1) == abs(v2) || (std::isnan(angle) ||  angle < 5.f)) {
 					headTransform = bodyTransform = mat4{ 1 };
 					return false;
 				}
@@ -91,13 +92,23 @@ namespace ncl {
 
 				if (doUpdate) {
 					body->update2<glm::vec3>(0, [&](glm::vec3* ptr) {
-						glm::vec4 p = glm::vec4{ *ptr, 1 };
-						*ptr = glm::vec3(bodyTransform * p);
-						});
+						int size = body->numVertices(0);
+						glm::mat4 model = glm::translate(glm::mat4(1), origin) * bodyTransform * glm::translate(glm::mat4(1), -origin);
+						for (int i = 0; i < size; i++) {
+							glm::vec4 p = glm::vec4{ *ptr, 1 };
+							*ptr = glm::vec3(model * p);
+							ptr++;
+						}
+					});
 					head->update2<glm::vec3>(0, [&](glm::vec3* ptr) {
-						glm::vec4 p = glm::vec4{ *ptr, 1 };
-						*ptr = glm::vec3(headTransform * p);
-						});
+						int size = head->numVertices(0);
+						glm::mat4 model = glm::translate(glm::mat4(1), origin) * headTransform * glm::translate(glm::mat4(1), -origin);
+						for (int i = 0; i < size; i++) {
+							glm::vec4 p = glm::vec4{ *ptr, 1 };
+							*ptr = glm::vec3(model * p);
+							ptr++;
+						}
+					});
 					value = newValue;
 				}
 			}
