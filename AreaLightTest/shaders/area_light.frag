@@ -35,7 +35,7 @@ struct Disk{
 };
 
 struct Rectangle{
-	vec3 left, top;
+	float width, height;
 };
 
 struct Tube{
@@ -84,11 +84,7 @@ float Area(Disk d){
 }
 
 float Area(Rectangle rect){
-	// we assume we are in light coordiante system;
-	vec3 v = (rect.top - rect.left);
-	float w = dot(vec3(1, 0, 0), v);
-	float h = dot(vec3(0, 0, 1), v);
-	return w * h;
+	return rect.width * rect.height;
 }
 
 float Area(Tube tube){
@@ -219,8 +215,9 @@ void SphereLight(Light light, Surface surface, vec3 eyes, inout Lighting lightin
 	lighting.direct.specular = max(vec3(0), specular * radiance * Saturate(NdotL));
 }
 
-float tracePlane(vec3 o, vec3 d, vec3 po, vec3 pn){
-	return dot(pn, (po - o) / dot(pn, d));
+float TracePlane(vec3 o, vec3 d, vec3 po, vec3 pn){
+	float t = dot(po, pn) - dot(pn, o);
+	return t/dot(pn, d);
 }
 
 void DiskLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting){
@@ -232,7 +229,7 @@ void DiskLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting)
 	vec3 L = normalize(lightDir);
 	vec3 N = normalize(gl_FrontFacing ? surface.normal : -surface.normal);
 	vec3 V = normalize(eyes - worldPos);
-	vec3 r = reflect(-V, N);
+	vec3 R = -reflect(V, N);
 	vec3 H = normalize(L+V);
 	vec3 Na = normalize(inverse(transpose(mat3(light.localToWorld))) * light.normal);
 	float roughness = surface.roughness;
@@ -247,13 +244,13 @@ void DiskLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting)
 	float intensity = light.value/( sqrLightRadius  * PI * PI);
 	vec3 radiance = light.color * intensity * illuminance;
 
-	r = getSpecularDominantDirArea(N, r, roughness);
+	R = getSpecularDominantDirArea(N, R, roughness);
 
-	float specularAttenuation = Saturate(abs(dot(Na, r)));
+	float specularAttenuation = Saturate(abs(dot(Na, R)));
 
 	if(specularAttenuation > 0){
-		float t = tracePlane(worldPos, r, lightPos, Na);
-		vec3 p = worldPos + r * t;
+		float t = TracePlane(worldPos, R, lightPos, Na);
+		vec3 p = worldPos + R * t;
 		vec3 centerToRay = p - lightPos;
 		vec3 closetPoint = L + centerToRay * Saturate(0.5 / length(centerToRay));
 		L = normalize(closetPoint);
@@ -303,7 +300,7 @@ float RectangleSolidAngle(vec3 worldPos, vec3 p0, vec3 p1, vec3 p2, vec3 p3){
 
 float TraceTriangle(vec3 o, vec3 d, vec3 A, vec3 B, vec3 C){
 	vec3 pN = normalize(cross(B - A, C - B));
-	float t = tracePlane(o, d, A, pN);
+	float t = TracePlane(o, d, A, pN);
 
 	vec3 p = o + d * t;
 
@@ -331,23 +328,29 @@ vec3 ClosestPointOnSegment(vec3 a, vec3 b, vec3 c){
 void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting){
 	vec3 worldPos = surface.position;
 	vec3 lightPos = (light.localToWorld * vec4(light.position, 1)).xyz;
-	vec3 lightNormal = (mat3(light.localToWorld) * light.normal);
+	mat3 lightToWorld3 = mat3(transpose(inverse(light.localToWorld)));
+	vec3 lightNormal =  normalize(lightToWorld3 * light.normal);
 	vec3 lightDir = lightPos - surface.position;
+	float roughness = surface.roughness;
 
+	Rectangle rect = rectangleLights[light.shapeId & ~RECTANGLE_SHAPE];
 
 	if(dot((-lightDir), lightNormal) > 0 ){
-		float lightWidth = 2;
-		float lightLength = 2;
-		vec3 lightLeft = vec3(-1, 3.98, -1);
-		vec3 lightUP = vec3(1, 3.98, 1);
+		float lightWidth = rect.width;
+		float lightLength = rect.height;
+
+		vec3 lightLeft = lightToWorld3 * vec3(1, 0, 0);
+		vec3 lightUp = lightToWorld3 * vec3(0, 0, 1);
 		float halfWidth = lightWidth * 0.5;
 		float halfHeight = lightLength * 0.5;
 		vec3 N = normalize(gl_FrontFacing ? surface.normal : -surface.normal);
 
-		vec3 p0 = lightLeft;
-		vec3 p1 = p0 + vec3(lightWidth, 0, 0);
-		vec3 p2 = lightUP;
-		vec3 p3 = p2 - vec3(lightWidth, 0, 0);
+
+
+		 vec3 p0 = lightPos + lightLeft * -halfWidth + lightUp * halfHeight ;
+		 vec3 p1 = lightPos + lightLeft * -halfWidth + lightUp * -halfHeight ;
+		 vec3 p2 = lightPos + lightLeft * halfWidth + lightUp * -halfHeight ;
+		 vec3 p3 = lightPos + lightLeft * halfWidth + lightUp * halfHeight ;
 
 		float solidAngle = RectangleSolidAngle(worldPos, p0, p1, p2, p3);
 
@@ -359,15 +362,57 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 							Saturate(dot(normalize(lightDir), N))
 							);
 		
-
-		float distSqr = dot(lightDir, lightDir);
-		float roughness = surface.roughness;
-		vec3 radiance = light.color * light.value/(lightWidth * lightLength) * illuminance;
-
 		vec3 L = normalize(lightDir);
 		
 		vec3 V = normalize(eyes - surface.position);
 		vec3 H = normalize(L + V);
+
+		float specularAttenuation = 1;
+//		if(illuminance > 0){
+//			vec3 Na = lightNormal;
+//			vec3 R = -reflect(V, N);
+//			R = getSpecularDominantDirArea(N, R, roughness);
+//			specularAttenuation = Saturate(abs(dot(Na, R)));
+//
+//			if(specularAttenuation > 0){
+//				float t = TraceRectangle(worldPos, R, p0, p1, p2, p3);
+//
+//				if( t > 0){
+//					L = R;
+//				}else{
+//					vec3 pointOnLightPlane = worldPos + R * TracePlane(worldPos, R, lightPos, Na);
+//					
+//					vec3 possibleLightPos[4] ={
+//						ClosestPointOnSegment(p0, p1, pointOnLightPlane),
+//						ClosestPointOnSegment(p1, p2, pointOnLightPlane),
+//						ClosestPointOnSegment(p2, p3, pointOnLightPlane),
+//						ClosestPointOnSegment(p3, p0, pointOnLightPlane)
+//					};
+//
+//					float dist[4] = {
+//						distance(possibleLightPos[0], pointOnLightPlane),
+//						distance(possibleLightPos[1], pointOnLightPlane),
+//						distance(possibleLightPos[2], pointOnLightPlane),
+//						distance(possibleLightPos[3], pointOnLightPlane)
+//					};
+//
+//					lightPos = possibleLightPos[0];
+//					float minDist = dist[0];
+//					for(int i = 1; i < 4; i++){
+//						if(dist[i] < minDist){
+//							minDist = dist[i];
+//							lightPos = possibleLightPos[i];
+//						}
+//					}
+//					L = normalize(lightPos - worldPos);
+//				}
+//			}
+//		}
+
+
+		float distSqr = dot(lightDir, lightDir);
+		float roughness = surface.roughness;
+		vec3 radiance = light.color * light.value/Area(rect) * illuminance;
 
 		float NDF = DistributionGGX(N, H, roughness);
 		float k = (roughness * roughness)/8;
@@ -382,7 +427,7 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 	
 		vec3 color = surface.color;
 		lighting.direct.diffuse = max(vec3(0), color/PI * radiance * Saturate(NdotL) * Kd);
-		lighting.direct.specular = max(vec3(0), specular * radiance * Saturate(NdotL));
+		lighting.direct.specular = max(vec3(0), specularAttenuation * specular * radiance * Saturate(NdotL));
 	}else{
 		lighting.direct.diffuse = vec3(0);
 		lighting.direct.specular = vec3(0);
@@ -398,7 +443,6 @@ void pointLight(Light light, Surface surface, vec3 eyes, inout Lighting lighting
 	vec3 L = normalize(lightDir);
 	vec3 N = normalize(gl_FrontFacing ? surface.normal : -surface.normal);
 	vec3 V = normalize(eyes - worldPos);
-	vec3 r = reflect(-V, N);
 	vec3 H = normalize(L+V);
 	float roughness = surface.roughness;
 

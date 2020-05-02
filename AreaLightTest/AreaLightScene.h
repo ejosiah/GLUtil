@@ -36,7 +36,7 @@ struct Disk_L {
 };
 
 struct Rectangle_L {
-	vec3 left, top;
+	float width, height;
 };
 
 struct Tube_L {
@@ -57,6 +57,15 @@ struct Light {
 	Shape* shape;
 	float radius;
 	mat4 localToWorld = glm::mat4{ 1 };
+};
+
+struct RenderEq {
+	vec3 V;
+	vec3 N;
+	vec3 L;
+	vec3 Na;
+	vec3 R;
+	vec3 P;
 };
 
 
@@ -88,17 +97,16 @@ public:
 		light.radius = 0.5f;
 		light.shape = new Sphere(light.radius, 50, 50, WHITE);
 
-	//	light.localToWorld = translate(mat4(1), { 3.9, 2,  0 });
-		light.localToWorld = translate(mat4(1), vec3(0, 3.98, 0));
-	//	light.localToWorld = rotate(light.localToWorld, glm::radians(-90.0f), { 0, 0, 1 });
-		rectangleLightShape.left = { -1.0f, 0, -1.0f };
-		rectangleLightShape.top = { 1.0f, 0, 1.0f };
+		light.localToWorld = translate(mat4(1), { 3.9, 2,  0 });
+		light.localToWorld = rotate(light.localToWorld, glm::radians(-90.0f), { 0, 0, 1 });
+		rectangleLightShape.width = 2.0f;
+		rectangleLightShape.height = 2.0f;
 		light.shapeId = 2 | RECTANGLE_SHAPE;
-		//light.normal = mat3(light.localToWorld) * light.normal;
 
 		sphere = new Sphere(0.2, 50, 50, RED);
 		createDisk();
 		createRectangle();
+		createTube();
 	}
 
 	void createDisk() {
@@ -129,6 +137,53 @@ public:
 		rectangle = new ProvidedMesh(mesh);
 	}
 
+	void createTube() {
+		vector<Mesh> meshes;
+		auto cylinder = new Cylinder(0.2f, 1.0f);
+		auto cap0 = new Hemisphere(0.2f);
+		Mesh mesh = cap0->getMeshes().at(0);
+		Mesh frontCap = mesh;
+		frontCap.name = "front_cap";
+		mat4 model = translate(mat4{ 1 }, { 0, 0, 0.5f });
+		model = rotate(model, half_pi<float>(), { 1, 0, 0 });
+
+		std::transform(frontCap.positions.begin(), frontCap.positions.end(), frontCap.positions.begin(), [&](auto p) {
+			return vec3((model * vec4(p, 1.0f)));
+		});
+		std::transform(frontCap.normals.begin(), frontCap.normals.end(), frontCap.normals.begin(), [&](auto n) {
+			return mat3(model) * n;
+		});
+		Mesh backCap = frontCap;
+		backCap.name = "back_cap";
+		model = rotate(mat4{ 1 }, pi<float>(), { 0, 1, 0 });
+
+		std::transform(backCap.positions.begin(), backCap.positions.end(), backCap.positions.begin(), [&](auto p) {
+			return vec3((model * vec4(p, 1.0f)));
+		});
+		std::transform(backCap.normals.begin(), backCap.normals.end(), backCap.normals.begin(), [&](auto n) {
+			return mat3(model) * n;
+		});
+
+		Mesh body = cylinder->getMeshes().at(0);
+		body.name = "body";
+		model = translate(mat4{ 1 }, { 0.0f, 0.0f, 0.5f });
+
+		std::transform(body.positions.begin(), body.positions.end(), body.positions.begin(), [&](auto p) {
+			return vec3((model * vec4(p, 1.0f)));
+			});
+
+		vector<vec4> colors{ body.positions.size(), GRAY };
+		frontCap.colors = vector<vec4>{ colors };
+		body.colors = colors;
+		backCap.colors = vector<vec4>{ colors };
+
+		meshes.push_back(frontCap);
+		meshes.push_back(body);
+		meshes.push_back(backCap);
+		delete cylinder;
+		tube = new ProvidedMesh(meshes);
+	}
+
 	void display() override {
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader("area_light")([&]() {
@@ -146,13 +201,18 @@ public:
 			
 			send("eyes", activeCamera().getPosition().xyz);
 			_send(light);
+
+			model = translate(mat4(1), { 0, 1, 0 });
+			send(activeCamera(), model);
+			shade(tube);
 		});
 
 		shader("flat")([&]() {
 			send(activeCamera(), light.localToWorld);
 			//shade(light.shape);
 			shade(rectangle);
-			shade(rectangle);
+
+			send(activeCamera());
 		});
 	}
 
@@ -166,8 +226,8 @@ public:
 		send("light.localToWorld", light.localToWorld);
 		send("light.normal", light.normal);
 		send("light.shapeId", light.shapeId);
-		send("rectangleLights[2].left", rectangleLightShape.left);
-		send("rectangleLights[2].top", rectangleLightShape.top);
+		send("rectangleLights[2].width", rectangleLightShape.width);
+		send("rectangleLights[2].height", rectangleLightShape.height);
 	}
 
 	void resized() override {
@@ -182,6 +242,7 @@ private:
 	ProvidedMesh* disk;
 	ProvidedMesh* rectangle;
 	Rectangle_L rectangleLightShape;
+	ProvidedMesh* tube;
 	vec4 lightColor;
 	float offset;
 };

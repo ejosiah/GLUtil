@@ -9,7 +9,7 @@ namespace ncl {
 	namespace gl {
 		class Hemisphere : public Shape {
 		public:
-			Hemisphere(GLfloat r, GLuint p, GLuint q, const glm::vec4& color = glm::vec4(1)) :
+			Hemisphere(GLfloat r, GLuint p = 50, GLuint q = 50, const glm::vec4& color = glm::vec4(1)) :
 				Shape(createMesh(r, p, q, color), false){
 			}
 
