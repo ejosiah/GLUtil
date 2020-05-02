@@ -84,12 +84,12 @@ public:
 		model = translate(model, { 0, 0.5, 0 });
 		cube = new Cube{ 1.0f, model, GRAY };
 
-		orb = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 0.5);
+		orb = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 0.5);
 		auto midpoint = (orb->bound->max() - orb->bound->min()) * 0.5f;
 		offset = dot(midpoint, { 0, 1, 0 });
-		activeCamera().lookAt({ 0, 0, 3 }, vec3(0), { 0, 1, 0 });
 		activeCamera().setMode(Camera::Mode::FIRST_PERSON);
-
+		activeCamera().lookAt({ 0, 2, 3 }, vec3(0), { 0, 1, 0 });
+		auto& camm = activeCamera();
 		light.type = AreaSphere;
 		light.unit = Luminance;
 		light.value = 700;
@@ -104,9 +104,28 @@ public:
 		light.shapeId = 2 | RECTANGLE_SHAPE;
 
 		sphere = new Sphere(0.2, 50, 50, RED);
+		pos = new Sphere(0.1, 10, 10, RED);
 		createDisk();
 		createRectangle();
 		createTube();
+		initVectors();
+	}
+
+	void initVectors() {
+		vec3 eyes = activeCamera().getPosition();
+		vec3 lightPos = (light.localToWorld * vec4(light.position, 1)).xyz;
+		vec3 l = normalize(lightPos - x);
+		vec3 v = normalize(activeCamera().getPosition() - x);
+		vec3 n = { 0, 1, 0 };
+		vec3 r = -reflect(v, n);
+		mat3 lightToWorld3 = mat3(transpose(inverse(light.localToWorld)));
+		vec3 na = normalize(lightToWorld3 * light.normal);
+
+		L = new Vector{ l, x, 1.0f, BLUE };
+		V = new Vector{ v, x, 1.0f, GREEN };
+		N = new Vector{ n, x, 1.0f, RED};
+		Na = new Vector{ na, lightPos, 1.0f, RED };
+		R = new Vector{ r,lightPos , 1.0, YELLOW };
 	}
 
 	void createDisk() {
@@ -191,9 +210,9 @@ public:
 			shade(cube);
 
 			mat4 model = translate(mat4(1), { 0, offset, 0 });
-			model = rotate(model, half_pi<float>(), { 0, 1, 0 });
-			send(activeCamera(), model);
-			shade(orb);
+		//	model = rotate(model, half_pi<float>(), { 0, 1, 0 });
+		//	send(activeCamera(), model);
+		//	shade(orb);
 
 			//mat4 model = translate(mat4(1), { -3, 2, 0 });
 			//send(activeCamera(), model);
@@ -202,9 +221,9 @@ public:
 			send("eyes", activeCamera().getPosition().xyz);
 			_send(light);
 
-			model = translate(mat4(1), { 0, 1, 0 });
-			send(activeCamera(), model);
-			shade(tube);
+			//model = translate(mat4(1), { 0, 1, 0 });
+			//send(activeCamera(), model);
+			//shade(tube);
 		});
 
 		shader("flat")([&]() {
@@ -213,6 +232,12 @@ public:
 			shade(rectangle);
 
 			send(activeCamera());
+			shade(pos);
+			shade(L);
+			shade(V);
+			shade(N);
+			shade(Na);
+			shade(R);
 		});
 	}
 
@@ -230,6 +255,10 @@ public:
 		send("rectangleLights[2].height", rectangleLightShape.height);
 	}
 
+	void update(float t) {
+		V->update(normalize( activeCamera().getPosition() - x));
+	}
+
 	void resized() override {
 		//activeCamera().perspective(65.0f, aspectRatio, 0.1f, 100.0f);
 	}
@@ -239,10 +268,17 @@ private:
 	Model* orb;
 	Light light;
 	Sphere* sphere;
+	Sphere* pos;
 	ProvidedMesh* disk;
 	ProvidedMesh* rectangle;
 	Rectangle_L rectangleLightShape;
 	ProvidedMesh* tube;
 	vec4 lightColor;
+	vec3 x{ 0, 0, 0 };
+	Vector* N;
+	Vector* V;
+	Vector* L;
+	Vector* Na;
+	Vector* R;
 	float offset;
 };

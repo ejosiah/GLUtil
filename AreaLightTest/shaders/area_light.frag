@@ -115,7 +115,7 @@ float illuminanceSphereOrDisk(float cosTheta, float sinSigmaSqr){
 
 vec3 getSpecularDominantDirArea(vec3 N, vec3 R, float roughness){
 	float lerpFactor = (1 - roughness);
-	return normalize(mix(R, N, lerpFactor));
+	return normalize(mix(N, R, lerpFactor));
 }
 
 float DistributionGGX(vec3 N, vec3 H, float a){
@@ -368,46 +368,47 @@ void RectangleLight(Light light, Surface surface, vec3 eyes, inout Lighting ligh
 		vec3 H = normalize(L + V);
 
 		float specularAttenuation = 1;
-//		if(illuminance > 0){
-//			vec3 Na = lightNormal;
-//			vec3 R = -reflect(V, N);
-//			R = getSpecularDominantDirArea(N, R, roughness);
-//			specularAttenuation = Saturate(abs(dot(Na, R)));
-//
-//			if(specularAttenuation > 0){
-//				float t = TraceRectangle(worldPos, R, p0, p1, p2, p3);
-//
-//				if( t > 0){
-//					L = R;
-//				}else{
-//					vec3 pointOnLightPlane = worldPos + R * TracePlane(worldPos, R, lightPos, Na);
-//					
-//					vec3 possibleLightPos[4] ={
-//						ClosestPointOnSegment(p0, p1, pointOnLightPlane),
-//						ClosestPointOnSegment(p1, p2, pointOnLightPlane),
-//						ClosestPointOnSegment(p2, p3, pointOnLightPlane),
-//						ClosestPointOnSegment(p3, p0, pointOnLightPlane)
-//					};
-//
-//					float dist[4] = {
-//						distance(possibleLightPos[0], pointOnLightPlane),
-//						distance(possibleLightPos[1], pointOnLightPlane),
-//						distance(possibleLightPos[2], pointOnLightPlane),
-//						distance(possibleLightPos[3], pointOnLightPlane)
-//					};
-//
-//					lightPos = possibleLightPos[0];
-//					float minDist = dist[0];
-//					for(int i = 1; i < 4; i++){
-//						if(dist[i] < minDist){
-//							minDist = dist[i];
-//							lightPos = possibleLightPos[i];
-//						}
-//					}
-//					L = normalize(lightPos - worldPos);
-//				}
-//			}
-//		}
+		if(illuminance > 0){
+			vec3 Na = lightNormal;
+			vec3 R = -reflect(V, N);
+			R = getSpecularDominantDirArea(N, R, roughness);
+			specularAttenuation = Saturate(abs(dot(Na, R)));
+
+			if(specularAttenuation > 0){
+				float t = TraceRectangle(worldPos, R, p0, p1, p2, p3);
+
+				if( t > 0){
+					L = R;
+				}
+				else{
+					vec3 pointOnLightPlane = worldPos + R * TracePlane(worldPos, R, lightPos, Na);
+					
+					vec3 possibleLightPos[4] ={
+						ClosestPointOnSegment(p0, p1, pointOnLightPlane),
+						ClosestPointOnSegment(p1, p2, pointOnLightPlane),
+						ClosestPointOnSegment(p2, p3, pointOnLightPlane),
+						ClosestPointOnSegment(p3, p0, pointOnLightPlane)
+					};
+
+					float dist[4] = {
+						distance(possibleLightPos[0], pointOnLightPlane),
+						distance(possibleLightPos[1], pointOnLightPlane),
+						distance(possibleLightPos[2], pointOnLightPlane),
+						distance(possibleLightPos[3], pointOnLightPlane)
+					};
+
+					lightPos = possibleLightPos[0];
+					float minDist = dist[0];
+					for(int i = 1; i < 4; i++){
+						if(dist[i] < minDist){
+							minDist = dist[i];
+							lightPos = possibleLightPos[i];
+						}
+					}
+					L = normalize(lightPos - worldPos);
+				}
+			}
+		}
 
 
 		float distSqr = dot(lightDir, lightDir);
