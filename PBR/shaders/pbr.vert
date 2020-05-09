@@ -40,7 +40,6 @@ void main(){
 	vertex_out.tangent = t;
 	vertex_out.bitangent = b;
 
-	mat3 olm = mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z);
 
 	vec4 worldPos = M * xform * vec4(position, 1.0);
 

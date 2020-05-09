@@ -197,6 +197,7 @@
     <ClInclude Include="include\ncl\gl\SceneObject.h" />
     <ClInclude Include="include\ncl\gl\shaders.h" />
     <ClInclude Include="include\ncl\gl\shader_binding.h" />
+    <ClInclude Include="include\ncl\gl\ShadowMap.h" />
     <ClInclude Include="include\ncl\gl\SkyBox.h" />
     <ClInclude Include="include\ncl\gl\spectrum.h" />
     <ClInclude Include="include\ncl\gl\StorageBufferObj.h" />
@@ -209,6 +210,7 @@
     <ClInclude Include="include\ncl\gl\TransformFeedBack.h" />
     <ClInclude Include="include\ncl\gl\UserCameraController.h" />
     <ClInclude Include="include\ncl\gl\Vector.h" />
+    <ClInclude Include="include\ncl\gl\ViewFrustum.h" />
     <ClInclude Include="include\ncl\gl\WithTangent.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
@@ -271,6 +273,7 @@
     <None Include="build.gradle" />
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
+    <None Include="include\ncl\gl\detail\ShadowMap.inl" />
     <None Include="include\ncl\gl\detail\StorageBufferObj.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
     <None Include="include\ncl\sampling\Sampler.inl" />
@@ -320,8 +323,19 @@
     <None Include="shaders\phong_lighting2.vert" />
     <None Include="shaders\per_fragment_lighing.frag" />
     <None Include="shaders\phong_lighting.vert" />
+    <None Include="shaders\point_shadow_map.frag" />
+    <None Include="shaders\point_shadow_map.geom" />
+    <None Include="shaders\point_shadow_map.vert" />
+    <None Include="shaders\point_shadow_map_render.frag" />
+    <None Include="shaders\point_shadow_map_render.vert" />
     <None Include="shaders\quad.tes" />
     <None Include="shaders\quad.vert" />
+    <None Include="shaders\screen.frag" />
+    <None Include="shaders\screen.vert" />
+    <None Include="shaders\shadow_map.frag" />
+    <None Include="shaders\shadow_map.vert" />
+    <None Include="shaders\shadow_map_render.frag" />
+    <None Include="shaders\shadow_map_render.vert" />
     <None Include="shaders\simple_light.frag" />
     <None Include="shaders\skybox.frag" />
     <None Include="shaders\skybox.geom" />

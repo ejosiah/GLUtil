@@ -102,13 +102,33 @@ namespace ncl {
 				return _name;
 			}
 
+			inline GLuint albedo() {
+				return _albedo->bufferId();
+			}
+
+			inline GLuint normal() {
+				return _normal->bufferId();
+			}
+
+			inline GLuint metalness() {
+				return _metalness->bufferId();
+			}
+
+			inline GLuint roughness() {
+				return _roughness->bufferId();
+			}
+
+			inline GLuint ambientOcclusion() {
+				return _ambientOcclusion->bufferId();
+			}
+
 		private:
 			std::string _name;
-			gl::Texture2D* albedo;
-			gl::Texture2D* normal;
-			gl::Texture2D* metalness;
-			gl::Texture2D* roughness;
-			gl::Texture2D* ambientOcclusion;
+			gl::Texture2D* _albedo;
+			gl::Texture2D* _normal;
+			gl::Texture2D* _metalness;
+			gl::Texture2D* _roughness;
+			gl::Texture2D* _ambientOcclusion;
 			bool _invertBlack = false;
 			bool _glossiness = false;
 		};
@@ -152,27 +172,27 @@ namespace ncl {
 		TextureMaterial::TextureMaterial(std::string name, glm::vec3 albedo, float metalness, float roughness, int width, int height)
 			: _name{ name } {
 			void* data = fill(albedo, width, height);
-			this->albedo = new gl::Texture2D(data, width, height, "albedoMap", ALBEDO_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, glm::vec2{ GL_CLAMP_TO_EDGE });
+			this->_albedo = new gl::Texture2D(data, width, height, "albedoMap", ALBEDO_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE, glm::vec2{ GL_CLAMP_TO_EDGE });
 		//	this->albedo = new gl::CheckerTexture(ALBEDO_ID, "albedoMap");
 
 			data = fill(glm::vec3(metalness), width, height);
-			this->metalness = new gl::Texture2D(data, width, height, "metalnessMap", METALNESS_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
+			this->_metalness = new gl::Texture2D(data, width, height, "metalnessMap", METALNESS_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
 
 			data = fill(glm::vec3(roughness), width, height);
-			this->roughness = new gl::Texture2D(data, width, height, "roughnessMap", ROUGHNESS_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
+			this->_roughness = new gl::Texture2D(data, width, height, "roughnessMap", ROUGHNESS_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
 
 			data = fill(glm::vec3(glm::vec3(0, 0, 1)), width, height);
-			this->ambientOcclusion = new gl::Texture2D(data, width, height, "aoMap", AMBIENT_OCCLU_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
-			this->normal = new gl::Texture2D(data, width, height, "normalMap", NORMAL_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
+			this->_ambientOcclusion = new gl::Texture2D(data, width, height, "aoMap", AMBIENT_OCCLU_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
+			this->_normal = new gl::Texture2D(data, width, height, "normalMap", NORMAL_ID, GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE,glm::vec2{ GL_CLAMP_TO_EDGE });
 		}
 
 		TextureMaterial::TextureMaterial(std::string name, std::string albedoPath, std::string normalPath, std::string metalPath, std::string roughPath, std::string aoPath, bool invertBlack, bool glossiness)
 			: _name{ name } {
-			this->albedo = new gl::Texture2D(albedoPath, ALBEDO_ID, "albedoMap", GL_SRGB8, GL_RGB);
-			this->normal = new gl::Texture2D(normalPath, NORMAL_ID, "normalMap");
-			this->metalness = new gl::Texture2D(metalPath, METALNESS_ID, "metalnessMap");
-			this->roughness = new gl::Texture2D(roughPath, ROUGHNESS_ID, "roughnessMap");
-			this->ambientOcclusion = new gl::Texture2D(aoPath, AMBIENT_OCCLU_ID, "aoMap");
+			this->_albedo = new gl::Texture2D(albedoPath, ALBEDO_ID, "albedoMap", GL_SRGB8, GL_RGB);
+			this->_normal = new gl::Texture2D(normalPath, NORMAL_ID, "normalMap");
+			this->_metalness = new gl::Texture2D(metalPath, METALNESS_ID, "metalnessMap");
+			this->_roughness = new gl::Texture2D(roughPath, ROUGHNESS_ID, "roughnessMap");
+			this->_ambientOcclusion = new gl::Texture2D(aoPath, AMBIENT_OCCLU_ID, "aoMap");
 			this->_invertBlack = invertBlack;
 			this->_glossiness = glossiness;
 		}
@@ -180,13 +200,13 @@ namespace ncl {
 		TextureMaterial::TextureMaterial(std::string name, Albedo albedo, Normal normal, Metalness metalness, Roughness roughness, AmbientOcculusion ao, bool invertBlack, bool glossiness):
 			_name{ name } {
 			// TODO albedo has to be a path if any other is a value
-			this->albedo = std::visit(Visitor{ "albedoMap", ALBEDO_ID, GL_SRGB8 }, albedo);
-			int w = this->albedo->width();
-			int h = this->albedo->height();
-			this->normal = std::visit(Visitor{"normalMap", NORMAL_ID, GL_RGB, w, h }, normal);
-			this->metalness = std::visit(Visitor{ "metalnessMap", METALNESS_ID, GL_RGB, w, h }, metalness);
-			this->roughness = std::visit(Visitor{ "roughnessMap", ROUGHNESS_ID, GL_RGB, w, h }, roughness);
-			this->ambientOcclusion = std::visit(Visitor{ "aoMap", AMBIENT_OCCLU_ID, GL_RGB, w, h }, ao);
+			this->_albedo = std::visit(Visitor{ "albedoMap", ALBEDO_ID, GL_SRGB8 }, albedo);
+			int w = this->_albedo->width();
+			int h = this->_albedo->height();
+			this->_normal = std::visit(Visitor{"normalMap", NORMAL_ID, GL_RGB, w, h }, normal);
+			this->_metalness = std::visit(Visitor{ "metalnessMap", METALNESS_ID, GL_RGB, w, h }, metalness);
+			this->_roughness = std::visit(Visitor{ "roughnessMap", ROUGHNESS_ID, GL_RGB, w, h }, roughness);
+			this->_ambientOcclusion = std::visit(Visitor{ "aoMap", AMBIENT_OCCLU_ID, GL_RGB, w, h }, ao);
 			this->_invertBlack = invertBlack;
 			this->_glossiness = glossiness;
 		}
@@ -196,11 +216,11 @@ namespace ncl {
 		}
 
 		TextureMaterial::~TextureMaterial() {
-			delete albedo;
-			delete normal;
-			delete metalness;
-			delete roughness;
-			delete ambientOcclusion;
+			delete _albedo;
+			delete _normal;
+			delete _metalness;
+			delete _roughness;
+			delete _ambientOcclusion;
 		}
 
 		TextureMaterial& TextureMaterial::operator=(TextureMaterial&& source) noexcept {
@@ -222,30 +242,30 @@ namespace ncl {
 		}
 
 		void TextureMaterial::sendTo(gl::Shader& shader) {
-			albedo->sendTo(shader);
-			normal->sendTo(shader);
-			metalness->sendTo(shader);
-			roughness->sendTo(shader);
-			ambientOcclusion->sendTo(shader);
+			_albedo->sendTo(shader);
+			_normal->sendTo(shader);
+			_metalness->sendTo(shader);
+			_roughness->sendTo(shader);
+			_ambientOcclusion->sendTo(shader);
 			shader.sendUniform1i("glossiness", _glossiness);
 			shader.sendUniform1i("invertBlack", _invertBlack);
 		}
 
 		inline void transfer(TextureMaterial& source, TextureMaterial& dest) {
 			dest._name = std::move(source._name);
-			dest.albedo = source.albedo;
-			dest.normal = source.normal;
-			dest.metalness = source.metalness;
-			dest.roughness = source.roughness;
-			dest.ambientOcclusion = source.ambientOcclusion;
+			dest._albedo = source._albedo;
+			dest._normal = source._normal;
+			dest._metalness = source._metalness;
+			dest._roughness = source._roughness;
+			dest._ambientOcclusion = source._ambientOcclusion;
 			dest._glossiness = source._glossiness;
 			dest._invertBlack = source._invertBlack;
 
-			source.albedo = nullptr;
-			source.normal = nullptr;
-			source.metalness = nullptr;
-			source.roughness = nullptr;
-			source.ambientOcclusion = nullptr;
+			source._albedo = nullptr;
+			source._normal = nullptr;
+			source._metalness = nullptr;
+			source._roughness = nullptr;
+			source._ambientOcclusion = nullptr;
 		}
 
 		gl::Texture2D* Visitor::operator()(std::string path) {
@@ -299,9 +319,6 @@ namespace ncl {
 				});
 			});
 
-
-
-			
 			return new gl::Texture2D{fbo.texture(), textureUnit};
 		}
 	}

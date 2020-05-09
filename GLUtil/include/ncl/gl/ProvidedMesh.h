@@ -20,7 +20,21 @@ namespace ncl {
 
 			}
 
+			ProvidedMesh(const ProvidedMesh&) = delete;
+
+			ProvidedMesh(ProvidedMesh&& source) noexcept 
+				: Shape(dynamic_cast<Shape&&>(source))  {
+
+			}
+
 			virtual ~ProvidedMesh() = default;
+
+			ProvidedMesh& operator=(const ProvidedMesh&) = delete;
+			
+			ProvidedMesh& operator=(ProvidedMesh&& source) noexcept {
+				Shape::transfer(dynamic_cast<Shape&>(source), dynamic_cast<Shape&>(*this));
+				return *this;
+			}
 
 		private:
 			Logger logger = Logger::get("Provided Mesh");

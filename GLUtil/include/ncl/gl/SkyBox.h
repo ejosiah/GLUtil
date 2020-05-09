@@ -13,7 +13,7 @@ namespace ncl {
 		public:
 			SkyBox(Scene& scene, GLuint buffer, GLuint unit, int size) 
 				:scene(scene), buffer(buffer), unit(unit) {
-				cube = new Cube(size, 10, WHITE, false);
+				cube = new Cube(size, glm::mat4{ 1 }, WHITE);
 			}
 
 			void render();

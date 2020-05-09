@@ -58,6 +58,15 @@ namespace ncl {
 			Shader();
 			~Shader();
 
+			Shader(Shader&& source) noexcept;
+			Shader(const Shader&) = delete;
+
+			Shader& operator=(Shader&& source) noexcept;
+
+			Shader& operator=(const Shader&) = delete;
+
+			friend void transfer(Shader& source, Shader& dest);
+
 			void loadFromFiles(std::vector<std::string> filenames);
 
 			void loadFromstring(GLenum shader, const std::string& source, const std::string& filename = ".shader");
@@ -99,7 +108,7 @@ namespace ncl {
 			void sendUniformMatrix2fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value);
 			void sendUniformMatrix3fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value);
 			void sendUniformMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value);
-			void send(const std::string& name, bool value);
+			void sendBool(const std::string& name, bool value);
 			void subroutine(const std::string& name, GLenum shaderType);
 
 

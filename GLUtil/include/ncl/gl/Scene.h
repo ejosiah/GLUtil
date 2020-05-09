@@ -209,7 +209,9 @@ namespace ncl {
 					sbr << "\tPosition: " << activeCamera().getPosition() << std::endl;
 					sbr << "\tVelocity: " << activeCamera().getVelocity() << std::endl;
 
+					glDepthFunc(GL_ALWAYS);
 					sFont->render(sbr.str(), 10, 10);
+					glDepthFunc(GL_LESS);
 					sbr.str("");
 					sbr.clear();
 				}
@@ -489,7 +491,7 @@ namespace ncl {
 					CameraController* cameraController = new CameraController{ Mesurements{ float(_width), float(_height) }, Camera::SPECTATOR };
 
 					cameraController->setModelHeight(_modelHeight);
-					cameraController->setFloorMeasurement({ 10000,  10000, 10000 });
+					cameraController->setFloorMeasurement({ 10000,  10000, 10000 });	// TODO set bounding box
 
 					cameraController->init();
 					cameraController->getCamera().setVelocity(5, 5, 5);

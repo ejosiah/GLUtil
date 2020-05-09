@@ -18,22 +18,28 @@ namespace ncl {
 				GLint internalFmt = GL_RGB;
 				GLint fmt = GL_RGB;
 				GLint border = 0;
+				GLfloat borderColor[4]{ 1.0f, 1.0f, 1.0f, 1.0f };
 				GLenum type = GL_UNSIGNED_BYTE;
 				GLenum magFilter = GL_LINEAR;
 				GLenum minfilter = GL_LINEAR;
+				GLenum wrap_s = GL_REPEAT;
+				GLenum wrap_t = GL_REPEAT;
+				GLenum wrap_r = GL_REPEAT;
 				GLenum attachment = GL_COLOR_ATTACHMENT0;
 				glm::vec4 clearColor = WHITE;
 				bool depthTest = true;
 				bool stencilTest = true;
 				bool depthAndStencil = true;
 				bool deleteTexture = true;
+				bool read = true;
+				bool write = true;
 			};
 
 			enum class Status{ Complete, UnComplete};
 
 			FrameBuffer() = default;
 
-			FrameBuffer(Config);
+			FrameBuffer(Config, std::function<void()> extraTexConfig = [] {});
 
 			FrameBuffer(const FrameBuffer&) = delete;
 
@@ -64,6 +70,7 @@ namespace ncl {
 			Config config;
 			Status status;
 			GLbitfield clearBits;
+			GLint viewport[4];
 		};
 
 	}

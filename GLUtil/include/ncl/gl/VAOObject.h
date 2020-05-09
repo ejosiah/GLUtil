@@ -78,6 +78,24 @@ namespace ncl {
 				
 			}
 
+			VAOObject(const VAOObject&) = delete;
+
+			VAOObject(VAOObject&& source) noexcept{
+				transfer(source, *this);
+			}
+
+			VAOObject& operator=(const VAOObject&) = delete;
+			
+			VAOObject& operator=(VAOObject&& source) noexcept {
+				transfer(source, *this);
+				return *this;
+			}
+
+			void transfer(VAOObject& source, VAOObject& dest) {
+				VBOObject::transfer(dynamic_cast<VBOObject&>(source), dynamic_cast<VBOObject&>(dest));
+				dest.vaoIds = std::move(source.vaoIds);
+			}
+
 			void use(int vaoIndex, std::function<void()> proc) {
 				glBindVertexArray(vaoIds[vaoIndex]);
 				proc();
@@ -85,7 +103,9 @@ namespace ncl {
 			}
 
 			virtual ~VAOObject() {
-				glDeleteVertexArrays(vaoIds.size(), &vaoIds[0]);
+				if (!vaoIds.empty()) {
+					glDeleteVertexArrays(vaoIds.size(), &vaoIds[0]);
+				}
 			}
 
 			GLuint getVaoId(int index) {

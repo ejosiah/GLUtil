@@ -28,23 +28,30 @@ namespace ncl {
 				for (int i = 0; i < meshes.size(); i++) {
 					meshName[meshes[i].name] = i;
 				}
+				whiteTexture = new CheckerTexture(0, "white", WHITE, WHITE);
+				normalTexture = new CheckerTexture(0, "normalMap", BLUE, BLUE);
 			}
 
-		//	Shape(Shape&& source) {}
+			Shape(Shape&& source) noexcept {
+				transfer(source, *this);
+			}
 
-		//	Shape(const Shape& shape) = delete;
+			Shape(const Shape&) = delete;
 
 
 			virtual ~Shape() {
-				if (tfb != nullptr) {
-					delete tfb;
-				}
+				delete tfb; 
+				delete whiteTexture;
+				delete normalTexture;
 			}
 
 
-		//	Shape& operator=(const Shape& shape) = delete;
+			Shape& operator=(const Shape&) = delete;
 
-		//	Shape& operator=(Shape&& source);
+			Shape& operator=(Shape&& source) {
+				transfer(source, *this);
+				return *this;
+			}
 			
 			virtual void draw(Shader& shader) override {
 				bool cullingDisabled = false;
@@ -57,32 +64,45 @@ namespace ncl {
 					GLuint vaoId = vaoIds[i];
 					glBindVertexArray(vaoId);
 
-					
-					Material& material = materials[i];
-					
-					if (material.ambientMat != -1) {
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-						shader.sendUniform1i("ambientMap", 0);
-					}
-					if (material.diffuseMat != -1) {
-						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-						shader.sendUniform1i("diffuseMap", 1);
-					}
-					if (material.specularMat != -1) {
-						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, material.specularMat);
-						shader.sendUniform1i("specularMap", 2);
-					}
+					if (useDefaultMaterial) {
+						Material& material = materials[i];
+						shader.sendUniform1f("shininess", material.shininess);
+						shader.sendUniform3fv("emission", 1, glm::value_ptr(material.emission));
+						if (material.ambientMat != -1) {
+							glBindTextureUnit(0, material.ambientMat);
+						}
+						//else {
+						//	if (material.diffuseMat != -1) {
+						//		glBindTextureUnit(0, material.diffuseMat);
+						//	}
+						//}
+						if (material.diffuseMat != -1) {
+							glBindTextureUnit(1, material.diffuseMat);
+						}
 
-					shader.sendUniformMaterial("material[0]", material);
+						if (material.specularMat != -1) {
+							glBindTextureUnit(2, material.specularMat);
+						}
+						else {
+							glBindTextureUnit(2, whiteTexture->bufferId());
+						}
+
+						if (material.bumpMap != -1) {
+							glBindTextureUnit(3, material.bumpMap);
+						}
+						else {
+							glBindTextureUnit(3, normalTexture->bufferId());
+						}
+
+						shader.sendUniformMaterial("material[0]", material);
+
+					}
 					if (xforms[i]) {
-						shader.send("useXform", true);
+						shader.sendBool("useXform", true);
 					}
 					
 					if (tfb != nullptr) {
-						shader.send("capture", true);
+						shader.sendBool("capture", true);
 						tfb->use({ captureBuffer }, 1, primitiveType[i], [&]() {
 							drawPrimitive(i);
 						});
@@ -127,11 +147,11 @@ namespace ncl {
 
 				shader.sendUniformMaterial("material[0]", material);
 				if (xforms[meshId]) {
-					shader.send("useXform", true);
+					shader.sendBool("useXform", true);
 				}
 
 				if (tfb != nullptr) {
-					shader.send("capture", true);
+					shader.sendBool("capture", true);
 					tfb->use({ captureBuffer }, 1, primitiveType[meshId], [&]() {
 						drawPrimitive(meshId);
 					});
@@ -146,6 +166,15 @@ namespace ncl {
 
 			virtual void draw(Shader& shader, std::string mesh) {
 				draw(shader, meshName[mesh]);
+			}
+
+			int getMeshId(std::string name) {
+				if (meshName.find(name) != meshName.end()) {
+					return meshName[name];
+				}
+				else {
+					return -1;
+				}
 			}
 
 			void drawPrimitive(int i) {
@@ -401,6 +430,10 @@ namespace ncl {
 				primitiveType[0] = newType;
 			}
 
+			void defautMaterial(bool flag) {
+				useDefaultMaterial = flag;
+			}
+
 		protected:
 			Texture2D* checkerBoard;
 			void normalize(std::vector<Mesh>& mesh, float _scale) {
@@ -454,13 +487,35 @@ namespace ncl {
 
 			}
 
+			void transfer(Shape& source, Shape& dest) {
+
+				VAOObject::transfer(dynamic_cast<VAOObject&>(source), dynamic_cast<VAOObject&>(dest));
+
+				dest.cullface = source.cullface;
+				dest.xbfEnabled = source.xbfEnabled;
+				dest.instanceCount = source.instanceCount;
+				dest.tfb = source.tfb;
+				dest.captureBuffer = source.captureBuffer;
+				dest.meshName = std::move(source.meshName);
+				dest.whiteTexture = source.whiteTexture;
+				dest.normalTexture = source.normalTexture;
+				dest.useDefaultMaterial = source.useDefaultMaterial;
+
+				source.whiteTexture = nullptr;
+				source.normalTexture = nullptr;
+				source.tfb = nullptr;
+			}
+
 		private:
 			bool cullface;
 			bool xbfEnabled = false;
 			unsigned instanceCount;
-			TransformFeebBack* tfb;	
+			TransformFeebBack* tfb = nullptr;	
 			GLuint captureBuffer;
 			std::unordered_map<std::string, int> meshName;
+			Texture2D* whiteTexture = nullptr;
+			Texture2D* normalTexture = nullptr;
+			bool useDefaultMaterial = true;
 		};
 	}
 }

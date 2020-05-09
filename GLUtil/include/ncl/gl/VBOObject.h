@@ -118,11 +118,40 @@ namespace ncl {
 				}
 			}
 
+			VBOObject(VBOObject&& source) noexcept {
+				transfer(source, *this);
+			}
+
+			VBOObject(const VBOObject&) = delete;
+
 			virtual ~VBOObject() {
 				for (GLuint* buffer : buffers) {
 					glDeleteBuffers(numBuffers, buffer);
 					delete[] buffer;
 				}
+			}
+
+			VBOObject& operator=(VBOObject&& source) noexcept {
+				transfer(source, *this);
+
+				return *this;
+			}
+
+			VBOObject& operator=(const VBOObject&) = delete;
+
+			void transfer(VBOObject& source, VBOObject& dest) {
+				dest.materials = std::move(source.materials);
+				dest.counts = std::move(source.counts);
+				dest.buffers = std::move(source.buffers);
+				dest.primitiveType = std::move(source.primitiveType);
+				dest.normals = std::move(source.normals);
+				dest.colors = std::move(source.colors);
+				dest.tangents = std::move(source.tangents);
+				dest.xforms = std::move(source.xforms);
+				dest.attributes = std::move(source.attributes);
+				dest.texCoords = std::move(source.texCoords);
+				dest.indices = std::move(source.indices);
+				dest.numBuffers = source.numBuffers;
 			}
 
 

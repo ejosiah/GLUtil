@@ -58,7 +58,7 @@ namespace ncl {
 			};
 
 
-			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST })
+			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR })
 				: _id(id) {
 				Image img(path);
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, img.width(), img.height(), 0, format, GL_UNSIGNED_BYTE, img.data()); };
@@ -68,7 +68,7 @@ namespace ncl {
 				_name = name;
 			}
 
-			Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = 0, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_NEAREST }) 
+			Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = 0, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR }) 
 				: _id(id) {
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, width, height, 0, format, dataType, data); };
 				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);

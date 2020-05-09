@@ -193,10 +193,10 @@ namespace ncl {
 						material.ambientMat = ambient->bufferId();
 						material.ambientTexPath = texPath;
 					}
-					//else {
-					//	ambient = new CheckerTexture(0, "", WHITE, WHITE);
-					//	material.ambientMat = ambient->bufferId();
-					//}
+					else {
+						ambient = new CheckerTexture(0, "ambientMap", material.ambient, material.ambient);
+						material.ambientMat = ambient->bufferId();
+					}
 
 
 					ret = aiMaterial->GetTexture(aiTextureType_DIFFUSE, 0, &path);
@@ -207,10 +207,35 @@ namespace ncl {
 						material.diffuseTexPath = texPath;
 						material.usingDefaultMat = false;
 					}
-					//else {
-					//	diffuse = new CheckerTexture(1, "", WHITE, WHITE);
-					//	material.diffuseMat = ambient->bufferId();
-					//}
+					else {
+						diffuse = new CheckerTexture(0, "diffuseMap", material.diffuse, material.diffuse);
+						material.diffuseMat = diffuse->bufferId();
+						material.usingDefaultMat = false;
+					}
+
+					ret = aiMaterial->GetTexture(aiTextureType_SPECULAR, 0, &path);
+					if (ret == aiReturn_SUCCESS) {
+						string texPath = parent + path.C_Str();
+						specular = new Texture2D(texPath, 2);
+						material.specularMat = diffuse->bufferId();
+						material.specularTexPath = texPath;
+					}
+
+					ret = aiMaterial->GetTexture(aiTextureType_NORMALS, 0, &path);
+					if (ret == aiReturn_SUCCESS) {
+						string texPath = parent + path.C_Str();
+						normal = new Texture2D(texPath, 4);
+						material.bumpMap = diffuse->bufferId();
+						material.bumpTexPath = texPath;
+					}
+
+					ret = aiMaterial->GetTexture(aiTextureType_DISPLACEMENT, 0, &path);
+					if (ret == aiReturn_SUCCESS) {
+						string texPath = parent + path.C_Str();
+						normal = new Texture2D(texPath, 4);
+						material.bumpMap = diffuse->bufferId();
+						material.bumpTexPath = texPath;
+					}
 
 					mesh.material = material;
 					meshes.push_back(mesh);
@@ -308,6 +333,8 @@ namespace ncl {
 				} bounds;
 				Texture2D* ambient;
 				Texture2D* diffuse;
+				Texture2D* specular;
+				Texture2D* normal;
 
 		};
 	}

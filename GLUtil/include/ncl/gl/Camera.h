@@ -75,6 +75,14 @@ namespace ncl {
 			void setVelocity(float x, float y, float z);
 			std::string modeAsString() const;
 
+			inline void collisionTestOn() {
+				testCollision = true;
+			}
+
+			inline void collisionTestOff() {
+				testCollision = false;
+			}
+
 		private:
 			void rotateFirstPerson(float headingDegrees, float pitchDegrees);
 			void rotateFlight(float headingDegrees, float pitchDegrees, float rollDegrees);
@@ -123,6 +131,7 @@ namespace ncl {
 			glm::mat4 viewMatrix;
 			glm::mat4 projMatrix;
 			glm::mat4 viewProjMatrix;
+			bool testCollision = true;
 		};
 
 		//-----------------------------------------------------------------------------
@@ -220,6 +229,7 @@ namespace ncl {
 		inline void Camera::perspective(float aspectRatio) {
 			perspective(fovx, aspectRatio, znear, zfar);
 		}
+
 		/*
 		class CameraController {
 

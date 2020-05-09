@@ -12,15 +12,34 @@ namespace ncl {
 			Cube() = default;
 
 			Cube(float size, glm::mat4 model, const glm::vec4& color = randomColor())
-				:Cube(size, 0, color, false, { model }) {}
+				:Cube(size, color, { model }, false) {}
 
-			Cube(float size, float grids = 10, const glm::vec4& color = randomColor(), bool cullface = true, std::vector<glm::mat4> models = { glm::mat4{1} })
-				:Shape(createMesh(size/2, color, models), cullface, models.size()) {}
+			Cube(float size, const glm::vec4& color = randomColor(), std::vector<glm::mat4> models = { glm::mat4{1} }, bool cullface = true)
+				:Shape(createMesh(size / 2, std::vector<glm::vec4>{6, color}, models), cullface, models.size()) {}
 
 
-			std::vector<Mesh> createMesh(float halfSize, const glm::vec4& color, std::vector<glm::mat4> models) {
+			Cube(float size, std::vector<glm::vec4> colors, std::vector<glm::mat4> models = { glm::mat4{1} }, bool cullface = true)
+				:Shape(createMesh(size / 2, colors, models), cullface, models.size()) {}
+
+			Cube(const Cube&) = delete;
+
+			Cube(Cube&& source) noexcept : Shape(dynamic_cast<Shape&&>(source)) {
+
+			}
+
+			Cube& operator=(const Cube&) = delete;
+
+			Cube& operator=(Cube&& source) noexcept {
+				Shape::transfer(dynamic_cast<Shape&>(source), dynamic_cast<Shape&>(*this));
+				return *this;
+			}
+
+
+			std::vector<Mesh> createMesh(float halfSize, const std::vector<glm::vec4> colors, std::vector<glm::mat4> models) {
 				using namespace glm;
 				const int NO_VERTICES = 24;
+
+				std::string names[]{"front", "right", "back", "left", "bottom", "top"};
 
 				vec3 positions[NO_VERTICES] = {
 					// Front
@@ -133,16 +152,26 @@ namespace ncl {
 
 				Mesh mesh;
 
+
+
+
+
 				mesh.positions = std::vector<vec3>(std::begin(positions), std::end(positions));
 				mesh.normals = std::vector<vec3>(std::begin(normals), std::end(normals));
-				mesh.material.diffuse = color;
-				mesh.material.ambient = color;
+				mesh.material.diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };
 				mesh.uvs[0] = std::vector<vec2>(std::begin(texCoords), std::end(texCoords));
 				mesh.indices = std::vector<GLuint>(std::begin(indices), std::end(indices));
 				mesh.primitiveType = GL_TRIANGLES;
 				mesh.xforms = std::vector<glm::mat4>(models);
 
+				for (int i = 0; i < 6; i++) {
+					for (int j = 0; j < 4; j++) {
+						mesh.colors.push_back(colors[i]);
+					}
+				}
+
 				return std::vector<Mesh>(1, mesh);
+
 			}
 		};
 	}

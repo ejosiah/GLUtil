@@ -212,13 +212,13 @@ public:
 
 	void initSkyBox() {
 		defer([&]() {
-			string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+			string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\004\\";
 			transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 				return root + path;
 				});
 
-			//skybox = SkyBox::create(skyTextures, 7, *this);
-			skybox = SkyBox::create("equi_rect", 7, *this, equi_rect);
+			skybox = SkyBox::create(skyTextures, 7, *this);
+		//	skybox = SkyBox::create("equi_rect", 7, *this, equi_rect);
 			
 			auto texture = new Texture2D(skybox->buffer, 0);
 			irradiance = SkyBox::create("irradiance_convolution", 5, *this, texture, 32, 32);
@@ -611,8 +611,8 @@ private:
 	GLuint texture;
 	GLuint unit = 7;
 	vector<string> skyTextures = vector<string>{
-		"right.jpg", "left.jpg",
-		"top.jpg", "bottom.jpg",
-		"front.jpg", "back.jpg"
+		"right.bmp", "left.bmp",
+		"top.bmp", "bottom.bmp",
+		"front.bmp", "back.bmp"
 	};
 };

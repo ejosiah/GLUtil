@@ -254,7 +254,10 @@ namespace ncl {
 				if (mouse.middle.status == Mouse::Button::PRESSED) {
 					camera.undoRoll();
 				}
-				performCollisionDetection();
+
+				if (camera.testCollision) {
+					performCollisionDetection();
+				}
 			}
 
 			void performCollisionDetection() {	

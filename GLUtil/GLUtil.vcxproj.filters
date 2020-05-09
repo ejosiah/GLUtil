@@ -381,6 +381,12 @@
     <ClInclude Include="shaders\irradiance_convolution.vert">
       <Filter>shaders\pbr</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\ShadowMap.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\ViewFrustum.h">
+      <Filter>Header Files\geometry\primitives</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -592,6 +598,42 @@
       <Filter>shaders\pbr</Filter>
     </None>
     <None Include="shaders\bling_phong.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shadow_map.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shadow_map.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shadow_map_render.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\shadow_map_render.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\screen.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\screen.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\ncl\gl\detail\ShadowMap.inl">
+      <Filter>Header Files\core\detail</Filter>
+    </None>
+    <None Include="shaders\point_shadow_map.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_shadow_map.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_shadow_map.geom">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_shadow_map_render.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\point_shadow_map_render.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

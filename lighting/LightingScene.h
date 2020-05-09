@@ -498,10 +498,10 @@ public:
 			send(light[0]);
 			send(activeCamera());
 
-		//	send("material[0].diffuseMap", 1);
-			
-			//send(floor);
-		//	send(specular);
+		////	send("material[0].diffuseMap", 1);
+		//	
+		//	//send(floor);
+		////	send(specular);
 			send(normal);
 			shade(plane);
 			

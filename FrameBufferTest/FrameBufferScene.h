@@ -20,6 +20,9 @@ public:
 		addShader("screen", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("brdf", GL_VERTEX_SHADER, brdf_vert_shader);
 		addShader("brdf", GL_FRAGMENT_SHADER, bsdf_frag_shader);
+
+		addShader("screen0", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("screen0", GL_FRAGMENT_SHADER, screen_frag_shader);
 	}
 
 	void init() override {
@@ -109,11 +112,11 @@ public:
 			glDisable(GL_DEPTH_TEST);
 		});
 
-		shader("screen")([&](Shader& s) {
-			//glBindTextureUnit(0, fbo.texture());
-			send(brdf_lut);
-			sendArray("kernel", identity, 9);
-			send(cam1);
+		shader("screen0")([&](Shader& s) {
+			glBindTextureUnit(0, fbo.texture());
+			//send(brdf_lut);
+		//	sendArray("kernel", identity, 9);
+			//send(cam1);
 			shade(quad);
 		});
 	}

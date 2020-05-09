@@ -7,6 +7,7 @@
 #include "textures.h"
 #include "StorageBufferObj.h"
 #include "pbr.h"
+#include "ShadowMap.h"
 
 namespace ncl {
 	namespace gl {
@@ -276,6 +277,11 @@ namespace ncl {
 		inline void send(pbr::Material& material) {
 			ensureShaderbound();
 			material.sendTo(*Shader::boundShader);
+		}
+
+		inline void send(ShadowMap& shadowMap) {
+			ensureShaderbound();
+			shadowMap.sendTo(*Shader::boundShader);
 		}
 	}
 }

@@ -38,6 +38,32 @@ namespace ncl {
 			clear();
 		}
 
+		Shader::Shader(Shader&& source) noexcept {
+			transfer(source, *this);
+		}
+
+		Shader& Shader::operator=(Shader&& source) noexcept {
+			transfer(source, *this);
+			return *this;
+		}
+
+		inline void transfer(Shader& source, Shader& dest) {
+			dest._program = source._program;
+			dest._totalShaders = source._totalShaders;
+
+			for (int i = 0; i < NO_OF_SHADERS; i++) {
+				dest._shaders[i] = source._shaders[i];
+			}
+			dest._attributeList = std::move(source._attributeList);
+			dest._uniformLocationList = std::move(source._uniformLocationList);
+			dest._subroutineList = std::move(source._subroutineList);
+			dest.logger = source.logger;
+			dest.pendingOps = std::move(source.pendingOps);
+			dest._storePreprocessedShaders = source._storePreprocessedShaders;
+			source._program = 0;
+			source.clear();
+		}
+
 		GLint Shader::findUniformLocation(const std::string& name) {
 			auto itr = _uniformLocationList.find(name);
 			GLint location = -1;
@@ -65,7 +91,6 @@ namespace ncl {
 			_attributeList.clear();
 			_uniformLocationList.clear();
 			
-			_program = 0;
 			_totalShaders = 0;
 			_shaders[VERTEX_SHADER] = 0;
 			_shaders[FRAGMENT_SHADER] = 0;
@@ -365,7 +390,7 @@ namespace ncl {
 			glUniformMatrix4fv(location, count, transpose, value);
 		}
 
-		void Shader::send(const std::string& name, bool value) {
+		void Shader::sendBool(const std::string& name, bool value) {
 			GLint location = findUniformLocation(name);
 			glUniform1i(location, value);
 		}
@@ -398,9 +423,9 @@ namespace ncl {
 			sendUniform4fv(name + ".specular", 1, &material.specular[0]);
 			sendUniform4fv(name + ".emission", 1, &material.emission[0]);
 			sendUniform1f(name + ".shininess", material.shininess);
-			send(name + ".ambientMap", material.ambientMat != -1);
-			send(name + ".diffuseMap", material.diffuseMat != -1);
-			send(name + ".specularMap", material.specularMat != -1);
+			sendBool(name + ".ambientMap", material.ambientMat != -1);
+			sendBool(name + ".diffuseMap", material.diffuseMat != -1);
+			sendBool(name + ".specularMap", material.specularMat != -1);
 		}
 
 		void Shader::sendUniformMaterials(const std::string& name, Material materials[]) {
@@ -460,11 +485,11 @@ namespace ncl {
 		}
 
 		void Shader::send(const LightModel& lightModel) {
-			send("lightModel.localViewer", lightModel.localViewer);
-			send("lightModel.twoSided", lightModel.twoSided);
-			send("lightModel.useObjectSpace", lightModel.useObjectSpace);
-			send("lightModel.celShading", lightModel.celShading);
-			send("lightModel.colorMaterial", lightModel.colorMaterial);
+			sendBool("lightModel.localViewer", lightModel.localViewer);
+			sendBool("lightModel.twoSided", lightModel.twoSided);
+			sendBool("lightModel.useObjectSpace", lightModel.useObjectSpace);
+			sendBool("lightModel.celShading", lightModel.celShading);
+			sendBool("lightModel.colorMaterial", lightModel.colorMaterial);
 			sendUniform4fv("lightModel.globalAmbience", 1, (float*)&lightModel.globalAmbience[0]);
 		}
 
