@@ -186,6 +186,7 @@
     <ClInclude Include="include\ncl\gl\gl_commands.h" />
     <ClInclude Include="include\ncl\gl\gl_enums.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
+    <ClInclude Include="include\ncl\gl\LightProbe.h" />
     <ClInclude Include="include\ncl\gl\MeshLoader.h" />
     <ClInclude Include="include\ncl\gl\MeshNormalizer.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
@@ -229,6 +230,7 @@
     <ClInclude Include="include\ncl\util\profile.h" />
     <ClInclude Include="include\ncl\util\SphericalCoord.h" />
     <ClInclude Include="shaders\irradiance_convolution.vert" />
+    <ClInclude Include="shaders\scene_capture_phong.frag" />
     <ClInclude Include="TesellationExample.h" />
     <ClInclude Include="ImageViewer.h" />
     <ClInclude Include="include\ncl\gl\Bounds.h" />
@@ -285,6 +287,7 @@
     <None Include="include\shaders\lighting.vert.glsl" />
     <None Include="include\shaders\lightModel.glsl" />
     <None Include="include\shaders\normal_calculator.glsl" />
+    <None Include="include\shaders\shadow.glsl" />
     <None Include="include\shaders\simple_light.vert" />
     <None Include="include\shaders\toon_diffuse.glsl" />
     <None Include="include\shaders\triangle_ray_intersection.glsl" />
@@ -328,6 +331,8 @@
     <None Include="shaders\point_shadow_map.vert" />
     <None Include="shaders\point_shadow_map_render.frag" />
     <None Include="shaders\point_shadow_map_render.vert" />
+    <None Include="shaders\scene_capture.geom" />
+    <None Include="shaders\scene_capture.vert" />
     <None Include="shaders\quad.tes" />
     <None Include="shaders\quad.vert" />
     <None Include="shaders\screen.frag" />

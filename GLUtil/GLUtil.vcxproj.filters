@@ -58,8 +58,14 @@
     <Filter Include="Header Files\pbr">
       <UniqueIdentifier>{69ac96bc-379d-4e3f-942a-81bd0e0d0894}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders\include">
+      <UniqueIdentifier>{8115d4be-bd25-4ff9-837b-e08dd1d4ee86}</UniqueIdentifier>
+    </Filter>
     <Filter Include="shaders\pbr">
       <UniqueIdentifier>{d8b1d611-4cb9-44b9-83ed-ec9ebf69f752}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\lighting">
+      <UniqueIdentifier>{e39c9851-7bd5-4607-8334-661b5d5ba88b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -387,6 +393,12 @@
     <ClInclude Include="include\ncl\gl\ViewFrustum.h">
       <Filter>Header Files\geometry\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\gl\LightProbe.h">
+      <Filter>Header Files\lighting</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\scene_capture_phong.frag">
+      <Filter>shaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -503,21 +515,6 @@
     <None Include="include\shaders\ads_diffuse.glsl">
       <Filter>shaders</Filter>
     </None>
-    <None Include="include\shaders\composite_diffuse.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\constants.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\lighting.frag.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\lighting.vert.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\lightModel.glsl">
-      <Filter>shaders</Filter>
-    </None>
     <None Include="include\shaders\normal_calculator.glsl">
       <Filter>shaders</Filter>
     </None>
@@ -534,12 +531,6 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="include\shaders\vertex_out_array.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\wireframe.glsl">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="include\shaders\wireframe_geom.glsl">
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\mass_spring.comp">
@@ -634,6 +625,36 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\point_shadow_map_render.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\shadow.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\lighting.frag.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\lighting.vert.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\constants.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\composite_diffuse.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\lightModel.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\wireframe_geom.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\wireframe.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="shaders\scene_capture.geom">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\scene_capture.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

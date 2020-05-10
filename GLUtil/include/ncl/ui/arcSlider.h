@@ -6,7 +6,7 @@ namespace ncl {
 	namespace ui {
 		class ArcSlider : public Slider, public gl::_3DMotionEventHandler {
 		public:
-			ArcSlider(gl::Scene& scene, std::string label, float v = 30, float limit = 90, float radius = 100.f, glm::vec2 pos = glm::vec2(0)) :Slider(scene, label, pos + glm::vec2(radius, 0)), radius(radius) {
+			ArcSlider(gl::Scene& scene, std::string label, float radius = 100.f, glm::vec2 pos = glm::vec2(0)) :Slider(scene, label, pos + glm::vec2(radius, 0)), radius(radius) {
 				_width = radius * 2;
 				_height = radius;
 				angle = 30;

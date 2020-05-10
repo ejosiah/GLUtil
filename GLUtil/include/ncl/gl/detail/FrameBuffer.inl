@@ -60,6 +60,9 @@ namespace ncl {
 			else {
 				status = Status::UnComplete;
 			}
+
+			assert(status == Status::Complete, "frambuffer incomplete");
+
 			glBindFramebuffer(c.fboTarget, 0);
 			clearBits = c.read || c.write ? GL_COLOR_BUFFER_BIT : 0;
 			clearBits = c.depthTest ? clearBits | GL_DEPTH_BUFFER_BIT : clearBits;

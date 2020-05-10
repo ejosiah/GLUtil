@@ -60,12 +60,12 @@ public:
 				lm.localViewer = true;
 				//lm.useObjectSpace = true;
 				LightSource light = calculateLight(camera);
-				phongShader.send("celShading", true);
+				phongShader.sendBool("celShading", true);
 				phongShader.sendUniform3fv("globalAmbience", 1, &glm::vec4(0.2)[0]);
-				phongShader.send("localViewer", true);
+				phongShader.sendBool("localViewer", true);
 				phongShader.sendUniform1f("line.width", 0.1);
 				phongShader.sendUniform4f("line.color", 1, 1, 1, 1);
-				phongShader.send("wireframe", false);
+				phongShader.sendBool("wireframe", false);
 				phongShader.sendUniformMatrix4fv("viewport", 1, GL_FALSE, value_ptr(getViewport()));
 				phongShader.sendUniformLight(light);
 				phongShader.sendComputed(camera, cameraController.modelTrans());

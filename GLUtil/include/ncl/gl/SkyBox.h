@@ -11,9 +11,30 @@ namespace ncl {
 	namespace gl {
 		class SkyBox {
 		public:
-			SkyBox(Scene& scene, GLuint buffer, GLuint unit, int size) 
+			SkyBox() = default;
+
+			SkyBox(Scene* scene, GLuint buffer, GLuint unit = 0, int size = 1) 
 				:scene(scene), buffer(buffer), unit(unit) {
 				cube = new Cube(size, glm::mat4{ 1 }, WHITE);
+			}
+
+			SkyBox(const SkyBox&) = delete;
+
+			SkyBox(SkyBox&& source) noexcept;
+
+			SkyBox& operator=(const SkyBox&) = delete;
+
+			SkyBox& operator=(SkyBox&& source) noexcept;
+
+			friend void transfer(SkyBox& source, SkyBox& dest) {
+				dest.scene = source.scene;
+				dest.buffer = source.buffer;
+				dest.unit = source.unit;
+				dest.cube = source.cube;
+
+				source.scene = nullptr;
+				source.buffer = 0;
+				source.cube = nullptr;
 			}
 
 			void render();
@@ -32,11 +53,20 @@ namespace ncl {
 			Cube* cube;
 
 		public:
-			Scene & scene;
+			Scene* scene;
 			GLuint buffer;
 			GLuint unit;
 			
 		};
+
+		SkyBox::SkyBox(SkyBox&& source) noexcept {
+			transfer(source, *this);
+		}
+
+		SkyBox& SkyBox::operator=(SkyBox&& source) noexcept {
+			transfer(source, *this);
+			return *this;
+		}
 
 		SkyBox* SkyBox::create(std::vector<std::string> faces, GLuint textureUnit, Scene& scene, int size) {
 			GLuint skyBoxId;
@@ -58,7 +88,7 @@ namespace ncl {
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 			glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
-			return new SkyBox(scene, skyBoxId, textureUnit, size);
+			return new SkyBox(&scene, skyBoxId, textureUnit, size);
 		}
 
 		SkyBox* SkyBox::create(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, GLsizei width, GLsizei height) {
@@ -112,7 +142,7 @@ namespace ncl {
 
 			glViewport(0, 0, scene.width(), scene.height());
 
-			return new SkyBox(scene, skyBoxId, textureUnit, 1);
+			return new SkyBox(&scene, skyBoxId, textureUnit, 1);
 		}
 
 		SkyBox* SkyBox::preFilter(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, int lod, GLsizei width, GLsizei height) {
@@ -179,12 +209,12 @@ namespace ncl {
 
 			glViewport(0, 0, scene.width(), scene.height());
 
-			return new SkyBox(scene, skyBoxId, textureUnit, 1);
+			return new SkyBox(&scene, skyBoxId, textureUnit, 1);
 		}
 
 		void SkyBox::render() {
-			scene.shader("skybox")([&](Shader& s) {
-				auto& camera = scene.activeCamera();
+			scene->shader("skybox")([&](Shader& s) {
+				auto& camera = scene->activeCamera();
 				glDepthFunc(GL_LEQUAL);
 				//glm::mat4 MVP = camera.getProjectionMatrix() * glm::mat4(glm::mat3(camera.getViewMatrix()));
 				glBindTextureUnit(unit, buffer);

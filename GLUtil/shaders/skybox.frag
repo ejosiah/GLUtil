@@ -2,7 +2,7 @@
 #pragma debug(on)
 #pragma optimize(off)
 
-layout(binding=7) uniform samplerCube skybox;
+layout(binding=0) uniform samplerCube skybox;
 smooth in vec3 textCoord_out;
 out vec4 fragColor;
 

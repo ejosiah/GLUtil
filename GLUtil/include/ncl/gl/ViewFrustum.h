@@ -2,6 +2,7 @@
 
 #include "Shape.h"
 #include "Cube.h"
+#include "Cone.h"
 
 namespace ncl {
 	namespace gl {
@@ -19,7 +20,7 @@ namespace ncl {
 
 			friend void transfer(ViewFrustum& source, ViewFrustum& dest);
 
-			static ViewFrustum perspective(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color = WHITE);
+			static ViewFrustum* perspective(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color = WHITE);
 
 			static ViewFrustum* ortho(glm::vec3 pos, glm::vec3 target, glm::vec3 up, float left, float right, float bottom, float top, float near_p, float far_p, glm::vec4 color = WHITE);
 
@@ -51,8 +52,8 @@ namespace ncl {
 			dest.worldView = source.worldView;
 		}
 
-		ViewFrustum ViewFrustum::perspective(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color) {
-			return ViewFrustum(view, fov, a, near_p, far_p, color);
+		ViewFrustum* ViewFrustum::perspective(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color) {
+			return new ViewFrustum(view, fov, a, near_p, far_p, color);
 		}
 
 
@@ -62,10 +63,10 @@ namespace ncl {
 
 
 		ViewFrustum::ViewFrustum(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color) 
-			:Shape(createPerspective(view, fov, a, near_p, far_p, color)) {}
+			:Shape(createPerspective(view, fov, a, near_p, far_p, color), false) {}
 
 		ViewFrustum::ViewFrustum(glm::vec3 pos, glm::vec3 target, glm::vec3 up, float left, float right, float bottom, float top, float near_p, float far_p, glm::vec4 color)
-			: Shape(createOrtho(pos, target, up, left, right, bottom, top, near_p, far_p, color)) {}
+			: Shape(createOrtho(pos, target, up, left, right, bottom, top, near_p, far_p, color), false) {}
 
 		std::vector<Mesh> ViewFrustum::createOrtho(glm::vec3 pos, glm::vec3 target, glm::vec3 up, float left, float right, float bottom, float top, float near_p, float far_p, glm::vec4 color) {
 			float width = ::abs(right - left);
@@ -100,7 +101,26 @@ namespace ncl {
 		}
 
 		std::vector<Mesh> ViewFrustum::createPerspective(glm::mat4 view, float fov, float a, float near_p, float far_p, glm::vec4 color) {
-			return {};
+			float l = far_p;
+			float r = ::tan(fov * 0.5) * l;
+			float h = r * 2;
+			float w = h * a;
+			auto cone = new Cone{ r, l, 4, 4, color };
+			Mesh mesh = cone->getMeshes().at(0);
+
+			auto model = glm::mat4{ 1 };
+
+			auto rot = glm::mat4(glm::mat3(view));
+			auto position = glm::inverse(view) * rot;
+
+			auto check = position * glm::vec4(0, 0, 0, 1);
+			auto flip = glm::rotate(glm::mat4{ 1 }, glm::pi<float>(), { 0, 1, 0 });
+
+			model = position * inverse(rot) * flip * glm::rotate(glm::mat4{ 1 }, glm::half_pi<float>(), { 0, 0, 1 });
+		//	model = glm::mat4(1) * glm::rotate(glm::mat4{ 1 }, glm::half_pi<float>(), { 0, 0, 1 });
+			mesh.xforms.push_back(model);
+			delete cone;
+			return { mesh };
 		}
 	}
 }
