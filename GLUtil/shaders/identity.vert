@@ -34,5 +34,5 @@ void main(){
 
 	capture_position = (M * xform * vec4(position, 1.0)).xyz;
 
-	gl_Position = MVP * xform * vec4(position, 1);
+	gl_Position = P * V * M * xform * vec4(position, 1);
 }

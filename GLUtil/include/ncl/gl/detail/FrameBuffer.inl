@@ -14,7 +14,7 @@ namespace ncl {
 			return false;
 		}
 
-		std::vector<GLenum> getColorAttachments(std::vector<FrameBuffer::Attachment>& attachments) {
+		static std::vector<GLenum> getColorAttachments(const std::vector<FrameBuffer::Attachment>& attachments) {
 			auto colorAttachments = std::vector<GLenum>{};
 			for (auto& a : attachments) {
 				if (isColorAttachment(a.attachment)) {
@@ -23,6 +23,24 @@ namespace ncl {
 			}
 
 			return colorAttachments;
+		}
+
+		static void initTexImage(const FrameBuffer::Config c, const FrameBuffer::Attachment& a) {
+			switch (a.texTarget) {
+			case GL_TEXTURE_2D:
+				glTexImage2D(a.texTarget, a.texLevel, a.internalFmt, c.width, c.height, a.border, a.fmt, a.type, nullptr);
+				break;
+			case GL_TEXTURE_CUBE_MAP:
+				for (int i = 0; i < 6; i++) {
+					glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, a.internalFmt, c.width, c.height, 0, a.fmt, a.type, nullptr);
+				}
+				break;
+			case GL_TEXTURE_2D_ARRAY:
+				glTexImage3D(a.texTarget, 0, a.internalFmt, c.width, c.height, a.numLayers, a.border, a.fmt, a.type, nullptr);
+				break;
+			default:
+				throw std::to_string(a.attachment) + "Not yet implemented";
+			}
 		}
 
 		static inline bool containsCubeMapForColorAttachment(std::vector<FrameBuffer::Attachment>& attachments) {
@@ -43,14 +61,7 @@ namespace ncl {
 				auto a = c.attachments[i];
 				auto& _tex = _textures[i];
 				glBindTexture(a.texTarget, _tex);
-				if (a.texTarget == GL_TEXTURE_CUBE_MAP) {
-					for (int i = 0; i < 6; i++) {
-						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, a.internalFmt, c.width, c.height, 0, a.fmt, a.type, nullptr);
-					}
-				}
-				else {
-					glTexImage2D(a.texTarget, a.texLevel, a.internalFmt, c.width, c.height, a.border, a.fmt, a.type, nullptr);
-				}
+				initTexImage(c, a);
 
 
 				glTexParameteri(a.texTarget, GL_TEXTURE_MIN_FILTER, a.minfilter);
@@ -69,7 +80,6 @@ namespace ncl {
 				if (a.wrap_s == GL_CLAMP_TO_BORDER) {
 					glTexParameterfv(a.texTarget, GL_TEXTURE_BORDER_COLOR, a.borderColor);
 				}
-
 
 				glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
 			}

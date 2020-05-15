@@ -68,6 +68,7 @@ namespace ncl {
 			Shader renderShader;
 			FrameBuffer framebuffer;
 			Cube cube;
+			gl::Sphere sphere;
 			Geometry geometry;
 		};
 		
@@ -88,6 +89,9 @@ namespace ncl {
 			views[5] = glm::lookAt(loc, loc + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 			cube = Cube{ 1, WHITE, {}, false };
 			cube.defautMaterial(false);
+
+			sphere = gl::Sphere{ 0.1, 10, 10, YELLOW };
+
 			initShaders(fragmentShader);
 		}
 
@@ -112,7 +116,7 @@ namespace ncl {
 			dest.sceneCapture = std::move(source.sceneCapture);
 			dest.renderShader = std::move(source.renderShader);
 			dest.framebuffer = std::move(source.framebuffer);
-
+			dest.sphere = std::move(source.sphere);
 
 			dest.cube = std::move(source.cube);
 			dest.geometry = source.geometry;
@@ -171,7 +175,9 @@ namespace ncl {
 		}
 
 		void Probe::draw(Shader& shader) {
-			
+			auto model = glm::translate(glm::mat4{ 1 }, location);
+			shader.sendUniformMatrix4fv("M", 1, GL_FALSE, glm::value_ptr(model));
+			sphere.draw(shader);
 		}
 
 		inline void Probe::render(int index) {

@@ -24,6 +24,7 @@ namespace ncl {
 				GLenum wrap_t = GL_REPEAT;
 				GLenum wrap_r = GL_REPEAT;
 				GLenum attachment = GL_COLOR_ATTACHMENT0;
+				GLsizei numLayers = 1;
 			};
 			struct Config {
 				GLsizei width;
