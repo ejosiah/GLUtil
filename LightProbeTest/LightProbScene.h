@@ -87,24 +87,26 @@ public:
 
 	void initOctahedral() {
 		quad = ProvidedMesh{ screnSpaceQuad() };
-		octahedral = FrameBuffer{ octahedralConfig() };
+		auto config = octahedralConfig();
+	//	octahedral = FrameBuffer{ octahedralConfig() };
 
 		vec4 colors[] = { RED, BLUE, YELLOW, GREEN, CYAN };
 
-		int i = 3;
-		octahedral.use([&] {
-			shader("octahedral")([&] {
-				for (int i = 0; i < probes.size(); i++) {
-					auto& probe = probes[i];
-					send("layer", i);
-					send("color", colors[i]);
-					glBindTextureUnit(0, probes[i].texture(0));
-					glBindTextureUnit(1, probes[i].texture(1));
-					glBindTextureUnit(2, probes[i].texture(2));
+		for (int level = 0; level < 1; level++) {
+			for (auto& a : config.attachments) {
+				a.texLevel = level;
+			}
+			auto framebuffer = FrameBuffer{ config };
+			auto& probe = probes[level];
+			framebuffer.use([&] {
+				shader("octahedral")([&] {
+					glBindTextureUnit(0, probes[level].texture(0));
+					glBindTextureUnit(1, probes[level].texture(1));
+					glBindTextureUnit(2, probes[level].texture(2));
 					shade(quad);
-				}
+				});
 			});
-		});
+		}
 	}
 
 	void display() override {
@@ -132,9 +134,10 @@ public:
 
 	void renderOctahedral() {
 		shader("screen")([&] {
-			send("numLayers", int(probes.size()));
+//			send("numLayers", int(probes.size()));
+			send("numLayers", int(1));
 			send("layer", 0);
-			glBindTextureUnit(0, octahedral.texture());
+			glBindTextureUnit(0, octahedralTextures[0]);
 			shade(quad);
 		});
 	}
@@ -164,6 +167,9 @@ public:
 	}
 
 	FrameBuffer::Config lightFieldConfig() {
+		octahedralTextures.resize(3);
+		glGenTextures(3, &octahedralTextures[0]);
+
 		auto config = FrameBuffer::Config{ 1024, 1024 };
 		config.fboTarget = GL_FRAMEBUFFER;
 		config.depthAndStencil = true;
@@ -181,7 +187,7 @@ public:
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 			attachment.texLevel = 0;
-			attachment.numLayers = probes.size();
+			attachment.texture = octahedralTextures[i];
 			config.attachments.push_back(attachment);
 		}
 
@@ -224,7 +230,9 @@ private:
 	Logger logger;
 	Probe probe;
 	vector<Probe> probes;
-	FrameBuffer octahedral;
+	vector<GLuint> octahedralTextures;
+	vector<FrameBuffer> octahedrals;
+//	FrameBuffer octahedral;
 	Model* sponza;
 	OminiDirectionalShadowMap shadowMap;
 	vec3 lightPos;

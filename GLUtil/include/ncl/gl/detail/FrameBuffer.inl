@@ -53,13 +53,13 @@ namespace ncl {
 			glGenFramebuffers(1, &_fbo);
 			glBindFramebuffer(c.fboTarget, _fbo);
 
-			_textures.resize(c.attachments.size());
-			glGenTextures(c.attachments.size(), &_textures[0]);
-
-
 			for (int i = 0; i < c.attachments.size(); i++) {
 				auto a = c.attachments[i];
-				auto& _tex = _textures[i];
+				auto _tex = a.texture;
+				if (glIsTexture(_tex) == GL_FALSE) {
+					glGenTextures(1, &_tex);
+					_textures.push_back(_tex);
+				}
 				glBindTexture(a.texTarget, _tex);
 				initTexImage(c, a);
 
