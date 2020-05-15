@@ -34,7 +34,7 @@ out VERTEX{
 
 void main(){
 	
-	mat3 nform = inverse(transpose(mat3(M * xform)));
+	mat3 nform = transpose(inverse(mat3(M * xform)));
 	vec3 n = nform * normal;
 	vec3 t = nform * tangent;
 	vec3 b = nform * bitangent;

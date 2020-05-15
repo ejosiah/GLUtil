@@ -3,9 +3,12 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <vector>
+#include <functional>
+#include "common.h"
 #include "Scene.h"
 #include "Image.h"
 #include "shader_binding.h"
+
 
 namespace ncl {
 	namespace gl {
@@ -15,7 +18,7 @@ namespace ncl {
 
 			SkyBox(Scene* scene, GLuint buffer, GLuint unit = 0, int size = 1) 
 				:scene(scene), buffer(buffer), unit(unit) {
-				cube = new Cube(size, glm::mat4{ 1 }, WHITE);
+				cube = new Cube(size, WHITE, {}, DONT_CULL_BACK_FACE);
 			}
 
 			SkyBox(const SkyBox&) = delete;
@@ -46,9 +49,9 @@ namespace ncl {
 			static SkyBox* create(std::vector<std::string> faces, GLuint textureUnit, Scene& scene, int size = 1);
 
 
-			static SkyBox* create(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, GLsizei width = 512, GLsizei height = 512);
+			static SkyBox* create(Shader& shader, GLuint textureUnit, Scene& scene, Texture2D& texture, GLsizei width = 512, GLsizei height = 512);
 
-			static SkyBox* preFilter(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, int lod = 5, GLsizei width = 128, GLsizei height = 128);
+			static SkyBox* preFilter(Shader& shader, GLuint textureUnit, Scene& scene, Texture2D& texture, int lod = 5, GLsizei width = 128, GLsizei height = 128);
 
 			Cube* cube;
 
@@ -91,7 +94,7 @@ namespace ncl {
 			return new SkyBox(&scene, skyBoxId, textureUnit, size);
 		}
 
-		SkyBox* SkyBox::create(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, GLsizei width, GLsizei height) {
+		SkyBox* SkyBox::create(Shader& shader, GLuint textureUnit, Scene& scene, Texture2D& texture, GLsizei width, GLsizei height) {
 			GLuint fbo, rbo;
 			glViewport(0, 0, width, height);
 			glGenFramebuffers(1, &fbo); 
@@ -113,7 +116,7 @@ namespace ncl {
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 			GlmCam cam;
-			cam.projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 10.0f);
+			cam.projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 1000.0f);
 			glm::mat4 views[6]{
 				glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 				glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
@@ -124,9 +127,9 @@ namespace ncl {
 
 			};
 			
-			auto cube = new Cube(1);
-			scene.shader(shader)([&]() {
-				send(texture);
+			auto cube = new Cube(1, WHITE, {}, DONT_CULL_BACK_FACE);
+			shader([&]() {
+				send(&texture);
 				for (int i = 0; i < 6; i++) {
 					cam.view = views[i];
 					send(cam);
@@ -145,7 +148,7 @@ namespace ncl {
 			return new SkyBox(&scene, skyBoxId, textureUnit, 1);
 		}
 
-		SkyBox* SkyBox::preFilter(std::string shader, GLuint textureUnit, Scene& scene, Texture2D* texture, int lod, GLsizei width, GLsizei height) {
+		SkyBox* SkyBox::preFilter(Shader& shader, GLuint textureUnit, Scene& scene, Texture2D& texture, int lod, GLsizei width, GLsizei height) {
 			GLuint fbo, rbo;
 			glViewport(0, 0, width, height);
 			glGenFramebuffers(1, &fbo);
@@ -169,7 +172,7 @@ namespace ncl {
 			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 			GlmCam cam;
-			cam.projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 10.0f);
+			cam.projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 1000.0f);
 			glm::mat4 views[6]{
 				glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
 				glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f,  0.0f,  0.0f), glm::vec3(0.0f, -1.0f,  0.0f)),
@@ -180,7 +183,7 @@ namespace ncl {
 
 			};
 
-			auto cube = new Cube(1);
+			auto cube = new Cube(1, WHITE, {}, DONT_CULL_BACK_FACE);
 			for (unsigned int level = 0; level < lod; level++) {
 				// reisze framebuffer according to mip-level size.
 				unsigned int w = width * std::pow(0.5, level);
@@ -190,9 +193,9 @@ namespace ncl {
 				glViewport(0, 0, w, h);
 
 				float roughness = (float)level / (float)(lod - 1);
-				scene.shader(shader)([&]() {
+				shader([&]() {
 					send("roughness", roughness);
-					send(texture);
+					send(&texture);
 					for (int i = 0; i < 6; i++) {
 						cam.view = views[i];
 						send(cam);

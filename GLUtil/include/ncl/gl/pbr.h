@@ -307,7 +307,7 @@ namespace ncl {
 			shader.createAndLinkProgram();
 
 			
-			gl::FrameBuffer::Config config{ 512, 512 };
+			auto  config = gl::FrameBuffer::defaultConfig( 512, 512 );
 			config.clearColor = glm::vec4(1);
 			config.deleteTexture = false;
 			gl::FrameBuffer fbo = gl::FrameBuffer{ config };

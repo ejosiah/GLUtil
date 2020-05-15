@@ -40,5 +40,6 @@ void main(){
 	for(int i = 0; i < 9; i++){
 		col += sampleTex[i] * kernel[i];
 	}
-	fragColor = vec4(col, 1.0);
+	//fragColor = vec4(col, 1.0);
+	fragColor = vec4(texture(image0, vertex.texCoord).rgb, 1);
 }

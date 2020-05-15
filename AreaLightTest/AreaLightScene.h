@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../GLUtil/include/ncl/gl/Scene.h"
+#include "../GLUtil/include/ncl/gl/LightProbe.h"
+
 
 using namespace std;
 using namespace ncl;
@@ -263,31 +265,12 @@ public:
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader("area_light")([&]() {
 			send(activeCamera());
-			shade(&cube);
-
-			mat4 model = translate(mat4(1), { 0, offset, 0 });
-			model = rotate(model, half_pi<float>(), { 0, 1, 0 });
-			send(activeCamera(), model);
-			shade(orb);
-
-			//mat4 model = translate(mat4(1), { -3, 2, 0 });
-			//send(activeCamera(), model);
-			//shade(sphere);
-			send("roughness", 0.0f);
-			send("eyes", activeCamera().getPosition().xyz);
-			for (int i = 0; i < 4; i++) {
-				_send(lights[i], i);
-			}
-			send("numLights", 4);
-
-			//model = translate(mat4(1), { 0, 1, 0 });
-			//send(activeCamera(), model);
-			//shade(tube);
+			renderScene(activeCamera().getPosition());
 		});
 
 		shader("flat")([&]() {
 			glDisable(GL_DEPTH_TEST);
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < numLights; i++) {
 				send(activeCamera(), lights[i].localToWorld);
 				shade(lights[i].shape);
 			}
@@ -300,6 +283,21 @@ public:
 			//shade(Na);
 			//shade(R);
 		});
+	}
+
+	void renderScene(vec3 eyes) {
+		shade(&cube);
+		mat4 model = translate(mat4(1), { 0, offset, 0 });
+		model = rotate(model, half_pi<float>(), { 0, 1, 0 });
+		send("M", model);
+		shade(orb);
+		send("roughness", 0.0f);
+		send("eyes", eyes);
+		for (int i = 0; i < numLights; i++) {
+			_send(lights[i], i);
+		}
+		send("numLights", numLights);
+
 	}
 
 	void _send(Light& light, int i) {
@@ -340,6 +338,7 @@ public:
 
 private:
 	Cube cube;
+	int numLights = 1;
 	Model* orb;
 	Light lights[5];
 	Sphere* pos;
@@ -355,5 +354,6 @@ private:
 	Vector* L;
 	Vector* Na;
 	Vector* R;
+	Probe probe;
 	float offset;
 };

@@ -399,6 +399,15 @@
     <ClInclude Include="shaders\scene_capture_phong.frag">
       <Filter>shaders</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\geom\sphere_bv.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\geom\OBB.h">
+      <Filter>Header Files\geometry\bounding_volumes</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\Octahedral.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -655,6 +664,33 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="shaders\scene_capture.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\probe_render.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\probe_render.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\math.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\pbr_lights.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\ibl_lighting.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\octahedral.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\g3dmath.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\compatibility.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="shaders\octahedral.frag">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

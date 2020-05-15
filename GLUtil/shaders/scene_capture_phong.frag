@@ -27,7 +27,7 @@ uniform vec3 lightPos;
 uniform float shininess = 5.0;
 uniform vec3 emission = vec3(0.0);
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 const vec3 globalAmbience = vec3(0.3);
 const vec3 lightColor = vec3(0.3);

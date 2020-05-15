@@ -220,9 +220,9 @@ public:
 			skybox = SkyBox::create(skyTextures, 7, *this);
 		//	skybox = SkyBox::create("equi_rect", 7, *this, equi_rect);
 			
-			auto texture = new Texture2D(skybox->buffer, 0);
-			irradiance = SkyBox::create("irradiance_convolution", 5, *this, texture, 32, 32);
-			prefilter = SkyBox::preFilter("prefilter", 6, *this, texture);
+			auto texture = new Texture2D{ skybox->buffer, 0 };
+			irradiance = SkyBox::create(shader("irradiance_convolution"), 5, *this, *texture, 32, 32);
+			prefilter = SkyBox::preFilter(shader("prefilter"), 6, *this, *texture);
 			brdfLUT = pbr::generate_brdf_lookup_table(7);
 		});
 	}

@@ -10,9 +10,25 @@ namespace ncl {
 	namespace gl {
 		class Sphere : public Shape {
 		public:
-			Sphere(GLfloat r = 0.5f, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1) :
+			Sphere() = default;
+
+			Sphere(GLfloat r, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1) :
 				Shape(createMesh(r, p, q, color), true, instances){
 			}
+
+			Sphere(const Sphere&) = delete;
+
+			Sphere(Sphere&& source) noexcept : Shape(dynamic_cast<Shape&&>(source)) {
+
+			}
+
+			Sphere& operator=(const Sphere&) = delete;
+
+			Sphere& operator=(Sphere&& source) noexcept {
+				Shape::transfer(dynamic_cast<Shape&>(source), dynamic_cast<Shape&>(*this));
+				return *this;
+			}
+
 
 		protected:
 			std::vector<Mesh> createMesh(float r, int p, int q,const glm::vec4& color) {

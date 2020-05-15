@@ -21,11 +21,10 @@ out VERTEX{
 uniform mat4 M;
 
 void main(){
-	vert_out.position = (M * xform * vec4(position, 1)).xyz;
-	vert_out.color = color;
-
 	mat3 nform = transpose(inverse(mat3(M * xform)));
 
+	vert_out.position = (M * xform * vec4(position, 1)).xyz;
+	vert_out.color = color;
 	vert_out.normal = nform * normal;
 	vert_out.tangent = nform * tangent;
 	vert_out.bitangent = nform * bitangent;

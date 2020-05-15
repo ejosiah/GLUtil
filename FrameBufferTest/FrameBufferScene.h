@@ -91,7 +91,7 @@ public:
 	}
 
 	void buildFrameBuffer() {
-		FrameBuffer::Config config{ _width, _height };
+		auto  config = FrameBuffer::defaultConfig( _width, _height);
 		config.clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
 		fbo = FrameBuffer{ config };
 	}

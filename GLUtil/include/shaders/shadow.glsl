@@ -62,9 +62,10 @@ float ShadowCalculationPoint(vec3 pos, vec3 lightPos, vec3 viewPos, float NdotL)
     int samples = 20;
     float viewDistance = length(viewPos - pos);
     float diskRadius = (1.0 + (viewDistance / farPlane)) / 25.0;
+    float closestDepth;
     for (int i = 0; i < samples; ++i)
     {
-        float closestDepth = texture(pointShadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth = texture(pointShadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
         closestDepth *= farPlane;   // undo mapping [0;1]
         if (currentDepth - bias > closestDepth)
             shadow += 1.0;
@@ -72,7 +73,7 @@ float ShadowCalculationPoint(vec3 pos, vec3 lightPos, vec3 viewPos, float NdotL)
     shadow /= float(samples);
 
     // display closestDepth as debug (to visualize depth cubemap)
-    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
+    fragColor = vec4(vec3(closestDepth / farPlane), 1.0);
 
     return shadow;
 }

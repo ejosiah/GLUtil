@@ -256,9 +256,14 @@ namespace ncl {
 			image->sendTo(*Shader::boundShader);
 		}
 
-		inline void shade(Drawable* drawable) {
+		inline void shade(Drawable& drawable) {
 			ensureShaderbound();
-			drawable->draw(*Shader::boundShader);
+			drawable.draw(*Shader::boundShader);
+		}
+
+		//[[ deprecated ]]
+		inline void shade(Drawable* drawable) {
+			shade(*drawable);
 		}
 		
 		inline void shade(std::initializer_list<Drawable*> drawables) {

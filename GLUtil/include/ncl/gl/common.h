@@ -18,6 +18,10 @@ namespace ncl {
 
 		const float EPSILON = 0.000001;
 
+		const bool DONT_CULL_BACK_FACE = false;
+
+		const std::function<void()> VOID_FUNC = [] {};
+
 		bool closeEnough(float x, float y) { return abs(x - y) <= EPSILON * (abs(x) + abs(y) + 1.0f); }
 
 		void clear(glm::vec3& v) {

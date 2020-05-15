@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <variant>
 #include <glm/glm.hpp>
 #include <gl/gl_core_4_5.h>
 #include "Shader.h"
@@ -11,58 +12,73 @@
 #include "Scene.h"
 #include "SkyBox.h"
 #include "shaders.h"
+#include "shader_binding.h"
+#include "../geom/sphere_bv.h"
+#include "../geom/OBB.h"
 
 namespace ncl {
 	namespace gl {
-		class LightProbe : public Drawable {
+
+		class Probe : public Drawable {
 		public:
-			LightProbe() = default;
+			using Sphere = geom::bvol::Sphere;
+			using Box = geom::bvol::OBB;
+			using Geometry = std::variant<Sphere, Box>;
 
-			LightProbe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height);
+			Probe() = default;
 
-			LightProbe(const LightProbe&) = delete;
 
-			LightProbe(LightProbe&& source) noexcept;
+			Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader = scene_capture_phong_frag_shader);
 
-			LightProbe& operator=(const LightProbe&) = delete;
+			Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader = scene_capture_phong_frag_shader);
 
-			LightProbe& operator=(LightProbe&& source) noexcept;
+			Probe(const Probe&) = delete;
 
-			friend void transfer(LightProbe& source, LightProbe& dest);
+			Probe(Probe&& source) noexcept;
+
+			Probe& operator=(const Probe&) = delete;
+
+			Probe& operator=(Probe&& source) noexcept;
+
+			friend void transfer(Probe& source, Probe& dest);
 
 			void capture(std::function<void()> scene);
 
 			void draw(Shader& shader) override;
 
-			void renderPreFiltered(CameraController& camera, float roughness = 0);
+			void render(int index = 0);
 
-			void renderIrradiance(CameraController& camera);
+			GLuint texture(int index = 0);
 
-			void render();
+			inline int captured() {
+				return framebuffer.numAttachments();
+			}
 
 		protected:
-			void initShaders();
+			void initShaders(std::string fragmentShader);
 
-			void initFrameBuffers();
+			static FrameBuffer::Config defaultConfig(GLsizei w, GLsizei h);
 
 		private:
 			Scene* scene;
 			glm::vec3 location;
 			float alpha;
-			int width;
-			int height;
 			glm::mat4 views[6];
 			Shader sceneCapture;
-			SkyBox captured;
+			Shader renderShader;
 			FrameBuffer framebuffer;
+			Cube cube;
+			Geometry geometry;
 		};
 		
-		LightProbe::LightProbe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height)
+		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader)
+			: Probe(scene, loc, alpha, defaultConfig(width, height), fragmentShader){}
+
+		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader)
 			: scene{ scene }
-			,location{ loc }
+			, location{ loc }
 			, alpha{ alpha }
-			, width{ width }
-			, height{ height }{
+			, framebuffer{ config }{
 
 			views[0] = glm::lookAt(loc, loc + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 			views[1] = glm::lookAt(loc, loc + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -70,24 +86,23 @@ namespace ncl {
 			views[3] = glm::lookAt(loc, loc + glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f));
 			views[4] = glm::lookAt(loc, loc + glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 			views[5] = glm::lookAt(loc, loc + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-			initShaders();
-			initFrameBuffers();
+			cube = Cube{ 1, WHITE, {}, false };
+			cube.defautMaterial(false);
+			initShaders(fragmentShader);
 		}
 
-		LightProbe::LightProbe(LightProbe&& source) noexcept {
+		Probe::Probe(Probe&& source) noexcept {
 			transfer(source, *this);
 		}
 
-		LightProbe& LightProbe::operator=(LightProbe&& source) noexcept {
+		Probe& Probe::operator=(Probe&& source) noexcept {
 			transfer(source, *this);
 			return *this;
 		}
 
-		void transfer(LightProbe& source, LightProbe& dest) {
+		void transfer(Probe& source, Probe& dest) {
 			dest.location = source.location;
 			dest.alpha = source.alpha;
-			dest.width = source.width;
-			dest.height = source.height;
 			
 			for (int i = 0; i < 6; i++) {
 				dest.views[i] = source.views[i];
@@ -95,63 +110,87 @@ namespace ncl {
 			}
 
 			dest.sceneCapture = std::move(source.sceneCapture);
-			dest.captured = std::move(source.captured);
+			dest.renderShader = std::move(source.renderShader);
 			dest.framebuffer = std::move(source.framebuffer);
+
+
+			dest.cube = std::move(source.cube);
+			dest.geometry = source.geometry;
+
 			dest.scene = source.scene;
 
 			source.scene = nullptr;
 		}
 
-		void LightProbe::initShaders() {
+		void Probe::initShaders(std::string fragmentShader) {
 			sceneCapture.load({ GL_VERTEX_SHADER, scene_capture_vert_shader, "scene_capture.vert" });
 			sceneCapture.load({ GL_GEOMETRY_SHADER, scene_capture_geom_shader, "scene_capture.geom" });
-			sceneCapture.load({ GL_FRAGMENT_SHADER, scene_capture_phong_frag_shader, "scene_capture.frag" });
+			sceneCapture.load({ GL_FRAGMENT_SHADER, fragmentShader, "scene_capture.frag" });
 			sceneCapture.createAndLinkProgram();
+
+			renderShader.load({ GL_VERTEX_SHADER, probe_render_vert_shader, "probe_render.vert" });
+			renderShader.load({ GL_FRAGMENT_SHADER, probe_render_frag_shader, "probe_render.vert" });
+			renderShader.createAndLinkProgram();
 		}
 
-		void LightProbe::initFrameBuffers() {
-			auto config = FrameBuffer::Config{ width, height };
-			config.magFilter = GL_LINEAR;
-			config.minfilter = GL_LINEAR_MIPMAP_LINEAR;
-			config.wrap_t = config.wrap_s = GL_CLAMP_TO_EDGE;
+		FrameBuffer::Config Probe::defaultConfig(GLsizei w, GLsizei h) {
+			auto config = FrameBuffer::Config{ w, h };
 			config.fboTarget = GL_FRAMEBUFFER;
-			config.texTarget = GL_TEXTURE_2D;
-			config.internalFmt = GL_RGB16;
-			config.fmt = GL_RGB;
-			config.type = GL_FLOAT;
-			config.attachment = GL_COLOR_ATTACHMENT0;
 			config.depthAndStencil = true;
+			config.depthTest = true;
+			config.stencilTest = false;
+			auto attachment = FrameBuffer::Attachment{};
+			attachment.magFilter = GL_NEAREST;
+			attachment.minfilter = GL_NEAREST;
+			attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
+			attachment.texTarget = GL_TEXTURE_CUBE_MAP;
+			attachment.internalFmt = GL_RGB8;
+			attachment.fmt = GL_RGB;
+			attachment.type = GL_FLOAT;
+			attachment.attachment = GL_COLOR_ATTACHMENT0;
+			attachment.texLevel = 0;
+			config.attachments.push_back(attachment);
 
-			framebuffer = FrameBuffer{ config };
+			return config;
 		}
 
-		void LightProbe::capture(std::function<void()> renderScene) {
-			auto projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 10.0f);
+		void Probe::capture(std::function<void()> renderScene) {
+			using namespace std;
+			auto projection = glm::perspective(glm::half_pi<float>(), 1.0f, 0.1f, 1000.0f);
 			framebuffer.use([&] {
 				sceneCapture.use([&] {
+					//glEnable(GL_DEPTH_TEST);
+					//glDepthFunc(GL_LESS);
 					sceneCapture.sendUniform3fv("camPos", 1, glm::value_ptr(location));
+					sceneCapture.sendUniformMatrix4fv("M", 1, false, glm::value_ptr(glm::mat4{ 1 }));
 					sceneCapture.sendUniformMatrix4fv("projection", 1, false, glm::value_ptr(projection));
 					sceneCapture.sendUniformMatrix4fv("views", 6, false, glm::value_ptr(views[0]));
 					renderScene();
 				});
 			});
-			captured = SkyBox{ scene, framebuffer.texture()};
 		}
 
-		void LightProbe::draw(Shader& shader) {
-
+		void Probe::draw(Shader& shader) {
+			
 		}
 
-		inline void LightProbe::render() {
-			captured.render();
+		inline void Probe::render(int index) {
+			renderShader([&] {
+				auto& camera = scene->activeCamera();
+				glDepthFunc(GL_LEQUAL);
+				//glm::mat4 MVP = camera.getProjectionMatrix() * glm::mat4(glm::mat3(camera.getViewMatrix()));
+				glBindTextureUnit(0, framebuffer.texture(index));
+				//s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, value_ptr(MVP));
+				send("probe_loc", location);
+				send(camera);
+				shade(&cube);
+				glDepthFunc(GL_LESS);
+			});
 		}
 
-		void LightProbe::renderPreFiltered(CameraController& camera, float roughness) {
 
-		}
-
-		void LightProbe::renderIrradiance(CameraController& camera) {
-
+		inline GLuint Probe::texture(int index) {
+			return framebuffer.texture(index);
 		}
 	}
 

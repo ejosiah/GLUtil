@@ -8,16 +8,18 @@ namespace ncl {
 			:lightView{ lv }
 			, textureUnit{ textureUnit } {
 			auto config = FrameBuffer::Config{ width, height };
-			config.magFilter = config.minfilter = GL_NEAREST;
-			config.wrap_s = config.wrap_t = GL_CLAMP_TO_BORDER;
-			config.internalFmt = config.fmt = GL_DEPTH_COMPONENT;
-			config.type = GL_FLOAT;
 			config.read = config.write = false;
 			config.depthAndStencil = false;
-			config.attachment = GL_DEPTH_ATTACHMENT;
 			config.depthTest = true;
 			config.stencilTest = false;
 			config.read = config.write = false;
+			auto attachment = FrameBuffer::Attachment{};
+			attachment.magFilter = attachment.minfilter = GL_NEAREST;
+			attachment.wrap_s = attachment.wrap_t = GL_CLAMP_TO_BORDER;
+			attachment.internalFmt = attachment.fmt = GL_DEPTH_COMPONENT;
+			attachment.type = GL_FLOAT;
+			attachment.attachment = GL_DEPTH_ATTACHMENT;
+			config.attachments.push_back(attachment);
 			frameBuffer = FrameBuffer{ config };
 			//	initRaw(width, height);
 

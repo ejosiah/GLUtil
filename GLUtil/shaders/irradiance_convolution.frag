@@ -5,6 +5,7 @@ layout(binding = 0) uniform samplerCube environmentMap;
 out vec4 fragColor;
 smooth in vec3 localPos;
 const float PI = 3.14159265359;
+uniform int nSamples;
 
 void main()
 {		

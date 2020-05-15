@@ -5,15 +5,12 @@
 #define PI 3.14159265359 
 #define MAX_SCENE_LIGHTS 10
 
-uniform sampler2D ambientMap;
+
+layout(binding = 0) uniform sampler2D ambientMap;
 layout(binding = 1) uniform sampler2D diffuseMap;
 layout(binding = 2) uniform sampler2D specularMap;
 layout(binding = 3) uniform sampler2D normalMap;
-layout(binding = 4) uniform sampler2D shadowMap;
-layout(binding = 5) uniform samplerCube pointShadowMap;
 
-const int DIRECTIONAL_SHADOW = 0;
-const int POINT_SHADOW = 1;
 
 in VERTEX{
 	smooth vec3 position;
@@ -29,10 +26,6 @@ uniform vec3 camPos;
 uniform vec3 lightPos;
 uniform float shininess = 5.0;
 uniform vec3 emission = vec3(0.0);
-uniform bool shadowOn = false;
-uniform bool pointLight = true;
-uniform float farPlane;
-uniform int shadowType;
 
 out vec4 fragColor;
 
@@ -66,64 +59,11 @@ vec3 getNormal0(){
 
 	vec3 tNormal = 2.0 * texture(normalMap, vertex_in.uv).xyz - 1.0;
 	//return normalize(TBN * tNormal);
-	//return gl_FrontFacing ? N : -N;
-	return N;
+	return gl_FrontFacing ? N : -N;
+	//return N;
 }
 
-float ShadowCalculationDirectional(vec4 pos, float NdotL){
-	if(!shadowOn) return 0.0;
-
-    vec3 projCoords = pos.xyz / pos.w;
-    projCoords = projCoords * 0.5 + 0.5; // [-1, 1] to [0, 1]
-
-    float closestDepth = texture(shadowMap, projCoords.xy).r; 
-    float currentDepth = projCoords.z;
-
-    float bias = max(0.05 * (1.0 - NdotL), 0.005);
-
-    // PCF
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
-    {
-        for(int y = -1; y <= 1; ++y)
-        {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;        
-        }    
-    }
-    shadow /= 9.0;
-    
-    // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
-        
-    return shadow;
-}
-
-float ShadowCalculationPoint(vec3 pos, float NdotL){
-	if(!shadowOn) return 0.0;
-	vec3 fragToLight = pos - lightPos;
-
-	float closestDepth = texture(pointShadowMap, fragToLight).r;
-
-	closestDepth *= farPlane;
-	float currentDepth = length(fragToLight);
-	float bias = max(0.05 * (1.0 - NdotL), 0.005);
-	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
-
-
-	fragColor = vec4(vec3(closestDepth/farPlane), 1.0);
-	return shadow;
-}
-
-float ShadowCalculation(vec3 posInWorld, vec4 posInLight, float NdotL){
-	if(!shadowOn) return 0.0;
-	if(shadowType == DIRECTIONAL_SHADOW) return ShadowCalculationDirectional(posInLight, NdotL);
-	if(shadowType == POINT_SHADOW) return ShadowCalculationPoint(posInWorld, NdotL);
-	return 0.0;
-}
-
+float ShadowCalculation(vec3 worldPos, vec4 posInLight, vec3 lightPos, vec3 camPos, float NdotL);
 
 
 void main(){
@@ -139,7 +79,7 @@ void main(){
 	float NdotL = max(dot(N, L), 0);
 	vec3 diffuse = texture(diffuseMap, uv).rgb  * NdotL;
 
-	float shadow = ShadowCalculation(worldPos, posInLight, NdotL);
+	float shadow = ShadowCalculation(worldPos, posInLight, lightPos, camPos, NdotL);
 
 	vec3 color =  globalAmbience * ambient + (1 - shadow) *  lightColor * (diffuse + specular);
 
@@ -149,3 +89,5 @@ void main(){
 	fragColor = vec4(color, vertex_in.color.a);
 
 }
+
+#pragma include("shadow.glsl")

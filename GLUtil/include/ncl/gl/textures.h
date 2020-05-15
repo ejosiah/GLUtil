@@ -90,27 +90,50 @@ namespace ncl {
 				this->_width = 0;
 				this->_height = 0;
 				this->_name = "";
+				this->deleteBuffer = false;
+			}
+
+			Texture2D(const Texture2D& source) {
+				this->buffer = source.buffer;
+				this->_id = source._id;
+				this->_width = source._width;
+				this->_height = source._height;
+				this->_name = source._name;
+				this->deleteBuffer = false;
 			}
 
 			Texture2D(Texture2D&& source) noexcept {
-				swap(source, *this);
+				transfer(source, *this);
 			}
 
 			virtual ~Texture2D() {
-				glDeleteTextures(1, &buffer);
+				if (deleteBuffer && glIsTexture(buffer) == GL_TRUE) {
+					glDeleteTextures(1, &buffer);
+				}
 			}
 
-			Texture2D& operator=(Texture2D&& source) noexcept {
-				swap(source, *this);
+			Texture2D& operator=(const Texture2D& source) noexcept {
+				this->buffer = source.buffer;
+				this->_id = source._id;
+				this->_width = source._width;
+				this->_height = source._height;
+				this->_name = source._name;
+				this->deleteBuffer = false;
 				return *this;
 			}
 
-			inline void swap(Texture2D& source, Texture2D& dest) {
+			Texture2D& operator=(Texture2D&& source) noexcept {
+				transfer(source, *this);
+				return *this;
+			}
+
+			friend inline void transfer(Texture2D& source, Texture2D& dest) {
 				dest._id = source._id;
 				dest.buffer = source.buffer;
 				dest._width = source._width;
 				dest._height = source._height;
 				dest._name = source._name;
+				dest.deleteBuffer = source.deleteBuffer;
 
 				source.buffer = 0;
 			}
@@ -140,6 +163,7 @@ namespace ncl {
 			GLuint _height;
 			std::string _name;
 			Config config;
+			bool deleteBuffer = true;
 
 
 		};
@@ -231,9 +255,26 @@ namespace ncl {
 				_name = name;
 			}
 
+			TextureBuffer(const TextureBuffer&&) = delete;
+
+			TextureBuffer(TextureBuffer&& source) {
+				transfer(source, *this);
+			}
+
+			TextureBuffer& operator=(const TextureBuffer&&) = delete;
+
+			TextureBuffer& operator=(TextureBuffer&& source) {
+				transfer(source, *this);
+				return *this;
+			}
+
 			virtual ~TextureBuffer() {
-				glDeleteBuffers(1, &_buffer);
-				glDeleteTextures(1, &_tbo_id);
+				if (glIsBuffer(_buffer) == GL_TRUE) {
+					glDeleteBuffers(1, &_buffer);
+				}
+				if (glIsTexture(_tbo_id)) {
+					glDeleteTextures(1, &_tbo_id);
+				}
 			}
 
 			GLuint tbo_id() const { return _tbo_id; }
@@ -249,6 +290,17 @@ namespace ncl {
 				glActiveTexture(TEXTURE(0));
 			}
 
+			friend inline void transfer(TextureBuffer& source, TextureBuffer& dest) {
+				dest._buffer = source._buffer;
+				dest._tbo_id = source._tbo_id;
+				dest._id = source._id;
+				dest._name = source._name;
+
+				source._buffer = 0;
+				source._tbo_id = 0;
+				source._name = "";
+			}
+
 		private:
 			GLuint _buffer;
 			GLuint _tbo_id;
@@ -262,7 +314,10 @@ namespace ncl {
 				: Texture2D(generate(colorA, colorB).get(), 256, 256, name, id, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 			}
 
-			CheckerTexture(CheckerTexture&& source) :Texture2D(static_cast<Texture2D&&>(source)) {}
+			CheckerTexture(const CheckerTexture&) = delete;
+
+			CheckerTexture(CheckerTexture&& source) noexcept 
+				:Texture2D(static_cast<Texture2D&&>(source)) {}
 
 			static std::unique_ptr<GLubyte[]> generate(const glm::vec4& a, const glm::vec4& b) {
 				// TODO cache texture
@@ -281,10 +336,12 @@ namespace ncl {
 				return std::unique_ptr<GLubyte[]>{data};
 			}
 
-			CheckerTexture& operator=(CheckerTexture&& source) {
+			CheckerTexture& operator=(CheckerTexture&& source) noexcept {
 				Texture2D::operator=(static_cast<Texture2D&&>(source));
 				return *this;
 			}
+
+			CheckerTexture& operator=(const CheckerTexture&) = delete;
 
 		};
 

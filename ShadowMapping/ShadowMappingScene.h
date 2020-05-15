@@ -18,43 +18,46 @@ public:
 	}
 
 	void init() override {
+		loadPlankMaterial();
 		setForeGroundColor(BLACK);
 		initDefaultCamera();
 		activeCamera().collisionTestOff();
 		activeCamera().setMode(Camera::FIRST_PERSON);
-		//sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
-		//cornell = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\cornell\\cornell_box.obj", true, 10);
-		//current = sponza;
-		//float y = current->bound->min().y;
-		//offset = std::abs(y);
-		//activeCamera().setPosition(vec3(0));
-		//updateLightPosition();
-		//lightView = lookAt(lightPos, vec3(0, 0, 0), { 0, 1, 0 });
+			sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
+			//cornell = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\cornell\\cornell_box.obj", true, 10);
+			current = sponza;
+			//float y = current->bound->min().y;
+			//offset = std::abs(y);
+			//activeCamera().setPosition(vec3(0));
+			updateLightPosition();
+			//lightView = lookAt(lightPos, vec3(0, 0, 0), { 0, 1, 0 });
 
-		//auto bottom = current->bound->min();
-		//auto top = current->bound->max();
+			//auto bottom = current->bound->min();
+			//auto top = current->bound->max();
 
-		//float near_plane = bottom.y;
-		//float far_plane = top.y;
-		//vec3 d = top - bottom;
-		//float h = dot({ 0, 1, 0 }, d);
-		//float w = dot({ 1, 0, 0 }, d);
-		//float l = dot({ 0, 0, 1 }, d);
+			//float near_plane = bottom.y;
+			//float far_plane = top.y;
+			//vec3 d = top - bottom;
+			//float h = dot({ 0, 1, 0 }, d);
+			//float w = dot({ 1, 0, 0 }, d);
+			//float l = dot({ 0, 0, 1 }, d);
 
 		lightPos = { -2, 4, -1 };
+		lightPos = activeCamera().getPosition();
 		shadowMap = DirectionalShadowMap{
 			4,
 			{
 				lookAt(lightPos, vec3(0), {0.0f, 1.0f, 0.0f}),
-				ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f),
-				//perspective(radians(90.0f), 1.0f, 1.0f, 800.0f),
+				ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 25.5f),
+				//perspective(radians(90.0f), 1.0f, 1.0f, 25.0f),
 				false
 			},
 			1024,
 			1024
 		};
 
-		viewFrustum = ViewFrustum::ortho(lightPos, vec3(0), { 0.0f, 1.0f, 0.0f }, -10, 10, -10, 10, 1, 7);
+		//	viewFrustum = ViewFrustum::ortho(lightPos, vec3(0), { 0.0f, 1.0f, 0.0f }, -10, 10, -10, 10, 1, 7);
+		viewFrustum = ViewFrustum::perspective(lookAt(lightPos, vec3(0), { 0.0f, 1.0f, 0.0f }), radians(90.0f), 1.0f, 1.0f, 800.0f);
 
 		vec3 Y = { 0, 1, 0 };
 		vec3 fwd = normalize(-lightPos);
@@ -65,58 +68,64 @@ public:
 		forward = new Vector(fwd, lightPos, 1, RED);
 		right = new Vector(rig, lightPos, 1, GREEN);
 		camUp = new Vector(cY, lightPos, 1, BLUE);
-	//	lightPos = vec3(0);
+		//	lightPos = vec3(0);
 
-		createPlane();
-		createCube();
+			//createPlane();
+			//createCube();
 		activeCamera().setPosition({ 0, 0, 3 });
-		pointShadowMap = OminiDirectionalShadowMap{ 5, lightPos, 1024, 1024 };
+		lightPos = { 0, 2.43, 0.6 };
+		pointShadowMap = OminiDirectionalShadowMap{ 5, lightPos, 2048, 2048 };
 		lightObj = new Sphere(0.3, 20, 20, WHITE);
-		//createCubeForPointShadow();          
-		
+	//	lightPos = vec3(0);
+		createCubeForPointShadow();
+
 	}
 
-	//void updateLightPosition() {
-	//	if (current == cornell) {
-	//		auto id = cornell->getMeshId("light");
-	//		if (id != -1) {
-	//			vec3 _min = vec3{ numeric_limits<float>::max() };
-	//			vec3 _max = vec3{ numeric_limits<float>::min() };
-	//			cornell->get<vec3>(id, 0, [&](GlBuffer<vec3> buffer) {
-	//				for (auto itr = buffer.begin(); itr != buffer.end(); itr++) {
-	//					auto v = *itr;
-	//					_min = glm::min(v, _min);
-	//					_max = glm::max(v, _max);
-	//				}
-	//			});
-	//		//	lightPos = ((_min + _max) * 0.5f) - vec3{0, 0.2, 0};
-	//			lightPos = ((_min + _max) * 0.5f);
-	//		}
-	//	}
-	//	else {
-	//		//lightPos = activeCamera().getPosition();
-	//		lightPos = (sponza->bound->min() + sponza->bound->max()) * 0.5f;
-	//		lightPos = { -10.4, 10.4, 0.288 };
-	//	}
-	//}
+	void updateLightPosition() {
+		if (current == cornell) {
+			auto id = cornell->getMeshId("light");
+			if (id != -1) {
+				vec3 _min = vec3{ numeric_limits<float>::max() };
+				vec3 _max = vec3{ numeric_limits<float>::min() };
+				cornell->get<vec3>(id, 0, [&](GlBuffer<vec3> buffer) {
+					for (auto itr = buffer.begin(); itr != buffer.end(); itr++) {
+						auto v = *itr;
+						_min = glm::min(v, _min);
+						_max = glm::max(v, _max);
+					}
+					});
+				//	lightPos = ((_min + _max) * 0.5f) - vec3{0, 0.2, 0};
+				lightPos = ((_min + _max) * 0.5f);
+			}
+		}
+		else {
+			//lightPos = activeCamera().getPosition();
+			lightPos = (sponza->bound->min() + sponza->bound->max()) * 0.5f;
+		}
+	}
 
 	void display() override {
 		//shadowMap.render();
-		//pointShadowMap.update(lightPos);
-		//pointShadowMap.capture([&] {
-		//	shade(cube);
-		//});
-		
-	//	vec3 camPos = { 0.0f, 0.0f, 3.0f };
+		pointShadowMap.update(lightPos);
+		pointShadowMap.capture([&] {
+			current->defautMaterial(false);
+			//cube->defautMaterial(false);
+			//shade(cube);
+			shade(current);
+		});
+
+		//	vec3 camPos = { 0.0f, 0.0f, 3.0f };
 		vec3 camPos = activeCamera().getPosition();
+		//	lightPos = camPos;
 
 		shader("phong")([&] {
-			plane->defautMaterial(true);
+			//	plane->defautMaterial(true);
+			current->defautMaterial(true);
 			cube->defautMaterial(true);
+			//	current->defautMaterial(true);
 			send(activeCamera());
-			send("lightSpaceView", shadowMap.lightViewMatrix());
-		//	send(pointShadowMap);
-			send(shadowMap);
+			//	send("lightSpaceView", shadowMap.lightViewMatrix());
+			send(pointShadowMap);
 			send("lightPos", lightPos);
 			send("camPos", camPos);
 			send("shadowOn", true);
@@ -125,16 +134,20 @@ public:
 			//glBindTextureUnit(1, plankMaterail.albedo());
 			//glBindTextureUnit(2, plankMaterail.ambientOcclusion());
 			//glBindTextureUnit(3, plankMaterail.normal());
-			shade(plane);
-			shade(cube);
-		});
-		
-		shadowMap.capture([&] {
-			plane->defautMaterial(false);
-			cube->defautMaterial(false);
-			shade(plane);
-			shade(cube);
-		});
+		//	shade(plane);
+			//shade(cube);
+				shade(current);
+			});
+
+		//pointShadowMap.update(activeCamera().getPosition());
+		//pointShadowMap.capture([&] {
+		//	//plane->defautMaterial(false);
+		//	//cube->defautMaterial(false);
+		//	//shade(plane);
+		//	//shade(cube);
+		//	current->defautMaterial(false);
+		//	shade(current);
+		//});
 
 		//pointShadowMap.update(lightPos);
 
@@ -143,26 +156,23 @@ public:
 			auto model = translate(mat4{ 1 }, lightPos);
 			send(activeCamera(), model);
 			shade(lightObj);
-			
+
 
 			//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			send(activeCamera());
-			shade(up);
-			shade(forward);
-			shade(right);
-			shade(camUp);
-			shade(viewFrustum);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		});
+			//send(activeCamera());
+			//shade(up);
+			//shade(forward);
+			//shade(right);
+			//shade(camUp);
+			//shade(viewFrustum);
+			//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			});
 		setBackGroundColor(BLACK);
 	}
 
 	void update(float t) override {
 		elapsedTime += t;
-	//	lightPos = activeCamera().getPosition();
-	//	lightPos.z = ::sin(elapsedTime * 0.5f) * 0.3f;
-	//	lightPos.z = ::sin(glfwGetTime() * 0.5f) * 0.3f;
-	//	lightPos.z = sin(glfwGetTime() * 0.5) * 3.0;
+		//lightPos.z = ::sin(elapsedTime * 0.5f) * 3.0f;
 	}
 
 	void resized() override {
@@ -170,7 +180,6 @@ public:
 	}
 
 	void createPlane() {
-		loadPlankMaterial();
 		Mesh mesh;
 		mesh.positions.emplace_back(25.0f, -0.5f, 25.0f);
 		mesh.positions.emplace_back(-25.0f, -0.5f, 25.0f);
@@ -260,7 +269,10 @@ public:
 		models.push_back(model);
 
 		cube = new Cube(2, RED, models, false);
-		cube->defautMaterial(false);
+		auto& material = cube->material();
+		material.ambientMat = plankMaterail.albedo();
+		material.diffuseMat = plankMaterail.albedo();
+		material.bumpMap = plankMaterail.normal();
 	}
 
 	void loadPlankMaterial() {

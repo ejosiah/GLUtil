@@ -24,7 +24,7 @@ public:
 
 	void init() override {
 		
-		setBackGroundColor(BLACK);
+		setBackGroundColor(BLUE);
 		setForeGroundColor(WHITE);
 	//	arcSlider = new ArcSlider(*this, 100.f, { width() * 0.333, height() * 0.5, });
 
@@ -33,7 +33,7 @@ public:
 		auto half_h = _height / 2;
 	//	panel = new Panel(270, 640, *this, "Light Settings", { 100, _height - 700 });
 		panel = new Panel(270, 640, *this, "Light Settings", { 0, 0 });
-		panel->isOpaque(true);
+		panel->isOpaque(false);
 	//	panel->setForGroundColor(getForeGround());
 		panel->init();
 		
@@ -41,6 +41,7 @@ public:
 		{
 
 			l_panel = new Panel(250, 150, *this, "color", { 10, panel->height() - 170 });
+			l_panel->isOpaque(false);
 			l_panel->init();
 			r = new LineSlider(*this, 200, "Red", 0.5f);
 			g = new LineSlider(*this, 200, "Green", 1.0f);
@@ -77,6 +78,7 @@ public:
 
 		{
 			da_panel = new Panel(250, 120, *this, "Distance attenuation", { 10, l_panel->pos().y - 130 });
+			da_panel->isOpaque(false);
 			da_panel->init();
 			float h = da_panel->height();
 
@@ -99,6 +101,7 @@ public:
 		}
 		{
 			spot_panel = new Panel(250, 200, *this, "Spot Settings", { 10, da_panel->pos().y - 220 });
+			spot_panel->isOpaque(false);
 			spot_panel->init();
 			float h = spot_panel->height();
 			arcSlider = new ArcSlider(*this, "Spot Angle", 100.0f, { 30, 70 });
@@ -121,6 +124,7 @@ public:
 		radioGroup->addRadioButton(new RadioButton(*this, "Directional"));
 		radioGroup->addRadioButton(new RadioButton(*this, "Positional"));
 		radioGroup->pos({ 10, spot_panel->pos().y - radioGroup->height() - 20 });
+		radioGroup->isOpaque(false);
 		radioGroup->init();
 		panel->addChild(radioGroup);
 

@@ -126,17 +126,19 @@ namespace ncl {
 			, nearPlane(1.0f)
 			, farPlane(25.0f) {
 			auto config = FrameBuffer::Config{ width, height };
-			config.texTarget = GL_TEXTURE_CUBE_MAP;
-			config.magFilter = config.minfilter = GL_NEAREST;
-			config.wrap_s = config.wrap_t = config.wrap_r = GL_CLAMP_TO_EDGE;
-			config.internalFmt = config.fmt = GL_DEPTH_COMPONENT;
-			config.type = GL_FLOAT;
-			config.read = config.write = false;
-			config.depthAndStencil = false;
-			config.attachment = GL_DEPTH_ATTACHMENT;
+			auto attachment = FrameBuffer::Attachment{};
 			config.depthTest = true;
 			config.stencilTest = false;
 			config.read = config.write = false;
+			config.read = config.write = false;
+			config.depthAndStencil = false;
+			attachment.texTarget = GL_TEXTURE_CUBE_MAP;
+			attachment.magFilter = attachment.minfilter = GL_NEAREST;
+			attachment.wrap_s = attachment.wrap_t = attachment.wrap_r = GL_CLAMP_TO_EDGE;
+			attachment.internalFmt = attachment.fmt = GL_DEPTH_COMPONENT;
+			attachment.type = GL_FLOAT;
+			attachment.attachment = GL_DEPTH_ATTACHMENT;
+			config.attachments.push_back(attachment);
 			frameBuffer = FrameBuffer{ config };
 
 			shadowShader.load({ GL_VERTEX_SHADER, point_shadow_map_vert_shader, "point_shadow_map.vert" });

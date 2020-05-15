@@ -3,16 +3,14 @@
 #include <gl/gl_core_4_5.h>
 #include <glm/glm.hpp>
 #include <functional>
+#include <vector>
 
 namespace ncl {
 	namespace gl {
 
 		class FrameBuffer {
 		public:
-			struct Config {
-				GLsizei width;
-				GLsizei height;
-				GLenum fboTarget = GL_FRAMEBUFFER;
+			struct Attachment {
 				GLenum texTarget = GL_TEXTURE_2D;
 				GLint texLevel = 0;
 				GLint internalFmt = GL_RGB;
@@ -26,7 +24,13 @@ namespace ncl {
 				GLenum wrap_t = GL_REPEAT;
 				GLenum wrap_r = GL_REPEAT;
 				GLenum attachment = GL_COLOR_ATTACHMENT0;
-				glm::vec4 clearColor = WHITE;
+			};
+			struct Config {
+				GLsizei width;
+				GLsizei height;
+				std::vector<Attachment> attachments;
+				GLenum fboTarget = GL_FRAMEBUFFER;
+				glm::vec4 clearColor = BLACK;
 				bool depthTest = true;
 				bool stencilTest = true;
 				bool depthAndStencil = true;
@@ -55,18 +59,25 @@ namespace ncl {
 				return config.depthAndStencil;
 			}
 
-			inline GLuint texture() {
-				return _tex;
+			inline GLuint texture(int index = 0) {
+				return _textures.at(index);
+			}
+
+			inline int numAttachments() {
+				return _textures.size();
 			}
 
 			void use(std::function<void()> exec) const;
 
 			friend void transfer(FrameBuffer& source, FrameBuffer& destination);
 
+			static Config defaultConfig(GLsizei width, GLsizei height);
+
 		private:
-			GLuint _tex;
+			std::vector<GLuint> _textures;
 			GLuint _fbo;
 			GLuint _rbo;
+			GLuint _depth_stencil_tex;
 			Config config;
 			Status status;
 			GLbitfield clearBits;
