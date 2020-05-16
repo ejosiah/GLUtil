@@ -2,6 +2,7 @@
 
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/sampling/Sampler.h"
+#include "../GLUtil/include/ncl/sampling/sampling.h"
 #include <glm/glm.hpp>
 #include <algorithm>
 
@@ -42,10 +43,14 @@ public:
 	
 	void initializeHemisphereSampling() {
 		
-		dw.resize(50);
-		generate(dw.begin(), dw.end(), [&]() { return new Vector(sampleHemisphere() * 3.0f, vec3(0));  });
+		//dw.resize(50);
+		//generate(dw.begin(), dw.end(), [&]() { return new Vector(sampleHemisphere() * 3.0f, vec3(0));  });
+		
+		auto points = pointsInSphere(50);
+		for (auto point : points) dw.push_back(new Vector{ point, vec3(0) });
 
 		hemisphere = new Hemisphere(1, 50, 50, vec4(1, 0, 0, 0.2));
+		hemisphere->defautMaterial(false);
 	}
 
 	void display() override {
