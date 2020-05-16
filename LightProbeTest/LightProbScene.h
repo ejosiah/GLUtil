@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/LightProbe.h"
+#include "../GLUtil/include/ncl/gl/light_field_probes.h"
 #include "../GLUtil/include/ncl/gl/ShadowMap.h"
 #include "../GLUtil/include/ncl/gl/pbr.h"
 #include "../GLUtil/include/ncl/util/SphericalCoord.h"
@@ -14,7 +15,7 @@ using namespace glm;
 
 class LightProbeScene : public Scene {
 public:
-	LightProbeScene() :Scene("Light probe") {
+	LightProbeScene() :Scene("Light probe", 1028, 1028) {
 		addShader("phong", GL_VERTEX_SHADER, scene_capture_vert_shader);
 		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
 		addShader("phong", GL_FRAGMENT_SHADER, scene_capture_phong_frag_shader);
@@ -35,10 +36,11 @@ public:
 		addShader("render", GL_FRAGMENT_SHADER, probe_render_frag_shader);
 
 		addShader("octahedral", GL_VERTEX_SHADER, octahedral_vert_shader);
-		addShader("octahedral", GL_GEOMETRY_SHADER, octahedral_geom_shader);
+		//addShader("octahedral", GL_GEOMETRY_SHADER, octahedral_geom_shader);
 		addShader("octahedral", GL_FRAGMENT_SHADER, octahedral_frag_shader);
 
 		addShader("screen", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("screen", GL_GEOMETRY_SHADER, octahedral_render_geom_shader);
 		addShader("screen", GL_FRAGMENT_SHADER, octahedral_render_frag_shader);
 
 		logger = Logger::get("probe");
@@ -56,15 +58,18 @@ public:
 		lightObj = new Sphere(0.3, 20, 20, WHITE);
 		probePos = { 0, 2.43, 0 };
 
+		auto dir = vec3{ 10, 12, 0 } - lightPos;
+		ray = new Vector{dir, lightPos};
+
 		auto fragmentShader = getText("light_field_probe_input.frag");
 
 		auto config = lightFieldConfig();
 		probe = Probe{ this, probePos, 1.0f, config, fragmentShader };
 
-		probes.emplace_back(this, vec3{ 5, 2.43, 5 }, 1.0f, config, fragmentShader);
-		probes.emplace_back(this, vec3{ 5, 2.43, -5 }, 1.0f, config, fragmentShader);
-		probes.emplace_back(this, vec3{ -5, 2.43, -5 }, 1.0f, config, fragmentShader);
-		probes.emplace_back(this, vec3{ -5, 2.43, 5 }, 1.0f, config, fragmentShader);
+		//probes.emplace_back(this, vec3{ 5, 2.43, 5 }, 1.0f, config, fragmentShader);
+		//probes.emplace_back(this, vec3{ 5, 2.43, -5 }, 1.0f, config, fragmentShader);
+		//probes.emplace_back(this, vec3{ -5, 2.43, -5 }, 1.0f, config, fragmentShader);
+		//probes.emplace_back(this, vec3{ -5, 2.43, 5 }, 1.0f, config, fragmentShader);
 		probes.emplace_back(this, probePos, 1.0f, config, fragmentShader);
 
 		shadowMap.update(lightPos);
@@ -91,50 +96,53 @@ public:
 
 		vec4 colors[] = { RED, BLUE, YELLOW, GREEN, CYAN };
 
-		int i = 3;
 		octahedral.use([&] {
 			shader("octahedral")([&] {
-				for (int i = 0; i < probes.size(); i++) {
-					auto& probe = probes[i];
-					send("layer", i);
-					send("color", colors[i]);
-					glBindTextureUnit(0, probes[i].texture(0));
-					glBindTextureUnit(1, probes[i].texture(1));
-					glBindTextureUnit(2, probes[i].texture(2));
+				for (int layer = 0; layer < probes.size(); layer++) {
+					octahedral.attachTextureFor(layer);
+					auto& probe = probes[layer];
+					glBindTextureUnit(0, probes[layer].texture(0));
+					glBindTextureUnit(1, probes[layer].texture(1));
+					glBindTextureUnit(2, probes[layer].texture(2));
 					shade(quad);
 				}
 			});
 		});
+
 	}
 
 	void display() override {
-		//probes[1].render();
+		//probes[0].render();
 		renderOctahedral();
+		renderRealScene();
+	}
 
-//		shader("phong") ([&] {
-//			send(activeCamera());
-//			send("camPos", activeCamera().getPosition());
-//			send("projection", activeCamera().getProjectionMatrix());
-//			send("views[0]", activeCamera().getViewMatrix());
-//			renderScene(true);
-//		});
-//
-//		shader("flat")([&] {
-// 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
-//			send(activeCamera());
-////			shade(lightObj);
-//			for (auto& probe : probes) {
-//				shade(probe);
-//			}
-//
-//		});
+	void renderRealScene() {
+		shader("phong") ([&] {
+			send(activeCamera());
+			send("camPos", activeCamera().getPosition());
+			send("projection", activeCamera().getProjectionMatrix());
+			send("views[0]", activeCamera().getViewMatrix());
+			renderScene(true);
+			});
+
+		shader("flat")([&] {
+ 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
+			send(activeCamera(), model);
+			shade(lightObj);
+			for (auto& probe : probes) {
+				shade(probe);
+			}
+
+		});
 	}
 
 	void renderOctahedral() {
+
 		shader("screen")([&] {
+			send("isDistance", attachment == 2);
 			send("numLayers", int(probes.size()));
-			send("layer", 0);
-			glBindTextureUnit(0, octahedral.texture());
+			glBindTextureUnit(0, octahedral.texture(attachment));
 			shade(quad);
 		});
 	}
@@ -145,6 +153,7 @@ public:
 		send("lightPos", lightPos);
 		send("shadowOn", shadowOn);
 		shade(sponza);
+		shade(ray);
 
 	}
 
@@ -181,7 +190,6 @@ public:
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 			attachment.texLevel = 0;
-			attachment.numLayers = probes.size();
 			config.attachments.push_back(attachment);
 		}
 
@@ -207,11 +215,12 @@ public:
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 			attachment.texLevel = 0;
+			attachment.numLayers = probes.size();
 			config.attachments.push_back(attachment);
 		}
 
-		//config.attachments[1].internalFmt = GL_RG8;
-		//config.attachments[2].internalFmt = GL_R16F;
+		config.attachments[2].internalFmt = GL_RG16F;
+		config.attachments[2].fmt = GL_RG;
 
 		return config;
 	}
@@ -221,6 +230,7 @@ public:
 	}
 
 private:
+	int attachment = 1;
 	Logger logger;
 	Probe probe;
 	vector<Probe> probes;
@@ -231,5 +241,7 @@ private:
 	vec3 probePos;
 	Sphere* lightObj;
 	ProvidedMesh quad;
+	Vector* ray;
+	LightFieldSurface lightSurface;
 	float roughness = 0;
 };

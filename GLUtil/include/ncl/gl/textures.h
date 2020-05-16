@@ -16,6 +16,11 @@
 namespace ncl {
 	namespace gl {
 
+		struct Texture {
+			GLuint unit;
+			GLuint buffer;
+		};
+
 		static GLuint nextId = 0;
 
 		using LoadData = std::function<void(void)>;

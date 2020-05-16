@@ -3,7 +3,9 @@
 
 layout(binding = 0) uniform sampler2D image;
 
-smooth in vec2 texCoord;
+in ncl_PerVertex{
+	smooth vec2 texCoord;
+};
 
 out vec4 fragColor;
 

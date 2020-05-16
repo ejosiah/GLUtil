@@ -37,6 +37,16 @@ vec3 worldPos = vert_in.position;
 vec2 uv = vert_in.uv;
 vec4 posInLight = vert_in.lightSpacePos;
 
+vec3 packNormal(vec3 N)
+{
+	return N * vec3(0.5) + vec3(0.5);
+}
+
+vec3 unpackNormal(vec3 packedNormal)
+{
+	return normalize(packedNormal * vec3(2.0) - vec3(1.0));
+}
+
 vec3 getNormal() {
 	vec3 n = normalize(vert_in.normal);
 	vec3 t = normalize(vert_in.tangent);
@@ -86,9 +96,8 @@ void main() {
 
 	vec3 color = globalAmbience * ambient + (1 - shadow) * lightColor * (diffuse + specular);
 
-	o_normal = vec4(N, 0);
-	float distance_to_cam = length(viewDir);
-	o_distance = vec4(distance_to_cam);
+	o_normal = vec4(packNormal(N), 0);
+	o_distance = vec4(length(viewDir), dot(viewDir, viewDir), 0, 0);
 	
 	fragColor = vec4(color, 1);
 }

@@ -80,8 +80,14 @@ namespace ncl {
 				if (a.wrap_s == GL_CLAMP_TO_BORDER) {
 					glTexParameterfv(a.texTarget, GL_TEXTURE_BORDER_COLOR, a.borderColor);
 				}
-
-				glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY) {
+					for (int layer = 0; layer < a.numLayers; layer++) {
+						glFramebufferTextureLayer(c.fboTarget, a.attachment, _tex, 0, layer);
+					}
+				}
+				else {
+					glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
+				}
 			}
 
 			if (c.depthAndStencil) {
@@ -129,9 +135,7 @@ namespace ncl {
 		FrameBuffer& FrameBuffer::operator=(FrameBuffer&& source) noexcept {
 			transfer(source, *this);
 			return *this;
-		}
-
-		inline void transfer(FrameBuffer& source, FrameBuffer& destination) {
+		}		inline void transfer(FrameBuffer& source, FrameBuffer& destination) {
 			destination._fbo = source._fbo;
 			destination._textures = std::move(source._textures);
 			destination._rbo = source._rbo;
@@ -162,10 +166,13 @@ namespace ncl {
 			}
 		}
 
-		void FrameBuffer::use(std::function<void()> exec) const {
+		void FrameBuffer::use(std::function<void()> exec, GLuint layer) const {
 			glGetIntegerv(GL_VIEWPORT, const_cast<GLint*>(viewport));
 
 			glBindFramebuffer(config.fboTarget, _fbo);
+
+
+
 			auto [r, g, b, a] = toTuple(config.clearColor); 
 			glClearColor(r, g, b, a);
 			glClear(clearBits);
@@ -173,6 +180,19 @@ namespace ncl {
 			exec();
 			glBindFramebuffer(config.fboTarget, 0);
 			glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+		}
+
+		void FrameBuffer::attachTextureFor(GLuint layer) const{
+			for (int i = 0; i < config.attachments.size(); i++) {
+				auto& a = config.attachments[i];
+				auto _tex = _textures[i];
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY) {	// Todo check for all array textures
+					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, 0, layer);
+				}
+			}
+			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _textures[0], 0, layer);
+			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, _textures[1], 0, layer);
+			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, _textures[2], 0, layer);
 		}
 
 		FrameBuffer::Config FrameBuffer::defaultConfig(GLsizei width, GLsizei height) {

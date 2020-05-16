@@ -56,6 +56,8 @@ namespace ncl {
 
 			FrameBuffer& operator=(FrameBuffer&&) noexcept;
 
+			void attachTextureFor(GLuint layer) const;
+
 			inline bool rboBuf() const {
 				return config.depthAndStencil;
 			}
@@ -68,7 +70,11 @@ namespace ncl {
 				return _textures.size();
 			}
 
-			void use(std::function<void()> exec) const;
+			inline GLuint fbo() {
+				return _fbo;
+			}
+
+			void use(std::function<void()> exec, GLuint layer = 0) const;
 
 			friend void transfer(FrameBuffer& source, FrameBuffer& destination);
 

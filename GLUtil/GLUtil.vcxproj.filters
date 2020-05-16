@@ -702,6 +702,9 @@
     <None Include="shaders\octahedral.vert">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\octahedral_render.geom">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">
