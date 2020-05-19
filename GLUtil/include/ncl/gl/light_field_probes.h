@@ -41,7 +41,7 @@ namespace ncl {
 			probeGridCubeArray meanDistProbeGrid;
 		};
 
-		class LightFieldProbes {
+		class LightFieldProbes : public Drawable{
 		public:
 			struct Config {
 				glm::vec3 probeCount = { 2, 2, 2 };
@@ -67,11 +67,11 @@ namespace ncl {
 
 			LightFieldProbes(const LightFieldProbes&) = default;
 
-			LightFieldProbes(LightFieldProbes&& source);
+			LightFieldProbes(LightFieldProbes&& source) noexcept;
 
 			LightFieldProbes& operator=(const LightFieldProbes&) = delete;
 
-			LightFieldProbes& operator=(LightFieldProbes&& source);
+			LightFieldProbes& operator=(LightFieldProbes&& source) noexcept;
 
 			friend void transfer(LightFieldProbes& source, LightFieldProbes& dest);
 
@@ -79,23 +79,23 @@ namespace ncl {
 
 			void capture(std::function<void()> scene);
 
-			void renderProbe(int index);
+			void renderProbe(int index = 0);
 
-			void renderOctahedrals();
+			void renderOctahedrals(int attachment = 0);
 
-			void renderOctahedral(int index);
+			void renderOctahedral(int index = 0);
 
-			void renderIrradiance(int index);
+			void renderIrradiance(int index = 0);
 
-			void renderMeadDistance(int index);
+			void renderMeadDistance(int index = 0);
 
-		protected:
 			inline void init() {
 				initProbes();
 				initOctahedral();
 				initIrradiaceProbeGrid();
 				initMeanDistanceProbeGrid();
 			}
+		protected:
 
 			void initShaders();
 
@@ -112,6 +112,8 @@ namespace ncl {
 			void generateIrradiaceGrid();
 
 			void generateMeanDistanceGrid();
+
+			void draw(Shader& shader) override;
 
 			gl::FrameBuffer::Config probeConfig();
 
@@ -153,20 +155,26 @@ namespace ncl {
 		LightFieldProbes::LightFieldProbes(Config config, Scene* scene)
 			:config{ config }
 			, scene{ scene }
-		{}
+		{
+			cube = Cube{ 1, WHITE, {}, false };
+			cube.defautMaterial(false);
+			quad = ProvidedMesh{ screnSpaceQuad() };
+			quad.defautMaterial(false);
+			initShaders();
+		}
 
-		LightFieldProbes::LightFieldProbes(LightFieldProbes&& source) {
+		LightFieldProbes::LightFieldProbes(LightFieldProbes&& source)  noexcept {
 			transfer(source, *this);
 		}
 
-		LightFieldProbes& LightFieldProbes::operator=(LightFieldProbes&& source) {
+		LightFieldProbes& LightFieldProbes::operator=(LightFieldProbes&& source)  noexcept{
 			transfer(source, *this);
 			return *this;
 		}
 
 		void transfer(LightFieldProbes& source, LightFieldProbes& dest) {
 
-			//if (&source == &dest) return;
+			if (&source == &dest) return;
 
 			dest.config = source.config;
 			dest.probes = std::move(source.probes);
@@ -188,7 +196,6 @@ namespace ncl {
 
 		void LightFieldProbes::update(Config config) {
 			this->config = config;
-			init();
 		}
 
 		void LightFieldProbes::initShaders() {
@@ -226,7 +233,8 @@ namespace ncl {
 		}
 
 		void LightFieldProbes::initOctahedral() {
-			octahedral = FrameBuffer{ octahedralConfig() };
+			auto config = octahedralConfig();
+			octahedral = FrameBuffer{ config };
 		}
 
 		void LightFieldProbes::initIrradiaceProbeGrid() {
@@ -242,7 +250,7 @@ namespace ncl {
 			for (auto& probe : probes) {
 				probe.capture([&] {
 					scene();
-					});
+				});
 			}
 			generateOctahedrals();
 			generateIrradiaceGrid();
@@ -303,12 +311,19 @@ namespace ncl {
 		}
 
 		void LightFieldProbes::renderProbe(int index) {
-			assert(index > 0 && index < probes.size());
+			assert(index > 0 || index < probes.size());
 			probes.at(index).render();
 		}
 
-		void LightFieldProbes::renderOctahedrals() {
-
+		void LightFieldProbes::renderOctahedrals(int attachment) {
+			octahedralRenderShader([&] {
+				send("isDistance", attachment == 2);
+				send("numLayers", int(probes.size()));
+				glBindTextureUnit(0, octahedral.texture(attachment));
+				glBindTextureUnit(1, irradianceProbeGrid.texture());
+				glBindTextureUnit(2, meanDistanceProbeGrid.texture());
+				shade(quad);
+			});
 		}
 
 		void LightFieldProbes::renderOctahedral(int index) {
@@ -321,6 +336,12 @@ namespace ncl {
 
 		void LightFieldProbes::renderMeadDistance(int index) {
 
+		}
+
+		void LightFieldProbes::draw(Shader& shader) {
+			for (auto& probe : probes) {
+				probe.draw(shader);
+			}
 		}
 
 		gl::FrameBuffer::Config LightFieldProbes::probeConfig() {
@@ -349,11 +370,36 @@ namespace ncl {
 		}
 
 		gl::FrameBuffer::Config LightFieldProbes::octahedralConfig() {
-			auto oConfig = FrameBuffer::Config{ config.resolution, config.resolution };
-			oConfig.fboTarget = GL_FRAMEBUFFER;
-			oConfig.depthAndStencil = false;
-			oConfig.depthTest = false;
-			oConfig.stencilTest = false;
+			//auto oConfig = FrameBuffer::Config{ config.resolution, config.resolution };
+			//oConfig.fboTarget = GL_FRAMEBUFFER;
+			//oConfig.depthAndStencil = false;
+			//oConfig.depthTest = false;
+			//oConfig.stencilTest = false;
+
+			//for (int i = 0; i < 3; i++) {
+			//	auto attachment = FrameBuffer::Attachment{};
+			//	attachment.magFilter = GL_NEAREST;
+			//	attachment.minfilter = GL_NEAREST;
+			//	attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
+			//	attachment.texTarget = GL_TEXTURE_2D_ARRAY;
+			//	attachment.internalFmt = GL_R11F_G11F_B10F;
+			//	attachment.fmt = GL_RGBA;
+			//	attachment.type = GL_FLOAT;
+			//	attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
+			//	attachment.texLevel = 0;
+			//	attachment.numLayers = probes.size();
+			//	oConfig.attachments.push_back(attachment);
+			//}
+
+			//oConfig.attachments[2].internalFmt = GL_RG16F;
+			//oConfig.attachments[2].fmt = GL_RG;
+
+			//return oConfig;
+			auto config = FrameBuffer::Config{ 1024, 1024 };
+			config.fboTarget = GL_FRAMEBUFFER;
+			config.depthAndStencil = false;
+			config.depthTest = false;
+			config.stencilTest = false;
 
 			for (int i = 0; i < 3; i++) {
 				auto attachment = FrameBuffer::Attachment{};
@@ -367,13 +413,13 @@ namespace ncl {
 				attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 				attachment.texLevel = 0;
 				attachment.numLayers = probes.size();
-				oConfig.attachments.push_back(attachment);
+				config.attachments.push_back(attachment);
 			}
 
-			oConfig.attachments[2].internalFmt = GL_RG16F;
-			oConfig.attachments[2].fmt = GL_RG;
+			config.attachments[2].internalFmt = GL_RG16F;
+			config.attachments[2].fmt = GL_RG;
 
-			return oConfig;
+			return config;
 		}
 
 		gl::FrameBuffer::Config LightFieldProbes::irradianceProbeGridConfig() {

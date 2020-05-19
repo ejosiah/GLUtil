@@ -1,8 +1,7 @@
 #version 450 core
 
-layout(triangles) in;
+layout(triangles, invocations = 2) in;
 layout(triangle_strip, max_vertices=128) out;
-
 
 
 in ncl_PerVertex{
@@ -32,6 +31,7 @@ mat4 scale4x4(vec3 s){
                   0, 0, 0,1);
 }
 
+const int MAX_TRIANGLES_PER_INSTANCE = 42;
 
 void main(){
     int cols = columns;
@@ -40,7 +40,8 @@ void main(){
 	float h = w/aspectRatio;
 	mat4 s = scale4x4(vec3(w, h, 1));
 
-    for(int level = 0; level < numLayers; level++){
+    int level = gl_InvocationID * MAX_TRIANGLES_PER_INSTANCE;
+    for(int level = gl_InvocationID * 42; level < numLayers; level++){
         gl_Layer = level;
         for(int i = 0; i < gl_in.length(); i++){
             layer = level;
