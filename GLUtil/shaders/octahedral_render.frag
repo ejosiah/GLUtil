@@ -9,7 +9,7 @@ uniform bool isDistanceSqrd = false;
 
 in ncl_PerVertex{
 	smooth vec2 texCoord;
-		flat int layer;
+	flat int layer;
 };
 
 out vec4 fragColor;
@@ -26,7 +26,7 @@ vec3 getColor(int layer){
 
 void main(){
 	float actual_layer = max(0, min(numLayers - 1 , floor(layer + 0.5)));
-	vec3 color = getColor(int(actual_layer));
+	vec3 color = getColor(int(layer));
 	color = isDistance || isDistanceSqrd ? color / (color + vec3(1.0)) : color;
 	fragColor = vec4(color, 1.0);
 }

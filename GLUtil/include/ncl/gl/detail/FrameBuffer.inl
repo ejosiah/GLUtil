@@ -38,6 +38,9 @@ namespace ncl {
 			case GL_TEXTURE_2D_ARRAY:
 				glTexImage3D(a.texTarget, 0, a.internalFmt, c.width, c.height, a.numLayers, a.border, a.fmt, a.type, nullptr);
 				break;
+			case GL_TEXTURE_CUBE_MAP_ARRAY:
+				glTexImage3D(a.texTarget, 0, a.internalFmt, c.width, c.height, a.numLayers * 6, a.border, a.fmt, a.type, nullptr);
+				break;
 			default:
 				throw std::to_string(a.attachment) + "Not yet implemented";
 			}
@@ -45,7 +48,7 @@ namespace ncl {
 
 		static inline bool containsCubeMapForColorAttachment(std::vector<FrameBuffer::Attachment>& attachments) {
 			return std::any_of(attachments.begin(), attachments.end(), [](FrameBuffer::Attachment a) {
-				return a.texTarget == GL_TEXTURE_CUBE_MAP && isColorAttachment(a.attachment);
+				return (a.texTarget == GL_TEXTURE_CUBE_MAP || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) && isColorAttachment(a.attachment);
 			});
 		}
 
@@ -80,14 +83,8 @@ namespace ncl {
 				if (a.wrap_s == GL_CLAMP_TO_BORDER) {
 					glTexParameterfv(a.texTarget, GL_TEXTURE_BORDER_COLOR, a.borderColor);
 				}
-				if (a.texTarget == GL_TEXTURE_2D_ARRAY) {
-					for (int layer = 0; layer < a.numLayers; layer++) {
-						glFramebufferTextureLayer(c.fboTarget, a.attachment, _tex, 0, layer);
-					}
-				}
-				else {
-					glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
-				}
+
+				glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
 			}
 
 			if (c.depthAndStencil) {
@@ -113,7 +110,8 @@ namespace ncl {
 				glDrawBuffers(attachments.size(), &attachments[0]);
 			}
 
-			if (glCheckFramebufferStatus(c.fboTarget) == GL_FRAMEBUFFER_COMPLETE) {
+			auto checkStatus = glCheckFramebufferStatus(c.fboTarget);
+			if (checkStatus == GL_FRAMEBUFFER_COMPLETE) {
 				status = Status::Complete;
 			}
 			else {
@@ -186,7 +184,7 @@ namespace ncl {
 			for (int i = 0; i < config.attachments.size(); i++) {
 				auto& a = config.attachments[i];
 				auto _tex = _textures[i];
-				if (a.texTarget == GL_TEXTURE_2D_ARRAY) {	// Todo check for all array textures
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) {	// Todo check for all array textures
 					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, 0, layer);
 				}
 			}

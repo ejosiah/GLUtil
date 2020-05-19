@@ -1,7 +1,7 @@
 #version 450 core
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices=18) out;
+layout(triangle_strip, max_vertices=128) out;
 
 
 
@@ -14,7 +14,7 @@ out ncl_PerVertex{
 	flat int layer;
 };
 
-uniform int numLayers = 5;
+uniform int numLayers;
 uniform int columns = 8;
 uniform float aspectRatio = 1;
 

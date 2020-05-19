@@ -189,6 +189,7 @@
     <ClInclude Include="include\ncl\gl\gl_enums.h" />
     <ClInclude Include="include\ncl\gl\HalfEdge.h" />
     <ClInclude Include="include\ncl\gl\LightProbe.h" />
+    <ClInclude Include="include\ncl\gl\light_field_probes.h" />
     <ClInclude Include="include\ncl\gl\MeshLoader.h" />
     <ClInclude Include="include\ncl\gl\MeshNormalizer.h" />
     <ClInclude Include="include\ncl\gl\Noise.h" />
@@ -218,6 +219,7 @@
     <ClInclude Include="include\ncl\gl\WithTangent.h" />
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
+    <ClInclude Include="include\ncl\octahedral.h" />
     <ClInclude Include="include\ncl\sampling\hash.h" />
     <ClInclude Include="include\ncl\sampling\Sampler.h" />
     <ClInclude Include="include\ncl\sampling\sampling.h" />
@@ -296,6 +298,7 @@
     <None Include="include\shaders\normal_calculator.glsl" />
     <None Include="include\shaders\octahedral.glsl" />
     <None Include="include\shaders\pbr_lights.glsl" />
+    <None Include="include\shaders\sampling.glsl" />
     <None Include="include\shaders\shadow.glsl" />
     <None Include="include\shaders\simple_light.vert" />
     <None Include="include\shaders\toon_diffuse.glsl" />
@@ -319,6 +322,11 @@
     <None Include="shaders\identity.frag" />
     <None Include="shaders\identity.vert" />
     <None Include="shaders\irradiance_convolution.frag" />
+    <None Include="shaders\lfp_irradiance_render.frag" />
+    <None Include="shaders\lfp_irradiance_render.vert" />
+    <None Include="shaders\lfp_prefilter.frag" />
+    <None Include="shaders\lfp_prefilter.geom" />
+    <None Include="shaders\lfp_prefilter.vert" />
     <None Include="shaders\lightMap.frag" />
     <None Include="shaders\lightMap.vert" />
     <None Include="shaders\mass_spring.comp" />

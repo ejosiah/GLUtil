@@ -25,7 +25,25 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="light_field_probe_input.frag">
+    <None Include="light_probe_prefilter.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="light_probe_prefilter.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lfp_irradiance_render.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lfp_irradiance_render.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lfp_prefilter.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lfp_prefilter.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\lfp_prefilter.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

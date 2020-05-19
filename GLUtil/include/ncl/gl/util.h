@@ -11,13 +11,13 @@ namespace ncl {
 
 	using real = float;
 
-	std::string extractExt(const std::string& path) {
+	inline std::string extractExt(const std::string& path) {
 		auto i = path.find_last_of(".");
 		if (i == std::string::npos) return "";
 		return path.substr(i + 1, path.length());
 	};
 
-	std::string getEnv(const char* name) {
+	inline std::string getEnv(const char* name) {
 		char* value;
 		size_t size;
 		auto error = _dupenv_s(&value, &size, name);
@@ -25,7 +25,7 @@ namespace ncl {
 		return value;
 	}
 
-	bool isBlankLine(std::string& line) {
+	inline bool isBlankLine(std::string& line) {
 		if (line.empty()) return true;
 		if (line.size() == 2) {
 			size_t found = line.find("\r\n");
@@ -34,7 +34,7 @@ namespace ncl {
 		return false;
 	}
 
-	std::string getText(const std::string& filename) {
+	inline std::string getText(const std::string& filename) {
 		std::ifstream fp;
 		fp.open(filename.c_str(), std::ios_base::in);
 		if (!fp) {
@@ -52,19 +52,19 @@ namespace ncl {
 
 	}
 
-	unsigned nextSeed() {
+	inline unsigned nextSeed() {
 		std::random_device rnd;
 		return rnd();
 	}
 
-	std::function<int(void)> rngInt(int min, int max, unsigned int seed = nextSeed()) {
+	inline std::function<int(void)> rngInt(int min, int max, unsigned int seed = nextSeed()) {
 		using namespace std;
 		default_random_engine eng{ seed };
 		uniform_int_distribution<int> dist{ min, max };
 		return bind(dist, eng);
 	}
 
-	std::function<real(void)> rngReal(real min, real max, unsigned int seed = nextSeed()) {
+	inline std::function<real(void)> rngReal(real min, real max, unsigned int seed = nextSeed()) {
 		using namespace std;
 		default_random_engine eng{ seed};
 		uniform_real_distribution<real> dist{ min, max };

@@ -147,7 +147,13 @@
     <ClCompile Include="LightProbe.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="light_field_probe_input.frag" />
+    <None Include="light_probe_prefilter.comp" />
+    <None Include="light_probe_prefilter.vert" />
+    <None Include="shaders\lfp_irradiance_render.frag" />
+    <None Include="shaders\lfp_irradiance_render.vert" />
+    <None Include="shaders\lfp_prefilter.frag" />
+    <None Include="shaders\lfp_prefilter.geom" />
+    <None Include="shaders\lfp_prefilter.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
