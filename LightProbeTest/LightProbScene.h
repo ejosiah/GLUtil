@@ -90,6 +90,7 @@ public:
 		LightFieldSurface c = lightSurface;
 		LightFieldSurface a;
 		LightFieldSurface b;
+		clearBindings();
 	}
 
 
@@ -97,7 +98,7 @@ public:
 	void display() override {
 	//	probes[0].render();
 	//	renderOctahedral();
-	//	renderRealScene();
+		renderRealScene();
 	//	skybox.render();
 	//	renderIrradiance();
 	//	lightFieldProbes.renderProbe(28);
@@ -105,11 +106,11 @@ public:
 	//	lightFieldProbes.renderLowResDistanceProbe();
 	//	lightFieldProbes.renderIrradiance();
 	//	lightFieldProbes.renderMeanDistance();
-		shader("lfp_test")([&] {
-			send("layer", 21);
-			lightFieldProbes.sendTo(shader("lfp_test"));
-			shade(quad);
-		});
+		//shader("lfp_test")([&] {
+		//	send("layer", 21);
+		//	lightFieldProbes.sendTo(shader("lfp_test"));
+		//	shade(quad);
+		//});
 	}
 
 	void renderRealScene() {
@@ -118,6 +119,8 @@ public:
 			send("camPos", activeCamera().getPosition());
 			send("projection", activeCamera().getProjectionMatrix());
 			send("views[0]", activeCamera().getViewMatrix());
+			send("lfp_on", lfp_on);
+			lightFieldProbes.sendTo(shader("phong"));
 			renderScene(true);
 		});
 
@@ -132,6 +135,13 @@ public:
 			shade(Y);
 			shade(Z);
 		});
+
+		if (lfp_on) {
+			sFont->render("light Field Probe on", 0, 60);
+		}
+		else {
+			sFont->render("light Field Probe off", 0, 60);
+		}
 	}
 
 	void renderScene(bool shadowOn = false) {
@@ -154,6 +164,10 @@ public:
 				roughness -= 0.05;
 			}
 			roughness = glm::clamp(roughness, 0.0f, 1.0f);
+
+			if (key.value() == 'o') {
+				lfp_on = !lfp_on;
+			}
 		}
 	}
 
@@ -174,6 +188,7 @@ public:
 		config.meanDistance.lobeSize = 1.0f;
 		config.meanDistance.resolution = 128;
 		config.lowResolutionDownsampleFactor = 8;
+		config.textureBindOffset = 6;
 
 		return config;
 	}
@@ -196,5 +211,6 @@ private:
 	Vector* Z;
 	LightFieldSurface lightSurface;
 	LightFieldProbes lightFieldProbes;
+	bool lfp_on = false;
 	float roughness = 0;
 };

@@ -10,7 +10,7 @@ layout(binding = 1) uniform sampler2D diffuseMap;
 layout(binding = 2) uniform sampler2D specularMap;
 layout(binding = 3) uniform sampler2D normalMap;
 
-//#pragma include("lightFieldProbeModel.glsl")
+#pragma include("LightFieldProbe.glsl")
 
 in VERTEX{
 	smooth vec3 position;
@@ -26,6 +26,7 @@ uniform vec3 camPos;
 uniform vec3 lightPos;
 uniform float shininess = 5.0;
 uniform vec3 emission = vec3(0.0);
+uniform bool lfp_on = false;
 
 layout(location = 0) out vec4 fragColor;
 
@@ -78,6 +79,10 @@ void main() {
 
 	float NdotL = max(dot(N, L), 0);
 	vec3 diffuse = texture(diffuseMap, uv).rgb * NdotL;
+
+	if(lfp_on){
+		diffuse += computePrefilteredIrradiance(worldPos, N) * INV_TWO_PI;
+	}
 
 	float shadow = ShadowCalculation(worldPos, posInLight, lightPos, camPos, NdotL);
 

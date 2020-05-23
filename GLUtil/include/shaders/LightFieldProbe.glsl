@@ -670,6 +670,7 @@ Irradiance3 computePrefilteredIrradiance(Point3 wsPosition, vec3 wsN) {
     return 2.0 * pi * sumIrradiance / sumWeight;
 }
 
+
 // Stochastically samples one glossy ray
 //Radiance3 computeGlossyRay(Point3 wsPosition, Vector3 wo, Vector3 n, ...) {
 //    const float rayBumpEpsilon = 0.001;
