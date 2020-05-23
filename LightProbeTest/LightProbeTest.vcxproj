@@ -147,6 +147,7 @@
     <ClCompile Include="LightProbe.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="lfp_uniform_test.frag" />
     <None Include="light_probe_prefilter.comp" />
     <None Include="light_probe_prefilter.vert" />
     <None Include="shaders\lfp_irradiance_render.frag" />
