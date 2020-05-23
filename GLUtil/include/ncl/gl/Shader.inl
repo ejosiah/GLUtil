@@ -32,9 +32,12 @@ namespace ncl {
 			}
 		}
 
+		static ncl::Logger stat_logger;
+
 		Shader::Shader()
 		{
 			logger = ncl::Logger::get("Shader");
+			stat_logger = logger;
 			clear();
 		}
 
@@ -355,6 +358,11 @@ namespace ncl {
 			glUniform4i(location, v0, v1, v2, v3);
 		}
 
+		void Shader::sendUniform3iv(const std::string& name, GLsizei count, GLint* v) {
+			GLint location = findUniformLocation(name);
+			glUniform3iv(location, count, v);
+		}
+
 		void Shader::sendUniform1ui(const std::string& name, GLuint v0) {
 			GLint location = findUniformLocation(name); // CHECK_GL_ERRORS
 			glUniform1ui(location, v0); //CHECK_GL_ERRORS
@@ -493,9 +501,56 @@ namespace ncl {
 			sendUniform4fv("lightModel.globalAmbience", 1, (float*)&lightModel.globalAmbience[0]);
 		}
 
-#ifndef SHADER_PROCESS
-#define SHADER_PROCESS
-		std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level) {
+		inline std::string processForEach(std::stringstream& in, std::string genTypeDef) {
+			using namespace std;
+
+			const regex FOR_EACH_END("^#endforeach");
+			smatch for_each_end_match;
+			stringstream template_out;
+			string line = "";
+			while (!regex_search(line, for_each_end_match, FOR_EACH_END)) {
+				getline(in, line);
+				if (line.find("#endforeach") == string::npos) {
+					template_out << line << "\n";
+				}
+			}
+
+			auto _template = template_out.str();
+
+			const regex GEN_TYPE("\([a-zA-Z0-9]*\)");
+			smatch match;
+			string open = "(";
+			string close = ")";
+			stringstream out;
+			string placeholder = "$(gentype)";
+
+			if (regex_search(genTypeDef, match, GEN_TYPE)) {
+				auto pos = 0;
+				while (true) {
+					pos = genTypeDef.find(open, pos);
+					if (pos == string::npos) break;
+					auto startIndex = pos + 1;
+					auto endIndex = genTypeDef.find(close, pos);
+					auto genType = genTypeDef.substr(startIndex, endIndex - startIndex);
+					pos = endIndex;
+					if (genType == "gentype") continue;
+					
+					auto templatePos = 0;
+					auto source = _template;
+					while (true) {
+						templatePos = source.find(placeholder, templatePos);
+						if (templatePos == string::npos) break;
+						source.replace(templatePos, placeholder.length(), genType);
+					}
+					out << source;
+					out << endl;
+				}
+			}
+
+			return out.str();
+		}
+
+		inline std::string preprocess(const std::string& source, const std::string& filename, std::set<std::string>& loaded, int level) {
 			static unsigned num = 0;
 			if (level > 32) {
 				throw "header inclusion depth limit reached, might be caused by cyclic header inclusion";
@@ -506,6 +561,8 @@ namespace ncl {
 			const regex DEBUG_MODE_REGEX("^#pragma\\s*storeIntermediate\\(on\\)");
 			const regex IGNORE_BEGIN("^#pragma\\s*ignore\\(on\\)");
 			const regex IGNORE_END("^#pragma\\s*ignore\\(off\\)");
+			const regex FOR_EACH_BEGIN("^#foreach.*");
+			
 			stringstream in;
 			stringstream out;
 			in << source;
@@ -515,6 +572,7 @@ namespace ncl {
 			smatch debug_match;
 			smatch ignore_match_on;
 			smatch ignore_match_off;
+			smatch for_each_match;
 
 			auto find = [](string name) -> string {
 				std::vector<std::filesystem::path> shader_loc = {
@@ -550,8 +608,12 @@ namespace ncl {
 					string include_string = ncl::getText(include_file);
 					out << preprocess(include_string, include_file, loaded, level + 1) << endl;
 				}
-				else if(!ignore) {
+				else if(!ignore && line.find("#foreach") == string::npos) {
 					out << line << endl;
+				}
+
+				if (regex_search(line, for_each_match, FOR_EACH_BEGIN)) {
+					out << processForEach(in, line);
 				}
 
 				if (regex_search(line, ignore_match_off, IGNORE_END)) {
@@ -575,7 +637,5 @@ namespace ncl {
 			}
 			return result;
 		}
-#endif
-
 	}
 }

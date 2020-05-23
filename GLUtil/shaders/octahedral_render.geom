@@ -16,6 +16,8 @@ out ncl_PerVertex{
 uniform int numLayers;
 uniform int columns = 8;
 uniform float aspectRatio = 1;
+uniform bool renderAll = true;
+uniform int uLayer;
 
 mat4 translate4x4(vec3 t) {
     return mat4(1,0,0,0,
@@ -40,17 +42,27 @@ void main(){
 	float h = w/aspectRatio;
 	mat4 s = scale4x4(vec3(w, h, 1));
 
-    int level = gl_InvocationID * MAX_TRIANGLES_PER_INSTANCE;
-    for(int level = gl_InvocationID * 42; level < numLayers; level++){
-        gl_Layer = level;
+    if(renderAll){
+        int level = gl_InvocationID * MAX_TRIANGLES_PER_INSTANCE;
+        for(int level = gl_InvocationID * 42; level < numLayers; level++){
+            gl_Layer = level;
+            for(int i = 0; i < gl_in.length(); i++){
+                layer = level;
+                texCoord = ncl_in[i].texCoord;
+                float x = w-1 + (level%cols) * w * 2;
+                float y = 1 - h - ((level/cols) * (h * 2));
+                mat4 model = translate4x4(vec3(x, y, 0)) *  s;
+               // mat4 model = mat4(1);
+                gl_Position = model * gl_in[i].gl_Position;
+                EmitVertex();
+            }
+            EndPrimitive();
+        }
+    }else{
         for(int i = 0; i < gl_in.length(); i++){
-            layer = level;
+            layer = uLayer;
             texCoord = ncl_in[i].texCoord;
-            float x = w-1 + (level%cols) * w * 2;
-            float y = 1 - h - ((level/cols) * (h * 2));
-            mat4 model = translate4x4(vec3(x, y, 0)) *  s;
-           // mat4 model = mat4(1);
-            gl_Position = model * gl_in[i].gl_Position;
+            gl_Position = gl_in[i].gl_Position;
             EmitVertex();
         }
         EndPrimitive();

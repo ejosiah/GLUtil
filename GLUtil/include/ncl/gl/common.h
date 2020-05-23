@@ -12,6 +12,11 @@
 #define CHECK_GL_ERRORS  assert(glGetError()==GL_NO_ERROR);
 #endif
 
+#ifndef TEXTURE(id)
+#define TEXTURE(id) GL_TEXTURE0 + id
+#endif // !TEXTURE(id)
+
+
 namespace ncl {
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)

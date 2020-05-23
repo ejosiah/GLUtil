@@ -729,6 +729,15 @@
     <None Include="shaders\lfp_prefilter.vert">
       <Filter>shaders</Filter>
     </None>
+    <None Include="shaders\octahedral_low_res_distance.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\lightFieldProbeModel.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\LightFieldProbe.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

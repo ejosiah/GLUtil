@@ -1,6 +1,3 @@
-#pragma once
-
-
 vec2 hammersley2d(uint i, const uint N) {
     vec2 P;
     P.x = float(i) * (1.0 / float(N));

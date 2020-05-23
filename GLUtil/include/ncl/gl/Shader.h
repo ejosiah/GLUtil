@@ -100,6 +100,14 @@ namespace ncl {
 			void sendUniform3i(const std::string& name, GLint v0, GLint v1, GLint v2);
 			void sendUniform4i(const std::string& name, GLint v0, GLint v1, GLint v2, GLint v3);
 
+
+
+			inline void sendUniform3iv(const std::string& name, GLint* v) {
+				sendUniform3iv(name, 1, v);
+			}
+
+			void sendUniform3iv(const std::string& name, GLsizei count, GLint* v);
+
 			void sendUniform1ui(const std::string& name, GLuint v0);
 			void sendUniform2ui(const std::string& name, GLuint v0, GLuint v1);
 			void sendUniform3ui(const std::string& name, GLuint v0, GLuint v1, GLuint v2);

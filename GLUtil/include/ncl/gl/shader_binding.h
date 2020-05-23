@@ -8,6 +8,7 @@
 #include "StorageBufferObj.h"
 #include "pbr.h"
 #include "ShadowMap.h"
+//#include "light_field_probes.h"
 
 namespace ncl {
 	namespace gl {
@@ -287,6 +288,12 @@ namespace ncl {
 		inline void send(ShadowMap& shadowMap) {
 			ensureShaderbound();
 			shadowMap.sendTo(*Shader::boundShader);
+		}
+
+		inline void clearBindings() {
+			for (int i = 0; i < 16; i++) {
+				glBindTextureUnit(i, 0);
+			}
 		}
 	}
 }

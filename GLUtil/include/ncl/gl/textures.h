@@ -8,10 +8,9 @@
 #include "Image.h"
 #include "Noise.h"
 #include "Shader.h"
+#include "common.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
-
-#define TEXTURE(id) GL_TEXTURE0 + id
 
 namespace ncl {
 	namespace gl {

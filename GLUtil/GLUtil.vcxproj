@@ -291,6 +291,8 @@
     <None Include="include\shaders\constants.glsl" />
     <None Include="include\shaders\g3dmath.glsl" />
     <None Include="include\shaders\ibl_lighting.glsl" />
+    <None Include="include\shaders\LightFieldProbe.glsl" />
+    <None Include="include\shaders\lightFieldProbeModel.glsl" />
     <None Include="include\shaders\lighting.frag.glsl" />
     <None Include="include\shaders\lighting.vert.glsl" />
     <None Include="include\shaders\lightModel.glsl" />
@@ -336,6 +338,7 @@
     <None Include="shaders\octahedral.frag" />
     <None Include="shaders\octahedral.geom" />
     <None Include="shaders\octahedral.vert" />
+    <None Include="shaders\octahedral_low_res_distance.frag" />
     <None Include="shaders\octahedral_render.frag" />
     <None Include="shaders\octahedral_render.geom" />
     <None Include="shaders\pass_through.frag" />

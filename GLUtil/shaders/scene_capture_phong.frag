@@ -11,6 +11,7 @@ layout(binding = 1) uniform sampler2D diffuseMap;
 layout(binding = 2) uniform sampler2D specularMap;
 layout(binding = 3) uniform sampler2D normalMap;
 
+#pragma include("lightFieldProbeModel.glsl")
 
 in VERTEX{
 	smooth vec3 position;

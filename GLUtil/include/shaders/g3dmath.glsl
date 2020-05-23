@@ -1,18 +1,8 @@
-/**
-  \file data-files/shader/g3dmath.glsl
-
-  G3D Innovation Engine http://casual-effects.com/g3d
-  Copyright 2000-2019, Morgan McGuire
-  All rights reserved
-  Available under the BSD License
-*/
 #pragma include("compatibility.glsl")
 
-// Some constants
-/** Ratio of unit circle perimeter to its diameter */
+
 const float pi = 3.1415927;
 
-/** 1 / pi */
 const float invPi = 1.0 / pi;
 const float inv8Pi = 1.0 / (8.0 * pi);
 
@@ -20,7 +10,6 @@ const float meters = 1.0;
 const float centimeters = 0.01;
 const float millimeters = 0.001;
 
-/** 32-bit floating-point infinity */
 const float inf =
 #if __VERSION__ >= 420
 // Avoid the 1/0 underflow warning (requires GLSL 400 or later):
@@ -61,7 +50,6 @@ intBitsToFloat(0x7f800000);
 
 #define CFrame       mat4x3
 
-/** Given a z-axis, construct an orthonormal tangent space. Assumes z is a unit vector. \deprecated */
 Matrix3 referenceFrameFromZAxis(Vector3 z) {
     Vector3 y = (abs(z.y) > 0.85) ? Vector3(-1, 0, 0) : Vector3(0, 1, 0);
     Vector3 x = normalize(cross(y, z));
@@ -69,16 +57,6 @@ Matrix3 referenceFrameFromZAxis(Vector3 z) {
     return Matrix3(x, y, z);
 }
 
-/**
-BUGGY
-
-  Given a z-axis (n), construct an orthonormal tangent space. Assumes z is a unit vector.
-
-  From http://jcgt.org/published/0006/01/01/ listing 3
-
-  \param n The unit z-axis (3rd column of the output)
-  \return The matrix
-*/
 Matrix3 _referenceFrameFromZAxis(Vector3 n) {
     float s = n.z >= 0.0 ? 1.0 : -1.0;
     float a = -1.0 / (s + n.z);
@@ -171,11 +149,7 @@ $(gentype) pow64($(gentype) v) {
 
 
 #foreach(gentype) in (float), (vec2), (vec3), (vec4)
-/**
-Perlin's smootherstep that is analogous to smoothstep() but
- has zero 1st and 2nd order derivatives at t=0 and t=1, from
- Texturing and Modeling, Third Edition: A Procedural Approach
- (see http://en.wikipedia.org/wiki/Smoothstep) */
+
     $(gentype) smootherstep($(gentype) edge0, $(gentype) edge1, $(gentype) x) {
     // Scale, and clamp x to 0..1 range
     x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
@@ -277,21 +251,12 @@ float meanComponent(float a) {
     return a;
 }
 
-/** Compute Schlick's approximation of the Fresnel coefficient.  The
-    original goes to 1.0 at glancing angles, which makes objects
-    appear to glow, so we scale it down to 0.9.
 
-    We never put a Fresnel term on perfectly diffuse surfaces, so, if
-    F0 is exactly black, then we keep the result black.
-    */
-    // Must match G3D-app/UniversalBSDF.h
 vec3 schlickFresnel(in vec3 F0, in float cos_i, float smoothness) {
     return (F0.r + F0.g + F0.b > 0.0) ? mix(F0, vec3(1.0), 0.9 * pow5(square(smoothness) * (1.0 - max(0.0, cos_i)))) : F0;
 }
 
-/** Matches UniversalBSDF::smoothnessToBlinnPhongExponent.
-    Maps smoothness [0, 1] to Blinn-Phong exponent [0, infinity].
-*/
+
 float smoothnessToBlinnPhongExponent(in float g3dSmoothness) {
     // From Graphics Codex [smthnss]
     float academicRoughness = square(1.0 - g3dSmoothness);
@@ -315,10 +280,6 @@ float packGlossyExponent(in float blinnPhongExponent) {
 
 
 #if G3D_SHADER_STAGE == G3D_FRAGMENT_SHADER
-/**
- Computes 2^mipLevel, avoiding the expensive log2 call needed for the
- actual MIP level.
- */
 float computeSampleRate(vec2 texCoord, vec2 samplerSize) {
     texCoord *= samplerSize;
     return maxComponent(max(abs(dFdx(texCoord)), abs(dFdy(texCoord))));
@@ -361,10 +322,6 @@ vec3 HSVtoRGB(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), clamp(c.y, 0.0, 1.0));
 }
 
-
-/**
- Generate the ith 2D Hammersley point out of N on the unit square [0, 1]^2
- \cite http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html */
 vec2 hammersleySquare(uint i, const uint N) {
     vec2 P;
     P.x = float(i) * (1.0 / float(N));
@@ -379,11 +336,6 @@ vec2 hammersleySquare(uint i, const uint N) {
     return P;
 }
 
-
-/**
- Generate the ith 2D Hammersley point out of N on the cosine-weighted unit hemisphere
- with Z = up.
- \cite http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html */
 vec3 hammersleyHemi(uint i, const uint N) {
     vec2 P = hammersleySquare(i, N);
     float phi = P.y * 2.0 * pi;
@@ -392,10 +344,7 @@ vec3 hammersleyHemi(uint i, const uint N) {
     return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
-/**
- Generate the ith 2D Hammersley point out of N on the cosine-weighted unit hemisphere
- with Z = up.
- \cite http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html */
+
 vec3 hammersleyCosHemi(uint i, const uint N) {
     vec3 P = hammersleyHemi(i, N);
     P.z = sqrt(P.z);
@@ -442,9 +391,6 @@ mat4x4 yaw4x4(float a) {
 }
 
 #if G3D_SHADER_STAGE == G3D_FRAGMENT_SHADER
-/** Computes the MIP-map level for a texture coordinate.
-    \cite The OpenGL Graphics System: A Specification 4.2
-    chapter 3.9.11, equation 3.21 */
 float mipMapLevel(in vec2 texture_coordinate, in vec2 textureSize) {
     vec2  dx = dFdx(texture_coordinate);
     vec2  dy = dFdy(texture_coordinate);
@@ -454,13 +400,6 @@ float mipMapLevel(in vec2 texture_coordinate, in vec2 textureSize) {
 }
 #endif
 
-
-/**
- A bicubic magnification filter, primarily useful for magnifying LOD 0
- without bilinear magnification artifacts. This just adjusts the rate
- at which we move between taps, not the number of taps.
- \cite https://www.shadertoy.com/view/4df3Dn
-*/
 vec4 textureLodSmooth(sampler2D tex, vec2 uv, int lod) {
     vec2 res = textureSize(tex, lod);
     uv = uv * res + 0.5;
@@ -472,13 +411,6 @@ vec4 textureLodSmooth(sampler2D tex, vec2 uv, int lod) {
 }
 
 
-/**
- Implementation of Sigg and Hadwiger's Fast Third-Order Texture Filtering
-
- http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter20.html
- \cite http://vec3.ca/bicubic-filtering-in-fewer-taps/
- \cite http://pastebin.com/raw.php?i=YLLSBRFq
- */
 vec4 textureLodBicubic(sampler2D tex, vec2 uv, int lod) {
     //--------------------------------------------------------------------------------------
     // Calculate the center of the texel to avoid any filtering
@@ -577,8 +509,6 @@ uint extractEvenBits(uint x) {
 }
 
 
-/** Expands a 10-bit integer into 30 bits
-by inserting 2 zeros after each bit. */
 uint expandBits(uint v) {
     v = (v * 0x00010001u) & 0xFF0000FFu;
     v = (v * 0x00000101u) & 0x0F00F00Fu;
@@ -589,8 +519,6 @@ uint expandBits(uint v) {
 }
 
 
-/** Calculates a 30-bit Morton code for the
-given 3D point located within the unit cube [0,1]. */
 uint interleaveBits(uvec3 inputval) {
     uint xx = expandBits(inputval.x);
     uint yy = expandBits(inputval.y);
@@ -615,18 +543,6 @@ bool isFinite(float x) {
 }
 
 
-
-/**  Generate a spherical fibonacci point
-    http://lgdv.cs.fau.de/publications/publication/Pub.2015.tech.IMMD.IMMD9.spheri/
-    To generate a nearly uniform point distribution on the unit sphere of size N, do
-    for (float i = 0.0; i < N; i += 1.0) {
-        float3 point = sphericalFibonacci(i,N);
-    }
-
-    The points go from z = +1 down to z = -1 in a spiral. To generate samples on the +z hemisphere,
-    just stop before i > N/2.
-
-*/
 Vector3 sphericalFibonacci(float i, float n) {
     const float PHI = sqrt(5) * 0.5 + 0.5;
 #   define madfrac(A, B) ((A)*(B)-floor((A)*(B)))
@@ -642,15 +558,6 @@ Vector3 sphericalFibonacci(float i, float n) {
 #   undef madfrac
 }
 
-/**
-    \param r Two uniform random numbers on [0,1]
-
-    \return uniformly distributed random sample on unit sphere
-
-    http://mathworld.wolfram.com/SpherePointPicking.html
-
-    See also g3d_sphereRandom texture and sphericalFibonacci()
-*/
 Vector3 sphereRandom(vec2 r) {
     float cosPhi = r.x * 2.0 - 1.0;
     float sinPhi = sqrt(1 - square(cosPhi));
@@ -658,24 +565,11 @@ Vector3 sphereRandom(vec2 r) {
     return Vector3(sinPhi * cos(theta), sinPhi * cos(theta), cosPhi);
 }
 
-/**
-    \param r Two uniform random numbers on [0,1]
-
-  \return uniformly distributed random sample on unit hemisphere about +z
-    See also hemisphereRandom texture.
-*/
 Vector3 hemisphereRandom(vec2 r) {
     Vector3 s = sphereRandom(r);
     return Vector3(s.x, s.y, abs(s.z));
 }
 
-
-/** Returns cos^k distributed random values distributed on the
-    hemisphere about +z
-
-    \param r Two uniform random numbers on [0,1]
-    See also cosHemiRandom texture.
-*/
 Vector3 cosPowHemiRandom(vec2 r, const float k) {
     float cos_theta = pow(r.x, 1.0 / (k + 1.0));
     float sin_theta = sqrt(1.0f - square(cos_theta));
@@ -694,3 +588,5 @@ int indexOfMaxComponent(vec2 v) { return (v.x > v.y) ? 0 : 1; }
 
 /** Returns zero */
 int indexOfMaxComponent(float v) { return 0; }
+
+#endif
