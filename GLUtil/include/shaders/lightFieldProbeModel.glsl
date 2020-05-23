@@ -1,17 +1,43 @@
-//layout(binding = 4) uniform sampler2DArray radianceProbeGrid;
-//layout(binding = 5) uniform sampler2DArray normalProbeGrid;
-//layout(binding = 6) uniform sampler2DArray distanceProbeGrid;
-//layout(binding = 7) uniform sampler2DArray lowResolutionDistanceProbeGrid;
-//layout(binding = 8) uniform samplerCubeArray irradianceProbeGrid;
-//layout(binding = 9) uniform samplerCubeArray meanDistProbeGrid;
+#pragma include("math.glsl")
 
-#define Vector3int32 ivec3
+const float minThickness = 0.03; // meters
+const float maxThickness = 0.50; // meters
 
-#define Point2 vec2
-#define Vector2 vec2
+// Points exactly on the boundary in octahedral space (x = 0 and y = 0 planes) map to two different
+// locations in octahedral space. We shorten the segments slightly to give unambigous locations that lead
+// to intervals that lie within an octant.
+const float rayBumpEpsilon = 0.001; // meters
 
-#define Point3 vec3
-#define Vector3 vec3
+// If we go all the way around a cell and don't move farther than this (in m)
+// then we quit the trace
+const float minProgressDistance = 0.01;
+
+//  zyx bit pattern indicating which probe we're currently using within the cell on [0, 7]
+#define CycleIndex int
+
+// On [0, L.probeCounts.x * L.probeCounts.y * L.probeCounts.z - 1]
+#define ProbeIndex int
+
+// probe xyz indices
+#define GridCoord ivec3
+
+// Enumerated value
+#define TraceResult int
+#define TRACE_RESULT_MISS    0
+#define TRACE_RESULT_HIT     1
+#define TRACE_RESULT_UNKNOWN 2
+
+
+float distanceSquared(Point2 v0, Point2 v1) {
+    Point2 d = v1 - v0;
+    return dot(d, d);
+}
+
+struct Ray {
+    vec3 direction;
+    vec3 origin;
+};
+
 
 struct Texture2DArray{
     sampler2DArray sampler;

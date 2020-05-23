@@ -1,10 +1,7 @@
 #version 450 core
 
-#pragma include("lightFieldProbeModel.glsl")
+#pragma include("LightFieldProbe.glsl")
 #pragma include("octahedral.glsl")
-
-const float PI = 3.1415926535897932384626422832795028841971;
-const float TWO_PI = 6.2831853071795864769252867665590057683943;
 
 vec3 direction_from_spherical(vec2 uv)
 {

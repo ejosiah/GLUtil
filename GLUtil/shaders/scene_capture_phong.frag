@@ -2,8 +2,7 @@
 #pragma debug(on)
 #pragma optimize(off)
 
-#define PI 3.14159265359 
-#define MAX_SCENE_LIGHTS 10
+#pragma include("constants.glsl")
 
 
 layout(binding = 0) uniform sampler2D ambientMap;
@@ -11,7 +10,7 @@ layout(binding = 1) uniform sampler2D diffuseMap;
 layout(binding = 2) uniform sampler2D specularMap;
 layout(binding = 3) uniform sampler2D normalMap;
 
-#pragma include("lightFieldProbeModel.glsl")
+//#pragma include("lightFieldProbeModel.glsl")
 
 in VERTEX{
 	smooth vec3 position;

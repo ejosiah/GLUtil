@@ -1,38 +1,7 @@
+#pragma include("math.glsl")
 #pragma include("octahedral.glsl")
 #pragma include("lightFieldProbeModel.glsl")
 
-const float minThickness = 0.03; // meters
-const float maxThickness = 0.50; // meters
-
-// Points exactly on the boundary in octahedral space (x = 0 and y = 0 planes) map to two different
-// locations in octahedral space. We shorten the segments slightly to give unambigous locations that lead
-// to intervals that lie within an octant.
-const float rayBumpEpsilon = 0.001; // meters
-
-// If we go all the way around a cell and don't move farther than this (in m)
-// then we quit the trace
-const float minProgressDistance = 0.01;
-
-//  zyx bit pattern indicating which probe we're currently using within the cell on [0, 7]
-#define CycleIndex int
-
-// On [0, L.probeCounts.x * L.probeCounts.y * L.probeCounts.z - 1]
-#define ProbeIndex int
-
-// probe xyz indices
-#define GridCoord ivec3
-
-// Enumerated value
-#define TraceResult int
-#define TRACE_RESULT_MISS    0
-#define TRACE_RESULT_HIT     1
-#define TRACE_RESULT_UNKNOWN 2
-
-
-float distanceSquared(Point2 v0, Point2 v1) {
-    Point2 d = v1 - v0;
-    return dot(d, d);
-}
 
 /**
  \param probeCoords Integer (stored in float) coordinates of the probe on the probe grid
@@ -52,7 +21,6 @@ ProbeIndex baseProbeIndex(in LightFieldSurface L, Point3 X) {
     return gridCoordToProbeIndex(L, baseGridCoord(L, X));
 }
 
-
 GridCoord probeIndexToGridCoord(in LightFieldSurface L, ProbeIndex index) {
     // Assumes probeCounts are powers of two.
     // Precomputing the MSB actually slows this code down substantially
@@ -64,10 +32,9 @@ GridCoord probeIndexToGridCoord(in LightFieldSurface L, ProbeIndex index) {
     return iPos;
 }
 
-
-Color3 probeIndexToColor(in LightFieldSurface L, ProbeIndex index) {
-    return gridCoordToColor(probeIndexToGridCoord(L, index));
-}
+//Color3 probeIndexToColor(in LightFieldSurface L, ProbeIndex index) {
+//    return gridCoordToColor(probeIndexToGridCoord(L, index));
+//}
 
 
 /** probeCoords Coordinates of the probe, computed as part of the process. */
@@ -103,7 +70,6 @@ CycleIndex nearestProbeIndices(in LightFieldSurface L, Point3 X) {
     return nearestIndex;
 }
 
-
 Point3 gridCoordToPosition(in LightFieldSurface L, GridCoord c) {
     return L.probeStep * Vector3(c) + L.probeStartPosition;
 }
@@ -118,7 +84,6 @@ Point3 probeLocation(in LightFieldSurface L, ProbeIndex index) {
 int idot(ivec3 a, ivec3 b) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
-
 
 /**
    \param baseProbeIndex Index into L.radianceProbeGrid's TEXTURE_2D_ARRAY. This is the probe
@@ -146,7 +111,6 @@ ProbeIndex relativeProbeIndex(in LightFieldSurface L, ProbeIndex baseProbeIndex,
 
     return (baseProbeIndex + idot(offset, stride)) & (numProbes - 1);
 }
-
 
 /** Given a CycleIndex [0, 7] on a cube of probes, returns the next CycleIndex to use.
     \see relativeProbeIndex
@@ -176,7 +140,6 @@ void sort(inout float3 v) {
     minSwap(v[1], v[2]);
     minSwap(v[0], v[1]);
 }
-
 
 /** Segments a ray into the piecewise-continuous rays or line segments that each lie within
     one Euclidean octant, which correspond to piecewise-linear projections in octahedral space.
@@ -213,7 +176,6 @@ void computeRaySegments
     boundaryTs[4] = tMax;
 }
 
-
 /** Returns the distance along v from the origin to the intersection
     with ray R (which it is assumed to intersect) */
 float distanceToIntersection(in Ray R, in Vector3 v) {
@@ -231,7 +193,6 @@ float distanceToIntersection(in Ray R, in Vector3 v) {
 
     return numer / denom;
 }
-
 
 /**
   On a TRACE_RESULT_MISS, bumps the endTexCoord slightly so that the next segment will start at the
@@ -359,7 +320,6 @@ TraceResult highResolutionTraceOneRaySegment
     return TRACE_RESULT_MISS;
 }
 
-
 /** Returns true on a conservative hit, false on a guaranteed miss.
     On a hit, advances lowResTexCoord to the next low res texel *after*
     the one that produced the hit.
@@ -478,7 +438,6 @@ bool lowResolutionTraceOneSegment
     return false;
 }
 
-
 TraceResult traceOneRaySegment
 (in LightFieldSurface lightFieldSurface,
     in Ray      probeSpaceRay,
@@ -558,8 +517,6 @@ TraceResult traceOneRaySegment
     return TRACE_RESULT_MISS;
 }
 
-
-
 /**
   \param tMax On call, the stop distance for the trace. On return, the distance
         to the new hit, if one was found. Always finite.
@@ -603,7 +560,6 @@ TraceResult traceOneProbeOct(in LightFieldSurface lightFieldSurface, in ProbeInd
     return TRACE_RESULT_MISS;
 }
 
-
 /** Traces a ray against the full lightfield.
     Returns true on a hit and updates \a tMax if there is a ray hit before \a tMax.
    Otherwise returns false and leaves tMax unmodified
@@ -612,50 +568,49 @@ TraceResult traceOneProbeOct(in LightFieldSurface lightFieldSurface, in ProbeInd
 
    \param fillHoles If true, this function MUST return a hit even if it is forced to use a coarse approximation
  */
-//bool trace(LightFieldSurface lightFieldSurface, Ray worldSpaceRay, inout float tMax, out Point2 hitProbeTexCoord, out ProbeIndex hitProbeIndex, const bool fillHoles) {
-//
-//    hitProbeIndex = -1;
-//    
-//
-//    int i = nearestProbeIndices(lightFieldSurface, worldSpaceRay.origin);
-//    int probesLeft = 8;
-//    float tMin = 0.0f;
-//    while (probesLeft > 0) {
-//        TraceResult result = traceOneProbeOct(lightFieldSurface, relativeProbeIndex(lightFieldSurface, baseIndex, i),
-//            worldSpaceRay, tMin, tMax, hitProbeTexCoord);
-//        if (result == TRACE_RESULT_UNKNOWN) {
-//            i = nextCycleIndex(i);
-//            --probesLeft;
-//        }
-//        else {
-//            if (result == TRACE_RESULT_HIT) {
-//                hitProbeIndex = relativeProbeIndex(lightFieldSurface, baseIndex, i);
-//            }
-//            // Found the hit point
-//            break;
-//        }
-//    }
-//
-//    if ((hitProbeIndex == -1) && fillHoles) {
-//        // No probe found a solution, so force some backup plan 
-//        Point3 ignore;
-//        hitProbeIndex = nearestProbeIndex(lightFieldSurface, worldSpaceRay.origin, ignore);
-//        hitProbeTexCoord = octEncode(worldSpaceRay.direction) * 0.5 + 0.5;
-//
-//        float probeDistance = texelFetch(lightFieldSurface.distanceProbeGrid.sampler, ivec3(ivec2(hitProbeTexCoord * lightFieldSurface.distanceProbeGrid.size.xy), hitProbeIndex), 0).r;
-//        if (probeDistance < 10000) {
-//            Point3 hitLocation = probeLocation(lightFieldSurface, hitProbeIndex) + worldSpaceRay.direction * probeDistance;
-//            tMax = length(worldSpaceRay.origin - hitLocation);
-//            return true;
-//        }
-//    }
-//
-//    return (hitProbeIndex != -1);
-//}
+bool trace(LightFieldSurface lightFieldSurface, ProbeIndex baseIndex, Ray worldSpaceRay, inout float tMax, out Point2 hitProbeTexCoord, out ProbeIndex hitProbeIndex, const bool fillHoles) {
+
+    hitProbeIndex = -1;
+
+    int i = nearestProbeIndices(lightFieldSurface, worldSpaceRay.origin);
+    int probesLeft = 8;
+    float tMin = 0.0f;
+    while (probesLeft > 0) {
+        TraceResult result = traceOneProbeOct(lightFieldSurface, relativeProbeIndex(lightFieldSurface, baseIndex, i),
+            worldSpaceRay, tMin, tMax, hitProbeTexCoord);
+        if (result == TRACE_RESULT_UNKNOWN) {
+            i = nextCycleIndex(i);
+            --probesLeft;
+        }
+        else {
+            if (result == TRACE_RESULT_HIT) {
+                hitProbeIndex = relativeProbeIndex(lightFieldSurface, baseIndex, i);
+            }
+            // Found the hit point
+            break;
+        }
+    }
+
+    if ((hitProbeIndex == -1) && fillHoles) {
+        // No probe found a solution, so force some backup plan 
+        Point3 ignore;
+        hitProbeIndex = nearestProbeIndex(lightFieldSurface, worldSpaceRay.origin, ignore);
+        hitProbeTexCoord = octEncode(worldSpaceRay.direction) * 0.5 + 0.5;
+
+        float probeDistance = texelFetch(lightFieldSurface.distanceProbeGrid.sampler, ivec3(ivec2(hitProbeTexCoord * lightFieldSurface.distanceProbeGrid.size.xy), hitProbeIndex), 0).r;
+        if (probeDistance < 10000) {
+            Point3 hitLocation = probeLocation(lightFieldSurface, hitProbeIndex) + worldSpaceRay.direction * probeDistance;
+            tMax = length(worldSpaceRay.origin - hitLocation);
+            return true;
+        }
+    }
+
+    return (hitProbeIndex != -1);
+}
 
 // Engine-specific arguments and helper functions have been removed from the following code 
 
-Irradiance3 computePrefilteredIrradiance(Point3 wsPosition) {
+Irradiance3 computePrefilteredIrradiance(Point3 wsPosition, vec3 wsN) {
     GridCoord baseGridCoord = baseGridCoord(lightFieldSurface, wsPosition);
     Point3 baseProbePos = gridCoordToPosition(lightFieldSurface, baseGridCoord);
     Irradiance3 sumIrradiance = Irradiance3(0);
@@ -714,7 +669,6 @@ Irradiance3 computePrefilteredIrradiance(Point3 wsPosition) {
 
     return 2.0 * pi * sumIrradiance / sumWeight;
 }
-
 
 // Stochastically samples one glossy ray
 //Radiance3 computeGlossyRay(Point3 wsPosition, Vector3 wo, Vector3 n, ...) {
