@@ -35,11 +35,16 @@ public:
 		addShader("screen", GL_GEOMETRY_SHADER, octahedral_render_geom_shader);
 		addShader("screen", GL_FRAGMENT_SHADER, octahedral_render_frag_shader);
 
-		addShader("lfp_test", GL_VERTEX_SHADER, screen_vert_shader);
+		//addShader("lfp_test", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("lfp_test", GL_VERTEX_SHADER, scene_capture_vert_shader);
+		addShader("lfp_test", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
 		addShader("lfp_test", GL_FRAGMENT_SHADER, getText("lfp_uniform_test.frag"));
 
+		addShader("mirror", GL_VERTEX_SHADER, scene_capture_vert_shader);
+		addShader("mirror", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
+
 		logger = Logger::get("probe");
-		camInfoOn = true;
+		camInfoOn = false;
 	}
 
 	void init() override {
@@ -48,13 +53,15 @@ public:
 		activeCamera().setMode(Camera::FIRST_PERSON);
 		activeCamera().setPosition({ 0, 1, 3 });
 		setForeGroundColor(WHITE);
+		//sponza = new Model("C:\\Users\\Josiah\\source\\repos\\Precomputed-Light-Field-Probes\\assets\\sponza\\sponza.obj", false, 20);
 		sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
-		lightPos = { 0, 2.43, 0.6 };
+		lightPos = { 0, 5, 0.6 };
 		shadowMap = OminiDirectionalShadowMap{ 5, lightPos, 2048, 2048 };
-		lightObj = new Sphere(0.3, 20, 20, WHITE);
+		lightColor = vec3(0.3);
+		lightObj = new Sphere(0.3, 20, 20, vec4(lightColor, 1));
 		probePos = { 0, 2.43, 0 };
 
-		auto center = (sponza->bound->max() + sponza->bound->min()) * 0.5f;
+		center = (sponza->bound->max() + sponza->bound->min()) * 0.5f;
 
 		auto dir = vec3{ 10, 12, 0 } - lightPos;
 		X = new Vector{ {1, 0, 0}, center, 1.0, RED };
@@ -73,8 +80,8 @@ public:
 		//	});
 		//}
 
-		//cube = Cube{ 1, WHITE, {}, false };
-		//cube.defautMaterial(false);
+		cube = Cube{ 1, WHITE, {}, false };
+		cube.defautMaterial(false);
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 		//initOctahedral();
@@ -91,9 +98,44 @@ public:
 		LightFieldSurface a;
 		LightFieldSurface b;
 		clearBindings();
+		createMirror();
 	}
 
+	void createMirror() {
+		Mesh mesh;
 
+		mesh.positions.emplace_back(-1.0f, 1.0f, 0.0f);
+		mesh.positions.emplace_back(-1.0f, -1.0f, 0.0f);
+		mesh.positions.emplace_back(1.0f, -1.0f, 0.0f);
+		mesh.positions.emplace_back(-1.0f, 1.0f, 0.0f);
+		mesh.positions.emplace_back(1.0f, -1.0f, 0.0f);
+		mesh.positions.emplace_back(1.0f, 1.0f, 0.0f);
+
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+		mesh.normals.emplace_back(0, 0, 1);
+
+		mesh.tangents.emplace_back(1, 0, 0);
+		mesh.tangents.emplace_back(1, 0, 0);
+		mesh.tangents.emplace_back(1, 0, 0);
+		mesh.tangents.emplace_back(1, 0, 0);
+		mesh.tangents.emplace_back(1, 0, 0);
+		mesh.tangents.emplace_back(1, 0, 0);
+
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.bitangents.emplace_back(0, 1, 0);
+		mesh.primitiveType = GL_TRIANGLES;
+
+		mirror = ProvidedMesh(mesh);
+	}
 
 	void display() override {
 	//	probes[0].render();
@@ -107,9 +149,15 @@ public:
 	//	lightFieldProbes.renderIrradiance();
 	//	lightFieldProbes.renderMeanDistance();
 		//shader("lfp_test")([&] {
-		//	send("layer", 21);
+		//	send(activeCamera());
+		//	send("camPos", activeCamera().getPosition());
+		//	send("projection", activeCamera().getProjectionMatrix());
+		//	send("views[0]", activeCamera().getViewMatrix());
+		//	send("lfp_on", lfp_on);
+		//	send("layer", 0);
 		//	lightFieldProbes.sendTo(shader("lfp_test"));
-		//	shade(quad);
+		//	//shade(quad);
+		//	shade(cube);
 		//});
 	}
 
@@ -124,32 +172,52 @@ public:
 			renderScene(true);
 		});
 
-		shader("flat")([&] {
- 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
-			send(activeCamera(), model);
-			shade(lightObj);
-			shade(lightFieldProbes);
+		//shader("flat")([&] {
+ 	//		auto model = glm::translate(glm::mat4{ 1 }, lightPos);
+		//	send(activeCamera(), model);
+		//	shade(lightObj);
+		//	shade(lightFieldProbes);
 
-			send("M", mat4{ 1 });
-			shade(X);
-			shade(Y);
-			shade(Z);
-		});
+		//	send("M", mat4{ 1 });
+		//	shade(X);
+		//	shade(Y);
+		//	shade(Z);
+		//});
 
-		if (lfp_on) {
-			sFont->render("light Field Probe on", 0, 60);
-		}
-		else {
-			sFont->render("light Field Probe off", 0, 60);
-		}
+		//shader("mirror")([&] {
+		//	send(activeCamera());
+		//	send("camPos", activeCamera().getPosition());
+		//	send("projection", activeCamera().getProjectionMatrix());
+		//	send("views[0]", activeCamera().getViewMatrix());
+		//	send("lfp_on", lfp_on);
+		//	lightFieldProbes.sendTo(shader("mirror"));
+		//	send("M", translate(mat4(1), center) * scale(mat4(1), vec3(1.5)));
+		//	shade(mirror);
+		//});
+
+		//if (lfp_on) {
+		//	sFont->render("light Field Probe on", 0, 60);
+		//}
+		//else {
+		//	sFont->render("light Field Probe off", 0, 60);
+		//}
+		//sFont->render("meshId: " + to_string(meshId), 0, 70);
 	}
 
-	void renderScene(bool shadowOn = false) {
+	void renderScene(bool shadowOn = false, bool all = true) {
 		sponza->defautMaterial(true);
 		send(shadowMap);
+		send("lightColor", lightColor);
 		send("lightPos", lightPos);
 		send("shadowOn", shadowOn);
-		shade(sponza);
+
+		if (all) {
+			shade(sponza);
+		}
+		else {
+			sponza->draw(*Shader::boundShader, meshId);
+		}
+
 	}
 
 	void update(float dt) override{
@@ -168,6 +236,13 @@ public:
 			if (key.value() == 'o') {
 				lfp_on = !lfp_on;
 			}
+			if (key.value() == '=') {
+				meshId += 1;
+			}
+			else if (key.value() == '-') {
+				meshId -= 0;
+			}
+			meshId = glm::clamp(meshId, 0, sponza->numMeshes() - 1);
 		}
 	}
 
@@ -210,7 +285,11 @@ private:
 	Vector* Y;
 	Vector* Z;
 	LightFieldSurface lightSurface;
+	ProvidedMesh mirror;
 	LightFieldProbes lightFieldProbes;
 	bool lfp_on = false;
 	float roughness = 0;
+	int meshId = 0;
+	vec3 lightColor;
+	vec3 center;
 };

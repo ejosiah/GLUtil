@@ -155,6 +155,7 @@
     <None Include="shaders\lfp_prefilter.frag" />
     <None Include="shaders\lfp_prefilter.geom" />
     <None Include="shaders\lfp_prefilter.vert" />
+    <None Include="shaders\mirror.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

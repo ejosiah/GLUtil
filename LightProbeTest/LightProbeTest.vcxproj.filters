@@ -49,5 +49,8 @@
     <None Include="lfp_uniform_test.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\mirror.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
