@@ -672,22 +672,31 @@ Irradiance3 computePrefilteredIrradiance(Point3 wsPosition, vec3 wsN) {
 
 
 // Stochastically samples one glossy ray
-//Radiance3 computeGlossyRay(Point3 wsPosition, Vector3 wo, Vector3 n, ...) {
-//    const float rayBumpEpsilon = 0.001;
-//
-//    Vector3 wi = importanceSampleBRDFDirection(wo, n);
-//
-//    Ray worldSpaceRay = Ray(wsPosition + wi * rayBumpEpsilon, wi);
-//
-//    float   hitDistance = 10000;
-//    Point2  hitProbeTexCoord;
-//    int     probeIndex;
-//    if (!trace(lightFieldSurface, worldSpaceRay, hitDistance, hitProbeTexCoord, probeIndex, FILL_HOLES == 1)) {
-//        // Missed the entire scene; fall back to the environment map
-//        return computeGlossyEnvironmentMapLighting(wi, true, glossyExponent, false);
-//    }
-//    else {
-//        // Sample the light probe radiance texture
-//        return textureLod(lightFieldSurface.radianceProbeGrid.sampler, float3(hitProbeTexCoord, probeIndex), 0).rgb;
-//    }
-//}
+Radiance3 computeGlossyRay(Point3 wsPosition, Vector3 wo, Vector3 n) {
+    const float rayBumpEpsilon = 0.001;
+
+    //Vector3 wi = importanceSampleBRDFDirection(wo, n);
+    Vector3 wi = normalize(reflect(-wo, n));
+
+    Ray worldSpaceRay = Ray(wsPosition + wi * rayBumpEpsilon, wi);
+ //   worldSpaceRay.origin = wsPosition + wi * rayBumpEpsilon;
+  //  worldSpaceRay.direction = wi;
+
+    float   hitDistance = 10000;
+    Point2  hitProbeTexCoord;
+    int     probeIndex;
+    ProbeIndex baseIndex = baseProbeIndex(lightFieldSurface, wsPosition);
+    //ProbeIndex baseIndex = 0;
+    if (!trace(lightFieldSurface, baseIndex, worldSpaceRay, hitDistance, hitProbeTexCoord, probeIndex, FILL_HOLES == 1)) {
+        // Missed the entire scene; fall back to the environment map
+      //  return computeGlossyEnvironmentMapLighting(wi, true, glossyExponent, false);
+        return vec3(0);
+    }
+    else {
+        vec2 uv = octEncode(wi);
+        // Sample the light probe radiance texture
+        return textureLod(lightFieldSurface.radianceProbeGrid.sampler, float3(hitProbeTexCoord, probeIndex), 0).rgb;
+      //  return texture(lightFieldSurface.radianceProbeGrid.sampler, float3(uv, 0)).rgb;
+      //  return vec3(1, 0, 0);
+    }
+}

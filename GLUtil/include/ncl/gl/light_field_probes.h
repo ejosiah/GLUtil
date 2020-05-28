@@ -313,20 +313,23 @@ namespace ncl {
 			lightFieldSurface.distanceProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probes.size(), 1 };
 			lightFieldSurface.distanceProbeGrid.invSize = 1.0f / lightFieldSurface.distanceProbeGrid.size;
 
-			lightFieldSurface.irradianceProbeGrid.texture = { config.textureBindOffset + 3, irradianceProbeGrid.texture() };
+			auto res = config.octResolution * (1 / float(config.lowResolutionDownsampleFactor));
+			lightFieldSurface.lowResolutionDistanceProbeGrid.texture = { config.textureBindOffset + 3, lowResolutionDistanceProbeGrid.texture() };
+			lightFieldSurface.lowResolutionDistanceProbeGrid.size = glm::vec4{ res , res, probes.size(), 1 };
+			lightFieldSurface.lowResolutionDistanceProbeGrid.invSize = 1.0f / lightFieldSurface.lowResolutionDistanceProbeGrid.size;
+
+			lightFieldSurface.irradianceProbeGrid.texture = { config.textureBindOffset + 4, irradianceProbeGrid.texture() };
 			lightFieldSurface.irradianceProbeGrid.size = glm::vec4{ config.irradiance.resolution, config.irradiance.resolution, 0, 0 };
 			lightFieldSurface.irradianceProbeGrid.invSize = 1.0f / lightFieldSurface.irradianceProbeGrid.size;
 
-			lightFieldSurface.meanDistProbeGrid.texture = { config.textureBindOffset + 4, meanDistanceProbeGrid.texture() };
+			lightFieldSurface.meanDistProbeGrid.texture = { config.textureBindOffset + 5, meanDistanceProbeGrid.texture() };
 			lightFieldSurface.meanDistProbeGrid.size = glm::vec4{ config.meanDistance.resolution, config.meanDistance.resolution, 0, 0 };
 			lightFieldSurface.meanDistProbeGrid.invSize = 1.0f / lightFieldSurface.meanDistProbeGrid.size;
 
-			auto res = config.octResolution * (1 / float(config.lowResolutionDownsampleFactor));
-			lightFieldSurface.lowResolutionDistanceProbeGrid.texture = { config.textureBindOffset + 2, lowResolutionDistanceProbeGrid.texture() };
-			lightFieldSurface.lowResolutionDistanceProbeGrid.size = glm::vec4{ res , res, probes.size(), 1 };
-			lightFieldSurface.lowResolutionDistanceProbeGrid.invSize = 1.0f / lightFieldSurface.lowResolutionDistanceProbeGrid.size;
+			
 			lightFieldSurface.probeCounts = config.probeCount;
 			lightFieldSurface.probeStartPosition = config.startProbeLocation;
+			lightFieldSurface.probeStep = config.probeStep;
 			lightFieldSurface.lowResolutionDownsampleFactor = config.lowResolutionDownsampleFactor;
 
 		}
@@ -519,10 +522,10 @@ namespace ncl {
 			shader.sendUniform2fv("lightFieldSurface.meanDistProbeGrid.size", 1, glm::value_ptr(lightFieldSurface.meanDistProbeGrid.size));
 			shader.sendUniform2fv("lightFieldSurface.meanDistProbeGrid.invSize", 1, glm::value_ptr(lightFieldSurface.meanDistProbeGrid.invSize));
 
-			//shader.sendUniform3iv("lightFieldSurface.probeCounts", 1, glm::value_ptr(lightFieldSurface.probeCounts));
-			//shader.sendUniform3fv("lightFieldSurface.probeStartPosition", 1, glm::value_ptr(lightFieldSurface.probeStartPosition));
-			//shader.sendUniform3fv("lightFieldSurface.probeStep", 1, glm::value_ptr(lightFieldSurface.probeStep));
-			//shader.sendUniform1i("lightFieldSurface.lowResolutionDownsampleFactor", lightFieldSurface.lowResolutionDownsampleFactor);
+			shader.sendUniform3iv("lightFieldSurface.probeCounts", 1, glm::value_ptr(lightFieldSurface.probeCounts));
+			shader.sendUniform3fv("lightFieldSurface.probeStartPosition", 1, glm::value_ptr(lightFieldSurface.probeStartPosition));
+			shader.sendUniform3fv("lightFieldSurface.probeStep", 1, glm::value_ptr(lightFieldSurface.probeStep));
+			shader.sendUniform1i("lightFieldSurface.lowResolutionDownsampleFactor", lightFieldSurface.lowResolutionDownsampleFactor);
 
 		}
 

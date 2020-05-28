@@ -64,6 +64,13 @@ namespace ncl {
 					GLuint vaoId = vaoIds[i];
 					glBindVertexArray(vaoId);
 
+					if (i == 34) {
+						shader.sendBool("isGround", true);
+					}
+					else {
+						shader.sendBool("isGround", false);
+					}
+
 					if (useDefaultMaterial) {
 						Material& material = materials[i];
 						shader.sendUniform1f("shininess", material.shininess);
@@ -123,44 +130,57 @@ namespace ncl {
 					cullingDisabled = true;
 					glDisable(GL_CULL_FACE);
 				}
-				GLuint vaoId = vaoIds[meshId];
-				glBindVertexArray(vaoId);
+					GLuint vaoId = vaoIds[meshId];
+					glBindVertexArray(vaoId);
 
+					if (useDefaultMaterial) {
+						Material& material = materials[meshId];
+						shader.sendUniform1f("shininess", material.shininess);
+						shader.sendUniform3fv("emission", 1, glm::value_ptr(material.emission));
+						if (material.ambientMat != -1) {
+							glBindTextureUnit(0, material.ambientMat);
+						}
+						//else {
+						//	if (material.diffuseMat != -1) {
+						//		glBindTextureUnit(0, material.diffuseMat);
+						//	}
+						//}
+						if (material.diffuseMat != -1) {
+							glBindTextureUnit(1, material.diffuseMat);
+						}
 
-				Material& material = materials[meshId];
+						if (material.specularMat != -1) {
+							glBindTextureUnit(2, material.specularMat);
+						}
+						else {
+							glBindTextureUnit(2, whiteTexture->bufferId());
+						}
 
-				if (material.ambientMat != -1) {
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, material.ambientMat);
-					shader.sendUniform1i("ambientMap", 0);
-				}
-				if (material.diffuseMat != -1) {
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, material.diffuseMat);
-					shader.sendUniform1i("diffuseMap", 1);
-				}
-				if (material.specularMat != -1) {
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, material.specularMat);
-					shader.sendUniform1i("specularMap", 2);
-				}
+						if (material.bumpMap != -1) {
+							glBindTextureUnit(3, material.bumpMap);
+						}
+						else {
+							glBindTextureUnit(3, normalTexture->bufferId());
+						}
 
-				shader.sendUniformMaterial("material[0]", material);
-				if (xforms[meshId]) {
-					shader.sendBool("useXform", true);
-				}
+						shader.sendUniformMaterial("material[0]", material);
 
-				if (tfb != nullptr) {
-					shader.sendBool("capture", true);
-					tfb->use({ captureBuffer }, 1, primitiveType[meshId], [&]() {
+					}
+					if (xforms[meshId]) {
+						shader.sendBool("useXform", true);
+					}
+
+					if (tfb != nullptr) {
+						shader.sendBool("capture", true);
+						tfb->use({ captureBuffer }, 1, primitiveType[meshId], [&]() {
+							drawPrimitive(meshId);
+						});
+					}
+					else {
 						drawPrimitive(meshId);
-					});
-				}
-				else {
-					drawPrimitive(meshId);
-				}
+					}
 
-				glBindVertexArray(0);
+					glBindVertexArray(0);
 				if (cullingDisabled) glEnable(GL_CULL_FACE);
 			}
 

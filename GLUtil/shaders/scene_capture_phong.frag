@@ -27,11 +27,12 @@ uniform vec3 lightPos;
 uniform float shininess = 5.0;
 uniform vec3 emission = vec3(0.0);
 uniform bool lfp_on = false;
+uniform bool isGround = false;
 
 layout(location = 0) out vec4 fragColor;
 
 const vec3 globalAmbience = vec3(0.3);
-const vec3 lightColor = vec3(0.3);
+uniform vec3 lightColor = vec3(0.3);
 vec3 worldPos = vert_in.position;
 vec2 uv = vert_in.uv;
 vec4 posInLight = vert_in.lightSpacePos;
@@ -60,8 +61,8 @@ vec3 getNormal0() {
 
 	vec3 tNormal = 2.0 * texture(normalMap, vert_in.uv).xyz - 1.0;
 	//return normalize(TBN * tNormal);
-	return gl_FrontFacing ? N : -N;
-	//return N;
+	//return gl_FrontFacing ? N : -N;
+	return N;
 }
 
 float ShadowCalculation(vec3 worldPos, vec4 posInLight, vec3 lightPos, vec3 camPos, float NdotL);
@@ -81,14 +82,16 @@ void main() {
 	vec3 diffuse = texture(diffuseMap, uv).rgb * NdotL;
 
 	if(lfp_on){
-		diffuse += computePrefilteredIrradiance(worldPos, N) * INV_TWO_PI;
+		diffuse *= computePrefilteredIrradiance(worldPos, N);
+		specular += computeGlossyRay(worldPos, V, N);
 	}
 
 	float shadow = ShadowCalculation(worldPos, posInLight, lightPos, camPos, NdotL);
 
-	vec3 color = globalAmbience * ambient + (1 - shadow) * lightColor * (diffuse + specular);
+	vec3 color = globalAmbience * lightColor * ambient + (1 - shadow) * lightColor * (diffuse + specular);
 
 	fragColor = vec4(color, vert_in.color.a);
+	//fragColor = vec4(specular, vert_in.color.a);
 }
 
 #pragma include("shadow.glsl")

@@ -26,6 +26,7 @@ const float minProgressDistance = 0.01;
 #define TRACE_RESULT_MISS    0
 #define TRACE_RESULT_HIT     1
 #define TRACE_RESULT_UNKNOWN 2
+#define FILL_HOLES 1
 
 
 float distanceSquared(Point2 v0, Point2 v1) {
@@ -34,8 +35,8 @@ float distanceSquared(Point2 v0, Point2 v1) {
 }
 
 struct Ray {
-    vec3 direction;
     vec3 origin;
+    vec3 direction;
 };
 
 
@@ -62,12 +63,12 @@ struct LightFieldSurface {
     Texture2DArray          normalProbeGrid;
     Texture2DArray          distanceProbeGrid;
     Texture2DArray          lowResolutionDistanceProbeGrid;
+    TextureCubeArray        irradianceProbeGrid;
+    TextureCubeArray        meanDistProbeGrid;
     Vector3int32            probeCounts;
     Point3                  probeStartPosition;
     Vector3                 probeStep;
     int                     lowResolutionDownsampleFactor;
-    TextureCubeArray        irradianceProbeGrid;
-    TextureCubeArray        meanDistProbeGrid;
 };
 
 
