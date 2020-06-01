@@ -738,6 +738,12 @@
     <None Include="include\shaders\LightFieldProbe.glsl">
       <Filter>shaders\include</Filter>
     </None>
+    <None Include="shaders\octahedral_convolution.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\octahedral_skybox.frag">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

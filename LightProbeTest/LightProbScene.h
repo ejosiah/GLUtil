@@ -32,8 +32,9 @@ public:
 		addShader("octahedral", GL_FRAGMENT_SHADER, octahedral_frag_shader);
 
 		addShader("screen", GL_VERTEX_SHADER, screen_vert_shader);
-		addShader("screen", GL_GEOMETRY_SHADER, octahedral_render_geom_shader);
-		addShader("screen", GL_FRAGMENT_SHADER, octahedral_render_frag_shader);
+		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
+		//addShader("screen", GL_GEOMETRY_SHADER, octahedral_render_geom_shader);
+		//addShader("screen", GL_FRAGMENT_SHADER, octahedral_render_frag_shader);
 
 		//addShader("lfp_test", GL_VERTEX_SHADER, screen_vert_shader);
 		addShader("lfp_test", GL_VERTEX_SHADER, scene_capture_vert_shader);
@@ -88,7 +89,17 @@ public:
 		//initMeanDistanceProbeGrid();
 		//initIrradiaceProbeGrid();
 	//	skybox = SkyBox{ this, irradianceProbeGrid.texture() };
-		lightFieldProbes = LightFieldProbes{ lfpConfig(), this };
+		auto config = lfpConfig();
+		//auto mem = memoryUse(config);
+		//logger.info("lfp memory use: " + to_string(mem) + " MB");
+
+		GLint data;
+		glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &data);
+		logger.info("max fb width: " + to_string(data));
+		glGetIntegerv(GL_MAX_FRAMEBUFFER_LAYERS, &data);
+		logger.info("max layers width: " + to_string(data));
+
+		lightFieldProbes = LightFieldProbes{ config, this };
 		lightFieldProbes.init();
 		lightFieldProbes.capture([&] {
 			renderScene();
@@ -99,6 +110,33 @@ public:
 		LightFieldSurface b;
 		clearBindings();
 		createMirror();
+
+		convolution = FrameBuffer{ cConfig() };
+		convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
+		convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
+		convolutionShader.createAndLinkProgram();
+
+		convolution.use([&] {
+			convolutionShader([&] {
+				for (int layer = 0; layer < 1; layer++) {
+					const int lod = 6;
+					for (int level = 0; level < lod; level++) {
+						unsigned int w = 512 * std::pow(0.5, level);
+						unsigned int h = 512 * std::pow(0.5, level);
+						convolution.attachTextureFor(layer, level);
+						glViewport(0, 0, w, h);
+
+						glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+						glBindTextureUnit(0, lightFieldProbes.octahedral.texture(toInt(Lfp::Radiance)));
+						float roughness = (float)level / (float)(lod - 1);
+						convolutionShader.sendUniform1i("layer", layer);
+						convolutionShader.sendUniform1f("roughness", roughness);
+						convolutionShader.sendUniform1f("resolution", 512);
+						quad.draw(convolutionShader);
+					}
+				}
+			});
+		});
 	}
 
 	void createMirror() {
@@ -140,10 +178,10 @@ public:
 	void display() override {
 	//	probes[0].render();
 	//	renderOctahedral();
-		renderRealScene();
+	//	renderRealScene();
 	//	skybox.render();
 	//	renderIrradiance();
-	//	lightFieldProbes.renderProbe(28);
+		lightFieldProbes.renderProbe(28);
 	//	lightFieldProbes.renderOctahedrals();
 	//	lightFieldProbes.renderLowResDistanceProbe();
 	//	lightFieldProbes.renderIrradiance();
@@ -158,6 +196,12 @@ public:
 		//	lightFieldProbes.sendTo(shader("lfp_test"));
 		//	//shade(quad);
 		//	shade(cube);
+		//});
+
+		//shader("screen")([&] {
+		//	glBindTextureUnit(0, convolution.texture());
+		////	glBindTextureUnit(1, lightFieldProbes.octahedral.texture());
+		//	shade(quad);
 		//});
 	}
 
@@ -256,6 +300,7 @@ public:
 		config.startProbeLocation = sponza->bound->min() + config.probeStep * vec3(0.5, 0.8, 0.5);
 		config.captureFragmentShader = getText("light_field_probe_input.frag");
 		config.resolution = 512;
+		//config.octResolution = 1024;
 		config.irradiance.numSamples = 2048;
 		config.irradiance.lobeSize = 1.0f;
 		config.irradiance.resolution = 128;
@@ -267,6 +312,43 @@ public:
 
 		return config;
 	}
+
+	FrameBuffer::Config cConfig() {
+		auto config = FrameBuffer::Config{ 512, 512 };
+		config.fboTarget = GL_FRAMEBUFFER;
+		config.depthAndStencil = false;
+		config.depthTest = false;
+		config.stencilTest = false;
+		auto attachment = FrameBuffer::Attachment{};
+		attachment.magFilter = GL_NEAREST;
+		attachment.minfilter = GL_NEAREST;
+		attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
+		attachment.texTarget = GL_TEXTURE_2D;
+	//	attachment.texTarget = GL_TEXTURE_2D_ARRAY;
+		attachment.internalFmt = GL_R11F_G11F_B10F;
+		attachment.fmt = GL_RGB;
+		attachment.type = GL_FLOAT;
+		attachment.attachment = GL_COLOR_ATTACHMENT0;
+	//	attachment.numLayers = 64;
+		attachment.numLayers = 1;
+		attachment.mipMap = true;
+		attachment.texLevel = 0;
+		config.attachments.push_back(attachment);
+
+		return config;
+	}
+
+	//double memoryUse(LightFieldProbes::Config& config) {
+	//	auto numProbes = config.probeCount.x * config.probeCount.y * config.probeCount.z;
+	//	double total = config.resolution * config.resolution * numProbes * 6 * 32/8 * 4;
+	//	total += config.octResolution * config.octResolution * numProbes * 2 * ;
+	//	total += config.octResolution * config.octResolution * numProbes * 16/8 * 2;
+	//	total += std::pow(config.octResolution * (1 / float(config.lowResolutionDownsampleFactor)), 2) * numProbes;
+	//	total += std::pow(config.irradiance.resolution, 2) * numProbes * 6;
+	//	total += std::pow(config.meanDistance.resolution, 2) * numProbes * 6;
+
+	//	return total / std::pow(1024, 2);
+	//}
 
 private:
 	int attachment = 0;
@@ -287,6 +369,8 @@ private:
 	LightFieldSurface lightSurface;
 	ProvidedMesh mirror;
 	LightFieldProbes lightFieldProbes;
+	FrameBuffer convolution;
+	Shader convolutionShader;
 	bool lfp_on = false;
 	float roughness = 0;
 	int meshId = 0;

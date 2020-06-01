@@ -4,7 +4,10 @@
 
 
 layout(location=0) in vec3 position;
-smooth out vec3 texCoord;
+
+out ncl_PerVertex{
+	smooth vec3 texCoord;
+};
 
 uniform mat4 M;
 uniform mat4 V;

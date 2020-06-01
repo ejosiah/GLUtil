@@ -7,8 +7,13 @@ layout(triangle_strip, max_vertices = 3) out;
 
 uniform int id;
 
-smooth in vec3 texCoord[3];
-smooth out vec3 textCoord_out;
+in ncl_PerVertex{
+	smooth vec3 texCoord;
+} ncl_in[3];
+
+out ncl_PerVertex{
+	smooth vec3 texCoord;
+};
 
 void main(void)
 {
@@ -17,7 +22,7 @@ void main(void)
 	for (n = 0; n < gl_in.length(); n++){
 		gl_ViewportIndex = id;
 		gl_Position = gl_in[n].gl_Position;
-		textCoord_out = texCoord[n];
+		texCoord = ncl_in[n].texCoord;
 		EmitVertex();
 	}
 	EndPrimitive();

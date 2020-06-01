@@ -81,9 +81,11 @@ void main() {
 	float NdotL = max(dot(N, L), 0);
 	vec3 diffuse = texture(diffuseMap, uv).rgb * NdotL;
 
+	vec3 diffuse_indirect = vec3(0);
 	if(lfp_on){
-		diffuse *= computePrefilteredIrradiance(worldPos, N);
+		diffuse_indirect += computePrefilteredIrradiance(worldPos, N) * INV_TWO_PI;
 		specular += computeGlossyRay(worldPos, V, N);
+		diffuse += diffuse_indirect;
 	}
 
 	float shadow = ShadowCalculation(worldPos, posInLight, lightPos, camPos, NdotL);
@@ -91,7 +93,7 @@ void main() {
 	vec3 color = globalAmbience * lightColor * ambient + (1 - shadow) * lightColor * (diffuse + specular);
 
 	fragColor = vec4(color, vert_in.color.a);
-	//fragColor = vec4(specular, vert_in.color.a);
+	//fragColor = vec4(diffuse_indirect, vert_in.color.a);
 }
 
 #pragma include("shadow.glsl")

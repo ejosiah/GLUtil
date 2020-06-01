@@ -130,6 +130,8 @@ namespace ncl {
 
 			void generateOctahedrals();
 
+			void generateOctahedralMipMap();
+
 			void generateLowResDistanceProbe();
 
 			void generateIrradiaceGrid();
@@ -148,7 +150,7 @@ namespace ncl {
 
 		public:
 			Config config;
-			std::vector<Probe> probes;
+			std::vector<Probe> probes;	// we don't need to keep this around
 			FrameBuffer octahedral;
 			FrameBuffer lowResolutionDistanceProbeGrid;
 			int lowResolutionDownsampleFactor = 1;
@@ -159,6 +161,8 @@ namespace ncl {
 			Shader irradianceShader;
 			Shader octahedralRenderShader;
 			Shader irradianceRenderShader;
+			Shader convolutionShader;
+			Shader renderProbeShader;
 			Scene* scene;
 			Cube cube;
 			ProvidedMesh quad;
@@ -213,6 +217,8 @@ namespace ncl {
 			dest.irradianceShader = std::move(source.irradianceShader);
 			dest.octahedralRenderShader = std::move(source.octahedralRenderShader);
 			dest.irradianceRenderShader = std::move(source.irradianceRenderShader);
+			dest.convolutionShader = std::move(source.convolutionShader);
+			dest.renderProbeShader = std::move(source.renderProbeShader);
 			dest.scene = source.scene;
 			dest.cube = std::move(source.cube);
 			dest.quad = std::move(source.quad);
@@ -228,7 +234,6 @@ namespace ncl {
 			octahedralShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral.vert" });
 			octahedralShader.load({ GL_FRAGMENT_SHADER, octahedral_frag_shader, "octahedral.frag" });
 			octahedralShader.createAndLinkProgram();
-
 
 			LowResDistanceShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "low_res_distance.vert" });
 			LowResDistanceShader.load({ GL_FRAGMENT_SHADER, octahedral_low_res_distance_frag_shader, "low_res_distance.frag" });
@@ -248,6 +253,14 @@ namespace ncl {
 			irradianceRenderShader.load({ GL_VERTEX_SHADER, lfp_irradiance_render_vert_shader, "irradiance_render.vert" });
 			irradianceRenderShader.load({ GL_FRAGMENT_SHADER, lfp_irradiance_render_frag_shader, "irradiance_render.frag" });
 			irradianceRenderShader.createAndLinkProgram();
+
+			convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
+			convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
+			convolutionShader.createAndLinkProgram();
+
+			renderProbeShader.load({ GL_VERTEX_SHADER , skybox_vert_shader, "probe_render.vert" });
+			renderProbeShader.load({ GL_FRAGMENT_SHADER, octahedral_skybox_frag_shader, "probe_render.frag" });
+			renderProbeShader.createAndLinkProgram();
 
 		}
 
@@ -347,6 +360,31 @@ namespace ncl {
 					}
 					});
 				});
+	//		generateOctahedralMipMap();
+		}
+
+		void LightFieldProbes::generateOctahedralMipMap() {
+			octahedral.use([&] {
+				convolutionShader([&] {
+					for (int layer = 0; layer < 64; layer++) {
+						const int lod = 6;
+						for (int level = 0; level < lod; level++) {
+							unsigned int w = 512 * std::pow(0.5, level);
+							unsigned int h = 512 * std::pow(0.5, level);
+							octahedral.attachTextureFor(layer, level);
+							glViewport(0, 0, w, h);
+
+							glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+							glBindTextureUnit(0, octahedral.texture(toInt(Lfp::Radiance)));
+							float roughness = (float)level / (float)(lod - 1);
+							convolutionShader.sendUniform1i("layer", layer);
+							convolutionShader.sendUniform1f("roughness", roughness);
+							convolutionShader.sendUniform1f("resolution", 512);
+							quad.draw(convolutionShader);
+						}
+					}
+				});
+			});
 		}
 
 		void LightFieldProbes::generateLowResDistanceProbe() {
@@ -390,11 +428,11 @@ namespace ncl {
 					irradianceShader.sendUniformMatrix4fv("views", 6, false, glm::value_ptr(views[0]));
 					irradianceShader.sendUniformMatrix4fv("projection", 1, false, glm::value_ptr(projection));
 					for (int layer = 0; layer < probes.size(); layer++) {
-						send("layer", layer);
+						send("layer", layer); // TODO use irradianceShader explicitly
 						//	irradianceProbeGrid.attachTextureFor(layer);
 						auto& probe = probes[layer];
 						glBindTextureUnit(0, probes[layer].texture(2));
-						shade(cube);
+						shade(cube);	// TODO use irradianceShader explicitly
 					}
 					});
 				});
@@ -402,7 +440,19 @@ namespace ncl {
 
 		void LightFieldProbes::renderProbe(int index) {
 			assert(index > 0 || index < probes.size());
-			probes.at(index).render();
+			//probes.at(index).render();
+			renderProbeShader([&] {
+				clearBindings();
+				glDepthFunc(GL_LEQUAL);
+				renderProbeShader.sendComputed(scene->activeCamera(), glm::mat4{ 1 });
+				renderProbeShader.sendUniform1i("numLayers", probes.size());
+				renderProbeShader.sendUniform1i("layer", index);
+				renderProbeShader.sendBool("isDistance", false);
+				renderProbeShader.sendBool("isDistanceSqrd", false);
+				glBindTextureUnit(0, octahedral.texture(0));
+				cube.draw(renderProbeShader);
+				glDepthFunc(GL_LESS);
+			});
 		}
 
 		void LightFieldProbes::renderOctahedrals(Lfp attachment) {
@@ -568,7 +618,7 @@ namespace ncl {
 				attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
 				attachment.texTarget = GL_TEXTURE_2D_ARRAY;
 				attachment.internalFmt = GL_R11F_G11F_B10F;
-				attachment.fmt = GL_RGBA;
+				attachment.fmt = GL_RGB;
 				attachment.type = GL_FLOAT;
 				attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 				attachment.texLevel = 0;
@@ -576,6 +626,8 @@ namespace ncl {
 				oConfig.attachments.push_back(attachment);
 			}
 
+			oConfig.attachments[0].mipMap = true;
+			//oConfig.attachments[0].texLevel = 6;
 			oConfig.attachments[2].internalFmt = GL_RG16F;
 			oConfig.attachments[2].fmt = GL_RG;
 
@@ -595,7 +647,7 @@ namespace ncl {
 			attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
 			attachment.texTarget = GL_TEXTURE_CUBE_MAP_ARRAY;
 			attachment.internalFmt = GL_R11F_G11F_B10F;
-			attachment.fmt = GL_RGBA;
+			attachment.fmt = GL_RGB;
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0;
 			attachment.texLevel = 0;

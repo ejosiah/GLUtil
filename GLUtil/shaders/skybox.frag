@@ -3,11 +3,15 @@
 #pragma optimize(off)
 
 layout(binding=0) uniform samplerCube skybox;
-smooth in vec3 textCoord_out;
+
+in ncl_PerVertex{
+	smooth vec3 texCoord;
+};
+
 out vec4 fragColor;
 
 void main(){
-	vec3 color = texture(skybox, textCoord_out).xyz;
+	vec3 color = texture(skybox, texCoord).rgb;
 
 	color /= color + vec3(1.0);
 	color = pow(color, vec3(1.0/2.2));

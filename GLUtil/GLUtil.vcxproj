@@ -338,9 +338,11 @@
     <None Include="shaders\octahedral.frag" />
     <None Include="shaders\octahedral.geom" />
     <None Include="shaders\octahedral.vert" />
+    <None Include="shaders\octahedral_convolution.frag" />
     <None Include="shaders\octahedral_low_res_distance.frag" />
     <None Include="shaders\octahedral_render.frag" />
     <None Include="shaders\octahedral_render.geom" />
+    <None Include="shaders\octahedral_skybox.frag" />
     <None Include="shaders\pass_through.frag" />
     <None Include="shaders\pass_through.tcs" />
     <None Include="shaders\pass_through.tes" />

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <functional>
 #include <vector>
+#include <initializer_list>
 
 namespace ncl {
 	namespace gl {
@@ -25,6 +26,7 @@ namespace ncl {
 				GLenum wrap_r = GL_REPEAT;
 				GLenum attachment = GL_COLOR_ATTACHMENT0;
 				GLsizei numLayers = 1;
+				bool mipMap = false;
 			};
 			struct Config {
 				GLsizei width;
@@ -56,7 +58,9 @@ namespace ncl {
 
 			FrameBuffer& operator=(FrameBuffer&&) noexcept;
 
-			void attachTextureFor(GLuint layer) const;
+			void attachTextureFor(GLuint layer, GLuint level = 0) const;
+
+			void attachTextureFor(GLuint layer, GLuint level, std::initializer_list<int> attachments) const;
 
 			inline bool rboBuf() const {
 				return config.depthAndStencil;
@@ -72,6 +76,10 @@ namespace ncl {
 
 			inline GLuint fbo() {
 				return _fbo;
+			}
+
+			inline GLuint rbo() {
+				return _rbo;
 			}
 
 			void use(std::function<void()> exec, GLuint layer = 0) const;

@@ -83,7 +83,9 @@ namespace ncl {
 				if (a.wrap_s == GL_CLAMP_TO_BORDER) {
 					glTexParameterfv(a.texTarget, GL_TEXTURE_BORDER_COLOR, a.borderColor);
 				}
-
+				if (a.mipMap) {
+					glGenerateMipmap(a.texTarget);
+				}
 				glFramebufferTexture(c.fboTarget, a.attachment, _tex, 0);
 			}
 
@@ -180,17 +182,33 @@ namespace ncl {
 			glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 		}
 
-		void FrameBuffer::attachTextureFor(GLuint layer) const{
+		void FrameBuffer::attachTextureFor(GLuint layer, GLuint level) const{
 			for (int i = 0; i < config.attachments.size(); i++) {
 				auto& a = config.attachments[i];
 				auto _tex = _textures[i];
 				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) {	// Todo check for all array textures
-					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, 0, layer);
+					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, level, layer);
+				}
+				else {
+					glFramebufferTexture(config.fboTarget, a.attachment, _tex, level);
 				}
 			}
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _textures[0], 0, layer);
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, _textures[1], 0, layer);
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, _textures[2], 0, layer);
+		}
+
+		void FrameBuffer::attachTextureFor(GLuint layer, GLuint level, std::initializer_list<int> attachments) const {
+			for (auto i : attachments) {
+				auto& a = config.attachments[i];
+				auto _tex = _textures[i];
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) {	// Todo check for all array textures
+					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, level, layer);
+				}
+				else {
+					glFramebufferTexture2D(config.fboTarget, a.attachment, a.texTarget, _tex, level);
+				}
+			}
 		}
 
 		FrameBuffer::Config FrameBuffer::defaultConfig(GLsizei width, GLsizei height) {

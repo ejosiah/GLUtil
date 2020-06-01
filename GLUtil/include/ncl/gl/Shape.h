@@ -64,12 +64,12 @@ namespace ncl {
 					GLuint vaoId = vaoIds[i];
 					glBindVertexArray(vaoId);
 
-					if (i == 34) {
-						shader.sendBool("isGround", true);
-					}
-					else {
-						shader.sendBool("isGround", false);
-					}
+					//if (i == 34) {
+					//	shader.sendBool("isGround", true);
+					//}
+					//else {
+					//	shader.sendBool("isGround", false);
+					//}
 
 					if (useDefaultMaterial) {
 						Material& material = materials[i];
