@@ -440,19 +440,19 @@ namespace ncl {
 
 		void LightFieldProbes::renderProbe(int index) {
 			assert(index > 0 || index < probes.size());
-			//probes.at(index).render();
-			renderProbeShader([&] {
-				clearBindings();
-				glDepthFunc(GL_LEQUAL);
-				renderProbeShader.sendComputed(scene->activeCamera(), glm::mat4{ 1 });
-				renderProbeShader.sendUniform1i("numLayers", probes.size());
-				renderProbeShader.sendUniform1i("layer", index);
-				renderProbeShader.sendBool("isDistance", false);
-				renderProbeShader.sendBool("isDistanceSqrd", false);
-				glBindTextureUnit(0, octahedral.texture(0));
-				cube.draw(renderProbeShader);
-				glDepthFunc(GL_LESS);
-			});
+			probes.at(index).render();
+			//renderProbeShader([&] {
+			//	clearBindings();
+			//	glDepthFunc(GL_LEQUAL);
+			//	renderProbeShader.sendComputed(scene->activeCamera(), glm::mat4{ 1 });
+			//	renderProbeShader.sendUniform1i("numLayers", probes.size());
+			//	renderProbeShader.sendUniform1i("layer", index);
+			//	renderProbeShader.sendBool("isDistance", false);
+			//	renderProbeShader.sendBool("isDistanceSqrd", false);
+			//	glBindTextureUnit(0, octahedral.texture(0));
+			//	cube.draw(renderProbeShader);
+			//	glDepthFunc(GL_LESS);
+			//});
 		}
 
 		void LightFieldProbes::renderOctahedrals(Lfp attachment) {

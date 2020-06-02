@@ -111,32 +111,32 @@ public:
 		clearBindings();
 		createMirror();
 
-		convolution = FrameBuffer{ cConfig() };
-		convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
-		convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
-		convolutionShader.createAndLinkProgram();
+		//convolution = FrameBuffer{ cConfig() };
+		//convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
+		//convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
+		//convolutionShader.createAndLinkProgram();
 
-		convolution.use([&] {
-			convolutionShader([&] {
-				for (int layer = 0; layer < 1; layer++) {
-					const int lod = 6;
-					for (int level = 0; level < lod; level++) {
-						unsigned int w = 512 * std::pow(0.5, level);
-						unsigned int h = 512 * std::pow(0.5, level);
-						convolution.attachTextureFor(layer, level);
-						glViewport(0, 0, w, h);
+		//convolution.use([&] {
+		//	convolutionShader([&] {
+		//		for (int layer = 0; layer < 1; layer++) {
+		//			const int lod = 6;
+		//			for (int level = 0; level < lod; level++) {
+		//				unsigned int w = 512 * std::pow(0.5, level);
+		//				unsigned int h = 512 * std::pow(0.5, level);
+		//				convolution.attachTextureFor(layer, level);
+		//				glViewport(0, 0, w, h);
 
-						glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-						glBindTextureUnit(0, lightFieldProbes.octahedral.texture(toInt(Lfp::Radiance)));
-						float roughness = (float)level / (float)(lod - 1);
-						convolutionShader.sendUniform1i("layer", layer);
-						convolutionShader.sendUniform1f("roughness", roughness);
-						convolutionShader.sendUniform1f("resolution", 512);
-						quad.draw(convolutionShader);
-					}
-				}
-			});
-		});
+		//				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//				glBindTextureUnit(0, lightFieldProbes.octahedral.texture(toInt(Lfp::Radiance)));
+		//				float roughness = (float)level / (float)(lod - 1);
+		//				convolutionShader.sendUniform1i("layer", layer);
+		//				convolutionShader.sendUniform1f("roughness", roughness);
+		//				convolutionShader.sendUniform1f("resolution", 512);
+		//				quad.draw(convolutionShader);
+		//			}
+		//		}
+		//	});
+		//});
 	}
 
 	void createMirror() {
@@ -178,10 +178,10 @@ public:
 	void display() override {
 	//	probes[0].render();
 	//	renderOctahedral();
-	//	renderRealScene();
+		renderRealScene();
 	//	skybox.render();
 	//	renderIrradiance();
-		lightFieldProbes.renderProbe(28);
+	//	lightFieldProbes.renderProbe(28);
 	//	lightFieldProbes.renderOctahedrals();
 	//	lightFieldProbes.renderLowResDistanceProbe();
 	//	lightFieldProbes.renderIrradiance();
@@ -216,17 +216,17 @@ public:
 			renderScene(true);
 		});
 
-		//shader("flat")([&] {
- 	//		auto model = glm::translate(glm::mat4{ 1 }, lightPos);
-		//	send(activeCamera(), model);
-		//	shade(lightObj);
-		//	shade(lightFieldProbes);
+		shader("flat")([&] {
+ 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
+			send(activeCamera(), model);
+			shade(lightObj);
+			shade(lightFieldProbes);
 
-		//	send("M", mat4{ 1 });
-		//	shade(X);
-		//	shade(Y);
-		//	shade(Z);
-		//});
+			send("M", mat4{ 1 });
+			shade(X);
+			shade(Y);
+			shade(Z);
+		});
 
 		//shader("mirror")([&] {
 		//	send(activeCamera());
@@ -295,12 +295,13 @@ public:
 		auto dim = sponza->bound->max() - sponza->bound->min();
 		auto config = LightFieldProbes::Config{};
 		config.probeCount = { 8, 2, 4 };
+	//	config.probeCount = { 4, 2, 4 };
 		config.probeStep = dim / config.probeCount;
 		config.probeStep.y *= 0.5;
 		config.startProbeLocation = sponza->bound->min() + config.probeStep * vec3(0.5, 0.8, 0.5);
 		config.captureFragmentShader = getText("light_field_probe_input.frag");
 		config.resolution = 512;
-		//config.octResolution = 1024;
+		config.octResolution = 512;
 		config.irradiance.numSamples = 2048;
 		config.irradiance.lobeSize = 1.0f;
 		config.irradiance.resolution = 128;

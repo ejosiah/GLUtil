@@ -5,9 +5,9 @@
 #include <Windows.h>
 #include "stdafx.h"
 
-#ifndef CONNECT_3D
-#define CONNECT_3D
-#endif
+//#ifndef CONNECT_3D
+//#define CONNECT_3D
+//#endif
 
 #ifndef DEBUG_MODE
 #define DEBUG_MODE

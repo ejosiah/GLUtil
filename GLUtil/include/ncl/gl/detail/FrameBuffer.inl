@@ -193,6 +193,7 @@ namespace ncl {
 					glFramebufferTexture(config.fboTarget, a.attachment, _tex, level);
 				}
 			}
+			glClear(clearBits);
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, _textures[0], 0, layer);
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, _textures[1], 0, layer);
 			//glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, _textures[2], 0, layer);

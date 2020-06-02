@@ -1,7 +1,7 @@
 #version 450 core
 
-layout(triangles, invocations = 6) in;
-layout(triangle_strip, max_vertices=3) out;
+layout(triangles) in;
+layout(triangle_strip, max_vertices=18) out;
 
 
 uniform mat4 projection;
@@ -29,20 +29,22 @@ out VERTEX{
 } vert_out;
 
 void main(){
-	gl_Layer = gl_InvocationID;
-	for(int i = 0; i < 3; i++){
-		vec4 worldPos = gl_in[i].gl_Position;
+	for(int face = 0; face < 6; face++){
+		gl_Layer = face;
+		for(int i = 0; i < 3; i++){
+			vec4 worldPos = gl_in[i].gl_Position;
 
-		vert_out.position = worldPos.xyz;
-		vert_out.normal = vert_in[i].normal;
-		vert_out.tangent = vert_in[i].tangent;
-		vert_out.bitangent = vert_in[i].bitangent;
-		vert_out.color = vert_in[i].color;
-		vert_out.uv = vert_in[i].uv;
-		vert_out.lightSpacePos = lightSpaceView * worldPos;
+			vert_out.position = worldPos.xyz;
+			vert_out.normal = vert_in[i].normal;
+			vert_out.tangent = vert_in[i].tangent;
+			vert_out.bitangent = vert_in[i].bitangent;
+			vert_out.color = vert_in[i].color;
+			vert_out.uv = vert_in[i].uv;
+			vert_out.lightSpacePos = lightSpaceView * worldPos;
 
-		gl_Position = projection * views[gl_InvocationID] * worldPos;
-		EmitVertex();
+			gl_Position = projection * views[face] * worldPos;
+			EmitVertex();
+		}
+		EndPrimitive();
 	}
-	EndPrimitive();
 }

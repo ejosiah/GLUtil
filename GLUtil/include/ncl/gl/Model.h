@@ -14,6 +14,7 @@
 #include "WithTriangleAdjacency.h"
 
 #pragma comment(lib, "assimp-vc140-mt.lib")
+//#pragma comment(lib, "assimp-vc142-mtd.lib")
 
 namespace ncl {
 	namespace gl {

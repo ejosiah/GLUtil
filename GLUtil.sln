@@ -76,6 +76,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LayeringTest", "LayeringTes
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Spherical_Harmonics", "Spherical_Harmonics\Spherical_Harmonics.vcxproj", "{CA61431A-0925-4A0E-AA3C-27996346CAC2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "subroutineTest", "subroutineTest\subroutineTest.vcxproj", "{42086323-C57E-4444-B5E2-E902BD3F74CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -356,6 +358,14 @@ Global
 		{CA61431A-0925-4A0E-AA3C-27996346CAC2}.Release|x64.Build.0 = Release|x64
 		{CA61431A-0925-4A0E-AA3C-27996346CAC2}.Release|x86.ActiveCfg = Release|Win32
 		{CA61431A-0925-4A0E-AA3C-27996346CAC2}.Release|x86.Build.0 = Release|Win32
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Debug|x64.ActiveCfg = Debug|x64
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Debug|x64.Build.0 = Debug|x64
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Debug|x86.ActiveCfg = Debug|Win32
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Debug|x86.Build.0 = Debug|Win32
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Release|x64.ActiveCfg = Release|x64
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Release|x64.Build.0 = Release|x64
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Release|x86.ActiveCfg = Release|Win32
+		{42086323-C57E-4444-B5E2-E902BD3F74CD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

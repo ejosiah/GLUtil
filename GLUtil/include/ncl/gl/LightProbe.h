@@ -28,9 +28,9 @@ namespace ncl {
 			Probe() = default;
 
 
-			Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader = scene_capture_phong_frag_shader);
+			Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader = scene_capture_phong_frag_shader, int id = 0);
 
-			Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader = scene_capture_phong_frag_shader);
+			Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader = scene_capture_phong_frag_shader, int id = 0);
 
 			Probe(const Probe&) = delete;
 
@@ -49,6 +49,10 @@ namespace ncl {
 			void render(int index = 0);
 
 			GLuint texture(int index = 0);
+
+			int id() {
+				return _id;
+			}
 
 			inline int captured() {
 				return framebuffer.numAttachments();
@@ -70,16 +74,18 @@ namespace ncl {
 			Cube cube;
 			gl::Sphere sphere;
 			Geometry geometry;
+			int _id = 0;
 		};
 		
-		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader)
-			: Probe(scene, loc, alpha, defaultConfig(width, height), fragmentShader){}
+		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, GLsizei width, GLsizei height, std::string fragmentShader, int id)
+			: Probe(scene, loc, alpha, defaultConfig(width, height), fragmentShader, id){}
 
-		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader)
+		Probe::Probe(Scene* scene, glm::vec3 loc, float alpha, FrameBuffer::Config config, std::string fragmentShader, int id)
 			: scene{ scene }
 			, location{ loc }
 			, alpha{ alpha }
-			, framebuffer{ config }{
+			, framebuffer{ config }
+			, _id{ id }{
 
 			views[0] = glm::lookAt(loc, loc + glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 			views[1] = glm::lookAt(loc, loc + glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));

@@ -23,13 +23,15 @@ public:
 
 	ImageViewer() :Scene("Image Viewr", 0, 0, false) {
 	//	Image img("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg");
-		Image img("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr");
+//		Image img("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr");
 		//_width = 512;
 		//_height = _width * float(img.width())/ img.height();
-		_width = img.width();
-		_height = img.height();
+		//_width = img.width();
+		//_height = img.height();
 		_width = 512;
 		_height = 512;
+		useImplictShaderLoad(false);
+		_requireMouse = false;
 		addShaderFromFile("image", "shaders/identity.vert");
 		addShaderFromFile("image", "shaders/texture.frag");
 	}
@@ -58,8 +60,8 @@ public:
 	//	texture1 = new NoiseTex3D();
 	//	shader("image").use();
 	//	texture0 = new CheckerTexture(1, "image");
-	//	texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
-	//	texture0 = load_hdr_texture("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr", 0, "newport_loft");
+		texture0 = new Texture2D("C:\\Users\\" + username + "\\OneDrive\\media\\textures\\Portrait-8.jpg", 0);
+		texture2 = load_hdr_texture("D:\\Users\\Josiah\\documents\\visual studio 2015\\Projects\\GLUtil\\PBR\\textures\\hdr\\newport_loft.hdr", 0, "newport_loft");
 		
 	//	texture0->sendTo(shader("image"));
 	//	shader("image").unUse();
@@ -93,12 +95,13 @@ public:
 	virtual void display() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		if (!texture0) {
-			texture0 = pbr::generate_brdf_lookup_table(0);
-		}
+		//if (!texture0) {
+		//	texture0 = pbr::generate_brdf_lookup_table(0);
+		//}
 
 		auto texId0 = texture0->bufferId();
 		auto texId1 = texture1->bufferId();
+		plane->defautMaterial(false);
 
 		shader("image")([&](Shader& s) {
 			
@@ -115,6 +118,7 @@ public:
 			
 			send(texture1);
 			send(texture0);
+			glBindTextureUnit(2, texture2->bufferId());
 		//	send(&board->images().front());
 			s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
 			plane->draw(s);
@@ -131,6 +135,7 @@ private:
 	Cube* cube;
 	Texture2D* texture1;
 	Texture2D* texture0 = nullptr;
+	Texture2D* texture2 = nullptr;
 	CheckerBoard_gpu* board;
 	Shader _shader;
 };
