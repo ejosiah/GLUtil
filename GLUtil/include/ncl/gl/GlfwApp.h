@@ -153,6 +153,7 @@ namespace ncl {
 
 			void run() {
 				GLFWwindow* window = nullptr;
+				GLFWwindow* offScreenWindow = nullptr;
 				try {
 					Keyboard::init();
 					double currentTime = 0;
@@ -176,9 +177,13 @@ namespace ncl {
 
 #endif
 
+					glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+					offScreenWindow = glfwCreateWindow(scene.height(), scene.width(), "", nullptr, nullptr);
+
 					GLFWmonitor* monitor = scene.fullScreen() ? glfwGetPrimaryMonitor() : nullptr;
 
-					window = glfwCreateWindow(scene.width(), scene.height(), scene.title(), monitor, nullptr);
+					glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+					window = glfwCreateWindow(scene.width(), scene.height(), scene.title(), monitor, offScreenWindow);
 
 					if (!window) {
 						throw std::runtime_error("GLFW window creation failed");
@@ -189,6 +194,7 @@ namespace ncl {
 
 
 					glfwMakeContextCurrent(window);
+					scene.set(offScreenWindow);
 
 					int loaded = ogl_LoadFunctions();
 					if (loaded == ogl_LOAD_FAILED) {
@@ -281,12 +287,14 @@ namespace ncl {
 					}
 
 					Keyboard::dispose();
+					glfwDestroyWindow(offScreenWindow);
 					glfwDestroyWindow(window);
 					glfwTerminate();
 				}
 				catch (std::runtime_error& error) {
 					if (window) {
 						glfwSetWindowShouldClose(window, GLFW_TRUE);
+						glfwDestroyWindow(offScreenWindow);
 						glfwDestroyWindow(window);
 					}
 					glfwTerminate();

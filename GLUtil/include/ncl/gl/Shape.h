@@ -62,6 +62,7 @@ namespace ncl {
 				const int num_vaos = vaoIds.size();
 				for (int i = 0; i < num_vaos; i++) {
 					GLuint vaoId = vaoIds[i];
+					assert(glIsVertexArray(vaoId) == GL_TRUE);
 					glBindVertexArray(vaoId);
 
 					//if (i == 34) {
@@ -131,6 +132,9 @@ namespace ncl {
 					glDisable(GL_CULL_FACE);
 				}
 					GLuint vaoId = vaoIds[meshId];
+
+					assert(glIsVertexArray(meshId) == GL_TRUE);
+
 					glBindVertexArray(vaoId);
 
 					if (useDefaultMaterial) {
@@ -138,6 +142,7 @@ namespace ncl {
 						shader.sendUniform1f("shininess", material.shininess);
 						shader.sendUniform3fv("emission", 1, glm::value_ptr(material.emission));
 						if (material.ambientMat != -1) {
+							assert(glIsTexture(material.ambientMat) == GL_TRUE);
 							glBindTextureUnit(0, material.ambientMat);
 						}
 						//else {
@@ -146,6 +151,7 @@ namespace ncl {
 						//	}
 						//}
 						if (material.diffuseMat != -1) {
+							assert(glIsTexture(material.diffuseMat) == GL_TRUE);
 							glBindTextureUnit(1, material.diffuseMat);
 						}
 

@@ -26,7 +26,10 @@
 #include "UserCameraController.h"
 #include <filesystem>
 #include "FrameBuffer.h"
-
+#include <GLFW/glfw3.h>
+#include <thread>
+#include <future>
+#include "../concurrency/concurrency.h"
 
 namespace ncl {
 	namespace gl {
@@ -129,6 +132,7 @@ namespace ncl {
 					for (auto source : entry.second) {
 						shader->load(source);
 					}
+					
 					shader->createAndLinkProgram();
 					_shaders.insert(std::make_pair(entry.first, shader));
 				}
@@ -140,6 +144,7 @@ namespace ncl {
 				glEnable(GL_DEPTH_TEST);
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
+
 				init();
 				initDefaultCamera();
 				initCameras();
@@ -549,11 +554,44 @@ namespace ncl {
 				deferred.push_back(exec);
 			}
 
+			template<typename T>
+			std::future<T> renderOffScreen(std::function<T()> func) {
+				//return std::async([=] {
+				//	glfwMakeContextCurrent(_offScreenWindow);
+				//	auto res =  func();
+				//	glfwMakeContextCurrent(nullptr);
+				//	return res;
+				//});
+				return executor.async([=] {
+					glfwMakeContextCurrent(_offScreenWindow);
+					glClearColor(1, 1, 1, 1);
+					glEnable(GL_DEPTH_TEST);
+					auto res = func();
+					glfwMakeContextCurrent(nullptr);
+					return res;
+				});
+			}
+
+			void bindToOffScreenContext(std::function<void()> exec){
+				executor.async([=] {
+					glfwMakeContextCurrent(_offScreenWindow);
+					glClearColor(1, 1, 1, 1);
+					glEnable(GL_DEPTH_TEST);
+					exec();
+					glfwMakeContextCurrent(nullptr);
+				}).get();
+			}
+
 			GlmCam cam;
 			_3DMotionEventHandler* _motionEventHandler;
 
 
 		protected:
+			void set(GLFWwindow* offScreenWindow) {
+				_offScreenWindow = offScreenWindow;
+			}
+
+
 			int _width;
 			int _height;
 			const char* _title;
@@ -585,6 +623,8 @@ namespace ncl {
 			float _modelHeight = 3;
 			std::stringstream sbr;
 			std::vector<Exec> deferred;
+			GLFWwindow* _offScreenWindow;
+			concurrency::ThreadPool executor{ 1 };
 		};
 	}
 }

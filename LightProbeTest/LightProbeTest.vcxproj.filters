@@ -55,5 +55,14 @@
     <None Include="light_field_probe_input.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\octahedral_probe.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\octahedral_probe.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\octahedral_probe.geom">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

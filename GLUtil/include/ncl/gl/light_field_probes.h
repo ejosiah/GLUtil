@@ -128,7 +128,7 @@ namespace ncl {
 
 			void initMeanDistanceProbeGrid();
 
-			void generateOctahedrals();
+			void generateOctahedrals(std::function<void()> scene);
 
 			void generateOctahedralMipMap();
 
@@ -148,9 +148,15 @@ namespace ncl {
 
 			gl::FrameBuffer::Config meanDistanceProbeGridConfig();
 
+			struct ProbeInfo {
+				int index;
+				glm::vec3 location;
+			};
+
 		public:
 			Config config;
 			std::vector<Probe> probes;	// we don't need to keep this around
+			std::vector<ProbeInfo> probeInfos;	// we don't need to keep this around
 			FrameBuffer octahedral;
 			FrameBuffer lowResolutionDistanceProbeGrid;
 			int lowResolutionDownsampleFactor = 1;
@@ -206,6 +212,7 @@ namespace ncl {
 
 			dest.config = source.config;
 			dest.probes = std::move(source.probes);
+			dest.probeInfos = std::move(source.probeInfos);
 			dest.octahedral = std::move(source.lowResolutionDistanceProbeGrid);
 			dest.lowResolutionDistanceProbeGrid = std::move(source.octahedral);
 			dest.lowResolutionDistanceProbeGrid = std::move(source.lowResolutionDistanceProbeGrid);
@@ -269,8 +276,10 @@ namespace ncl {
 			for (int z = 0; z < config.probeCount.z; z++) {
 				for (int y = 0; y < config.probeCount.y; y++) {
 					for (int x = 0; x < config.probeCount.x; x++) {
+						int index = (z * config.probeCount.x * config.probeCount.y) + (y * config.probeCount.x) + x;
 						glm::vec3 location = glm::vec3(x, y, z) * config.probeStep + config.startProbeLocation;
-						probes.emplace_back(scene, location, 1.0f, pConfig, config.captureFragmentShader);
+					//	probes.emplace_back(scene, location, 1.0f, pConfig, config.captureFragmentShader);
+						probeInfos.push_back(ProbeInfo{ index, location });
 					}
 				}
 			}
@@ -302,33 +311,33 @@ namespace ncl {
 		}
 
 		void LightFieldProbes::capture(std::function<void()> scene) {
-			for (auto& probe : probes) {
-				probe.capture([&] {
-					scene();
-				});
-			}
-			generateOctahedrals();
+			//for (auto& probe : probes) {
+			//	probe.capture([&] {
+			//		scene();
+			//	});
+			//}
+			generateOctahedrals(scene);
 			generateLowResDistanceProbe();
 			generateIrradiaceGrid();
 			generateMeanDistanceGrid();
 
 			lightFieldSurface.radianceProbeGrid.texture = { config.textureBindOffset, octahedral.texture(toInt(Lfp::Radiance)) };
-			lightFieldSurface.radianceProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probes.size(), 1 };
+			lightFieldSurface.radianceProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probeInfos.size(), 1 };
 			lightFieldSurface.radianceProbeGrid.invSize = 1.0f / lightFieldSurface.radianceProbeGrid.size;
 
 			lightFieldSurface.normalProbeGrid.texture = { config.textureBindOffset + 1, octahedral.texture(toInt(Lfp::Normal)) };
-			lightFieldSurface.normalProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probes.size(), 1 };
+			lightFieldSurface.normalProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probeInfos.size(), 1 };
 			lightFieldSurface.normalProbeGrid.invSize = 1.0f / lightFieldSurface.normalProbeGrid.size;
 			lightFieldSurface.normalProbeGrid.readMultiplyFirst = glm::vec4{ 2 };
 			lightFieldSurface.normalProbeGrid.readAddSecond = glm::vec4{ -1 };
 
 			lightFieldSurface.distanceProbeGrid.texture = { config.textureBindOffset + 2, octahedral.texture(toInt(Lfp::Distance)) };
-			lightFieldSurface.distanceProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probes.size(), 1 };
+			lightFieldSurface.distanceProbeGrid.size = glm::vec4{ config.octResolution, config.octResolution, probeInfos.size(), 1 };
 			lightFieldSurface.distanceProbeGrid.invSize = 1.0f / lightFieldSurface.distanceProbeGrid.size;
 
 			auto res = config.octResolution * (1 / float(config.lowResolutionDownsampleFactor));
 			lightFieldSurface.lowResolutionDistanceProbeGrid.texture = { config.textureBindOffset + 3, lowResolutionDistanceProbeGrid.texture() };
-			lightFieldSurface.lowResolutionDistanceProbeGrid.size = glm::vec4{ res , res, probes.size(), 1 };
+			lightFieldSurface.lowResolutionDistanceProbeGrid.size = glm::vec4{ res , res, probeInfos.size(), 1 };
 			lightFieldSurface.lowResolutionDistanceProbeGrid.invSize = 1.0f / lightFieldSurface.lowResolutionDistanceProbeGrid.size;
 
 			lightFieldSurface.irradianceProbeGrid.texture = { config.textureBindOffset + 4, irradianceProbeGrid.texture() };
@@ -347,15 +356,24 @@ namespace ncl {
 
 		}
 
-		void LightFieldProbes::generateOctahedrals() {
+		void LightFieldProbes::generateOctahedrals(std::function<void()> scene) {
 			octahedral.use([&] {
 				octahedralShader([&] {
-					for (int layer = 0; layer < probes.size(); layer++) {
+					for (int layer = 0; layer < probeInfos.size(); layer++) {
 						octahedral.attachTextureFor(layer);
-						auto& probe = probes[layer];
-						glBindTextureUnit(0, probes[layer].texture(0));
-						glBindTextureUnit(1, probes[layer].texture(1));
-						glBindTextureUnit(2, probes[layer].texture(2));
+						auto pConfig = probeConfig();
+						std::future<Probe> futureProbe = this->scene->renderOffScreen<Probe>([&]() {
+							auto probe = Probe{this->scene, probeInfos[layer].location, 1.0f, pConfig, config.captureFragmentShader };
+							probe.capture([&] {
+								scene();
+							});
+							return probe;
+						});
+
+						auto probe = futureProbe.get();
+						glBindTextureUnit(0, probe.texture(0));
+						glBindTextureUnit(1, probe.texture(1));
+						glBindTextureUnit(2, probe.texture(2));
 						quad.draw(octahedralShader);
 					}
 					});
@@ -390,10 +408,12 @@ namespace ncl {
 		void LightFieldProbes::generateLowResDistanceProbe() {
 			lowResolutionDistanceProbeGrid.use([&] {
 				LowResDistanceShader([&] {
-					for (int layer = 0; layer < probes.size(); layer++) {
+					for (int layer = 0; layer < probeInfos.size(); layer++) {
 						lowResolutionDistanceProbeGrid.attachTextureFor(layer);
-						auto& probe = probes[layer];
-						glBindTextureUnit(0, probes[layer].texture(2));
+						//auto& probe = probes[layer];
+						//glBindTextureUnit(0, probes[layer].texture(2));
+						LowResDistanceShader.sendUniform1i("layer", layer);
+						glBindTextureUnit(0, octahedral.texture(toInt(Lfp::Distance)));
 						shade(quad);
 					}
 				});
@@ -408,11 +428,13 @@ namespace ncl {
 					irradianceShader.sendBool("irradiance", true);	// TODO try subroutine
 					irradianceShader.sendUniformMatrix4fv("views", 6, false, glm::value_ptr(views[0]));
 					irradianceShader.sendUniformMatrix4fv("projection", 1, false, glm::value_ptr(projection));
-					for (int layer = 0; layer < probes.size(); layer++) {
-						irradianceShader.sendUniform1i("layer", layer);
+					for (int layer = 0; layer < probeInfos.size(); layer++) {
 						//	irradianceProbeGrid.attachTextureFor(layer);
-						auto& probe = probes[layer];
-						glBindTextureUnit(0, probes[layer].texture(0));
+						//auto& probe = probes[layer];
+						//glBindTextureUnit(0, probes[layer].texture(0));
+
+						irradianceShader.sendUniform1i("layer", layer);
+						glBindTextureUnit(0, octahedral.texture(toInt(Lfp::Radiance)));
 						cube.draw(irradianceShader);
 					}
 					});
@@ -427,11 +449,12 @@ namespace ncl {
 					send("irradiance", false);	// TODO try subroutine
 					irradianceShader.sendUniformMatrix4fv("views", 6, false, glm::value_ptr(views[0]));
 					irradianceShader.sendUniformMatrix4fv("projection", 1, false, glm::value_ptr(projection));
-					for (int layer = 0; layer < probes.size(); layer++) {
+					for (int layer = 0; layer < probeInfos.size(); layer++) {
 						send("layer", layer); // TODO use irradianceShader explicitly
-						//	irradianceProbeGrid.attachTextureFor(layer);
-						auto& probe = probes[layer];
-						glBindTextureUnit(0, probes[layer].texture(2));
+						//irradianceProbeGrid.attachTextureFor(layer);
+					//	auto& probe = probes[layer];
+					//	glBindTextureUnit(0, probes[layer].texture(2));
+						glBindTextureUnit(0, octahedral.texture(toInt(Lfp::Distance)));
 						shade(cube);	// TODO use irradianceShader explicitly
 					}
 					});
@@ -439,26 +462,26 @@ namespace ncl {
 		}
 
 		void LightFieldProbes::renderProbe(int index) {
-			assert(index > 0 || index < probes.size());
-			probes.at(index).render();
-			//renderProbeShader([&] {
-			//	clearBindings();
-			//	glDepthFunc(GL_LEQUAL);
-			//	renderProbeShader.sendComputed(scene->activeCamera(), glm::mat4{ 1 });
-			//	renderProbeShader.sendUniform1i("numLayers", probes.size());
-			//	renderProbeShader.sendUniform1i("layer", index);
-			//	renderProbeShader.sendBool("isDistance", false);
-			//	renderProbeShader.sendBool("isDistanceSqrd", false);
-			//	glBindTextureUnit(0, octahedral.texture(0));
-			//	cube.draw(renderProbeShader);
-			//	glDepthFunc(GL_LESS);
-			//});
+			assert(index > 0 || index < probeInfos.size());
+			//probes.at(index).render();
+			renderProbeShader([&] {
+				clearBindings();
+				glDepthFunc(GL_LEQUAL);
+				renderProbeShader.sendComputed(scene->activeCamera(), glm::mat4{ 1 });
+				renderProbeShader.sendUniform1i("numLayers", probeInfos.size());
+				renderProbeShader.sendUniform1i("layer", index);
+				renderProbeShader.sendBool("isDistance", false);
+				renderProbeShader.sendBool("isDistanceSqrd", false);
+				glBindTextureUnit(0, octahedral.texture(0));
+				cube.draw(renderProbeShader);
+				glDepthFunc(GL_LESS);
+			});
 		}
 
 		void LightFieldProbes::renderOctahedrals(Lfp attachment) {
 			octahedralRenderShader([&] {
 				send("isDistance", static_cast<int>(attachment) == 2);
-				send("numLayers", int(probes.size()));
+				send("numLayers", int(probeInfos.size()));
 				send("renderAll", true);
 				glBindTextureUnit(0, octahedral.texture(static_cast<int>(attachment)));
 				glBindTextureUnit(1, irradianceProbeGrid.texture());
@@ -470,7 +493,7 @@ namespace ncl {
 		void LightFieldProbes::renderOctahedral(Lfp attachment, int index) {
 			octahedralRenderShader([&] {
 				send("isDistance", static_cast<int>(attachment) == 2);
-				send("numLayers", int(probes.size()));
+				send("numLayers", int(probeInfos.size()));
 				send("renderAll", false);
 				send("uLayer", index);
 				glBindTextureUnit(0, octahedral.texture(static_cast<int>(attachment)));
@@ -484,7 +507,7 @@ namespace ncl {
 		void LightFieldProbes::renderLowResDistanceProbes() {
 			octahedralRenderShader([&] {
 				send("isDistance", true);
-				send("numLayers", int(probes.size()));
+				send("numLayers", int(probeInfos.size()));
 				send("renderAll", true);
 				glBindTextureUnit(0, lowResolutionDistanceProbeGrid.texture());
 				shade(quad);
@@ -494,7 +517,7 @@ namespace ncl {
 		void LightFieldProbes::renderLowResDistanceProbe(int index) {
 			octahedralRenderShader([&] {
 				send("isDistance", true);
-				send("numLayers", int(probes.size()));
+				send("numLayers", int(probeInfos.size()));
 				send("renderAll", false);
 				send("uLayer", index);
 				glBindTextureUnit(0, lowResolutionDistanceProbeGrid.texture());
@@ -622,7 +645,7 @@ namespace ncl {
 				attachment.type = GL_FLOAT;
 				attachment.attachment = GL_COLOR_ATTACHMENT0 + i;
 				attachment.texLevel = 0;
-				attachment.numLayers = probes.size();
+				attachment.numLayers = probeInfos.size();
 				oConfig.attachments.push_back(attachment);
 			}
 
@@ -651,7 +674,7 @@ namespace ncl {
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0;
 			attachment.texLevel = 0;
-			attachment.numLayers = probes.size();
+			attachment.numLayers = probeInfos.size();
 			fConfig.attachments.push_back(attachment);
 
 			return fConfig;
@@ -674,7 +697,7 @@ namespace ncl {
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_COLOR_ATTACHMENT0;
 			attachment.texLevel = 0;
-			attachment.numLayers = probes.size();
+			attachment.numLayers = probeInfos.size();
 			fConfig.attachments.push_back(attachment);
 
 			return fConfig;

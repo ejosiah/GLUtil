@@ -67,6 +67,9 @@
     <Filter Include="Header Files\lighting">
       <UniqueIdentifier>{e39c9851-7bd5-4607-8334-661b5d5ba88b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\concurrency">
+      <UniqueIdentifier>{db6def46-af87-411e-a9a2-12d0b76a398f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -413,6 +416,12 @@
     </ClInclude>
     <ClInclude Include="include\ncl\octahedral.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\concurrency\concurrency.h">
+      <Filter>Header Files\concurrency</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\concurrency\thread_pool.h">
+      <Filter>Header Files\concurrency</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -157,6 +157,8 @@
     <ClInclude Include="exampleScene.h" />
     <ClInclude Include="FontTest.h" />
     <ClInclude Include="include\glm\vec_util.h" />
+    <ClInclude Include="include\ncl\concurrency\concurrency.h" />
+    <ClInclude Include="include\ncl\concurrency\thread_pool.h" />
     <ClInclude Include="include\ncl\configured_logger.h" />
     <ClInclude Include="include\ncl\data_structure\binary_tree.h" />
     <ClInclude Include="include\ncl\data_structure\quad_tree.h" />

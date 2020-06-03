@@ -55,59 +55,60 @@ public:
 		activeCamera().setPosition({ 0, 1, 3 });
 		setForeGroundColor(WHITE);
 		//sponza = new Model("C:\\Users\\Josiah\\source\\repos\\Precomputed-Light-Field-Probes\\assets\\sponza\\sponza.obj", false, 20);
-		sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
-		lightPos = { 0, 5, 0.6 };
-		shadowMap = OminiDirectionalShadowMap{ 5, lightPos, 2048, 2048 };
-		lightColor = vec3(0.3);
-		lightObj = new Sphere(0.3, 20, 20, vec4(lightColor, 1));
-		probePos = { 0, 2.43, 0 };
-
-		center = (sponza->bound->max() + sponza->bound->min()) * 0.5f;
-
-		auto dir = vec3{ 10, 12, 0 } - lightPos;
-		X = new Vector{ {1, 0, 0}, center, 1.0, RED };
-		Y = new Vector{ {0, 1, 0}, center, 1.0, GREEN };
-		Z = new Vector{ {0, 0, 1}, center, 1.0, BLUE };
-
-		shadowMap.update(lightPos);
-		shadowMap.capture([&] {
-			sponza->defautMaterial(false);
-			shade(sponza);
+		shadowMap = new OminiDirectionalShadowMap{ 5, lightPos, 2048, 2048 };
+		bindToOffScreenContext([&] {
+			sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
 		});
 
-		//for (auto& probe : probes) {
-		//	probe.capture([&] {
-		//		renderScene();
-		//	});
-		//}
-
-		cube = Cube{ 1, WHITE, {}, false };
-		cube.defautMaterial(false);
-		quad = ProvidedMesh{ screnSpaceQuad() };
-		quad.defautMaterial(false);
-		//initOctahedral();
-		//initMeanDistanceProbeGrid();
-		//initIrradiaceProbeGrid();
-	//	skybox = SkyBox{ this, irradianceProbeGrid.texture() };
 		auto config = lfpConfig();
-		//auto mem = memoryUse(config);
-		//logger.info("lfp memory use: " + to_string(mem) + " MB");
-
-		GLint data;
-		glGetIntegerv(GL_MAX_FRAMEBUFFER_WIDTH, &data);
-		logger.info("max fb width: " + to_string(data));
-		glGetIntegerv(GL_MAX_FRAMEBUFFER_LAYERS, &data);
-		logger.info("max layers width: " + to_string(data));
-
 		lightFieldProbes = LightFieldProbes{ config, this };
 		lightFieldProbes.init();
 		lightFieldProbes.capture([&] {
 			renderScene();
 		});
 
-		LightFieldSurface c = lightSurface;
-		LightFieldSurface a;
-		LightFieldSurface b;
+		//delete sponza;
+		sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
+		lightPos = { 0, 5, 0.6 };
+
+		lightColor = vec3(0.3);
+		lightObj = new Sphere(0.3, 20, 20, vec4(lightColor, 1));
+		probePos = { 0, 2.43, 0 };
+
+		center = (sponza->bound->max() + sponza->bound->min()) * 0.5f;
+
+		auto dir = vec3{ 10, 12, 0 } -lightPos;
+		X = new Vector{ {1, 0, 0}, center, 1.0, RED };
+		Y = new Vector{ {0, 1, 0}, center, 1.0, GREEN };
+		Z = new Vector{ {0, 0, 1}, center, 1.0, BLUE };
+
+		shadowMap->update(lightPos);
+		shadowMap->capture([&] {
+			sponza->defautMaterial(false);
+			shade(sponza);
+		});
+
+
+		cube = new Cube{ 1, WHITE, {}, false };
+		cube->defautMaterial(false);
+		quad = new ProvidedMesh{ screnSpaceQuad() };
+		quad->defautMaterial(false);
+	//	sponza0 = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
+
+
+	//	});
+		//initOctahedral();
+		//initMeanDistanceProbeGrid();
+		//initIrradiaceProbeGrid();
+	//	skybox = SkyBox{ this, irradianceProbeGrid.texture() };
+		
+		//auto mem = memoryUse(config);
+		//logger.info("lfp memory use: " + to_string(mem) + " MB");
+
+
+
+
+
 		clearBindings();
 		createMirror();
 
@@ -137,6 +138,7 @@ public:
 		//		}
 		//	});
 		//});
+		//brdfLUT = renderOffScreen<Texture2D*>([] { return pbr::generate_brdf_lookup_table(0); });
 	}
 
 	void createMirror() {
@@ -176,6 +178,7 @@ public:
 	}
 
 	void display() override {
+	//	static Texture2D* tex = brdfLUT.get();
 	//	probes[0].render();
 	//	renderOctahedral();
 		renderRealScene();
@@ -199,9 +202,16 @@ public:
 		//});
 
 		//shader("screen")([&] {
-		//	glBindTextureUnit(0, convolution.texture());
+		//	//glBindTextureUnit(0, convolution.texture());
+		//	send(tex);
 		////	glBindTextureUnit(1, lightFieldProbes.octahedral.texture());
 		//	shade(quad);
+		//});
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//shader("flat")([&] {
+		//	send(activeCamera());
+		////	sponza->defautMaterial(false);
+		//	shade(sponza);
 		//});
 	}
 
@@ -216,17 +226,17 @@ public:
 			renderScene(true);
 		});
 
-		shader("flat")([&] {
- 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
-			send(activeCamera(), model);
-			shade(lightObj);
-			shade(lightFieldProbes);
+		//shader("flat")([&] {
+ 	//		auto model = glm::translate(glm::mat4{ 1 }, lightPos);
+		//	send(activeCamera(), model);
+		//	shade(lightObj);
+		//	shade(lightFieldProbes);
 
-			send("M", mat4{ 1 });
-			shade(X);
-			shade(Y);
-			shade(Z);
-		});
+		//	send("M", mat4{ 1 });
+		//	shade(X);
+		//	shade(Y);
+		//	shade(Z);
+		//});
 
 		//shader("mirror")([&] {
 		//	send(activeCamera());
@@ -250,7 +260,7 @@ public:
 
 	void renderScene(bool shadowOn = false, bool all = true) {
 		sponza->defautMaterial(true);
-		send(shadowMap);
+		send(*shadowMap);
 		send("lightColor", lightColor);
 		send("lightPos", lightPos);
 		send("shadowOn", shadowOn);
@@ -300,8 +310,8 @@ public:
 		config.probeStep.y *= 0.5;
 		config.startProbeLocation = sponza->bound->min() + config.probeStep * vec3(0.5, 0.8, 0.5);
 		config.captureFragmentShader = getText("light_field_probe_input.frag");
-		config.resolution = 512;
-		config.octResolution = 512;
+		config.resolution = 1024;
+		config.octResolution = 1024;
 		config.irradiance.numSamples = 2048;
 		config.irradiance.lobeSize = 1.0f;
 		config.irradiance.resolution = 128;
@@ -355,15 +365,16 @@ private:
 	int attachment = 0;
 	Logger logger;
 	Probe probe;
-	Cube cube;
+	Cube* cube;
 	GLsizei probeRes = 512;
 	Model* sponza;
-	OminiDirectionalShadowMap shadowMap;
+	Model* sponza0;
+	OminiDirectionalShadowMap* shadowMap;
 	vec3 lightPos;
 	vec3 probePos;
 	Sphere* lightObj;
-	ProvidedMesh quad;
-	SkyBox skybox;
+	ProvidedMesh* quad;
+	SkyBox* skybox;
 	Vector* X;
 	Vector* Y;
 	Vector* Z;
@@ -377,4 +388,5 @@ private:
 	int meshId = 0;
 	vec3 lightColor;
 	vec3 center;
+	future<Texture2D*> brdfLUT;
 };
