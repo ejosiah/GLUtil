@@ -17,12 +17,12 @@ struct Stack {
 };
 #pragma pack(pop)
 
-class Background : public Compute {
+class RayTracer : public Compute {
 public:
-	Background(Scene& scene, StorageBufferObj<std::vector<ray_tracing::Ray>>& rays)
+	RayTracer(Scene& scene, StorageBufferObj<std::vector<ray_tracing::Ray>>& rays)
 		:Compute(vec3{ scene.width() / 32.0f, scene.height() / 32.0f, 1.0f }
 			, vector<Image2D>{ Image2D(scene.width(), scene.height(), GL_RGBA32F, "image", 0) }
-	, & scene.shader("background"))
+	, & scene.shader("whitted_raytracer"))
 		, rays{ rays }{
 
 
@@ -38,16 +38,12 @@ public:
 			});
 
 		skybox = SkyBox::create(skyTextures, 0, scene);
-		stack_ssbo = StorageBufferObj<vector<Stack>>{ scene.width() * scene.height(), 2 };
-		scene.shader("background")([&] {
-			stack_ssbo.sendToGPU(false);
-		});
+
 
 	}
 
 	void preCompute() {
 		rays.sendToGPU(false);
-		stack_ssbo.sendToGPU(false);
 		glBindTextureUnit(1, skybox->buffer);
 	}
 
@@ -57,7 +53,6 @@ public:
 
 private:
 	StorageBufferObj<std::vector<ray_tracing::Ray>>& rays;
-	StorageBufferObj<vector<Stack>> stack_ssbo;
 	SkyBox* skybox;
 };
 
@@ -76,9 +71,9 @@ public:
 
 	void init() override {
 		initDefaultCamera();
-		camera_ssbo = gl::StorageBufferObj<ray_tracing::Camera>{ ray_tracing::Camera{} };
+		camera_ssbo = StorageBufferObj<ray_tracing::Camera>{ 1, true };
 		rayGenerator = new ray_tracing::RayGenerator{ *this, camera_ssbo };
-		background = new Background{ *this, rayGenerator->getRaySSBO() };
+		raytracer = new RayTracer{ *this, rayGenerator->getRaySSBO() };
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		setBackGroundColor(BLACK);
 	}
@@ -86,14 +81,11 @@ public:
 	bool once = true;
 	void display() override {
 		rayGenerator->compute();
-
-		for (int i = 0; i < 50; i++) {
-			background->compute();
-		}
+		raytracer->compute();
 
 		shader("screen")([&] {
-			background->images().front().renderMode();
-			glBindTextureUnit(0, background->images().front().buffer());
+			raytracer->images().front().renderMode();
+			glBindTextureUnit(0, raytracer->images().front().buffer());
 			shade(quad);
 		});
 
@@ -104,25 +96,25 @@ public:
 
 private:
 	ray_tracing::RayGenerator* rayGenerator;
-	Background* background;
+	RayTracer* raytracer;
 	Logger& logger = Logger::get("ray");
 	StorageBufferObj<ray_tracing::Camera> camera_ssbo;
 	ProvidedMesh quad;
 };
 
-template<>
-struct ncl::gl::ObjectReflect<std::vector<Stack>> {
-
-	static GLsizeiptr sizeOfObj(std::vector<Stack>& stacks) {
-		auto size = sizeof(Stack);
-		return GLsizeiptr(size * stacks.size());
-	}
-
-	static void* objPtr(std::vector<Stack>& stacks) {
-		return &stacks[0];
-	}
-
-	static GLsizeiptr sizeOf(int count) {
-		return GLsizeiptr(count * sizeof(Stack));
-	}
-};
+//template<>
+//struct ncl::gl::ObjectReflect<std::vector<Stack>> {
+//
+//	static GLsizeiptr sizeOfObj(std::vector<Stack>& stacks) {
+//		auto size = sizeof(Stack);
+//		return GLsizeiptr(size * stacks.size());
+//	}
+//
+//	static void* objPtr(std::vector<Stack>& stacks) {
+//		return &stacks[0];
+//	}
+//
+//	static GLsizeiptr sizeOf(int count) {
+//		return GLsizeiptr(count * sizeof(Stack));
+//	}
+//};

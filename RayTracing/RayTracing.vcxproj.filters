@@ -34,5 +34,23 @@
     <None Include="shaders\stack_test.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\lights.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ray_shape_test.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ray_tracing_model.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ray_triangle_test.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ray_tracing_common.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\whitted_raytracer.comp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
