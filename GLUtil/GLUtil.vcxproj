@@ -223,6 +223,9 @@
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
     <ClInclude Include="include\ncl\octahedral.h" />
+    <ClInclude Include="include\ncl\ray_tracing\camera.h" />
+    <ClInclude Include="include\ncl\ray_tracing\Ray.h" />
+    <ClInclude Include="include\ncl\ray_tracing\RayGenerator.h" />
     <ClInclude Include="include\ncl\sampling\hash.h" />
     <ClInclude Include="include\ncl\sampling\Sampler.h" />
     <ClInclude Include="include\ncl\sampling\sampling.h" />
@@ -306,6 +309,7 @@
     <None Include="include\shaders\sampling.glsl" />
     <None Include="include\shaders\shadow.glsl" />
     <None Include="include\shaders\simple_light.vert" />
+    <None Include="include\shaders\stack.glsl" />
     <None Include="include\shaders\toon_diffuse.glsl" />
     <None Include="include\shaders\triangle_ray_intersection.glsl" />
     <None Include="include\shaders\vertex_in.glsl" />
@@ -320,6 +324,7 @@
     <None Include="shaders\bling_phong.vert" />
     <None Include="shaders\brdf.vert" />
     <None Include="shaders\bsdf.frag" />
+    <None Include="shaders\copy_array2d.frag" />
     <None Include="shaders\equi_rectangular_map.frag" />
     <None Include="shaders\equi_rectangular_map.vert" />
     <None Include="shaders\font.frag" />

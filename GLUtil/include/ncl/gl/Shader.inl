@@ -59,7 +59,8 @@ namespace ncl {
 			}
 			dest._attributeList = std::move(source._attributeList);
 			dest._uniformLocationList = std::move(source._uniformLocationList);
-			dest._subroutineList = std::move(source._subroutineList);
+			dest._subroutinesPtrs = std::move(source._subroutinesPtrs);
+			dest._subroutineIndexes = std::move(source._subroutineIndexes);
 			dest.logger = source.logger;
 			dest.pendingOps = std::move(source.pendingOps);
 			dest._storePreprocessedShaders = source._storePreprocessedShaders;
@@ -74,15 +75,6 @@ namespace ncl {
 				addUniform(name);
 			}
 			return _uniformLocationList[name];
-		}
-
-		GLuint Shader::findSubroutineLocation(const std::string& name, GLenum shaderType) {
-			auto itr = _subroutineList[shaderType].find(name);
-			if (itr != _subroutineList[shaderType].end()) {
-				return glGetSubroutineUniformLocation(_program, shaderType, itr->second.c_str());
-			}
-			auto error = std::runtime_error("No subroute defined for function: " + name);
-			logger.error("", error);
 		}
 
 		Shader::~Shader(void)
@@ -142,7 +134,7 @@ namespace ncl {
 
 			}
 			_shaders[_totalShaders++] = shader;
-			_subroutineList[type] = std::map<std::string, std::string>();
+			_subroutinesPtrs[type] = std::map<std::string, std::tuple<GLint, GLuint>>{};
 		}
 
 		void Shader::createAndLinkProgram() {
@@ -190,6 +182,40 @@ namespace ncl {
 			glDeleteShader(_shaders[FRAGMENT_SHADER]);
 			glDeleteShader(_shaders[GEOMETRY_SHADER]);
 			glDeleteShader(_shaders[COMPUTE_SHADER]);
+
+			initSubroutines();
+
+		}
+
+		void Shader::initSubroutines() {
+					// std::map<GLenum, std::vector<GLuint>> _subroutineIndexes;
+			char name[256];
+			int len, numFunc;
+			for (auto& [type, ptrs] : _subroutinesPtrs) {
+				GLsizei activeUniforms;
+				glGetProgramStageiv(_program, type, GL_ACTIVE_SUBROUTINE_UNIFORMS, &activeUniforms);
+				
+				_subroutineIndexes[type] = std::vector<GLuint>(activeUniforms);
+				for (int i = 0; i < activeUniforms; i++) {
+					glGetActiveSubroutineUniformName(_program, type, i, 256, &len, name);
+					std::string uniform = std::string{ name };
+					glGetActiveSubroutineUniformiv(_program, type, i, GL_NUM_COMPATIBLE_SUBROUTINES, &numFunc);
+					auto indices = std::vector<GLint>(numFunc);
+
+					glGetActiveSubroutineUniformiv(_program, type, i, GL_COMPATIBLE_SUBROUTINES, &indices[0]);
+					for (int j = 0; j < numFunc; j++) {
+						glGetActiveSubroutineName(_program, type, indices[j], 256, &len, name);
+						std::string func = name;
+						// std::map<GLenum, std::map<std::string, std::tuple<GLint, GLuint>>> _subroutinesPtrs;
+						std::string key = uniform + "_" + func;
+						ptrs[key] = std::make_tuple(GLint(i), GLuint(indices[j]));
+						if (j == 0) {
+							_subroutineIndexes[type][i] = indices[j];
+						}
+					}
+
+				}
+			}
 
 		}
 
@@ -255,12 +281,6 @@ namespace ncl {
 
 		void Shader::addUniform(const std::string& uniform) {
 			_uniformLocationList[uniform] = glGetUniformLocation(_program, uniform.c_str());
-		}
-
-		void Shader::addSubroutineLocation(GLenum shaderType, const std::string& subroutine, std::initializer_list<std::string> functions) {
-			for (std::string f : functions) {
-				_subroutineList[shaderType][f] = subroutine;
-			}
 		}
 
 		GLint Shader::operator()(const std::string& uniform) {
@@ -441,17 +461,12 @@ namespace ncl {
 			sendUniformMaterial("material[1]", materials[1]);
 		}
 
-		void Shader::subroutine(const std::string& name, GLenum shaderType) {
-			GLsizei n;
-			glGetIntegerv(GL_MAX_SUBROUTINE_UNIFORM_LOCATIONS, &n);
-			GLuint* indices = new GLuint[n];
-
-			GLuint subroutinePtr = findSubroutineLocation(name, shaderType);
-			
-			GLuint funcLoc = glGetSubroutineIndex(_program, shaderType, name.c_str());
-			indices[subroutinePtr] = funcLoc;
-			glUniformSubroutinesuiv(shaderType, n, indices);
-			delete[] indices;
+		void Shader::subroutine(GLenum shaderType, const std::string& name, const std::string& func_name) {
+			auto key = name + "_" + func_name;
+			auto [loc, func_index] = _subroutinesPtrs[shaderType][key];
+			auto& indices = _subroutineIndexes[shaderType];
+			indices[loc] = func_index;
+			glUniformSubroutinesuiv(shaderType, indices.size(), &indices[0]);
 		}
 
 

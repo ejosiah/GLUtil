@@ -4,6 +4,8 @@
 #include "Drawable.h"
 #include "VBOObject.h"
 #include <functional>
+#include <GLFW/glfw3.h>
+#include <map>
 
 namespace ncl {
 	namespace gl {
@@ -16,13 +18,18 @@ namespace ncl {
 			VAOObject() = default;
 
 			VAOObject(std::vector<Mesh>& meshes)
-				:VBOObject(meshes) {
+				:VBOObject(meshes)
+				, currentContext{ glfwGetCurrentContext() } {
+				vaoIds = init();
+			}
+
+			std::vector<GLuint> init() {
 				const int no_of_vaos = buffers.size();
-				
+
 				vaoIds = std::vector<GLuint>(no_of_vaos);
 				glGenVertexArrays(no_of_vaos, &vaoIds[0]);
 
-			
+
 				for (int i = 0; i < no_of_vaos; i++) {
 					GLuint* buffer = buffers[i];
 
@@ -75,7 +82,14 @@ namespace ncl {
 					}
 					glBindVertexArray(0);
 				}
-				
+				contextVAOIds[glfwGetCurrentContext()] = vaoIds;
+				return vaoIds;
+			}
+
+			void ensureContext() {
+				if (contextVAOIds.find(glfwGetCurrentContext()) == contextVAOIds.end()) {
+					init();
+				}
 			}
 
 			VAOObject(const VAOObject&) = delete;
@@ -94,6 +108,7 @@ namespace ncl {
 			void transfer(VAOObject& source, VAOObject& dest) {
 				VBOObject::transfer(dynamic_cast<VBOObject&>(source), dynamic_cast<VBOObject&>(dest));
 				dest.vaoIds = std::move(source.vaoIds);
+				dest.contextVAOIds = std::move(source.contextVAOIds);
 			}
 
 			void use(int vaoIndex, std::function<void()> proc) {
@@ -114,6 +129,8 @@ namespace ncl {
 
 		protected:
 			std::vector<GLuint> vaoIds;
+			std::map<GLFWwindow*, std::vector<GLuint>> contextVAOIds;
+			GLFWwindow* currentContext;
 		};
 	}
 }

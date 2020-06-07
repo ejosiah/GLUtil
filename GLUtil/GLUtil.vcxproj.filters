@@ -70,6 +70,9 @@
     <Filter Include="Header Files\concurrency">
       <UniqueIdentifier>{db6def46-af87-411e-a9a2-12d0b76a398f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ray_tracing">
+      <UniqueIdentifier>{56852758-c88f-42d5-bbfa-06f46b8a6f36}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -423,6 +426,15 @@
     <ClInclude Include="include\ncl\concurrency\thread_pool.h">
       <Filter>Header Files\concurrency</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\ray_tracing\camera.h">
+      <Filter>Header Files\ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\ray_tracing\Ray.h">
+      <Filter>Header Files\ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\ray_tracing\RayGenerator.h">
+      <Filter>Header Files\ray_tracing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -752,6 +764,12 @@
     </None>
     <None Include="shaders\octahedral_skybox.frag">
       <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\copy_array2d.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="include\shaders\stack.glsl">
+      <Filter>shaders\include</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -15,18 +15,24 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SubroutineScene.h">
+    <ClCompile Include="RayTracing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RayTracingScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\subroutine.frag">
+    <None Include="shaders\generate_rays.comp">
       <Filter>Resource Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="subroutine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <None Include="shaders\background.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\stack_test.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

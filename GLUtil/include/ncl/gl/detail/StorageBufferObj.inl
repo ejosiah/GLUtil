@@ -15,6 +15,17 @@ namespace ncl {
 		}
 
 		template<typename T>
+		StorageBufferObj<T>::StorageBufferObj(int count, GLuint id)
+			: _size{ ObjectReflect<T>::sizeOf(count) }
+			, _idx{ id }{
+			glGenBuffers(1, &_buf);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, _size, NULL, GL_DYNAMIC_DRAW);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _idx, _buf);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		}
+
+		template<typename T>
 		StorageBufferObj<T>::StorageBufferObj(StorageBufferObj<T>&& source) noexcept {
 			transfer(source, *this);
 		}
@@ -38,9 +49,19 @@ namespace ncl {
 		}
 
 		template<typename T>
-		void StorageBufferObj<T>::sendToGPU() {
+		T StorageBufferObj<T>::getFromGPU() {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _size, ObjectReflect<T>::objPtr(_obj));
+			T* data = (T*)glMapNamedBuffer(_buf, GL_READ_ONLY);
+			glUnmapNamedBuffer(_buf);
+			return *data;
+		}
+
+		template<typename T>
+		void StorageBufferObj<T>::sendToGPU(bool update) {
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
+			if (update) {
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _size, ObjectReflect<T>::objPtr(_obj));
+			}
 		}
 
 		template<typename U>

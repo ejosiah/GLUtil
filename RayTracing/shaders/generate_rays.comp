@@ -1,0 +1,68 @@
+#version 450 core
+
+layout(local_size_x= 32, local_size_y = 32) in;
+
+struct Camera {
+	mat4 cameraToWorld;
+	mat4 cameraToScreen;
+	mat4 rasterToCamera;
+	mat4 screenToRaster;
+	mat4 rasterToScreen;
+	float shutterOpen;
+	float shutterClose;
+	float lensRadius;
+	float focalDistance;
+};
+
+struct Ray{
+	vec4 origin;
+	vec4 direction;
+	float tMax;
+};
+
+struct CameraSample {
+	vec2 pFilm;
+	vec2 pLens;
+	float time;
+};
+
+
+void generateRay(in CameraSample csample, in Camera camera, inout Ray ray) {
+	vec3 p = (camera.rasterToCamera * vec4(csample.pFilm, 0, 1)).xyz;
+	vec4 origin = vec4(vec3(0), 1);
+	vec3 direction = normalize(p);
+
+	ray.origin = camera.cameraToWorld * origin;
+	direction = mat3(camera.cameraToWorld) * direction;
+	ray.direction = vec4(normalize(direction), 1);
+	ray.tMax = 1000;
+}
+
+layout(std430, binding=0) buffer CAMERA_SSB0{
+	Camera camera;
+};
+
+layout(std430, binding=1) buffer RAY_SSB0{
+	Ray rays[];
+};
+
+int globalIndex(){
+	ivec3 size = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+
+}
+
+void main(){
+	ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+	CameraSample csample;
+	csample.pFilm = vec2(pos);
+	csample.time = 1.0;
+
+	Ray ray;
+	generateRay(csample, camera, ray);
+	int index = globalIndex();
+
+	rays[index] = ray;
+}

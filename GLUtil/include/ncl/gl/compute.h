@@ -11,6 +11,8 @@ namespace ncl {
 	namespace gl {
 		class Compute {
 		public:
+			Compute() {}
+
 			Compute(glm::ivec3 workers, std::vector<Image2D> images = {}, Shader* shader = nullptr)
 				:_workers(workers), _shader(shader), _images(images) {
 

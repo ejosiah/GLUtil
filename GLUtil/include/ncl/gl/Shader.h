@@ -52,7 +52,6 @@ namespace ncl {
 		class Shader {
 		protected:
 			GLint findUniformLocation(const std::string& name);
-			GLuint findSubroutineLocation(const std::string& name, GLenum shaderType);
 
 		public:
 			Shader();
@@ -74,6 +73,8 @@ namespace ncl {
 			void createAndLinkProgram();
 			void relink();
 
+			void initSubroutines();
+
 			void use(Procedure proc);	// TODO delete this
 			void use(Procedure1 proc);
 			void use();
@@ -81,7 +82,6 @@ namespace ncl {
 
 			void addAttribute(const std::string& attribute, const GLuint location);
 			void addUniform(const std::string& uniform);
-			void addSubroutineLocation(GLenum shaderType, const std::string& subroutine, std::initializer_list<std::string> functions);
 			GLuint operator[] (const std::string& attribute);
 			GLint operator() (const std::string& uniform);
 
@@ -117,12 +117,12 @@ namespace ncl {
 			void sendUniformMatrix3fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value);
 			void sendUniformMatrix4fv(const std::string& name, GLsizei count, GLboolean transpose, const GLfloat* value);
 			void sendBool(const std::string& name, bool value);
-			void subroutine(const std::string& name, GLenum shaderType);
+			void subroutine(GLenum shaderType, const std::string& name, const std::string& func_name);
 
 
 			void send(const LightModel& lightModel);
 
-			void sendUniformLight(LightSource& light) { sendUniformLight("light[0]", light); }
+			inline void sendUniformLight(LightSource& light) { sendUniformLight("light[0]", light); }
 
 			void sendUniformLight(const std::string& name, LightSource& light);
 
@@ -140,23 +140,23 @@ namespace ncl {
 
 			void sendComputed(const GlmCam& camera);
 
-            void operator()(Procedure proc){
+            inline void operator()(Procedure proc){
                 use(proc);
             }
 
-			void operator()(Procedure1 proc) {
+			inline void operator()(Procedure1 proc) {
 				use(proc);
 			}
 
 			void clear();
 
-			GLuint program() { return _program;  }
+			inline GLuint program() { return _program;  }
 
-			bool isActive() { return _program != 0;  }
+			inline bool isActive() { return _program != 0;  }
 
-			static bool isShader(const std::string filename);
+			inline static bool isShader(const std::string filename);
 
-			void storePreprocessedShaders(bool flag) { _storePreprocessedShaders = flag;  }
+			inline void storePreprocessedShaders(bool flag) { _storePreprocessedShaders = flag;  }
 
 			static ShaderSource extractFromFile(const std::string& filename);
 
@@ -173,11 +173,11 @@ namespace ncl {
 			GLuint _shaders[NO_OF_SHADERS];
 			std::map<std::string, GLuint> _attributeList;
 			std::map<std::string, GLint> _uniformLocationList;
-			std::map<GLenum, std::map<std::string, std::string>> _subroutineList;
+			std::map<GLenum, std::map<std::string, std::tuple<GLint, GLuint>>> _subroutinesPtrs;
+			std::map<GLenum, std::vector<GLuint>> _subroutineIndexes;
 			ncl::Logger logger;
 			std::vector<Procedure> pendingOps;
 			bool _storePreprocessedShaders = false;
-
 			static std::stack<GLuint> activePrograms;
 		};
 	}

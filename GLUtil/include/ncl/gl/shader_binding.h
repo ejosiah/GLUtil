@@ -295,5 +295,36 @@ namespace ncl {
 				glBindTextureUnit(i, 0);
 			}
 		}
+
+
+		inline void subroutine(GLenum shaderType, const std::string& name, const std::string& func_name) {
+			ensureShaderbound();
+			Shader::boundShader->subroutine(shaderType, name, func_name);
+		}
+
+		inline void subroutineFrag(const std::string& name, const std::string& func_name) {
+			subroutine(GL_FRAGMENT_SHADER, name, func_name);
+		}
+
+		inline void subroutineVert(const std::string& name, const std::string& func_name) {
+			subroutine(GL_VERTEX_SHADER, name, func_name);
+		}
+
+		inline void subroutineGeom(const std::string& name, const std::string& func_name) {
+			subroutine(GL_GEOMETRY_SHADER, name, func_name);
+		}
+		
+		inline void subroutineTessEval(const std::string& name, const std::string& func_name) {
+			subroutine(GL_TESS_EVALUATION_SHADER, name, func_name);
+		}
+
+		inline void subroutineTessCtl(const std::string& name, const std::string& func_name) {
+			subroutine(GL_TESS_CONTROL_SHADER, name, func_name);
+		}
+
+		inline void subroutineCompute(const std::string& name, const std::string& func_name) {
+			subroutine(GL_COMPUTE_SHADER, name, func_name);
+		}
+
 	}
 }

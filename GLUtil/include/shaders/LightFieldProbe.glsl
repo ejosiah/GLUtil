@@ -693,7 +693,6 @@ Radiance3 computeGlossyRay(Point3 wsPosition, Vector3 wo, Vector3 n) {
         return vec3(0);
     }
     else {
-        vec2 uv = octEncode(wi);
         // Sample the light probe radiance texture
         return textureLod(lightFieldSurface.radianceProbeGrid.sampler, float3(hitProbeTexCoord, probeIndex), 0).rgb;
       //  return texture(lightFieldSurface.radianceProbeGrid.sampler, float3(uv, 0)).rgb;

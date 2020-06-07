@@ -105,6 +105,14 @@ namespace ncl {
 
 			void renderMeanDistance(int index = 0);
 
+			GLsizei resolution() {
+				return config.octResolution;
+			}
+
+			int numProbes() {
+				return config.probeCount.x * config.probeCount.y * config.probeCount.z;
+			}
+
 			void sendTo(Shader& shader);
 
 			inline void init() {
@@ -129,6 +137,8 @@ namespace ncl {
 			void initMeanDistanceProbeGrid();
 
 			void generateOctahedrals(std::function<void()> scene);
+
+			void convoluteOctahedrals();
 
 			void generateOctahedralMipMap();
 
@@ -168,9 +178,11 @@ namespace ncl {
 			Shader octahedralRenderShader;
 			Shader irradianceRenderShader;
 			Shader convolutionShader;
+			Shader copy2dArrayShader;
 			Shader renderProbeShader;
 			Scene* scene;
 			Cube cube;
+			Sphere sphere;
 			ProvidedMesh quad;
 			LightFieldSurface lightFieldSurface;
 		};
@@ -194,6 +206,7 @@ namespace ncl {
 			cube.defautMaterial(false);
 			quad = ProvidedMesh{ screnSpaceQuad() };
 			quad.defautMaterial(false);
+			sphere = Sphere{ 0.1, 10, 10, YELLOW };
 			initShaders();
 		}
 
@@ -226,9 +239,11 @@ namespace ncl {
 			dest.irradianceRenderShader = std::move(source.irradianceRenderShader);
 			dest.convolutionShader = std::move(source.convolutionShader);
 			dest.renderProbeShader = std::move(source.renderProbeShader);
+			dest.copy2dArrayShader = std::move(source.copy2dArrayShader);
 			dest.scene = source.scene;
 			dest.cube = std::move(source.cube);
 			dest.quad = std::move(source.quad);
+			dest.sphere = std::move(source.sphere);
 
 			source.scene = nullptr;
 		}
@@ -268,6 +283,10 @@ namespace ncl {
 			renderProbeShader.load({ GL_VERTEX_SHADER , skybox_vert_shader, "probe_render.vert" });
 			renderProbeShader.load({ GL_FRAGMENT_SHADER, octahedral_skybox_frag_shader, "probe_render.frag" });
 			renderProbeShader.createAndLinkProgram();
+
+			copy2dArrayShader.load({ GL_VERTEX_SHADER, screen_vert_shader, "copy_arry2d.vert" });
+			copy2dArrayShader.load({ GL_FRAGMENT_SHADER, copy_array2d_frag_shader, "copy_arry2d.vert" });
+			copy2dArrayShader.createAndLinkProgram();
 
 		}
 
@@ -317,6 +336,7 @@ namespace ncl {
 			//	});
 			//}
 			generateOctahedrals(scene);
+			convoluteOctahedrals();
 			generateLowResDistanceProbe();
 			generateIrradiaceGrid();
 			generateMeanDistanceGrid();
@@ -379,6 +399,72 @@ namespace ncl {
 					});
 				});
 	//		generateOctahedralMipMap();
+		}
+
+		void LightFieldProbes::convoluteOctahedrals() {
+			auto resolution = this->config.octResolution;
+			auto config = FrameBuffer::Config{ resolution, resolution };
+			config.fboTarget = GL_FRAMEBUFFER;
+			config.depthAndStencil = false;
+			config.depthTest = false;
+			config.stencilTest = false;
+			auto attachment = FrameBuffer::Attachment{};
+			attachment.magFilter = GL_LINEAR;
+			attachment.minfilter = GL_LINEAR_MIPMAP_LINEAR;
+			attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
+			attachment.texTarget = GL_TEXTURE_2D_ARRAY;
+			attachment.internalFmt = GL_R11F_G11F_B10F;
+			attachment.fmt = GL_RGB;
+			attachment.type = GL_FLOAT;
+			attachment.attachment = GL_COLOR_ATTACHMENT0;
+			attachment.numLayers = numProbes();
+			attachment.mipMap = true;
+			attachment.texLevel = 0;
+			config.attachments.push_back(attachment);
+
+			auto convolution = FrameBuffer{ config };
+
+			quad.defautMaterial(false);
+			convolution.use([&] {
+				convolutionShader([&] {
+					for (int layer = 0; layer < numProbes(); layer++) {
+						const int lod = 6;
+						for (int level = 0; level < lod; level++) {
+							unsigned int w = resolution * std::pow(0.5, level);
+							unsigned int h = resolution * std::pow(0.5, level);
+							convolution.attachTextureFor(layer, level);
+							glViewport(0, 0, w, h);
+
+							glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+							glBindTextureUnit(0, octahedral.texture(toInt(Lfp::Radiance)));
+							float roughness = (float)level / (float)(lod - 1);
+							convolutionShader.sendUniform1i("layer", layer);
+							convolutionShader.sendUniform1f("roughness", roughness);
+							convolutionShader.sendUniform1f("resolution", resolution);
+							quad.draw(convolutionShader);
+						}
+					}
+				});
+			});
+
+			octahedral.use([&] {
+				copy2dArrayShader([&] {
+					for (int layer = 0; layer < numProbes(); layer++) {
+						const int lod = 6;
+						for (int level = 0; level < lod; level++) {
+							unsigned int w = resolution * std::pow(0.5, level);
+							unsigned int h = resolution * std::pow(0.5, level);
+							octahedral.attachTextureFor(layer, level, { 0 });
+							glViewport(0, 0, w, h);
+
+							glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+							glBindTextureUnit(0, convolution.texture());
+							copy2dArrayShader.sendUniform1i("layer", layer);
+							quad.draw(copy2dArrayShader);
+						}
+					}
+				});
+			});
 		}
 
 		void LightFieldProbes::generateOctahedralMipMap() {
@@ -550,8 +636,10 @@ namespace ncl {
 		}
 
 		void LightFieldProbes::draw(Shader& shader) {
-			for (auto& probe : probes) {
-				probe.draw(shader);
+			for (auto& probe : probeInfos) {
+				auto model = glm::translate(glm::mat4{ 1 }, probe.location);
+				shader.sendUniformMatrix4fv("M", 1, GL_FALSE, glm::value_ptr(model));
+				sphere.draw(shader);
 			}
 		}
 

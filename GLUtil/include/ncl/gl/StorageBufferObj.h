@@ -13,6 +13,9 @@ namespace ncl {
 
 			template<typename U>
 			static void* objPtr(U& obj);
+
+			template<typename U>
+			static GLsizeiptr sizeOf(int size);
 		};
 		
 		template<typename T>
@@ -21,6 +24,8 @@ namespace ncl {
 			StorageBufferObj() = default;
 
 			explicit StorageBufferObj(T, GLuint = 0);
+
+			explicit StorageBufferObj(int count, GLuint id = 0);
 
 			StorageBufferObj(StorageBufferObj<T>&&) noexcept;
 
@@ -34,13 +39,19 @@ namespace ncl {
 
 			T& get();
 
+			T getFromGPU();
+
+			inline GLuint buffer() {
+				return _buf;
+			}
+
 			template<typename U>
 			friend void send(const StorageBufferObj<U>&);
 
 			template<typename U>
 			friend void transfer(StorageBufferObj<U>&, StorageBufferObj<U>&);
 
-			void sendToGPU();
+			void sendToGPU(bool update = true);
 
 		private:
 			T _obj;

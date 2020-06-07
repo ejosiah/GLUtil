@@ -102,7 +102,7 @@ void main(){
 
             float mipLevel = roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel); 
             
-            vec3 id = vec3(octEncode(L), layer);
+            vec3 id = vec3(octEncode(L) * 0.5 + 0.5, layer);
             prefilteredColor += textureLod(radianceMap, id, mipLevel).rgb * NdotL;
             totalWeight      += NdotL;
         }

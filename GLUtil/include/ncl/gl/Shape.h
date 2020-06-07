@@ -54,11 +54,13 @@ namespace ncl {
 			}
 			
 			virtual void draw(Shader& shader) override {
+				ensureContext();
 				bool cullingDisabled = false;
 				if (!cullface && glIsEnabled(GL_CULL_FACE)) {
 					cullingDisabled = true;
 					glDisable(GL_CULL_FACE);
 				}
+				auto vaoIds = contextVAOIds[glfwGetCurrentContext()];
 				const int num_vaos = vaoIds.size();
 				for (int i = 0; i < num_vaos; i++) {
 					GLuint vaoId = vaoIds[i];

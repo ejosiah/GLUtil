@@ -68,7 +68,7 @@ public:
 		});
 
 		//delete sponza;
-		sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
+		//sponza = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
 		lightPos = { 0, 5, 0.6 };
 
 		lightColor = vec3(0.3);
@@ -89,10 +89,10 @@ public:
 		});
 
 
-		cube = new Cube{ 1, WHITE, {}, false };
-		cube->defautMaterial(false);
-		quad = new ProvidedMesh{ screnSpaceQuad() };
-		quad->defautMaterial(false);
+		cube = Cube{ 1, WHITE, {}, false };
+		cube.defautMaterial(false);
+		quad = ProvidedMesh{ screnSpaceQuad() };
+		quad.defautMaterial(false);
 	//	sponza0 = new Model("C:\\Users\\" + username + "\\OneDrive\\media\\models\\Sponza\\sponza.obj", false, 20);
 
 
@@ -112,32 +112,33 @@ public:
 		clearBindings();
 		createMirror();
 
-		//convolution = FrameBuffer{ cConfig() };
-		//convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
-		//convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
-		//convolutionShader.createAndLinkProgram();
+		convolution = FrameBuffer{ cConfig() };
+		convolutionShader.load({ GL_VERTEX_SHADER, octahedral_vert_shader, "octahedral_convolution.vert" });
+		convolutionShader.load({ GL_FRAGMENT_SHADER, octahedral_convolution_frag_shader, "octahedral_convolution.frag" });
+		convolutionShader.createAndLinkProgram();
 
-		//convolution.use([&] {
-		//	convolutionShader([&] {
-		//		for (int layer = 0; layer < 1; layer++) {
-		//			const int lod = 6;
-		//			for (int level = 0; level < lod; level++) {
-		//				unsigned int w = 512 * std::pow(0.5, level);
-		//				unsigned int h = 512 * std::pow(0.5, level);
-		//				convolution.attachTextureFor(layer, level);
-		//				glViewport(0, 0, w, h);
+		convolution.use([&] {
+			convolutionShader([&] {
+				auto resolution = lightFieldProbes.resolution();
+				for (int layer = 0; layer < lightFieldProbes.numProbes(); layer++) {
+					const int lod = 6;
+					for (int level = 0; level < lod; level++) {
+						unsigned int w = resolution * std::pow(0.5, level);
+						unsigned int h = resolution * std::pow(0.5, level);
+						convolution.attachTextureFor(layer, level);
+						glViewport(0, 0, w, h);
 
-		//				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//				glBindTextureUnit(0, lightFieldProbes.octahedral.texture(toInt(Lfp::Radiance)));
-		//				float roughness = (float)level / (float)(lod - 1);
-		//				convolutionShader.sendUniform1i("layer", layer);
-		//				convolutionShader.sendUniform1f("roughness", roughness);
-		//				convolutionShader.sendUniform1f("resolution", 512);
-		//				quad.draw(convolutionShader);
-		//			}
-		//		}
-		//	});
-		//});
+						glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+						glBindTextureUnit(0, lightFieldProbes.octahedral.texture(toInt(Lfp::Radiance)));
+						float roughness = (float)level / (float)(lod - 1);
+						convolutionShader.sendUniform1i("layer", layer);
+						convolutionShader.sendUniform1f("roughness", roughness);
+						convolutionShader.sendUniform1f("resolution", resolution);
+						quad.draw(convolutionShader);
+					}
+				}
+			});
+		});
 		//brdfLUT = renderOffScreen<Texture2D*>([] { return pbr::generate_brdf_lookup_table(0); });
 	}
 
@@ -202,8 +203,7 @@ public:
 		//});
 
 		//shader("screen")([&] {
-		//	//glBindTextureUnit(0, convolution.texture());
-		//	send(tex);
+		//	glBindTextureUnit(0, convolution.texture());
 		////	glBindTextureUnit(1, lightFieldProbes.octahedral.texture());
 		//	shade(quad);
 		//});
@@ -226,17 +226,17 @@ public:
 			renderScene(true);
 		});
 
-		//shader("flat")([&] {
- 	//		auto model = glm::translate(glm::mat4{ 1 }, lightPos);
-		//	send(activeCamera(), model);
-		//	shade(lightObj);
-		//	shade(lightFieldProbes);
+		shader("flat")([&] {
+ 			auto model = glm::translate(glm::mat4{ 1 }, lightPos);
+			send(activeCamera(), model);
+			shade(lightObj);
+			shade(lightFieldProbes);
 
-		//	send("M", mat4{ 1 });
-		//	shade(X);
-		//	shade(Y);
-		//	shade(Z);
-		//});
+			//send("M", mat4{ 1 });
+			//shade(X);
+			//shade(Y);
+			//shade(Z);
+		});
 
 		//shader("mirror")([&] {
 		//	send(activeCamera());
@@ -311,7 +311,7 @@ public:
 		config.startProbeLocation = sponza->bound->min() + config.probeStep * vec3(0.5, 0.8, 0.5);
 		config.captureFragmentShader = getText("light_field_probe_input.frag");
 		config.resolution = 1024;
-		config.octResolution = 1024;
+		config.octResolution = 512;
 		config.irradiance.numSamples = 2048;
 		config.irradiance.lobeSize = 1.0f;
 		config.irradiance.resolution = 128;
@@ -325,23 +325,22 @@ public:
 	}
 
 	FrameBuffer::Config cConfig() {
-		auto config = FrameBuffer::Config{ 512, 512 };
+		auto res = lightFieldProbes.resolution();
+		auto config = FrameBuffer::Config{ res, res };
 		config.fboTarget = GL_FRAMEBUFFER;
 		config.depthAndStencil = false;
 		config.depthTest = false;
 		config.stencilTest = false;
 		auto attachment = FrameBuffer::Attachment{};
-		attachment.magFilter = GL_NEAREST;
-		attachment.minfilter = GL_NEAREST;
+		attachment.magFilter = GL_LINEAR;
+		attachment.minfilter = GL_LINEAR_MIPMAP_LINEAR;
 		attachment.wrap_t = attachment.wrap_s = attachment.wrap_r = GL_CLAMP_TO_EDGE;
-		attachment.texTarget = GL_TEXTURE_2D;
-	//	attachment.texTarget = GL_TEXTURE_2D_ARRAY;
+		attachment.texTarget = GL_TEXTURE_2D_ARRAY;
 		attachment.internalFmt = GL_R11F_G11F_B10F;
 		attachment.fmt = GL_RGB;
 		attachment.type = GL_FLOAT;
 		attachment.attachment = GL_COLOR_ATTACHMENT0;
-	//	attachment.numLayers = 64;
-		attachment.numLayers = 1;
+		attachment.numLayers = lightFieldProbes.numProbes();
 		attachment.mipMap = true;
 		attachment.texLevel = 0;
 		config.attachments.push_back(attachment);
@@ -365,15 +364,14 @@ private:
 	int attachment = 0;
 	Logger logger;
 	Probe probe;
-	Cube* cube;
+	Cube cube;
 	GLsizei probeRes = 512;
 	Model* sponza;
-	Model* sponza0;
 	OminiDirectionalShadowMap* shadowMap;
 	vec3 lightPos;
 	vec3 probePos;
 	Sphere* lightObj;
-	ProvidedMesh* quad;
+	ProvidedMesh quad;
 	SkyBox* skybox;
 	Vector* X;
 	Vector* Y;

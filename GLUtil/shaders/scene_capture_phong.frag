@@ -84,8 +84,10 @@ void main() {
 	vec3 diffuse_indirect = vec3(0);
 	if(lfp_on){
 		diffuse_indirect += computePrefilteredIrradiance(worldPos, N) * INV_TWO_PI;
-		specular += computeGlossyRay(worldPos, V, N);
 		diffuse += diffuse_indirect;
+		vec3 reflection = computeGlossyRay(worldPos, V, N);
+		ambient += reflection;
+		specular += reflection;
 	}
 
 	float shadow = ShadowCalculation(worldPos, posInLight, lightPos, camPos, NdotL);
