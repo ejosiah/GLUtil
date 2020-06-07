@@ -28,7 +28,8 @@ namespace ncl {
 
 			void preCompute() override {
 				update(camera_ssbo->get(), *scene);
-				camera_ssbo->sendToGPU();
+				camera_ssbo->flush();
+				camera_ssbo->sendToGPU(false);
 				rays.sendToGPU(false);
 			}
 

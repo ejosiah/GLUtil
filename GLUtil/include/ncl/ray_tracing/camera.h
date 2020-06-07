@@ -34,14 +34,14 @@ namespace ncl {
 	}
 }
 
-template<>
-struct ncl::gl::ObjectReflect<ncl::ray_tracing::Camera> {
-
-	static GLsizeiptr sizeOfObj(ncl::ray_tracing::Camera& camera) {
-		return GLsizeiptr(sizeof(camera));
-	}
-
-	static void* objPtr(ncl::ray_tracing::Camera& camera) {
-		return &camera;
-	}
-};
+//template<>
+//struct ncl::gl::ObjectReflect<ncl::ray_tracing::Camera> {
+//
+//	static GLsizeiptr sizeOfObj(ncl::ray_tracing::Camera& camera) {
+//		return GLsizeiptr(sizeof(camera));
+//	}
+//
+//	static void* objPtr(ncl::ray_tracing::Camera& camera) {
+//		return &camera;
+//	}
+//};

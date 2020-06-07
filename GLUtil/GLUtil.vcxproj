@@ -226,6 +226,7 @@
     <ClInclude Include="include\ncl\ray_tracing\camera.h" />
     <ClInclude Include="include\ncl\ray_tracing\Ray.h" />
     <ClInclude Include="include\ncl\ray_tracing\RayGenerator.h" />
+    <ClInclude Include="include\ncl\ray_tracing\model.h" />
     <ClInclude Include="include\ncl\sampling\hash.h" />
     <ClInclude Include="include\ncl\sampling\Sampler.h" />
     <ClInclude Include="include\ncl\sampling\sampling.h" />

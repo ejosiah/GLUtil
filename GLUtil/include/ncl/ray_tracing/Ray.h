@@ -17,19 +17,19 @@ namespace ncl {
 	}
 }
 
-template<>
-struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::Ray>> {
-
-	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::Ray>& rays) {
-		auto size = sizeof(ncl::ray_tracing::Ray);
-		return GLsizeiptr(size * rays.size());
-	}
-
-	static void* objPtr(std::vector<ncl::ray_tracing::Ray>& rays) {
-		return &rays[0];
-	}
-
-	static GLsizeiptr sizeOf(int count) {
-		return GLsizeiptr(sizeof(ncl::ray_tracing::Ray) * count);
-	}
-};
+//template<>
+//struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::Ray>> {
+//
+//	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::Ray>& rays) {
+//		auto size = sizeof(ncl::ray_tracing::Ray);
+//		return GLsizeiptr(size * rays.size());
+//	}
+//
+//	static void* objPtr(std::vector<ncl::ray_tracing::Ray>& rays) {
+//		return &rays[0];
+//	}
+//
+//	static GLsizeiptr sizeOf(int count) {
+//		return GLsizeiptr(sizeof(ncl::ray_tracing::Ray) * count);
+//	}
+//};
