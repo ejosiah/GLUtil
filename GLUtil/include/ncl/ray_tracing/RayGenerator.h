@@ -20,13 +20,15 @@ namespace ncl {
 				, camera_ssbo{ &camera_ssbo }
 				, numRays{ scene.width() * scene.height() }
 			{
-				rays = gl::StorageBufferObj<std::vector<Ray>>{ numRays, false, 1 };
+				rays = gl::StorageBufferObj<std::vector<Ray>>{ numRays, 1 };
+				scene.shader("generate_rays").use([&] {
+					rays.sendToGPU(false);
+				});
 			}
 
 			void preCompute() override {
 				update(camera_ssbo->get(), *scene);
-				camera_ssbo->flush();
-				camera_ssbo->sendToGPU(false);
+				camera_ssbo->sendToGPU();
 				rays.sendToGPU(false);
 			}
 

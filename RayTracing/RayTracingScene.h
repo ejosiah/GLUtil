@@ -71,8 +71,7 @@ public:
 
 	void init() override {
 		initDefaultCamera();
-		rCamera = new ray_tracing::Camera;
-		camera_ssbo = StorageBufferObj<ray_tracing::Camera>{1, true };
+		camera_ssbo = gl::StorageBufferObj<ray_tracing::Camera>{ ray_tracing::Camera{} };
 		rayGenerator = new ray_tracing::RayGenerator{ *this, camera_ssbo };
 		raytracer = new RayTracer{ *this, rayGenerator->getRaySSBO() };
 		quad = ProvidedMesh{ screnSpaceQuad() };
@@ -82,7 +81,9 @@ public:
 	bool once = true;
 	void display() override {
 		rayGenerator->compute();
+
 		raytracer->compute();
+		
 
 		shader("screen")([&] {
 			raytracer->images().front().renderMode();
@@ -104,19 +105,19 @@ private:
 	ray_tracing::Camera* rCamera;
 };
 
-//template<>
-//struct ncl::gl::ObjectReflect<std::vector<Stack>> {
-//
-//	static GLsizeiptr sizeOfObj(std::vector<Stack>& stacks) {
-//		auto size = sizeof(Stack);
-//		return GLsizeiptr(size * stacks.size());
-//	}
-//
-//	static void* objPtr(std::vector<Stack>& stacks) {
-//		return &stacks[0];
-//	}
-//
-//	static GLsizeiptr sizeOf(int count) {
-//		return GLsizeiptr(count * sizeof(Stack));
-//	}
-//};
+template<>
+struct ncl::gl::ObjectReflect<std::vector<Stack>> {
+
+	static GLsizeiptr sizeOfObj(std::vector<Stack>& stacks) {
+		auto size = sizeof(Stack);
+		return GLsizeiptr(size * stacks.size());
+	}
+
+	static void* objPtr(std::vector<Stack>& stacks) {
+		return &stacks[0];
+	}
+
+	static GLsizeiptr sizeOf(int count) {
+		return GLsizeiptr(count * sizeof(Stack));
+	}
+};

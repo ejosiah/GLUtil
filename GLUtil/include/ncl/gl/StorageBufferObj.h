@@ -5,27 +5,27 @@
 namespace ncl {
 	namespace gl {
 
-		//template<typename U>
-		//struct ObjectReflect {
+		template<typename U>
+		struct ObjectReflect {
 
-		//	template<typename U>
-		//	static GLsizeiptr sizeOfObj(U& obj);
+			template<typename U>
+			static GLsizeiptr sizeOfObj(U& obj);
 
-		//	template<typename U>
-		//	static void* objPtr(U& obj);
+			template<typename U>
+			static void* objPtr(U& obj);
 
-		//	template<typename U>
-		//	static GLsizeiptr sizeOf(int size);
-		//};
+			template<typename U>
+			static GLsizeiptr sizeOf(int size);
+		};
 		
 		template<typename T>
 		class StorageBufferObj {
 		public:
 			StorageBufferObj() = default;
 
-			explicit StorageBufferObj(T*, int count = 1, bool map = false, GLuint = 0);
+			explicit StorageBufferObj(T, GLuint = 0);
 
-			explicit StorageBufferObj(int count, bool map = false, GLuint = 0);
+			explicit StorageBufferObj(int count, GLuint id = 0);
 
 			StorageBufferObj(StorageBufferObj<T>&&) noexcept;
 
@@ -37,25 +37,12 @@ namespace ncl {
 
 			StorageBufferObj<T>& operator=(StorageBufferObj<T>&&);
 
-			inline void flush() {
-				if (_mapped) {
-					glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-					glFlushMappedBufferRange(GL_SHADER_STORAGE_BUFFER, 0, _size);
-					glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-				}
-			}
-
 			T& get();
 
 			T getFromGPU();
 
 			inline GLuint buffer() {
 				return _buf;
-			}
-
-			template<typename U>
-			static inline GLsizeiptr sizeOf(int size) {
-				return sizeof(U) * size;
 			}
 
 			template<typename U>
@@ -67,11 +54,10 @@ namespace ncl {
 			void sendToGPU(bool update = true);
 
 		private:
-			T* _obj;
+			T _obj;
 			GLsizeiptr _size;
 			GLuint _buf;
 			GLuint _idx;
-			bool _mapped;
 
 		}; 
 		

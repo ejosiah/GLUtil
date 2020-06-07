@@ -25,7 +25,6 @@ namespace ncl {
 		}
 
 		void update(Camera& camera, gl::Scene& scene) {
-			camera.rasterToCamera = glm::mat4{ 1 };
 			camera.rasterToScreen = rasterToScreen(scene.width(), scene.height());
 			camera.screenToRaster = glm::inverse(camera.rasterToCamera);
 			camera.cameraToScreen = scene.activeCamera().getProjectionMatrix();
@@ -35,14 +34,14 @@ namespace ncl {
 	}
 }
 
-//template<>
-//struct ncl::gl::ObjectReflect<ncl::ray_tracing::Camera> {
-//
-//	static GLsizeiptr sizeOfObj(ncl::ray_tracing::Camera& camera) {
-//		return GLsizeiptr(sizeof(camera));
-//	}
-//
-//	static void* objPtr(ncl::ray_tracing::Camera& camera) {
-//		return &camera;
-//	}
-//};
+template<>
+struct ncl::gl::ObjectReflect<ncl::ray_tracing::Camera> {
+
+	static GLsizeiptr sizeOfObj(ncl::ray_tracing::Camera& camera) {
+		return GLsizeiptr(sizeof(camera));
+	}
+
+	static void* objPtr(ncl::ray_tracing::Camera& camera) {
+		return &camera;
+	}
+};
