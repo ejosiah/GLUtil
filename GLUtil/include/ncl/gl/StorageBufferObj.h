@@ -39,7 +39,9 @@ namespace ncl {
 
 			inline void flush() {
 				if (_mapped) {
-					glFlushMappedBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeOf<T>(_count));
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
+					glFlushMappedBufferRange(GL_SHADER_STORAGE_BUFFER, 0, _size);
+					glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 				}
 			}
 
@@ -69,7 +71,6 @@ namespace ncl {
 			GLsizeiptr _size;
 			GLuint _buf;
 			GLuint _idx;
-			int _count;
 			bool _mapped;
 
 		}; 

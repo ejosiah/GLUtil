@@ -25,6 +25,7 @@ namespace ncl {
 		}
 
 		void update(Camera& camera, gl::Scene& scene) {
+			camera.rasterToCamera = glm::mat4{ 1 };
 			camera.rasterToScreen = rasterToScreen(scene.width(), scene.height());
 			camera.screenToRaster = glm::inverse(camera.rasterToCamera);
 			camera.cameraToScreen = scene.activeCamera().getProjectionMatrix();

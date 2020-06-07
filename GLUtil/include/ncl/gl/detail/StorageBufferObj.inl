@@ -7,12 +7,11 @@ namespace ncl {
 			:_obj{ t }
 			, _size{ sizeOf<T>(count) }
 			, _idx{ id }
-			, _count{ count }
 			, _mapped{ map }{
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
 
-			if (map) {
+			if (_mapped) {
 				glBufferStorage(GL_SHADER_STORAGE_BUFFER, _size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 			}
 			else {
@@ -21,7 +20,7 @@ namespace ncl {
 
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _idx, _buf);
 
-			if (map) {
+			if (_mapped) {
 				_obj = (T*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, _size,
 					GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 			}
@@ -34,11 +33,10 @@ namespace ncl {
 			: _obj{ nullptr }
 			, _size{ sizeOf<T>(count) }
 			, _idx{ id }
-			, _count{ count }
 			, _mapped{ map }{
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			if (map) {
+			if (_mapped) {
 				glBufferStorage(GL_SHADER_STORAGE_BUFFER, _size, nullptr, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT);
 			}
 			else {
@@ -47,7 +45,7 @@ namespace ncl {
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _idx, _buf);
 			
 
-			if (map) {
+			if (_mapped) {
 				_obj = (T*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, _size,
 					GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_FLUSH_EXPLICIT_BIT);
 			}
@@ -99,6 +97,7 @@ namespace ncl {
 			dest._size = source._size;
 			dest._buf = source._buf;
 			dest._idx = source._idx;
+			dest._mapped = source._mapped;
 
 			source._idx = 0;
 			source._buf = 0;
