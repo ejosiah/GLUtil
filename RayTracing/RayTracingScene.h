@@ -71,7 +71,8 @@ public:
 
 	void init() override {
 		initDefaultCamera();
-		camera_ssbo = StorageBufferObj<ray_tracing::Camera>{ 1, true };
+		rCamera = new ray_tracing::Camera;
+		camera_ssbo = StorageBufferObj<ray_tracing::Camera>{1, true };
 		rayGenerator = new ray_tracing::RayGenerator{ *this, camera_ssbo };
 		raytracer = new RayTracer{ *this, rayGenerator->getRaySSBO() };
 		quad = ProvidedMesh{ screnSpaceQuad() };
@@ -100,6 +101,7 @@ private:
 	Logger& logger = Logger::get("ray");
 	StorageBufferObj<ray_tracing::Camera> camera_ssbo;
 	ProvidedMesh quad;
+	ray_tracing::Camera* rCamera;
 };
 
 //template<>
