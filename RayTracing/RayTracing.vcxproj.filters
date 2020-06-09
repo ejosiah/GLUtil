@@ -52,5 +52,17 @@
     <None Include="shaders\whitted_raytracer.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\interaction.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\scene_test.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\reflection.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\hash.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

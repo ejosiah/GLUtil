@@ -10,3 +10,7 @@ void swap(inout float a, inout float b) {
 	a = b;
 	b = temp;
 }
+
+vec3 flipNormal(vec3 wo, vec3 n) {
+	return dot(wo, n) < 0.0 ? -n : n;
+}

@@ -3,6 +3,7 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <iomanip>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
@@ -208,7 +209,9 @@ namespace ncl {
 			void display0() {
 				glClear(fBuffer);
 				display();
-				if (camInfoOn) {
+				if (camInfoOn || _debug) {
+					sbr << "fps: " << std::setprecision(3) << std::to_string(fps) << "\n";
+					sbr.clear();
 					sbr << "Camera Settings:" << std::endl;
 					sbr << "\tType: " << activeCamera().modeAsString() << std::endl;;
 					sbr << "\tPosition: " << activeCamera().getPosition() << std::endl;
@@ -219,6 +222,7 @@ namespace ncl {
 					glDepthFunc(GL_LESS);
 					sbr.str("");
 					sbr.clear();
+					textOffset = 60;
 				}
 
 			}
@@ -619,7 +623,9 @@ namespace ncl {
 			bool cameraControlActive = true;
 			bool camInfoOn = false;
 			Font* sFont;
+			int textOffset = 0;
 			int _fontSize = 10;
+			bool _debug = false;
 			float _modelHeight = 3;
 			std::stringstream sbr;
 			std::vector<Exec> deferred;

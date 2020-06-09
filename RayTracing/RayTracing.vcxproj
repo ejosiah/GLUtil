@@ -148,12 +148,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\background.comp" />
+    <None Include="shaders\hash.glsl" />
+    <None Include="shaders\interaction.glsl" />
     <None Include="shaders\ray_tracing_common.glsl" />
     <None Include="shaders\generate_rays.comp" />
     <None Include="shaders\lights.glsl" />
     <None Include="shaders\ray_shape_test.glsl" />
     <None Include="shaders\ray_tracing_model.glsl" />
     <None Include="shaders\ray_triangle_test.glsl" />
+    <None Include="shaders\reflection.glsl" />
+    <None Include="shaders\scene_test.glsl" />
     <None Include="shaders\stack_test.frag" />
     <None Include="shaders\whitted_raytracer.comp" />
   </ItemGroup>

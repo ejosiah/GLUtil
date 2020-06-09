@@ -408,6 +408,14 @@ namespace ncl {
 			const Camera& getCamera() const {
 				return camera;
 			}
+
+			inline float getNear() {
+				return zNear;
+			}
+
+			inline float getFar() {
+				return zFar;
+			}
 		};
 	}
 }

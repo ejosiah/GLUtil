@@ -3,6 +3,9 @@ const int DELTA_DIRECTION = 1 << 2;
 const int AREA_LIGHT = 1 << 3;
 const int INFINITE_LIGHT = 1 << 4;
 const int POINT_LIGHT = (1 << 5) | DELTA_POSITION;
+const int SUN_LIGHT = (1 << 6) | DELTA_DIRECTION;
+const int DISTANT_LIGHT = (1 << 7) | DELTA_DIRECTION;
+const float SUN_ANGULAR_RADIUS = 0.262743736528799;
 
 struct LightSource {
 	vec4 I;
@@ -13,26 +16,49 @@ struct LightSource {
 	int nSamples;
 };
 
-const float meters = 0.01;
+const float meters = 1;
 
 bool isDeltaLight(int flags) {
 	return (flags & DELTA_POSITION) > 0 || (flags & DELTA_DIRECTION) > 0;
 }
 
+vec3 sample_point_light(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf, out Ray shadowRay) {
+	vec3 lightDir = light.position.xyz - ref.p;
+	wi = normalize(lightDir);
+	pdf = 1.0;
+	shadowRay.origin = vec4(ref.p + wi * 0.001, 1);
+	shadowRay.direction = vec4(wi, 1);
+	shadowRay.tMax = 1000;
+
+	//return light.I.rgb * light.I.a / (4 * dot(lightDir, lightDir) * PI);
+	return (light.I.rgb * light.I.a)  / dot(lightDir, lightDir);
+}
+
+vec3 sample_distant_light(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf, out Ray shadowRay) {
+	wi = light.position.xyz;
+	pdf = 1;
+	shadowRay.origin = vec4(ref.p, 1);
+	shadowRay.direction = vec4( normalize(ref.p - (ref.p + wi * 2 * worldRadius)), 1);
+	shadowRay.tMax = 1000;
+	return light.I.rgb * light.I.a;
+}
+
+
 vec3 sample_Li(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf, out Ray shadowRay) {
 	if ((light.flags & POINT_LIGHT) > 0) {
-		wi = normalize(light.position.xyz - ref.p);
-		pdf = 1.0;
-		shadowRay.o = light.position.xyz + 0.001 * ref.n;
-		shadowRay.d = wi;
-		shadowRay.tMax = 1000;
-
-		float d = distance(light.position.xyz, ref.p);
-		return light.I.xyz / (d * d);
+		return sample_point_light(light, ref, u, wi, pdf, shadowRay);
+	}
+	else if ((light.flags & DISTANT_LIGHT) > 0) {
+		return sample_distant_light(light, ref, u, wi, pdf, shadowRay);
 	}
 	else {
 		return vec3(0);
 	}
+}
+
+bool isBlack(vec3 L) {
+	bvec3 res = equal(L, vec3(0));
+	return all(res);
 }
 
 vec3 power(LightSource light) {

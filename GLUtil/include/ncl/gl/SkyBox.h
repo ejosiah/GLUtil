@@ -80,7 +80,7 @@ namespace ncl {
 				auto name = faces[i];
 				auto path = name;
 				auto img = Image(path, IL_ORIGIN_UPPER_LEFT);
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB8, img.width(), img.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data());
 			}
 
 

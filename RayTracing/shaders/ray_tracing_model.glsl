@@ -1,4 +1,5 @@
 #pragma include("ray_tracing_common.glsl")
+#pragma include("reflection.glsl")
 
 const int SPHERE_SHAPE = 0;
 const int CYLINDER = 1;
@@ -27,8 +28,8 @@ struct Box {
 };
 
 struct Sphere {
-	vec3 c;
-	vec3 color;
+	vec4 c;
+	vec4 color;
 	mat4 objectToWorld;
 	mat4 worldToObject;
 	float r;
@@ -113,8 +114,15 @@ struct SurfaceInteration {
 	vec2 uv;
 	vec3 dpdu;
 	vec3 dpdv;
-	int objId;
-	int objType;
+	vec3 sn;
+	vec3 st;
+	vec3 sb;
+	vec4 color;
+	int matId;
+	int shape;
+	int shapeId;
+	float n1;	// index of refraction above surface
+	float n2; // index of refration below the surface
 };
 
 struct HitInfo {
@@ -125,9 +133,11 @@ struct HitInfo {
 };
 
 Ray transform(mat4 m, Ray ray) {
+	vec4 o = m * ray.origin;
+	vec3 d = mat3(m) * ray.direction.xyz;
 	Ray r;
-	r.origin = (m * vec4(ray.origin.xyz, 1));
-	r.direction = vec4(mat3(m) * ray.direction.xyz, 1);
+	r.origin = o;
+	r.direction = vec4(d, 1);
 	r.tMax = ray.tMax;
 	return r;
 }

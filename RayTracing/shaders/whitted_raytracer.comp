@@ -1,28 +1,49 @@
 #version 450 core
 
+uniform vec3 camPos;
+uniform vec3 worldCenter;
+uniform float worldRadius;
+uniform int numPlanes = 0;
+uniform int numSpheres = 0;
+uniform int bounces = 5;
+
 #pragma include("ray_tracing_common.glsl")
 #pragma include("ray_tracing_model.glsl")
 #pragma include("ray_shape_test.glsl")
+#pragma include("lights.glsl")
+#pragma include("hash.glsl")
+
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba32f, binding=0) uniform image2D image;
 
-layout(binding = 1) uniform samplerCube environmentMap;
+layout(binding = 0) uniform samplerCube environmentMap;
+layout(binding=1) uniform sampler2D checkerboard;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
 };
 
-layout(std430, binding=2) buffer RAY_LEFT_SSB0{
-	Ray left[];
+layout(std430, binding=2) buffer LIGHT_SOURCE_SSBO{
+	LightSource light[];
 };
 
+layout(std430, binding=3) buffer MATERIAL_SSB0{
+	Material material[];
 
-layout(std430, binding=2) buffer RAY_RIGHT_SSB0{
-	Ray right[];
 };
 
+layout(std430, binding=4) buffer PLANE_SSB0{
+	Plane plane[];
+};
+
+layout(std430, binding=5) buffer SPHERE_SSB0{
+	Sphere sphere[];
+};
+
+#pragma include("interaction.glsl")
+#pragma include("scene_test.glsl")
 
 int globalIndex(){
 	ivec3 size = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
@@ -31,14 +52,154 @@ int globalIndex(){
 	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
 }
 
+vec3 shade(SurfaceInteration interact){
+	Ray shadow_ray;
+	float pdf;
+	vec3 wi;
+	vec3 I = sample_Li(light[0], interact, vec2(0), wi, pdf, shadow_ray);
+
+	if(pdf == 0 || isBlack(I)) return vec3(0);
+
+	vec3 p = interact.p;
+	vec3 n = interact.n;
+	vec3 wo = normalize( camPos - p);
+	vec3 h = normalize(wi + wo);
+
+	vec3 ka = vec3(0);
+	vec3 kd = interact.color.xyz;
+	vec3 ks = I;
+	float f = 5.0;
+
+	if(interact.matId >= 0){
+		Material mat = material[interact.matId];
+		ka = mat.diffuse.xyz;
+		kd = mat.diffuse.xyz;
+		ks = mat.specular.xyz;
+		f = mat.shine;
+	}
+	if (interact.shape == PLANE) {
+		ka = vec3(0);
+		kd = texture(checkerboard, interact.uv).xyz;
+		ks = vec3(1);
+		f = 20.0;
+	}
+
+	float wi_dot_n = dot(wi, n);
+
+	//vec3 Li = ka * vec3(0.3) + I;
+	vec3 Li = vec3(0);
+
+	Li += I * max(0, wi_dot_n) * kd;
+	Li += I * max(0, pow(dot(n, h), f)) * ks;
+
+	return  wi_dot_n > 0 && anyHit(shadow_ray) ? mix(Li, vec3(0), 0.7) : Li;
+}
+
+const int MAX_BOUNCES = 5;
+
+vec3 doReflect(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
+	pdf = 1.0;
+	wi = reflect(-wo, interact.n);
+	return vec3(1);
+}
+
+vec3 doRefract(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
+	bool entering = dot(wo, interact.n) > 0;
+	float etaI = entering ? interact.n1 : interact.n2;
+	float etaT = entering ? interact.n2 : interact.n1;
+	float eta = etaI / etaT;
+
+	pdf = 1.0;
+
+	vec3 n = interact.n;
+	n = flipNormal(wo, n);
+	wi = refract(-wo, n, eta);
+	return vec3(1);
+}
+
+vec3 doFresnel(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
+	vec3 n = interact.n;
+	float pdf_local;
+	float cos0 = dot(wo, n);
+	float f  = fresnel(cos0, interact.n1, interact.n2);
+	if(hash13(wo) < f){
+		vec3 R = doReflect(wo, wi, interact, pdf_local);
+		pdf = f * pdf_local;
+		return f * R / abs(dot(wi, n));
+	}else{
+		vec3 T = doRefract(wo, wi, interact, pdf_local);
+		pdf = (1 - f) * pdf_local ;
+		return ((1 - f) * T)/ abs(dot(wi, n));
+	}
+}
+
+vec3 trace(Ray ray){
+//	bool aHit = false;
+//	HitInfo hit;
+//	HitInfo local_hit;
+//	local_hit.t = hit.t;
+//	hit.t = ray.tMax;
+//	local_hit.t = hit.t;
+//	if(intersectPlane(ray, plane[0], local_hit)){
+//		aHit = true;
+//		if (local_hit.t < hit.t) {
+//			hit = local_hit;
+//		}
+//	}
+//	if(aHit){
+//		SurfaceInteration interact;
+//		intialize(hit, ray, interact);
+//		return shade(interact);
+//	}
+//
+//	return texture(environmentMap, ray.direction.xyz).rgb;
+
+	vec3 color = vec3(0);
+	vec3 mask = vec3(1);
+	vec3 accum_f = vec3(1);
+	vec3 accum_pdf = vec3(1);
+	Ray r = ray;
+	for(int i = 0; i < bounces; i++){
+		HitInfo hit;
+		vec3 wo = -r.direction.xyz;
+		vec3 wi;
+		if (intersectScene(r, hit)){
+			SurfaceInteration interact;
+			intialize(hit, r, interact);
+			if(hasBsdf(interact, SPECIULAR_REFLECT)){
+				float pdf;
+				accum_f *= doReflect(wo, wi, interact, pdf);
+				accum_pdf *= pdf;
+
+			}else if(hasBsdf(interact, SPECULAR_TRANSMISSION)){
+			// mask *= fresnel
+				float pdf;
+				accum_f *= doRefract(wo, wi, interact, pdf);
+				accum_pdf *= pdf;
+			}
+			else{
+				color += accum_f * shade(interact) / accum_pdf;
+				break;
+			}
+			r.origin = vec4(interact.p + 0.001 * wi, 1.0);
+			r.direction = vec4(wi, 1.0);
+		}
+		else{
+			color += accum_f * texture(environmentMap, r.direction.xyz).rgb / accum_pdf;
+			break;
+		}
+	}
+	return color;
+}
+
 void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
-	vec3 color = texture(environmentMap, ray.direction.xyz).rgb;
-	ray.tMax = 10000;
+	
+	vec3 color = trace(ray);
 
-
-	rays[index] = ray;
+	color /= color + vec3(1.0);
+	color = pow(color, vec3(1.0/2.2));
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1));
 }

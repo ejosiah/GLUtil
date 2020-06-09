@@ -19,8 +19,9 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 	float t1 = t0;
 
 	Ray r = transform(s.worldToObject, ray);
+//	Ray r = ray;
 
-	vec3 m = r.origin.xyz - s.c;
+	vec3 m = r.origin.xyz - s.c.xyz;
 	float a = dot(r.direction.xyz, r.direction.xyz);
 	float b = dot(m, ray.direction.xyz);
 	float c = dot(m, m) - s.r * s.r;
@@ -41,7 +42,7 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 	if (tHit > r.tMax) return false;
 
 	vec3 p = r.origin.xyz + r.direction.xyz * tHit;
-	p *= s.r / distance(p, s.c);
+	p *= s.r / distance(p, s.c.xyz);
 	if (p.x == 0 && p.z == 0) p.x = 1E-5 * s.r;
 	float phi = atan(p.z, p.x);
 	if (phi < 0.0) phi += TWO_PI;
@@ -52,7 +53,7 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 
 		tHit = t1;
 		p = r.origin.xyz + r.direction.xyz * tHit;
-		p *= s.r / distance(p, s.c);
+		p *= s.r / distance(p, s.c.xyz);
 		if (p.x == 0.0 && p.z == 0.0) p.x = 1E-5 * s.r;
 		float phi = atan(p.z, p.x);
 		if (phi < 0.0) phi += TWO_PI;
