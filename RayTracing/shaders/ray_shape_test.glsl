@@ -84,3 +84,46 @@ bool intersectBox(Ray ray, Box box) {
 	float  tFar = min(min(t2.x, t2.y), t2.z);
 	return  tNear < ray.tMax || tNear < tFar;
 }
+
+bool triangleRayIntersect(Ray ray, Triangle tri, out float t, out float u, out float v, out float w) {
+	vec3 ba = tri.b.xyz - tri.a.xyz;
+	vec3 ca = tri.c.xyz - tri.a.xyz;
+	vec3 pa = ray.origin.xyz - tri.a.xyz;
+	vec3 pq = -ray.direction.xyz;
+
+	vec3 n = cross(ba, ca);
+	float d = dot(pq, n);
+
+	if (d <= 0) return false; // ray is either coplainar with triangle abc or facing opposite it
+
+	t = dot(pa, n);
+
+	if (t < 0) return false;     // ray invariant t >= 0
+
+	vec3 e = cross(pq, pa);
+
+	v = dot(e, ca);
+	if (v < 0.0f || v > d) return false;
+
+	w = -dot(e, ba);
+	if (w < 0.0f || (v + w) > d) return false;
+
+	float ood = 1.0 / d;
+
+	t *= ood;
+	v *= ood;
+	w *= ood;
+	u = 1 - v - w;
+
+	return true;
+}
+
+bool intersectTriangle(Ray ray, Triangle tri, HitInfo hit) {
+	float t, u, v, w;
+	bool intersects = triangleRayIntersect(ray, tri, t, u, v, w);
+	hit.t = t;
+	hit.shape = TRIANGLE;
+	hit.id = tri.id;
+	hit.extras = vec4(u, v, w, 0);
+	return intersects;
+}

@@ -16,7 +16,6 @@ struct LightSource {
 	int nSamples;
 };
 
-const float meters = 1;
 
 bool isDeltaLight(int flags) {
 	return (flags & DELTA_POSITION) > 0 || (flags & DELTA_DIRECTION) > 0;

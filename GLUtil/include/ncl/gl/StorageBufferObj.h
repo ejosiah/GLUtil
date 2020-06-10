@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gl/gl_core_4_5.h>
+#include <functional>
 
 namespace ncl {
 	namespace gl {
@@ -52,6 +53,11 @@ namespace ncl {
 			friend void transfer(StorageBufferObj<U>&, StorageBufferObj<U>&);
 
 			void sendToGPU(bool update = true);
+
+			
+			void read(std::function<void(T*)> use) {
+
+			}
 
 		private:
 			T _obj;

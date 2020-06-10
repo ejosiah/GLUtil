@@ -181,6 +181,7 @@ public:
 		objectToWorld = translate(mat4(1), { 0, 2, 0 });
 		worldToObject = inverse(objectToWorld);
 		orb = new Model("C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 1);
+		orb->defautMaterial(false);
 
 		//for (int i = 0; i < orb->numMeshes(); i++) {
 		//	orb->material(i).diffuse = RED;

@@ -1,4 +1,6 @@
 #pragma once
+
+#include <gl/gl_core_4_5.h>
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -20,7 +22,9 @@ namespace ncl {
 			Status status;
 
 		public:
-			Image(std::string filename, ILenum origin = IL_ORIGIN_LOWER_LEFT) {
+			Image() = default;
+
+			Image(std::string filename, ILenum dataType = IL_UNSIGNED_BYTE,  ILenum origin = IL_ORIGIN_LOWER_LEFT) {
 				if (!devilInit) {
 					ilInit();
 				}
@@ -30,7 +34,7 @@ namespace ncl {
 				ilOriginFunc(origin);
 				ILboolean success = ilLoadImage(filename.c_str());
 				if (success) {
-					success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+					success = ilConvertImage(IL_RGBA, dataType);
 					status = success ? Success : Failure;
 				}
 				else {
@@ -64,5 +68,24 @@ namespace ncl {
 				}
 			}
 		};
+
+		inline ILenum glTypeToILType(GLenum type) {
+			switch (type) {
+			case GL_UNSIGNED_INT:
+				return IL_UNSIGNED_INT;
+			case GL_BYTE:
+				return IL_BYTE;
+			case GL_SHORT:
+				return IL_SHORT;
+			case GL_INT:
+				return IL_INT;
+			case GL_FLOAT:
+				return IL_FLOAT;
+			case GL_DOUBLE:
+				return IL_DOUBLE;
+			default:
+				throw "invalid GL data type: " + std::to_string(type);
+			}
+		}
 	}
 }

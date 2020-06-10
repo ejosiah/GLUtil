@@ -289,6 +289,7 @@
     <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
     <None Include="include\ncl\gl\detail\ShadowMap.inl" />
     <None Include="include\ncl\gl\detail\StorageBufferObj.inl" />
+    <None Include="include\ncl\gl\detail\textures.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
     <None Include="include\ncl\sampling\Sampler.inl" />
     <None Include="include\shaders\aabb.glsl" />

@@ -64,5 +64,14 @@
     <None Include="shaders\hash.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\units.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\capture_triangles.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\capture_triangles.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

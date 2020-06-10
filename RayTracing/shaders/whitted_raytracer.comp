@@ -1,5 +1,17 @@
 #version 450 core
 
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+layout(rgba32f, binding=0) uniform image2D image;
+
+layout(binding = 0) uniform samplerCube environmentMap;
+layout(binding=1) uniform sampler2D checkerboard;
+
+const int MAX_BOUNCES = 5;
+const float RRThreshold = 0.0001;
+int rayCount = 0;
+int shadowRayCount = 0;
+
 uniform vec3 camPos;
 uniform vec3 worldCenter;
 uniform float worldRadius;
@@ -13,13 +25,6 @@ uniform int bounces = 5;
 #pragma include("lights.glsl")
 #pragma include("hash.glsl")
 
-
-layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
-
-layout(rgba32f, binding=0) uniform image2D image;
-
-layout(binding = 0) uniform samplerCube environmentMap;
-layout(binding=1) uniform sampler2D checkerboard;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
@@ -40,6 +45,14 @@ layout(std430, binding=4) buffer PLANE_SSB0{
 
 layout(std430, binding=5) buffer SPHERE_SSB0{
 	Sphere sphere[];
+};
+
+layout(std430, binding=6) buffer TRIANGLE_SSB0{
+	Triangle triangle[];
+};
+
+layout(std430, binding=7) buffer SHADING_SSB0{
+	Shading shading[];
 };
 
 #pragma include("interaction.glsl")
@@ -92,15 +105,20 @@ vec3 shade(SurfaceInteration interact){
 	Li += I * max(0, wi_dot_n) * kd;
 	Li += I * max(0, pow(dot(n, h), f)) * ks;
 
-	return  wi_dot_n > 0 && anyHit(shadow_ray) ? mix(Li, vec3(0), 0.7) : Li;
-}
+	float visibility = 1.0;
+	if(wi_dot_n > 0 && anyHit(shadow_ray)){
+		shadowRayCount++;
+		visibility = 0.3;
+	}
 
-const int MAX_BOUNCES = 5;
+//	return  wi_dot_n > 0 && inShadow ? mix(Li, vec3(0), 0.7) : Li;
+	return  mix(vec3(0), Li, visibility);
+}
 
 vec3 doReflect(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
 	pdf = 1.0;
 	wi = reflect(-wo, interact.n);
-	return vec3(1);
+	return vec3(0.7);
 }
 
 vec3 doRefract(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
@@ -117,49 +135,17 @@ vec3 doRefract(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
 	return vec3(1);
 }
 
-vec3 doFresnel(vec3 wo, out vec3 wi, SurfaceInteration interact, out float pdf){
-	vec3 n = interact.n;
-	float pdf_local;
-	float cos0 = dot(wo, n);
-	float f  = fresnel(cos0, interact.n1, interact.n2);
-	if(hash13(wo) < f){
-		vec3 R = doReflect(wo, wi, interact, pdf_local);
-		pdf = f * pdf_local;
-		return f * R / abs(dot(wi, n));
-	}else{
-		vec3 T = doRefract(wo, wi, interact, pdf_local);
-		pdf = (1 - f) * pdf_local ;
-		return ((1 - f) * T)/ abs(dot(wi, n));
-	}
-}
+vec3 trace1(Ray ray);
+vec3 trace2(Ray ray);
 
 vec3 trace(Ray ray){
-//	bool aHit = false;
-//	HitInfo hit;
-//	HitInfo local_hit;
-//	local_hit.t = hit.t;
-//	hit.t = ray.tMax;
-//	local_hit.t = hit.t;
-//	if(intersectPlane(ray, plane[0], local_hit)){
-//		aHit = true;
-//		if (local_hit.t < hit.t) {
-//			hit = local_hit;
-//		}
-//	}
-//	if(aHit){
-//		SurfaceInteration interact;
-//		intialize(hit, ray, interact);
-//		return shade(interact);
-//	}
-//
-//	return texture(environmentMap, ray.direction.xyz).rgb;
-
 	vec3 color = vec3(0);
 	vec3 mask = vec3(1);
 	vec3 accum_f = vec3(1);
-	vec3 accum_pdf = vec3(1);
+	float accum_pdf = 1;
 	Ray r = ray;
 	for(int i = 0; i < bounces; i++){
+		if(accum_pdf < RRThreshold) break;
 		HitInfo hit;
 		vec3 wo = -r.direction.xyz;
 		vec3 wi;
@@ -176,19 +162,110 @@ vec3 trace(Ray ray){
 				float pdf;
 				accum_f *= doRefract(wo, wi, interact, pdf);
 				accum_pdf *= pdf;
+			}else if(hasBsdf(interact, FRESNEL_SPECULAR)){
+				vec3 n = interact.n;
+				float pdf_local;
+				float cos0 = dot(wo, n);
+				float f  = fresnel(cos0, interact.n1, interact.n2);
+				
+				vec3 wi_r;
+				float pdf_r;
+				vec3 R = doReflect(wo, wi_r, interact, pdf_r);
+				Ray rr = spawnRay(interact, wi_r);
+
+				color += accum_f * f * R * trace1(rr) / (pdf_r * f * accum_pdf);
+				float ks = 1 - f;
+
+				float pdf;
+				accum_f *= doRefract(wo, wi, interact, pdf);
+				accum_pdf *= pdf;
 			}
 			else{
 				color += accum_f * shade(interact) / accum_pdf;
 				break;
 			}
-			r.origin = vec4(interact.p + 0.001 * wi, 1.0);
-			r.direction = vec4(wi, 1.0);
+			r = spawnRay(interact, wi);
 		}
 		else{
 			color += accum_f * texture(environmentMap, r.direction.xyz).rgb / accum_pdf;
 			break;
 		}
 	}
+	return color;
+}
+
+vec3 trace1(Ray ray){
+	vec3 color = vec3(0);
+	vec3 mask = vec3(1);
+	vec3 accum_f = vec3(1);
+	float accum_pdf = 1;
+	Ray r = ray;
+	for(int i = 0; i < bounces * 0.5; i++){
+		if(accum_pdf < RRThreshold) break;
+		rayCount++;
+		HitInfo hit;
+		vec3 wo = -r.direction.xyz;
+		vec3 wi;
+		if (intersectScene(r, hit)){
+			SurfaceInteration interact;
+			intialize(hit, r, interact);
+			if(hasBsdf(interact, SPECIULAR_REFLECT)){
+				float pdf;
+				accum_f *= doReflect(wo, wi, interact, pdf);
+				accum_pdf *= pdf;
+
+			}else if(hasBsdf(interact, SPECULAR_TRANSMISSION)){
+			// mask *= fresnel
+				float pdf;
+				accum_f *= doRefract(wo, wi, interact, pdf);
+				accum_pdf *= pdf;
+			}else if(hasBsdf(interact, FRESNEL_SPECULAR)){
+				vec3 n = interact.n;
+				float pdf_local;
+				float cos0 = dot(wo, n);
+				float f  = fresnel(cos0, interact.n1, interact.n2);
+				
+				vec3 wi_r;
+				float pdf_r;
+				vec3 R = doReflect(wo, wi_r, interact, pdf_r);
+				Ray rr = spawnRay(interact, wi_r);
+				color += accum_f * f * R * trace2(rr) / (pdf_r * f * accum_pdf);
+
+				float pdf;
+				accum_f *= doRefract(wo, wi, interact, pdf);
+				accum_pdf *= pdf * (1 - f);
+			}
+			else{
+				color += accum_f * shade(interact) / accum_pdf;
+				break;
+			}
+			r = spawnRay(interact, wi);
+		}
+		else{
+			color += accum_f * texture(environmentMap, r.direction.xyz).rgb / accum_pdf;
+			break;
+		}
+	}
+	return color;
+}
+
+vec3 trace2(Ray ray){
+	vec3 color = vec3(0);
+	Ray r = ray;
+	HitInfo hit;
+	if (intersectScene(r, hit)){
+		SurfaceInteration interact;
+		intialize(hit, r, interact);
+		if(!hasFlag(interact, SPECULAR_TRANSMISSION | SPECIULAR_REFLECT | FRESNEL_SPECULAR)){
+			color = shade(interact);
+		}else{
+			color = vec3(0);
+		}
+	}else{
+		color = texture(environmentMap, r.direction.xyz).rgb;
+	}
+	
+
 	return color;
 }
 

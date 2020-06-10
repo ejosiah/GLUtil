@@ -86,6 +86,22 @@ namespace ncl {
 		};
 #pragma pack(pop)
 
+#pragma pack(push, 1)
+		struct Triangle {
+			glm::vec4 a;
+			glm::vec4 b;
+			glm::vec4 c;
+			int objectToWorldId;
+			int worldToObjectId;
+			int id;
+			int padding;
+		};
+#pragma pack(pop)
+		
+#pragma pack(push, 1)
+
+#pragma pack(pop)
+
 	}
 }
 

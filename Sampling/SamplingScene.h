@@ -38,6 +38,7 @@ public:
 		points = new ProvidedMesh(m);
 		generatePoints();
 		initializeHemisphereSampling();
+		teapot = new Teapot;
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 	
@@ -46,7 +47,7 @@ public:
 		//dw.resize(50);
 		//generate(dw.begin(), dw.end(), [&]() { return new Vector(sampleHemisphere() * 3.0f, vec3(0));  });
 		
-		auto points = pointsInSphere(50);
+		auto points = randomSphere(50);
 		for (auto point : points) dw.push_back(new Vector{ point, vec3(0) });
 
 		hemisphere = new Hemisphere(1, 50, 50, vec4(1, 0, 0, 0.2));
@@ -74,15 +75,16 @@ public:
 			send(light[0]);
 			send(cam);
 			send(lightModel);
-			for (auto v : dw) shade(v);
+			//for (auto v : dw) shade(v);
 
-			glEnable(GL_BLEND);
-			glDisable(GL_DEPTH_TEST);
-			glDepthMask(false);
-			shade(hemisphere);
-			glDisable(GL_BLEND);
-			glEnable(GL_DEPTH_TEST);
-			glDepthMask(true);
+			//glEnable(GL_BLEND);
+			//glDisable(GL_DEPTH_TEST);
+			//glDepthMask(false);
+			//shade(hemisphere);
+			//glDisable(GL_BLEND);
+			//glEnable(GL_DEPTH_TEST);
+			//glDepthMask(true);
+			shade(teapot);
 
 		});
 	}
@@ -170,6 +172,7 @@ private:
 	Hemisphere* hemisphere;
 	vector<Vector*> dw;
 	LightModel lightModel;
+	Teapot* teapot;
 	bool useCosine = true;
 	
 };

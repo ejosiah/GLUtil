@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/SkyBox.h"
 #include "../GLUtil/include/ncl/ray_tracing/RayGenerator.h"
@@ -20,7 +21,7 @@ struct Stack {
 #pragma pack(pop)
 
 const float DAY_LIGHT_ILLUMINANCE = 64000;
-const int MaxSpheres = 250;
+const int MaxSpheres = 100;
 const int MAX_BOUNCES = 10;
 
 class RayTracer : public Compute {
@@ -123,9 +124,9 @@ public:
 		auto rng = rngReal(0, 1);
 		auto rngIOR = rngReal(1.2, 2.417);
 		auto rngShine = rngReal(50, 100);
-		auto rngIndex = rngInt(0, 3);
 
-		int bsdfs[4] = { rt::SPECULAR_TRANSMISSION, rt::SPECIULAR_REFLECT, rt::BSDF_DIFFUSE, rt::FRESNEL_SPECULAR };
+		vector<int> bsdfs = { rt::FRESNEL_SPECULAR, rt::BSDF_DIFFUSE, rt::SPECIULAR_REFLECT };
+		auto rngIndex = rngInt(0, bsdfs.size() - 1);
 
 		for (int i = 0; i < MaxSpheres; i++) {
 
@@ -173,6 +174,17 @@ public:
 		sphere_ssbo = StorageBufferObj<vector<rt::Sphere>>{ spheres, 5 };
 	}
 
+	//void initTriangles() {
+	//	auto teapot = Teapot{};
+	//	triangle_ssbo = StorageBufferObj<vector<rt::Triangle>>{ 10000, 6 };
+	//	scene.shader("capture_trinagles")([&] {
+	//		glEnable(GL_RASTERIZER_DISCARD);
+	//		triangle_ssbo.sendToGPU(false);
+	//		shade(teapot);
+	//		glDisable(GL_RASTERIZER_DISCARD);
+	//	});
+	//}
+
 	void preCompute() {
 		//auto& light = light_ssbo.get()[0];
 		//light.lightToWorld = translate(mat4(1), { scene.activeCamera().getPosition() });
@@ -216,6 +228,7 @@ private:
 	StorageBufferObj<vector<rt::LightSource>> light_ssbo;
 	StorageBufferObj<vector<rt::Sphere>> sphere_ssbo;
 	StorageBufferObj<vector<rt::Material>> material_ssbo;
+//	StorageBufferObj<vector<rt::Triangle>> triangle_ssbo;
 	CheckerBoard_gpu* checkerboard;
 	SkyBox* skybox;
 	Scene& scene;

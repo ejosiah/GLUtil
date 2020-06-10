@@ -65,13 +65,12 @@ struct Cylinder {
 };
 
 struct Triangle {
-	int id;	// TODO fix offset issue
+	vec4 a;
+	vec4 b;
+	vec4 c;
 	int objectToWorldId;
 	int worldToObjectId;
-	int matId;
-	vec3 a;
-	vec3 b;
-	vec3 c;
+	int id;
 };
 
 struct Shading {
@@ -140,4 +139,12 @@ Ray transform(mat4 m, Ray ray) {
 	r.direction = vec4(d, 1);
 	r.tMax = ray.tMax;
 	return r;
+}
+
+Ray spawnRay(SurfaceInteration interact, vec3 wi) {
+	Ray ray;
+	ray.origin = vec4(interact.p + 0.0001 * wi, 1.0);
+	ray.direction = vec4(wi, 1.0);
+	ray.tMax = 1 * kilometer;
+	return ray;
 }

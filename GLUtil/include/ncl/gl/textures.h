@@ -15,6 +15,51 @@
 namespace ncl {
 	namespace gl {
 
+		struct Data {
+			void* contents;
+			GLsizei width;
+			GLsizei height;
+		};
+
+		using Content = std::variant<std::string, Data>;
+		struct Config {
+			std::vector<Content> contents;
+			std::string name = "";
+			GLuint id = 0;
+			GLuint internalFmt = GL_RGBA8;
+			GLuint format = GL_RGBA;
+			GLenum wrapS = GL_REPEAT;
+			GLenum wrapT = GL_REPEAT;
+			GLenum wrapR = GL_REPEAT;
+			GLenum minFilter = GL_NEAREST;
+			GLenum magFilter = GL_NEAREST;
+			GLint border = 0;
+			GLsizei numLayers = 1;
+			bool mipMap = false;
+			GLenum type = GL_UNSIGNED_BYTE;
+		};
+
+		struct TextureVisitor {
+
+			inline TextureVisitor(GLenum dataType = GL_UNSIGNED_BYTE)
+				:dataType{ dataType } {}
+
+			inline Data operator()(std::string path) {
+				auto image = Image(path, glTypeToILType(dataType));	// TODO data type
+				return {
+					image.data(),
+					image.height(),
+					image.width()
+				};
+			}
+
+			inline Data operator()(Data data) {
+				return data;
+			}
+
+			GLenum dataType;
+		};
+
 		struct Texture {
 			GLuint unit;
 			GLuint buffer;
@@ -39,29 +84,6 @@ namespace ncl {
 
 		class Texture2D {
 		public:
-			struct Data {
-				void* contents;
-				GLsizei width;
-				GLsizei height;
-			};
-
-			using PathOrData = std::variant<std::string, Data>;
-
-			struct Config {
-				PathOrData data;
-				GLsizei width;
-				GLsizei height;
-				std::string name = "";
-				GLuint id = 0;
-				GLuint internalFmt = GL_RGBA8;
-				GLuint format = GL_RGBA;
-				GLenum wrapS = GL_REPEAT;
-				GLenum wrapT = GL_REPEAT;
-				GLenum minFilter = GL_NEAREST;
-				GLenum magFilter = GL_NEAREST;
-			};
-
-
 			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR })
 				: _id(id) {
 				Image img(path);
@@ -479,9 +501,38 @@ namespace ncl {
 			else {
 				return nullptr;
 			}
-
-
 		}
-	}
 
+		//class Texture2DArray {
+		//public:
+		//	Texture2DArray() = default;
+
+		//	Texture2DArray(Config config, GLuint unit = 0);
+
+		//	Texture2DArray(const Texture2DArray&) = delete;
+
+		//	Texture2DArray(Texture2DArray&&);
+
+		//	Texture2DArray& operator=(const Texture2DArray&) = delete;
+
+		//	Texture2DArray& operator=(Texture2DArray&&);
+
+		//	GLuint buffer();
+
+		//	GLuint unit();
+
+		//	inline Texture view() {
+		//		return { _unit, _buffer };
+		//	}
+
+		//	friend void transfer(Texture2DArray& source, Texture2DArray& dest);
+
+		//private:
+		//	GLuint _buffer;
+		//	GLuint _unit;
+		//	Config config;
+		//};
+	}
 }
+
+//#include "detail/textures.inl"
