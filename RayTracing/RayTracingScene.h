@@ -12,13 +12,6 @@ using namespace gl;
 using namespace glm;
 namespace rt = ray_tracing;
 
-#pragma pack(push, 1)
-struct Stack {
-	int size = 0;
-	int top = 0;
-	int data[64];
-};
-#pragma pack(pop)
 
 const float DAY_LIGHT_ILLUMINANCE = 64000;
 const int MaxSpheres = 100;
@@ -26,7 +19,7 @@ const int MAX_BOUNCES = 10;
 
 class RayTracer : public Compute {
 public:
-	RayTracer(Scene& scene, StorageBufferObj<std::vector<rt::Ray>>& rays)
+	RayTracer(Scene& scene, StorageBufferObj<rt::Ray>& rays)
 		:Compute(vec3{ scene.width() / 32.0f, scene.height() / 32.0f, 1.0f }
 			, vector<Image2D>{ Image2D(scene.width(), scene.height(), GL_RGBA32F, "image", 0) }
 	, & scene.shader("whitted_raytracer"))
@@ -93,11 +86,11 @@ public:
 
 		auto planes = vector<rt::Plane>{};
 		planes.push_back(plane);
-		plane_ssbo = StorageBufferObj<vector<rt::Plane>>{ planes, 4 };
+		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 4 };
 		initLights();
 		initSpheres(materials);
 
-		material_ssbo = StorageBufferObj<vector<rt::Material>>{ materials, 3 };
+		material_ssbo = StorageBufferObj<rt::Material>{ materials, 3 };
 	}
 
 	void initLights() {
@@ -114,7 +107,7 @@ public:
 	//	light.position = vec4(0, 1, 0, 1);
 		lights.push_back(light);
 		
-		light_ssbo = StorageBufferObj<vector<rt::LightSource>>{ lights, 2 };
+		light_ssbo = StorageBufferObj<rt::LightSource>{ lights, 2 };
 	}
 
 	void initSpheres(vector< rt::Material>& materials) {
@@ -171,7 +164,7 @@ public:
 			continue;
 		}
 		numSpheres = spheres.size();
-		sphere_ssbo = StorageBufferObj<vector<rt::Sphere>>{ spheres, 5 };
+		sphere_ssbo = StorageBufferObj<rt::Sphere>{ spheres, 5 };
 	}
 
 	//void initTriangles() {
@@ -223,11 +216,11 @@ public:
 	}
 
 private:
-	StorageBufferObj<std::vector<rt::Ray>>& rays;
-	StorageBufferObj<vector<rt::Plane>> plane_ssbo;
-	StorageBufferObj<vector<rt::LightSource>> light_ssbo;
-	StorageBufferObj<vector<rt::Sphere>> sphere_ssbo;
-	StorageBufferObj<vector<rt::Material>> material_ssbo;
+	StorageBufferObj<rt::Ray>& rays;
+	StorageBufferObj<rt::Plane> plane_ssbo;
+	StorageBufferObj<rt::LightSource> light_ssbo;
+	StorageBufferObj<rt::Sphere> sphere_ssbo;
+	StorageBufferObj<rt::Material> material_ssbo;
 //	StorageBufferObj<vector<rt::Triangle>> triangle_ssbo;
 	CheckerBoard_gpu* checkerboard;
 	SkyBox* skybox;
@@ -262,12 +255,29 @@ public:
 		setBackGroundColor(BLACK);
 	}
 
-	bool once = true;
+	bool once = false;
 	void display() override {
 		rayGenerator->compute();
 
 		raytracer->compute();
 		
+		if (once) {
+			once = false;
+			rayGenerator->getRaySSBO().read([this](rt::Ray* itr) {
+				stringstream ss;
+				for (int i = 0; i < 10; i++) {
+;
+					rt::Ray ray = *(itr + i);
+					ss << "Ray[ o: " << vec3(ray.origin);
+					ss << ", d: " << vec3(ray.direction);
+					ss << ", t: " << ray.tMax <<  "]\n";
+					
+					logger.info(ss.str());
+					ss.clear();
+					ss.str("");
+				}
+			});
+		}
 
 		shader("screen")([&] {
 			raytracer->images().front().renderMode();

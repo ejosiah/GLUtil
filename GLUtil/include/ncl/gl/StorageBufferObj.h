@@ -26,7 +26,9 @@ namespace ncl {
 
 			explicit StorageBufferObj(T, GLuint = 0);
 
-			explicit StorageBufferObj(int count, GLuint id = 0);
+			StorageBufferObj(int count, GLuint id = 0);
+
+			explicit StorageBufferObj(std::vector<T>, GLuint = 0);
 
 			StorageBufferObj(StorageBufferObj<T>&&) noexcept;
 
@@ -38,7 +40,7 @@ namespace ncl {
 
 			StorageBufferObj<T>& operator=(StorageBufferObj<T>&&);
 
-			T& get();
+			T* get();
 
 			T getFromGPU();
 
@@ -54,13 +56,18 @@ namespace ncl {
 
 			void sendToGPU(bool update = true);
 
-			
-			void read(std::function<void(T*)> use) {
-
+			static inline GLsizeiptr sizeOf(std::vector<T> v) {
+				return sizeof(T) * v.size();
 			}
 
+			static inline GLsizeiptr sizeOf(int count) {
+				return sizeof(T) * count;
+			}
+			
+			void read(std::function<void(T*)> use);
+
 		private:
-			T _obj;
+			std::vector<T> _obj;
 			GLsizeiptr _size;
 			GLuint _buf;
 			GLuint _idx;

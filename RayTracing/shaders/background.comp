@@ -4,7 +4,7 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
 layout(rgba32f, binding=0) uniform image2D image;
 
-layout(binding = 1) uniform samplerCube environmentMap;
+layout(binding = 0) uniform samplerCube environmentMap;
 
 #pragma include("ray_tracing_common.glsl")
 #pragma include("ray_tracing_model.glsl")
@@ -15,14 +15,6 @@ layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
 };
 
-layout(std430, binding=2) buffer RAY_LEFT_SSB0{
-	Ray left[];
-};
-
-
-layout(std430, binding=2) buffer RAY_RIGHT_SSB0{
-	Ray right[];
-};
 
 
 int globalIndex(){
@@ -37,9 +29,9 @@ void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 	vec3 color = texture(environmentMap, ray.direction.xyz).rgb;
-	ray.tMax = 120;
 
-	rays[index] = ray;
+	color /= color + vec3(1.0);
+	color = pow(color, vec3(1.0/2.2));
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1));
 }
