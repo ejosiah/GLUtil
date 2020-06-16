@@ -67,10 +67,16 @@
     <None Include="shaders\units.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\capture_triangles.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\capture_triangles.frag">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="shaders\capture_triangles.geom">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\capture_triangles.vert">
+    <None Include="shaders\cube.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

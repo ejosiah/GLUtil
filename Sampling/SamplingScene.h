@@ -5,6 +5,8 @@
 #include "../GLUtil/include/ncl/sampling/sampling.h"
 #include <glm/glm.hpp>
 #include <algorithm>
+#include "../GLUtil/include/ncl/ray_tracing/camera.h"
+#include "../GLUtil/include/ncl/ray_tracing/ray.h"
 
 using namespace std;
 using namespace ncl;
@@ -17,15 +19,19 @@ static const float PI_OVER4 = PI / 4.f;
 static const float PI_OVER2 = PI / 2.f;
 static const float TWO_PI = two_pi<float>();
 
+namespace rt = ray_tracing;
+
 class SamplingScene : public Scene {
 public:
-	SamplingScene() :Scene("Sampling", Resolution::QHD.height, Resolution::QHD.height) {
+	SamplingScene() :Scene("Sampling", Resolution::HD.width, Resolution::HD.height) {
 		useImplictShaderLoad(true);
 		_requireMouse = false;
 		animate = false;
 	}
 
 	void init() override {
+		initDefaultCamera();
+		activeCamera().lookAt({ 0, 10, 0 }, vec3(0), { 0, 0, 1 });
 		Mesh m;
 		m.primitiveType = GL_POINTS;
 		lightModel.colorMaterial = true;
@@ -39,7 +45,35 @@ public:
 		generatePoints();
 		initializeHemisphereSampling();
 		teapot = new Teapot;
+
+	//	rt::update(rtCam, *this);
+	//	generateRay(vec2{ _width / 2, _height / 2 }, rtCam, ray);
+
+		ray = {
+			{0, 0, 0, 1},
+			{0.234, 0.146, -0.961, 1},
+			5.0f
+		};
+
+		float cos0 = dot(planeNormal, -vec3(ray.direction.xyz));
+
+		v_ray = new Vector{ ray.direction.xyz * ray.tMax, ray.origin.xyz, 1.0, YELLOW };
+		normal = new Vector{ planeNormal, vec3(0), 1.0, RED };
+		activeCamera().lookAt({ 0, 3, 10 }, vec3(0), { 0, 1, 0 });
+		
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	}
+
+	void generateRay(vec2 pos, rt::Camera camera, rt::Ray& ray) {
+		vec3 p = (camera.rasterToCamera * vec4(pos, 0, 1)).xyz;
+		vec4 origin = vec4(vec3(0), 1);
+		vec3 direction = normalize(p);
+
+		ray.origin = camera.cameraToWorld * origin;
+		direction = mat3(camera.cameraToWorld) * direction;
+		ray.direction = vec4(normalize(direction), 1);
+		ray.tMax = length(vec3(ray.origin)) * 0.5;
 	}
 	
 	void initializeHemisphereSampling() {
@@ -73,7 +107,8 @@ public:
 		shader("default")([&](Shader& s) {
 			send("gammaCorrect", false);
 			send(light[0]);
-			send(cam);
+		//	send(cam);
+			send(activeCamera());
 			send(lightModel);
 			//for (auto v : dw) shade(v);
 
@@ -84,7 +119,9 @@ public:
 			//glDisable(GL_BLEND);
 			//glEnable(GL_DEPTH_TEST);
 			//glDepthMask(true);
-			shade(teapot);
+		//	shade(teapot);
+			shade(v_ray);
+			shade(normal);
 
 		});
 	}
@@ -174,5 +211,10 @@ private:
 	LightModel lightModel;
 	Teapot* teapot;
 	bool useCosine = true;
+	vec3 planeNormal = { -0.383, -0.238, 0.893 };
+	rt::Ray ray;
+	rt::Camera rtCam;
+	Vector* v_ray;
+	Vector* normal;
 	
 };

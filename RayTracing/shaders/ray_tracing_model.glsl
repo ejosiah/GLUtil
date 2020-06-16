@@ -9,14 +9,16 @@ const int PLANE = 4;
 const float INFINITY = 1.0 / 0.0;
 
 struct Ray {
-	vec4 origin;
-	vec4 direction;
+	vec3 origin;
+	vec3 direction;
 	float tMax;
 };
 
 
 struct Plane {
-	vec3 n;
+	vec4 n;
+	vec4 min;
+	vec4 max;
 	float d;
 	int id;
 	int matId;
@@ -71,7 +73,9 @@ struct Triangle {
 	int objectToWorldId;
 	int worldToObjectId;
 	int id;
+	int matId;
 };
+
 
 struct Shading {
 	vec3 n0;
@@ -131,6 +135,22 @@ struct HitInfo {
 	vec4 extras;
 };
 
+struct Debug {
+	vec4 o;
+	vec4 d;
+	vec4 n;
+	vec4 wo;
+	vec4 wi;
+	float f;
+	float cos0;
+	float n1;
+	float n2;
+	int bounce;
+	int id;
+	int shapeId;
+	float t;
+};
+
 Ray transform(mat4 m, Ray ray) {
 	vec4 o = m * ray.origin;
 	vec3 d = mat3(m) * ray.direction.xyz;
@@ -148,3 +168,17 @@ Ray spawnRay(SurfaceInteration interact, vec3 wi) {
 	ray.tMax = 1 * kilometer;
 	return ray;
 }
+
+vec3 pointOnRay(Ray ray, HitInfo hit) {
+	return ray.origin.xyz + hit.t * ray.direction.xyz;
+}
+
+struct TriangleData {
+	samplerBuffer triangles;
+	samplerBuffer normals;
+//	samplerBuffer uvs;
+	isamplerBuffer indices;
+	bool hasIndices;
+	int matId;
+	int numTriangles;
+};

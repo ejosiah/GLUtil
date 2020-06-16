@@ -148,8 +148,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\background.comp" />
+    <None Include="shaders\capture_triangles.frag" />
     <None Include="shaders\capture_triangles.geom" />
     <None Include="shaders\capture_triangles.vert" />
+    <None Include="shaders\cube.glsl" />
     <None Include="shaders\hash.glsl" />
     <None Include="shaders\interaction.glsl" />
     <None Include="shaders\ray_tracing_common.glsl" />

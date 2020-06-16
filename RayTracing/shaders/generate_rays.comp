@@ -9,11 +9,19 @@ void generateRay(in CameraSample csample, in Camera camera, inout Ray ray) {
 	vec4 origin = vec4(vec3(0), 1);
 	vec3 direction = normalize(p);
 
-	ray.origin = camera.cameraToWorld * origin;
+	ray.origin = (camera.cameraToWorld * origin).xyz;
 	direction = mat3(camera.cameraToWorld) * direction;
-	ray.direction = vec4(normalize(direction), 1);
+	ray.direction = normalize(direction);
 	ray.tMax = 1000;
 }
+
+struct Ray0 {
+	vec3 origin;
+	vec3 direction;
+	float tMax;
+	vec2 uv;
+};
+
 
 layout(std430, binding=0) buffer CAMERA_SSB0{
 	Camera camera;
@@ -21,6 +29,10 @@ layout(std430, binding=0) buffer CAMERA_SSB0{
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
+};
+
+layout(std430, binding=12) buffer RAY0_SSB0{
+	Ray0 rays0[];
 };
 
 int globalIndex(){
@@ -41,5 +53,7 @@ void main(){
 	generateRay(csample, camera, ray);
 	int index = globalIndex();
 
+	Ray0 _ray = Ray0(ray.origin.xyz, ray.direction.xyz, 1000, vec2(5, 6));
 	rays[index] = ray;
+	rays0[index] = _ray;
 }

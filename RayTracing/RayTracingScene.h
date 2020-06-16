@@ -6,25 +6,60 @@
 #include "../GLUtil/include/ncl/ray_tracing/RayGenerator.h"
 #include "../GLUtil/include/ncl/ray_tracing/model.h"
 #include "../GLUtil/include/ncl/ray_tracing/Ray.h"
+#include "../GLUtil/include/ncl/geom/aabb2.h"
+
 using namespace std;
 using namespace ncl;
 using namespace gl;
 using namespace glm;
 namespace rt = ray_tracing;
+namespace box = geom::bvol::aabb;
 
-
+const unsigned int MILLION = 1000000;
 const float DAY_LIGHT_ILLUMINANCE = 64000;
-const int MaxSpheres = 100;
+const int MaxSpheres = 0;
 const int MAX_BOUNCES = 10;
+Logger& logger = Logger::get("ray");
+
+struct {
+	Texture triangles;
+	Texture normals;
+	Texture uvs;
+	Texture indices;
+	bool hasIndices;
+	int matId;
+	int numTriangles;
+} triangleData; 
+
+#pragma pack(push, 1)
+struct Debug {
+	vec4 o;
+	vec4 d;
+	vec4 n;
+	vec4 wo;
+	vec4 wi;
+	float f;
+	float cos0;
+	float n1;
+	float n2;
+	int bounce;
+	int id;
+	int shapeId;
+	float t;
+};
+#pragma pack(pop)
 
 class RayTracer : public Compute {
+	using Bounds = geom::bvol::AABB2;
+
 public:
 	RayTracer(Scene& scene, StorageBufferObj<rt::Ray>& rays)
 		:Compute(vec3{ scene.width() / 32.0f, scene.height() / 32.0f, 1.0f }
 			, vector<Image2D>{ Image2D(scene.width(), scene.height(), GL_RGBA32F, "image", 0) }
 	, & scene.shader("whitted_raytracer"))
 		, rays{ rays }
-		, scene{ scene }{
+		, scene{ scene }
+		, bounds{ bounds }{
 
 		auto& cam = scene.getActiveCameraController();
 		worldRadius = (cam.getFar() - cam.getNear()) * 0.5;
@@ -40,7 +75,7 @@ public:
 		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
-			});
+		});
 
 		skybox = SkyBox::create(skyTextures, 0, scene);
 		auto numRays = scene.width() * scene.height();
@@ -63,34 +98,142 @@ public:
 			send("worldCenter", worldCenter);
 			send("worldRadius", worldRadius);
 			send("numSpheres", numSpheres);
+			send("numPlanes", numPlanes);
 		});
 	}
 
 	void initObjs() {
 		auto materials = std::vector<rt::Material>{};
+		auto planes = vector<rt::Plane>{};
 
 		rt::Plane plane;
-		plane.n = { 0, 1, 0 };
+		plane.n = { 0, 1, 0, 1 };
 		plane.d = 0;
-		plane.id = 0;
+		plane.id = planes.size();
 		plane.matId = materials.size();
 
 		rt::Material m;
 		m.ambient = vec4(0);
 		m.diffuse = vec4(1, 0, 0, 1);
-		m.ior = 0;
+		m.ior = 1.52;
 		m.bsdf[0] = rt::BSDF_DIFFUSE;
 		m.nBxDfs += 1;
 		m.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		m.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		m.shine = 50;
 		materials.push_back(m);
-
-		auto planes = vector<rt::Plane>{};
 		planes.push_back(plane);
-		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 4 };
+
+		//rt::Plane plane1;
+		//plane1.n = { 0, 0, 1, 1 };
+		//plane1.d = 5;
+		//plane1.id = planes.size();
+		//plane1.matId = materials.size();
+		//plane1.max = vec4(vec3(20), 1);
+		//plane1.min = vec4(vec3(0), 1);
+
+		//rt::Material m1;
+		//m1.ambient = vec4(0);
+		//m1.diffuse = vec4(1, 0, 0, 1);
+		//m1.ior = 1.52;
+		//m1.bsdf[0] = rt::FRESNEL_SPECULAR;
+		//m1.nBxDfs += 1;
+		//m1.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		//m1.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		//m1.shine = 10;
+		//materials.push_back(m1);
+		//planes.push_back(plane1);
+
+		//rt::Plane plane2;
+		//plane2.n = { 0, 0, 1, 1 };
+		//plane2.d = 10;
+		//plane2.id = planes.size();
+		//plane2.matId = materials.size();
+		//plane2.max = vec4(vec3(20), 1);
+		//plane2.min = vec4(vec3(0), 1);
+
+		//rt::Material m2;
+		//m2.ambient = vec4(0);
+		//m2.diffuse = vec4(1, 0, 0, 1);
+		//m2.ior = 1.52;
+		//m2.bsdf[0] = rt::FRESNEL_SPECULAR;
+		//m2.nBxDfs += 1;
+		//m2.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		//m2.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		//m2.shine = 50;
+		//materials.push_back(m2);
+		//planes.push_back(plane2);
+
+		//rt::Plane plane3;
+		//plane3.n = { 1, 0, 0, 1 };
+		//plane3.d = 0;
+		//plane3.id = planes.size();
+		//plane3.matId = materials.size();
+		//plane3.max = vec4(vec3(20), 1);
+		//plane3.min = vec4(vec3(0), 1);
+
+		//rt::Material m3;
+		//m3.ambient = vec4(0);
+		//m3.diffuse = vec4(1, 0, 0, 1);
+		//m3.ior = 1.52;
+		//m3.bsdf[0] = rt::FRESNEL_SPECULAR;
+		//m3.nBxDfs += 1;
+		//m3.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		//m3.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		//m3.shine = 0;
+		//materials.push_back(m3);
+		//planes.push_back(plane3);
+
+		//rt::Plane plane4;
+		//plane4.n = { -1, 0, 0, 1 };
+		//plane4.d = 0;
+		//plane4.id = planes.size();
+		//plane4.matId = materials.size();
+		//plane4.max = vec4(vec3(20), 1);
+		//plane4.min = vec4(vec3(0), 1);
+
+		//rt::Material m4;
+		//m4.ambient = vec4(0);
+		//m4.diffuse = vec4(1, 0, 0, 1);
+		//m4.ior = 1.52;
+		//m4.bsdf[0] = rt::FRESNEL_SPECULAR;
+		//m4.nBxDfs += 1;
+		//m4.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		//m4.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		//m4.shine = 50;
+		//materials.push_back(m4);
+		//planes.push_back(plane4);
+
+		//rt::Plane plane5;
+		//plane5.n = { 0, 1, 0, 1 };
+		//plane5.d = 0;
+		//plane5.id = planes.size();
+		//plane5.matId = materials.size();
+		//plane5.max = vec4(vec3(20), 1);
+		//plane5.min = vec4(vec3(0), 1);
+
+		//rt::Material m5;
+		//m5.ambient = vec4(0);
+		//m5.diffuse = vec4(1, 0, 0, 1);
+		//m5.ior = 1.52;
+		//m5.bsdf[0] = rt::FRESNEL_SPECULAR;
+		//m5.nBxDfs += 1;
+		//m5.kr = vec4(0.8, 0.8, 0.8, 1.0);
+		//m5.kt = vec4(0.8, 0.8, 0.8, 1.0);
+		//m5.shine = 50;
+		//materials.push_back(m5);
+		//planes.push_back(plane5);
+
+		numPlanes = planes.size();
+
+		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 5 };
+		initRayCounter();
 		initLights();
 		initSpheres(materials);
-
+		initTriangles(materials);
 		material_ssbo = StorageBufferObj<rt::Material>{ materials, 3 };
+		debug_ssbo = StorageBufferObj<Debug>{ scene.width() * scene.height(), 8 };
+
 	}
 
 	void initLights() {
@@ -114,12 +257,14 @@ public:
 		auto spheres = std::vector<rt::Sphere>{};
 		vec2 radius = { 0.3, 2.0 };
 		float placementRadius = 20;
-		auto rng = rngReal(0, 1);
-		auto rngIOR = rngReal(1.2, 2.417);
-		auto rngShine = rngReal(50, 100);
+		auto seed = 12345678919;
+		auto rng = rngReal(0, 1, seed);
+		auto rngIOR = rngReal(1.2, 2.417, seed);
+		auto rngShine = rngReal(50, 100, seed);
 
 		vector<int> bsdfs = { rt::FRESNEL_SPECULAR, rt::BSDF_DIFFUSE, rt::SPECIULAR_REFLECT };
-		auto rngIndex = rngInt(0, bsdfs.size() - 1);
+	//	vector<int> bsdfs = {rt::FRESNEL_SPECULAR };
+		auto rngIndex = rngInt(0, bsdfs.size() - 1, seed);
 
 		for (int i = 0; i < MaxSpheres; i++) {
 
@@ -132,20 +277,32 @@ public:
 			m.kt = vec4(1);
 			m.kr = vec4(0.8, 0.8, 0.8, 1.0);
 			m.ior = rngIOR();
-		//	m.bsdf[0] = SPECULAR_TRANSMISSION;
+		//	m.bsdf[0] = rt::FRESNEL_SPECULAR;
 		//	m.bsdf[0] = rt::BSDF_DIFFUSE;
 			m.bsdf[0] = bsdfs[rngIndex()];
 			m.nBxDfs += 1;
 
 			rt::Sphere s;
-			s.radius = radius.x + rng() * (radius.y - radius.x);
+		//	s.radius = radius.x + rng() * (radius.y - radius.x);
 			s.radius = radius.x + rng() * (radius.y - radius.x);
 			float r = sqrt(rng());
 			vec2 u = vec2(r * cos(rng() * two_pi<float>()), r * sin(rng() * two_pi<float>())) * placementRadius;
 			s.center = vec4(0);
 			s.objectToWorld = translate(mat4(1), vec3{ u.x, s.radius, u.y });
 			s.worldToObject = inverse(s.objectToWorld);
+			vec3 worldCenter = vec3(s.objectToWorld * vec4(0, 0, 0, 1));
+			auto diagonal = normalize(vec3(1, 1, 1));
+			auto x0 = worldCenter + vec3(1, 0, 0) * s.radius;
+			auto x1 = worldCenter + vec3(-1, 0, 0) * s.radius;
+			auto y0 = worldCenter + vec3(0, 1, 0) * s.radius;
+			auto y1 = worldCenter + vec3(0, -1, 0) * s.radius;
+			auto z0 = worldCenter + vec3(0, 0, 1) * s.radius;
+			auto z1 = worldCenter + vec3(0, 0, -1) * s.radius;
 
+			//s.radius = 5.0;
+			////s.objectToWorld = translate(mat4(1), vec3{ 0, s.radius, 0 });
+			//s.objectToWorld = translate(mat4(1), vec3{ 0, 0, 0 });
+			//s.worldToObject = inverse(s.objectToWorld);
 
 			for (auto other : spheres) {
 				float minDist = s.radius + other.radius;
@@ -154,42 +311,263 @@ public:
 				vec3 d = aCenter - oCenter;
 				if (dot(d, d) < minDist * minDist) goto outter;
 			}
+			
+			bounds = box::Union(bounds, x0);
+			bounds = box::Union(bounds, x1);
+			bounds = box::Union(bounds, y0);
+			bounds = box::Union(bounds, y1);
+			bounds = box::Union(bounds, z0);
+			bounds = box::Union(bounds, z1);
 			s.matId = materials.size();
 			s.id = spheres.size();
 			materials.push_back(m);
 			spheres.push_back(s);
 
-
 		outter:
 			continue;
 		}
 		numSpheres = spheres.size();
-		sphere_ssbo = StorageBufferObj<rt::Sphere>{ spheres, 5 };
+		sphere_ssbo = StorageBufferObj<rt::Sphere>{ spheres, 4 };
 	}
 
-	//void initTriangles() {
-	//	auto teapot = Teapot{};
-	//	triangle_ssbo = StorageBufferObj<vector<rt::Triangle>>{ 10000, 6 };
-	//	scene.shader("capture_trinagles")([&] {
-	//		glEnable(GL_RASTERIZER_DISCARD);
-	//		triangle_ssbo.sendToGPU(false);
-	//		shade(teapot);
-	//		glDisable(GL_RASTERIZER_DISCARD);
-	//	});
-	//}
+	void initTriangles(vector< rt::Material>& materials) {
+		rt::Material mat;
+		mat.diffuse = RED;
+		mat.ambient = RED;
+		mat.specular = WHITE;
+		mat.ior = 1.52;
+		mat.kr = WHITE;
+		mat.kt = WHITE;
+		mat.shine = 50;
+		mat.bsdf[0] = rt::BSDF_DIFFUSE;
+
+		int materialId = materials.size();
+		triangleData.matId = materialId;
+		
+		materials.push_back(mat);
+
+		//initNextIndex();
+	//	auto cube = Teapot{2};
+		auto cube = Cube{ 10 };
+		auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\cornell\\cube.obj" };
+
+		cube.get<vec3>(0, VAOObject::Position, [&](GlBuffer<vec3> buffer) {
+			for_each(buffer.begin(), buffer.end(), [&](auto v) {
+				bounds = box::Union(bounds, v);
+			});
+		});
+
+		triangleData.numTriangles = cube.numTriangles();
+		triangleData.triangles.unit = 2;
+		glGenTextures(1, &triangleData.triangles.buffer);
+		glBindTexture(GL_TEXTURE_BUFFER, triangleData.triangles.buffer);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, cube.bufferFor(0, VAOObject::Position));
+
+		triangleData.normals.unit = 3;
+		glGenTextures(1, &triangleData.normals.buffer);
+		glBindTexture(GL_TEXTURE_BUFFER, triangleData.normals.buffer);
+		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, cube.bufferFor(0, VAOObject::Normal));
+
+		//triangleData.uvs.unit = 4;
+		//glGenTextures(1, &triangleData.uvs.buffer);
+		//glBindTexture(GL_TEXTURE_BUFFER, triangleData.uvs.buffer);
+		//glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, cube.bufferFor(0, VAOObject::TexCoord));
+
+		
+		if (cube.numIndices(0) > 0) {
+			triangleData.hasIndices = true;
+			triangleData.indices.unit = 5;
+			glGenTextures(1, &triangleData.indices.buffer);
+			glBindTexture(GL_TEXTURE_BUFFER, triangleData.indices.buffer);
+			glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32I, cube.bufferFor(0, VAOObject::Indices));
+		}
+		
+		initNextIndex();
+		triangle_ssbo = StorageBufferObj<rt::Triangle>{ 12,  6};
+		numTriangles = 1;
+		scene.shader("capture_triangles")([&] {
+			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
+			glEnable(GL_RASTERIZER_DISCARD);
+
+			send("materialId", materialId);
+			triangle_ssbo.sendToGPU(false);
+			shade(cube);
+			numTriangles = *(int*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_ONLY);
+			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+			glDisable(GL_RASTERIZER_DISCARD);
+		});
+		
+		//triangle_ssbo.read([&](rt::Triangle* itr) {
+		//	stringstream ss;
+		//	for (int i = 0; i < numTriangles; i++) {
+		//		auto tri = *(itr+i);
+		//		ss << "[a : " << tri.a.xyz << ", ";
+		//		ss << "b: " << tri.b.xyz << ", ";
+		//		ss << "c: " << tri.c.xyz << ", ";
+		//		ss << "id: " << tri.id << "], ";
+		//		ss << "material: " << tri.matId << "]";
+		//		logger.info(ss.str());
+		//		ss.clear();
+		//		ss.str("");
+		//		//triangles.push_back(tri);
+		//	}
+		//});
+		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
+		//auto nextIndex = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
+		//logger.info("nextIndex: " + to_string(*nextIndex));
+		//glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+	}
+
+	void sendTriangles() {
+		glActiveTexture(TEXTURE(triangleData.triangles.unit));
+		glBindTexture(GL_TEXTURE_BUFFER, triangleData.triangles.buffer);
+		send("triangleData.triangles", triangleData.triangles.unit);
+
+
+		glActiveTexture(TEXTURE(triangleData.normals.unit));
+		glBindTexture(GL_TEXTURE_BUFFER, triangleData.normals.buffer);
+		send("triangleData.normals", triangleData.normals.unit);
+
+		if (triangleData.hasIndices) {
+			glActiveTexture(TEXTURE(triangleData.indices.unit));
+			glBindTexture(GL_TEXTURE_BUFFER, triangleData.indices.buffer);
+			send("triangleData.indices", triangleData.indices.unit);
+		}
+
+		send("triangleData.hasIndices", triangleData.hasIndices);
+		send("triangleData.matId", triangleData.matId);
+		send("triangleData.numTriangles", triangleData.numTriangles);
+		send("fetchFromTexture", false);
+
+		triangle_ssbo.sendToGPU(false);
+		send("numTriangles", numTriangles);
+	}
+
+	void initRayCounter() {
+		unsigned counters[2]{ 0, 0 };
+		glGenBuffers(1, &rayCounterBuffer);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned) * 2, NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 2, counters);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, rayCounterBuffer);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+	}
+
+	void initNextIndex() {
+		auto startIndex = 0u;
+		glGenBuffers(1, &nextIndexBuffer);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned), NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned), &startIndex);
+		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, nextIndexBuffer);
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+	}
+
 
 	void preCompute() {
-		//auto& light = light_ssbo.get()[0];
-		//light.lightToWorld = translate(mat4(1), { scene.activeCamera().getPosition() });
-		//light.worldToLight = inverse(light.lightToWorld);
-		//light.position = light.lightToWorld * vec4(0, 0, 0, 1);
-		//light_ssbo.sendToGPU(true);
+		auto& light = light_ssbo.get()[0];
+		light.lightToWorld = translate(mat4(1), { scene.activeCamera().getPosition() });
+		light.worldToLight = inverse(light.lightToWorld);
+		light.position = light.lightToWorld * vec4(0, 0, 0, 1);
+
+
+		light_ssbo.sendToGPU(true);
 		rays.sendToGPU(false);
+		//triangle_ssbo.sendToGPU(true);
+		//send("numTriangles", numTriangles);
+		sendTriangles();
+		//for (int i = 0; i < numTriangles; i++) {
+		//	auto triangle = triangles[i];
+		//	send("triangles[" + to_string(i) + "].a", triangle.a);
+		//	send("triangles[" + to_string(i) + "].b", triangle.b);
+		//	send("triangles[" + to_string(i) + "].c", triangle.c);
+		//	send("triangles[" + to_string(i) + "].id", triangle.id);
+		//	send("triangles[" + to_string(i) + "].matId", triangle.matId);
+		//}
+
+		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
 		send("bounces", _bounces);
+		send("numPlanes", numPlanes);
+		send("bounds.min", vec3(bounds.min));
+		send("bounds.max", vec3(bounds.max));
 		glBindTextureUnit(0, skybox->buffer);
 		auto& img = checkerboard->images().front();
 		glBindTextureUnit(1, img.buffer());
 		send("camPos", scene.activeCamera().getPosition());
+	}
+
+	bool once = true;
+	void postCompute() override {
+		if (once) {
+			once = false;
+		////	debug_ssbo.read([&](Debug* ptr) {
+		////		for (int i = 0; i < 1; i++) {
+		////			auto debug = *(ptr+i);
+		////			stringstream ss;
+		////			ss << "size: " << sizeof(Debug) << endl;
+		////			ss << "Ray debug info:\n";
+		////			ss << "\to : " << debug.o.xyz << endl;
+		////			ss << "\td : " << debug.d.xyz << endl;
+		////			ss << "\tn  : " << debug.n.xyz << endl;
+		////			ss << "\two : " << debug.wo << endl;
+		////			ss << "\tcos0 : " << debug.cos0 << endl;
+		////			ss << "\tf : " << debug.f << endl;
+		////			ss << "\tn1 : " << debug.n1 << endl;
+		////			ss << "\tn2 : " << debug.n2 << endl;
+		////			ss << "\tbounce : " << debug.bounce << endl;
+		////			ss << "\tid: " << debug.id << endl;
+		////			ss << "\tShapeId: " << debug.shapeId << endl;
+		////			logger.info(ss.str());
+		////		}
+		////	});
+
+			//auto debug = debug_ssbo.getFromGPU(524800);
+			//stringstream ss;
+			//ss << "\n";
+			//ss << "size: " << sizeof(Debug) << endl;
+			//ss << "Ray debug info:\n";
+			//ss << "\to : " << debug.o.xyz << endl;
+			//ss << "\td : " << debug.d << endl;
+			//ss << "\tn  : " << debug.n.xyz << endl;
+			//ss << "\two : " << debug.wo << endl;
+			//ss << "\twi : " << debug.wi << endl;
+			//ss << "\tcos0 : " << debug.cos0 << endl;
+			//ss << "\tf : " << debug.f << endl;
+			//ss << "\tn1 : " << debug.n1 << endl;
+			//ss << "\tn2 : " << debug.n2 << endl;
+			//ss << "\tbounce : " << debug.bounce << endl;
+			//ss << "\tid: " << debug.id << endl;
+			//ss << "\tShapeId: " << debug.shapeId << endl;
+			//ss << "\tt: " << debug.t << endl;
+			//logger.info(ss.str());
+
+		////	rays.read([&](rt::Ray* ptr) {
+		////		auto ray = *ptr;
+		////		stringstream ss;
+		////		ss << "Ray[ ";
+		////		ss << "o: " << ray.origin.xyz;
+		////		ss << ", d: " << ray.direction.xyz;
+		////		ss << ", t: " << ray.tMax;
+		////		ss << " ]";
+		////		logger.info(ss.str());
+		////	});
+
+		//triangle_ssbo.read([&](rt::Triangle* itr) {
+		//	stringstream ss;
+		//	for (int i = 0; i < numTriangles; i++) {
+		//		auto tri = *(itr + i);
+		//		ss << "[a : " << tri.a.xyz << ", ";
+		//		ss << "b: " << tri.b.xyz << ", ";
+		//		ss << "c: " << tri.c.xyz << ", ";
+		//		ss << "id: " << tri.id << "], ";
+		//		ss << "material: " << tri.matId << "]";
+		//		logger.info(ss.str());
+		//		ss.clear();
+		//		ss.str("");
+		//	}
+		//	});
+		}
 	}
 
 	void processInput(const Key& key) {
@@ -215,13 +593,57 @@ public:
 		skybox->render();
 	}
 
+	void log(Font& font) {
+		if (showRayCount) {
+			showRayCount = false;
+			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+			auto rayCounts = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
+			NumRays = rayCounts[0];
+			shadowRays = rayCounts[1];
+			rayCounts[0] = rayCounts[1] = 0;
+			//glFlushMappedBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 2 * sizeof(unsigned));
+			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+		}
+
+		font.render("Rays: " + to_string(NumRays/ MILLION) + " million", 0, 100);
+		font.render("Shadow Rays: " + to_string(shadowRays/ MILLION) + "  million", 0, 110);
+		
+		//rt::Ray ray;
+		//rays.read([&](rt::Ray* ptr) {
+		//	ray = *ptr;
+		//	});
+		//stringstream ss;
+		//ss << "ray.origin: " << ray.origin.xyz;
+		//ss << "ray.direction: " << ray.direction.xyz;
+		//font.render(ss.str(), 0, 130);
+	}
+
+	void update(float t) {
+		static float et = 0;
+		static float elapsedTime = 0;
+		elapsedTime += t;
+		et += t;
+		if (elapsedTime > 1.0f) {
+			showRayCount = true;
+			elapsedTime = 0.0f;
+		}
+		auto pos = vec3{ cos(et) * 10, 10, sin(et) * 10 };
+	//	auto pos = scene.activeCamera().getPosition();
+		//auto& light = *light_ssbo.get();
+		//light.lightToWorld = translate(mat4(1), { pos });
+		//light.worldToLight = inverse(light.lightToWorld);
+		//light.position = light.lightToWorld * vec4(0, 0, 0, 1);
+	}
+
 private:
 	StorageBufferObj<rt::Ray>& rays;
 	StorageBufferObj<rt::Plane> plane_ssbo;
 	StorageBufferObj<rt::LightSource> light_ssbo;
 	StorageBufferObj<rt::Sphere> sphere_ssbo;
 	StorageBufferObj<rt::Material> material_ssbo;
-//	StorageBufferObj<vector<rt::Triangle>> triangle_ssbo;
+	StorageBufferObj<rt::Triangle> triangle_ssbo;
+	StorageBufferObj<Debug> debug_ssbo;
 	CheckerBoard_gpu* checkerboard;
 	SkyBox* skybox;
 	Scene& scene;
@@ -230,6 +652,15 @@ private:
 	int numSpheres;
 	int numPlanes;
 	int _bounces = MAX_BOUNCES;
+	unsigned int rayCounters[3] = { 0, 0, 0 };
+	int NumRays;
+	int shadowRays;
+	GLuint rayCounterBuffer;
+	GLuint nextIndexBuffer;
+	bool showRayCount = false;
+	int numTriangles = 12;
+	vector<rt::Triangle> triangles;
+	Bounds bounds;
 };
 
 
@@ -247,37 +678,42 @@ public:
 	}
 
 	void init() override {
+		fontColor(YELLOW);
 		initDefaultCamera();
+		activeCamera().setPosition({ 0.818, 2.29, -1.26 });
+	//	activeCamera().lookAt({ 0, 10, 0 }, vec3(0), { 0, 0, 1 });
 		camera_ssbo = gl::StorageBufferObj<rt::Camera>{ rt::Camera{} };
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 		raytracer = new RayTracer{ *this, rayGenerator->getRaySSBO() };
 		quad = ProvidedMesh{ screnSpaceQuad() };
+		teapot = new Teapot;
 		setBackGroundColor(BLACK);
 	}
 
-	bool once = false;
+	bool once = true;
+
 	void display() override {
 		rayGenerator->compute();
-
 		raytracer->compute();
 		
-		if (once) {
-			once = false;
-			rayGenerator->getRaySSBO().read([this](rt::Ray* itr) {
-				stringstream ss;
-				for (int i = 0; i < 10; i++) {
-;
-					rt::Ray ray = *(itr + i);
-					ss << "Ray[ o: " << vec3(ray.origin);
-					ss << ", d: " << vec3(ray.direction);
-					ss << ", t: " << ray.tMax <<  "]\n";
-					
-					logger.info(ss.str());
-					ss.clear();
-					ss.str("");
-				}
-			});
-		}
+//		if (once) {
+//			once = false;
+//			rayGenerator->getRaySSBO().read([this](rt::Ray* itr) {
+//				stringstream ss;
+//				auto cam = camera_ssbo.getFromGPU();
+//				for (int i = 0; i < 10; i++) {
+//;
+//					rt::Ray ray = *(itr + i);
+//					ss << "Ray[ o: " << vec3(ray.origin);
+//					ss << ", d: " << vec3(ray.direction);
+//					ss << ", t: " << ray.tMax <<  "]\n";
+//					
+//					logger.info(ss.str());
+//					ss.clear();
+//					ss.str("");
+//				}
+//			});
+//		}
 
 		shader("screen")([&] {
 			raytracer->images().front().renderMode();
@@ -285,10 +721,37 @@ public:
 			shade(quad);
 		});
 
-		//shader("stack_test")([&] {
-		//	shade(quad);
+		
+		//shader("capture_triangles")([&] {
+		//	//	glEnable(GL_RASTERIZER_DISCARD);
+		//	triangle_ssbo.sendToGPU(false);
+		//	shade(teapot);
+		//	//shade(quad);
+		//	//	glDisable(GL_RASTERIZER_DISCARD);
 		//});
+
+		//if (once) {
+		//	once = false;
+		//	triangle_ssbo.read([&](rt::Triangle* itr) {
+		//		stringstream ss;
+		//		for (int i = 0; i < 10; i++) {
+		//			auto tri = *(itr+i);
+		//			ss << "[a : " << tri.a.xyz << ", ";
+		//			ss << "b: " << tri.b.xyz << ", ";
+		//			ss << "c: " << tri.c.xyz << ", ";
+		//			ss << "id: " << tri.id << "]";
+		//			logger.info(ss.str());
+		//			ss.clear();
+		//			ss.str("");
+		//		}
+		//		});
+		//}
 		sFont->render("Bounces: " + to_string(raytracer->bounces()), 0, 70);
+		raytracer->log(*sFont);
+	}
+
+	void update(float t) override {
+		raytracer->update(t);
 	}
 
 	void processInput(const Key& key) override {
@@ -298,25 +761,8 @@ public:
 private:
 	rt::RayGenerator* rayGenerator;
 	RayTracer* raytracer;
-	Logger& logger = Logger::get("ray");
 	StorageBufferObj<rt::Camera> camera_ssbo;
 	ProvidedMesh quad;
 	rt::Camera* rCamera;
+	Teapot* teapot;
 };
-
-//template<>
-//struct ncl::gl::ObjectReflect<std::vector<Stack>> {
-//
-//	static GLsizeiptr sizeOfObj(std::vector<Stack>& stacks) {
-//		auto size = sizeof(Stack);
-//		return GLsizeiptr(size * stacks.size());
-//	}
-//
-//	static void* objPtr(std::vector<Stack>& stacks) {
-//		return &stacks[0];
-//	}
-//
-//	static GLsizeiptr sizeOf(int count) {
-//		return GLsizeiptr(count * sizeof(Stack));
-//	}
-//};

@@ -44,15 +44,30 @@ vec3 sample_distant_light(LightSource light, SurfaceInteration ref, vec2 u, out 
 
 
 vec3 sample_Li(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf, out Ray shadowRay) {
-	if ((light.flags & POINT_LIGHT) > 0) {
-		return sample_point_light(light, ref, u, wi, pdf, shadowRay);
-	}
-	else if ((light.flags & DISTANT_LIGHT) > 0) {
-		return sample_distant_light(light, ref, u, wi, pdf, shadowRay);
-	}
-	else {
-		return vec3(0);
-	}
+	//if ((light.flags & POINT_LIGHT) > 0) {
+	//	return sample_point_light(light, ref, u, wi, pdf, shadowRay);
+	//}
+	//else if ((light.flags & DISTANT_LIGHT) > 0) {
+	//	return sample_distant_light(light, ref, u, wi, pdf, shadowRay);
+	//}
+	//else {
+	//	return vec3(0);
+	//}
+	vec3 lightDir = light.position.xyz - ref.p;
+	wi = normalize(lightDir);
+	pdf = 1.0;
+	shadowRay.origin = vec4(ref.p + wi * 0.0001, 1);
+	shadowRay.direction = vec4(wi, 1);
+	shadowRay.tMax = length(lightDir);
+
+	//return light.I.rgb * light.I.a / (4 * dot(lightDir, lightDir) * PI);
+	return (light.I.rgb * light.I.a) / dot(lightDir, lightDir);
+}
+
+
+vec3 sample_Li(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf) {
+	Ray shadowRay;
+	return sample_Li(light, ref, u, wi, pdf, shadowRay);
 }
 
 bool isBlack(vec3 L) {

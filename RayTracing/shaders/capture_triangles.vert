@@ -2,10 +2,6 @@
 #pragma debug(on)
 #pragma optimize(off)
 
-uniform mat4 M;
-uniform mat4 V;
-uniform mat4 P;
-uniform mat4 MVP;
 
 layout(location=0) in vec3 position;
 layout(location=1) in vec3 normal;
@@ -27,8 +23,7 @@ out ncl_PerVetex {
 
 void main(){
 	vec4 worldPos = xform * vec4(position, 1.0);
-	mat4 MV = V *  xform * M;
-	mat3 NM = transpose(inverse(mat3(MV)));
+	mat3 NM = transpose(inverse(mat3(xform)));
 	ncl_out.normal = normalize(NM * normal);
 	ncl_out.tangent = normalize(NM * tangent);
 	ncl_out.bitangent = normalize(NM * bitangent);

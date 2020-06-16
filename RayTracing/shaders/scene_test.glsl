@@ -1,5 +1,6 @@
 #pragma include("ray_tracing_model.glsl")
 #pragma include("ray_shape_test.glsl")
+#pragma include("ray_triangle_test.glsl")
 
 bool anyHit(Ray ray) {
 	HitInfo local_hit;
@@ -19,14 +20,26 @@ bool anyHit(Ray ray) {
 	return false;
 }
 
+
 bool intersectScene(Ray ray, out HitInfo hit) {
 	hit.t = ray.tMax;
 	HitInfo local_hit;
 	local_hit.t = hit.t;
 	bool aHit = false;
-	for (int i = 0; i < numSpheres; i++) {
-		Sphere s = sphere[i];
-		if (intersectSphere(ray, s, local_hit)) {
+
+	if (intersectCube(ray, bounds, local_hit)) {
+		for (int i = 0; i < numSpheres; i++) {
+			Sphere s = sphere[i];
+			if (intersectSphere(ray, s, local_hit)) {
+				aHit = true;
+				if (local_hit.t < hit.t) {
+					hit = local_hit;
+				}
+			}
+		}
+
+		local_hit.t = hit.t;
+		if (intersectsTriangle(ray, local_hit)) {
 			aHit = true;
 			if (local_hit.t < hit.t) {
 				hit = local_hit;
@@ -34,8 +47,21 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 		}
 	}
 
+
+
 	//local_hit.t = hit.t;
-	//if (intersectsTriangle(ray, local_hit, 0)) {
+	//for (int i = 0; i < numTriangles; i++) {
+	//	Triangle tri = triangles[i];
+	//	if (intersectTriangle(ray, tri, local_hit)) {
+	//		aHit = true;
+	//		if (local_hit.t < hit.t) {
+	//			hit = local_hit;
+	//		}
+	//	}
+	//}
+
+	//local_hit.t = hit.t;
+	//if (intersectBox(ray, box, local_hit)) {
 	//	aHit = true;
 	//	if (local_hit.t < hit.t) {
 	//		hit = local_hit;
@@ -43,10 +69,12 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 	//}
 
 	local_hit.t = hit.t;
-	if (intersectPlane(ray, plane[0], local_hit)) {
-		aHit = true;
-		if (local_hit.t < hit.t) {
-			hit = local_hit;
+	for (int i = 0; i < numPlanes; i++) {
+		if (intersectPlane(ray, plane[i], local_hit)) {
+			aHit = true;
+			if (local_hit.t < hit.t) {
+				hit = local_hit;
+			}
 		}
 	}
 

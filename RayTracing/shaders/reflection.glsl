@@ -34,7 +34,32 @@ float fresnelSchlick(float cosTheta, float F0) {
 	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-float fresnel(float cosTheta, float etaI, float etaT) {
-	return fresnelSchlick(cosTheta, f0(etaI, etaT));
+float fresnelDielectric(float cosThetaI, float etaI, float etaT) {
+	cosThetaI = clamp(cosThetaI, -1.0, 1.0);
+	// Potentially swap indices of refraction
+	bool entering = cosThetaI > 0.f;
+	if (!entering) {
+		swap(etaI, etaT);
+		cosThetaI = abs(cosThetaI);
+	}
+
+	// Compute _cosThetaT_ using Snell's law
+	float sinThetaI = sqrt(max(0, 1 - cosThetaI * cosThetaI));
+	float sinThetaT = etaI / etaT * sinThetaI;
+
+	// Handle total internal reflection
+	if (sinThetaT >= 1) {
+		return 1;
+	}
+	float cosThetaT = sqrt(max(0, 1 - sinThetaT * sinThetaT));
+	float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
+		((etaT * cosThetaI) + (etaI * cosThetaT));
+	float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
+		((etaI * cosThetaI) + (etaT * cosThetaT));
+	return (Rparl * Rparl + Rperp * Rperp) / 2;
 }
 
+float fresnel(float cosTheta, float etaI, float etaT) {
+	//return fresnelSchlick(cosTheta, f0(etaI, etaT));
+	return fresnelDielectric(cosTheta, etaI, etaT);
+}
