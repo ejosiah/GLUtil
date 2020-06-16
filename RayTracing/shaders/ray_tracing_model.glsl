@@ -152,25 +152,25 @@ struct Debug {
 };
 
 Ray transform(mat4 m, Ray ray) {
-	vec4 o = m * ray.origin;
-	vec3 d = mat3(m) * ray.direction.xyz;
+	vec4 o = m * vec4(ray.origin, 1);
+	vec3 d = mat3(m) * ray.direction;
 	Ray r;
-	r.origin = o;
-	r.direction = vec4(d, 1);
+	r.origin = o.xyz;
+	r.direction = d;
 	r.tMax = ray.tMax;
 	return r;
 }
 
 Ray spawnRay(SurfaceInteration interact, vec3 wi) {
 	Ray ray;
-	ray.origin = vec4(interact.p + 0.0001 * wi, 1.0);
-	ray.direction = vec4(wi, 1.0);
+	ray.origin = interact.p + 0.0001 * wi;
+	ray.direction = wi;
 	ray.tMax = 1 * kilometer;
 	return ray;
 }
 
 vec3 pointOnRay(Ray ray, HitInfo hit) {
-	return ray.origin.xyz + hit.t * ray.direction.xyz;
+	return ray.origin + hit.t * ray.direction;
 }
 
 struct TriangleData {

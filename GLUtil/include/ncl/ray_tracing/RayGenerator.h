@@ -54,39 +54,39 @@ namespace ncl {
 
 			bool once = true;
 			void postCompute() override {
-				if (once) {
-					once = false;
-					rays.read([&](Ray* ptr) {
-						std::stringstream ss;
-						for (int i = 0; i < 10; i++) {
-							auto ray = *(ptr + i);
-							ss << "Ray[ ";
-							ss << "o: " << ray.origin;
-							ss << ", d: " << ray.direction;
-							ss << ", t: " << ray.tMax;
-							ss << " ]";
-							logger.info(ss.str());
-							ss.clear();
-							ss.str("");
-						}
-						});
-					logger.info("");
-					rays0.read([&](Ray0* ptr) {
-						std::stringstream ss;
-						for (int i = 0; i < 10; i++) {
-							auto ray = *(ptr + i);
-							ss << "Ray[ ";
-							ss << "o: " << glm::vec4(ray.origin, 1);
-							ss << ", d: " << glm::vec4(ray.direction, 1);
-							ss << ", t: " << ray.tMax;
-							ss << ", uv: " << ray.uv;
-							ss << " ]";
-							logger.info(ss.str());
-							ss.clear();
-							ss.str("");
-						}
-						});
-				}
+				//if (once) {
+				//	once = false;
+				//	rays.read([&](Ray* ptr) {
+				//		std::stringstream ss;
+				//		for (int i = 0; i < 10; i++) {
+				//			auto ray = *(ptr + i);
+				//			ss << "Ray[ ";
+				//			ss << "o: " << ray.origin;
+				//			ss << ", d: " << ray.direction;
+				//			ss << ", t: " << ray.tMax;
+				//			ss << " ]";
+				//			logger.info(ss.str());
+				//			ss.clear();
+				//			ss.str("");
+				//		}
+				//		});
+				//	logger.info("");
+				//	rays0.read([&](Ray0* ptr) {
+				//		std::stringstream ss;
+				//		for (int i = 0; i < 10; i++) {
+				//			auto ray = *(ptr + i);
+				//			ss << "Ray[ ";
+				//			ss << "o: " << glm::vec4(ray.origin, 1);
+				//			ss << ", d: " << glm::vec4(ray.direction, 1);
+				//			ss << ", t: " << ray.tMax;
+				//			ss << ", uv: " << ray.uv;
+				//			ss << " ]";
+				//			logger.info(ss.str());
+				//			ss.clear();
+				//			ss.str("");
+				//		}
+				//		});
+				//}
 			}
 
 			Ray* getRays() {

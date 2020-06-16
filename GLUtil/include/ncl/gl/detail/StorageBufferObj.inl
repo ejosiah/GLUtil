@@ -85,6 +85,7 @@ namespace ncl {
 			T* data = (T*)glMapNamedBuffer(_buf, GL_READ_ONLY);
 			use(data);
 			glUnmapNamedBuffer(_buf);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 
 		template<typename U>

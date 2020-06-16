@@ -25,8 +25,8 @@ vec3 sample_point_light(LightSource light, SurfaceInteration ref, vec2 u, out ve
 	vec3 lightDir = light.position.xyz - ref.p;
 	wi = normalize(lightDir);
 	pdf = 1.0;
-	shadowRay.origin = vec4(ref.p + wi * 0.001, 1);
-	shadowRay.direction = vec4(wi, 1);
+	shadowRay.origin = ref.p + wi * 0.001;
+	shadowRay.direction = wi;
 	shadowRay.tMax = 1000;
 
 	//return light.I.rgb * light.I.a / (4 * dot(lightDir, lightDir) * PI);
@@ -36,8 +36,8 @@ vec3 sample_point_light(LightSource light, SurfaceInteration ref, vec2 u, out ve
 vec3 sample_distant_light(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, out float pdf, out Ray shadowRay) {
 	wi = light.position.xyz;
 	pdf = 1;
-	shadowRay.origin = vec4(ref.p, 1);
-	shadowRay.direction = vec4( normalize(ref.p - (ref.p + wi * 2 * worldRadius)), 1);
+	shadowRay.origin = ref.p + wi * 0.0001;
+//	shadowRay.direction = normalize(ref.p - (ref.p + wi * 2 * worldRadius)), 1);
 	shadowRay.tMax = 1000;
 	return light.I.rgb * light.I.a;
 }
@@ -56,8 +56,8 @@ vec3 sample_Li(LightSource light, SurfaceInteration ref, vec2 u, out vec3 wi, ou
 	vec3 lightDir = light.position.xyz - ref.p;
 	wi = normalize(lightDir);
 	pdf = 1.0;
-	shadowRay.origin = vec4(ref.p + wi * 0.0001, 1);
-	shadowRay.direction = vec4(wi, 1);
+	shadowRay.origin = ref.p + wi * 0.0001;
+	shadowRay.direction = wi;
 	shadowRay.tMax = length(lightDir);
 
 	//return light.I.rgb * light.I.a / (4 * dot(lightDir, lightDir) * PI);
