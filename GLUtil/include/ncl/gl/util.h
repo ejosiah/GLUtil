@@ -6,6 +6,7 @@
 #include <functional>
 #include <cmath>
 #include <atomic>
+#include <iostream>
 
 namespace ncl {
 
@@ -42,7 +43,7 @@ namespace ncl {
 			throw std::runtime_error(msg);
 		}
 		std::string line, buffer;
-		while (getline(fp, line)) {
+		while (std::getline(fp, line)) {
 			if (!line.empty()) {
 				buffer.append(line);
 				buffer.append("\r\n");

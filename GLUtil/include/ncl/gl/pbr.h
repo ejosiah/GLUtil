@@ -323,15 +323,3 @@ namespace ncl {
 		}
 	}
 }
-
-template<>
-struct ncl::gl::ObjectReflect<ncl::pbr::Scene> {
-
-	static GLsizeiptr sizeOfObj(ncl::pbr::Scene& obj) {
-		return sizeof(glm::vec4) + sizeof(ncl::pbr::Light) * ncl::pbr::MAX_SCENE_LIGHTS;
-	}
-
-	static void* objPtr(ncl::pbr::Scene& obj) {
-		return &obj;
-	}
-};

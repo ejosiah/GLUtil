@@ -96,7 +96,7 @@ namespace ncl {
 				_vaoId{ vaoId }, _bufferId{ bufferId }{
 				glBindVertexArray(vaoId);
 				_ptr = (T*)glMapNamedBuffer(_bufferId, GL_READ_ONLY);
-				glBindBuffer(GL_ARRAY_BUFFER, bufferId);
+				glBindBuffer(GL_ARRAY_BUFFER, bufferId);	// TODO make generic
 				glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &_size);
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				_size /= sizeof(T);

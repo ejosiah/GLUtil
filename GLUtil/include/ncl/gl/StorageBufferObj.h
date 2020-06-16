@@ -5,20 +5,6 @@
 
 namespace ncl {
 	namespace gl {
-
-		template<typename U>
-		struct ObjectReflect {
-
-			template<typename U>
-			static GLsizeiptr sizeOfObj(U& obj);
-
-			template<typename U>
-			static void* objPtr(U& obj);
-
-			template<typename U>
-			static GLsizeiptr sizeOf(int size);
-		};
-		
 		template<typename T>
 		class StorageBufferObj {
 		public:
@@ -43,6 +29,8 @@ namespace ncl {
 			T* get();
 
 			T getFromGPU();
+
+			T getFromGPU(unsigned int index);
 
 			inline GLuint buffer() {
 				return _buf;

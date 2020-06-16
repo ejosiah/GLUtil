@@ -61,7 +61,7 @@ namespace ncl {
 		};
 
 		struct Texture {
-			GLuint unit;
+			GLint unit;
 			GLuint buffer;
 		};
 

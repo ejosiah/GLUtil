@@ -153,9 +153,6 @@ namespace ncl {
 				Mesh mesh;
 
 
-
-
-
 				mesh.positions = std::vector<vec3>(std::begin(positions), std::end(positions));
 				mesh.normals = std::vector<vec3>(std::begin(normals), std::end(normals));
 				mesh.material.diffuse = { 0.5f, 0.5f, 0.5f, 1.0f };

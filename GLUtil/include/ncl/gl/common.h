@@ -18,6 +18,23 @@
 
 
 namespace ncl {
+
+	struct padding_4 {
+		int p0;
+	};
+
+	struct padding_8 {
+		int p0, p1;
+	};
+
+	struct padding_12 {
+		int p0, p1, p2;
+	};
+
+	struct padding_16 {
+		int p0, p1, p2, p3;
+	};
+
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)
 

@@ -117,6 +117,7 @@ namespace ncl {
 			void init0(){
 				setForeGroundColor(BLACK);
 				setBackGroundColor(WHITE);
+
 				using namespace std;
 				if (_useImplictShaderLoad) {
 					loadShaderImplicity();
@@ -146,6 +147,8 @@ namespace ncl {
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
 
+				_fontColor = getForeGround();
+
 				init();
 				initDefaultCamera();
 				initCameras();
@@ -156,7 +159,7 @@ namespace ncl {
 					}
 					processInput(key);
 				});
-				sFont = Font::Arial(_fontSize, 0, getForeGround());				
+				sFont = Font::Arial(_fontSize, 0, _fontColor);
 			}
 
 			void loadShaderImplicity() {
@@ -586,6 +589,10 @@ namespace ncl {
 				}).get();
 			}
 
+			void fontColor(glm::vec4 color) {
+				_fontColor = color;
+			}
+
 			GlmCam cam;
 			_3DMotionEventHandler* _motionEventHandler;
 
@@ -630,6 +637,7 @@ namespace ncl {
 			std::stringstream sbr;
 			std::vector<Exec> deferred;
 			GLFWwindow* _offScreenWindow;
+			glm::vec4 _fontColor;
 			concurrency::ThreadPool executor{ 1 };
 		};
 	}

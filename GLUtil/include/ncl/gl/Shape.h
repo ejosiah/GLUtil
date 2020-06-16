@@ -443,8 +443,8 @@ namespace ncl {
 				int n = 0;
 				int v = 0;
 				for (int i = 0; i < vaoIds.size(); i++) {
-					n = numIndices(i);
-					v = numVertices(i);
+					n += numIndices(i);
+					v += numVertices(i);
 				}
 				if (n > 0) return n / 3;
 				return v / 3;

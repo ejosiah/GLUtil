@@ -29,19 +29,8 @@ namespace ncl {
 			camera.screenToRaster = glm::inverse(camera.rasterToCamera);
 			camera.cameraToScreen = scene.activeCamera().getProjectionMatrix();
 			camera.rasterToCamera = glm::inverse(scene.activeCamera().getProjectionMatrix()) * camera.rasterToScreen;
-			camera.cameraToWorld = glm::inverse(scene.activeCamera().getViewMatrix());
+			auto view = scene.activeCamera().getViewMatrix();
+			camera.cameraToWorld = glm::inverse(view);
 		}
 	}
 }
-
-template<>
-struct ncl::gl::ObjectReflect<ncl::ray_tracing::Camera> {
-
-	static GLsizeiptr sizeOfObj(ncl::ray_tracing::Camera& camera) {
-		return GLsizeiptr(sizeof(camera));
-	}
-
-	static void* objPtr(ncl::ray_tracing::Camera& camera) {
-		return &camera;
-	}
-};

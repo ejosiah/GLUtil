@@ -23,7 +23,7 @@ namespace ncl {
 				mesh.uvs[0] = std::vector<glm::vec2>(num_vertices);
 				mesh.indices = std::vector<GLuint>(num_indices * 6);
 				mesh.colors = std::vector<glm::vec4>(num_vertices, color);
-				mesh.primitiveType = GL_TRIANGLES_ADJACENCY;
+				mesh.primitiveType = GL_TRIANGLES;
 
 				generatePatches((float*)&mesh.positions[0], (float*)&mesh.normals[0], (float*)&mesh.uvs[0][0], (unsigned*)&mesh.indices[0], grid);
 
@@ -33,7 +33,7 @@ namespace ncl {
 					mesh.normals[i] = glm::inverseTranspose(rotMat) * mesh.normals[i];
 				}
 				
-				mesh.indices = addAdjacency(mesh.indices);
+			//	mesh.indices = addAdjacency(mesh.indices);
 				std::vector<Mesh> meshes(1, mesh);
 				if(_normalize) normalize(meshes, 1.0f);
 				moveLid(grid, (float*)&meshes[0].positions[0], lidTransform);

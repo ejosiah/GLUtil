@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include "../gl/common.h"
 #include "Ray.h"
 #include "camera.h"
 
@@ -35,10 +36,14 @@ namespace ncl {
 
 #pragma pack(push, 1)
 		struct Plane {
-			glm::vec3 n;
+			glm::vec4 n;
+			glm::vec4 min = glm::vec4(-1000);
+			glm::vec4 max = glm::vec4(1000);
 			float d;
 			int id;
 			int matId;
+			int padding;
+		//	glm::vec2 padding;
 		};
 #pragma pack(pop)
 
@@ -94,79 +99,8 @@ namespace ncl {
 			int objectToWorldId;
 			int worldToObjectId;
 			int id;
-			int padding;
+			int matId;
 		};
 #pragma pack(pop)
-		
-#pragma pack(push, 1)
-
-#pragma pack(pop)
-
 	}
 }
-
-template<>
-struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::Plane>> {
-
-	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::Plane>& planes) {
-		auto size = sizeof(ncl::ray_tracing::Plane);
-		return GLsizeiptr(size * planes.size());
-	}
-
-	static void* objPtr(std::vector<ncl::ray_tracing::Plane>& planes) {
-		return &planes[0];
-	}
-
-	static GLsizeiptr sizeOf(int count) {
-		return GLsizeiptr(sizeof(ncl::ray_tracing::Plane) * count);
-	}
-};
-
-//template<>
-//struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::LightSource>> {
-//
-//	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::LightSource>& lights) {
-//		auto size = sizeof(ncl::ray_tracing::LightSource);
-//		return GLsizeiptr(size * lights.size());
-//	}
-//
-//	static void* objPtr(std::vector<ncl::ray_tracing::LightSource>& lights) {
-//		return &lights[0];
-//	}
-//
-//	static GLsizeiptr sizeOf(int count) {
-//		return GLsizeiptr(sizeof(ncl::ray_tracing::LightSource) * count);
-//	}
-//};
-//
-//template<>
-//struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::Sphere>> {
-//
-//	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::Sphere>& obj) {
-//		return (GLsizeiptr)(sizeof(ncl::ray_tracing::Sphere) * obj.size());
-//	}
-//
-//	static void* objPtr(std::vector<ncl::ray_tracing::Sphere>& obj) {
-//		return &obj[0];
-//	}
-//
-//	static GLsizeiptr sizeOf(int count) {
-//		return GLsizeiptr(sizeof(ncl::ray_tracing::Sphere) * count);
-//	}
-//};
-//
-//template<>
-//struct ncl::gl::ObjectReflect<std::vector<ncl::ray_tracing::Material>> {
-//
-//	static GLsizeiptr sizeOfObj(std::vector<ncl::ray_tracing::Material>& obj) {
-//		return (GLsizeiptr)(sizeof(ncl::ray_tracing::Material) * obj.size());
-//	}
-//
-//	static void* objPtr(std::vector<ncl::ray_tracing::Material>& obj) {
-//		return &obj[0];
-//	}
-//
-//	static GLsizeiptr sizeOf(int count) {
-//		return GLsizeiptr(sizeof(ncl::ray_tracing::Material) * count);
-//	}
-//};

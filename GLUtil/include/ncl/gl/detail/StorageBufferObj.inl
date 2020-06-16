@@ -56,15 +56,25 @@ namespace ncl {
 		template<typename T>
 		T StorageBufferObj<T>::getFromGPU() {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			T* data = (T*)glMapNamedBuffer(_buf, GL_READ_ONLY);
+			T data = *((T*)glMapNamedBuffer(_buf, GL_READ_ONLY));
 			glUnmapNamedBuffer(_buf);
-			return *data;
+			return data;
+		}
+
+		template<typename T>
+		T StorageBufferObj<T>::getFromGPU(unsigned index) {
+			auto offset = sizeOf(index);
+			assert(offset < _size);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
+			T data = *((T*)glMapNamedBuffer(_buf, GL_READ_ONLY) + index);
+			glUnmapNamedBuffer(_buf);
+			return data;
 		}
 
 		template<typename T>
 		void StorageBufferObj<T>::sendToGPU(bool update) {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			if (update) {
+			if (update && !_obj.empty()) {
 				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _size, &_obj[0]);
 			}
 		}
