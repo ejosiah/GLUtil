@@ -12,6 +12,7 @@
 #include "textures.h"
 #include "TransformFeedBack.h"
 #include "buffer_iterator.h"
+#include "../geom/aabb2.h"
 
 namespace ncl {
 	namespace gl {
@@ -30,6 +31,9 @@ namespace ncl {
 				}
 				whiteTexture = new CheckerTexture(0, "white", WHITE, WHITE);
 				normalTexture = new CheckerTexture(0, "normalMap", BLUE, BLUE);
+				for (auto& mesh : meshes) {
+					_aabb = geom::bvol::aabb::Union(_aabb, mesh.positions);
+				}
 			}
 
 			Shape(Shape&& source) noexcept {
@@ -462,6 +466,10 @@ namespace ncl {
 				useDefaultMaterial = flag;
 			}
 
+			geom::bvol::AABB2 aabb() const {
+				return _aabb;
+			}
+
 		protected:
 			Texture2D* checkerBoard;
 			void normalize(std::vector<Mesh>& mesh, float _scale) {
@@ -528,6 +536,7 @@ namespace ncl {
 				dest.whiteTexture = source.whiteTexture;
 				dest.normalTexture = source.normalTexture;
 				dest.useDefaultMaterial = source.useDefaultMaterial;
+				dest._aabb = source._aabb;
 
 				source.whiteTexture = nullptr;
 				source.normalTexture = nullptr;
@@ -544,6 +553,7 @@ namespace ncl {
 			Texture2D* whiteTexture = nullptr;
 			Texture2D* normalTexture = nullptr;
 			bool useDefaultMaterial = true;
+			geom::bvol::AABB2 _aabb;
 		};
 	}
 }

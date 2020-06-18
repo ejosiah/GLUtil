@@ -31,21 +31,25 @@ namespace ncl {
 					return create(&points[0], points.size());
 				}
 
-				inline glm::vec3 diagonal(AABB2& aabb) {
+				inline glm::vec3 diagonal(const AABB2& aabb) {
 					return aabb.max.xyz - aabb.min.xyz;
 				}
 
-				inline float sufraceArea(AABB2& aabb) {
+				inline glm::vec3 halfWidth(const AABB2& aabb) {
+					return diagonal(aabb) * 0.5f;
+				}
+
+				inline float sufraceArea(const AABB2& aabb) {
 					auto d = diagonal(aabb);
 					return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
 				}
 
-				inline float volume(AABB2& aabb) {
+				inline float volume(const AABB2& aabb) {
 					auto d = diagonal(aabb);
 					return d.x * d.y * d.z;
 				}
 
-				inline int maxExtent(AABB2& aabb) {
+				inline int maxExtent(const AABB2& aabb) {
 					auto d = diagonal(aabb);
 					if (d.x > d.y && d.x > d.z)
 						return 0;
@@ -66,6 +70,14 @@ namespace ncl {
 					AABB2 aabb;
 					aabb.min = glm::min(a.min, glm::vec4(p, 0));
 					aabb.max = glm::max(a.max, glm::vec4(p, 0));
+					return aabb;
+				}
+
+				inline AABB2 Union(const AABB2& bounds, const std::vector<glm::vec3> points) {
+					AABB2 aabb = bounds;
+					for (auto p : points) {
+						aabb = Union(aabb, p);
+					}
 					return aabb;
 				}
 
