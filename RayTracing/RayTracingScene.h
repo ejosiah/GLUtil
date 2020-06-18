@@ -21,7 +21,7 @@ namespace bvh = geom::bvh;
 const unsigned int MILLION = 1000000;
 const unsigned int BILLION = 1000000000;
 const float DAY_LIGHT_ILLUMINANCE = 64000;
-const int MaxSpheres = 0;
+const int MaxSpheres = 100;
 const int MAX_BOUNCES = 10;
 Logger& logger = Logger::get("ray");
 
@@ -116,7 +116,8 @@ public:
 		plane.n = { 0, 1, 0, 1 };
 		plane.d = 0;
 		plane.id = planes.size();
-		plane.matId = materials.size();
+		plane.matId = -1;
+		//plane.matId = materials.size();
 
 		rt::Material m;
 		m.ambient = vec4(0);
@@ -184,8 +185,8 @@ public:
 			m.kr = vec4(0.8, 0.8, 0.8, 1.0);
 			m.ior = rngIOR();
 		//	m.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//	m.bsdf[0] = rt::BSDF_DIFFUSE;
-			m.bsdf[0] = bsdfs[rngIndex()];
+			m.bsdf[0] = rt::BSDF_DIFFUSE;
+		//	m.bsdf[0] = bsdfs[rngIndex()];
 			m.nBxDfs += 1;
 
 			rt::Sphere s;
@@ -253,53 +254,35 @@ public:
 		materials.push_back(mat);
 
 		//initNextIndex();
-		auto cube = Teapot{10};
-	//	auto cube = Cube{ 10 };
-		auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\cornell\\cube.obj" };
+		auto cube = Teapot{5};
+	//	auto cube = Cube{ 1 };
+	//	auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\stanford-dragon\\stanford-dragon.obj", true };
+	//	auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-glass\\lte_glass.obj", true, 20};
+	//	auto& cube = *model;
 
-		//cube.get<vec3>(0, VAOObject::Position, [&](GlBuffer<vec3> buffer) {
-		//	for_each(buffer.begin(), buffer.end(), [&](auto v) {
-		//		bounds = box::Union(bounds, v);
-		//	});
-		//});
-
-		triangleData.numTriangles = cube.numTriangles();
-		triangleData.triangles.unit = 2;
-		glGenTextures(1, &triangleData.triangles.buffer);
-		glBindTexture(GL_TEXTURE_BUFFER, triangleData.triangles.buffer);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, cube.bufferFor(0, VAOObject::Position));
-
-		triangleData.normals.unit = 3;
-		glGenTextures(1, &triangleData.normals.buffer);
-		glBindTexture(GL_TEXTURE_BUFFER, triangleData.normals.buffer);
-		glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32F, cube.bufferFor(0, VAOObject::Normal));
-
-		//triangleData.uvs.unit = 4;
-		//glGenTextures(1, &triangleData.uvs.buffer);
-		//glBindTexture(GL_TEXTURE_BUFFER, triangleData.uvs.buffer);
-		//glTexBuffer(GL_TEXTURE_BUFFER, GL_RG32F, cube.bufferFor(0, VAOObject::TexCoord));
-
-		
-		if (cube.numIndices(0) > 0) {
-			triangleData.hasIndices = true;
-			triangleData.indices.unit = 5;
-			glGenTextures(1, &triangleData.indices.buffer);
-			glBindTexture(GL_TEXTURE_BUFFER, triangleData.indices.buffer);
-			glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32I, cube.bufferFor(0, VAOObject::Indices));
-		}
+	//	numTriangles = cube.numTriangles();
 
 		numTriangles = 0;
 		for (int i = 0; i < cube.numMeshes(); i++) {
 			numTriangles += cube.numTriangles();
 		}
-		
 
 		initNextIndex();
 		triangle_ssbo = StorageBufferObj<rt::Triangle>{ numTriangles,  6};
 		shading_ssbo = StorageBufferObj<rt::Shading>{ numTriangles,  7};
 		numTriangles = 1;
-		mat4 xform = scale(mat4(1), vec3(5));
-		xform = translate(xform, { 0, 0.5, 0 });
+
+		auto aabb = cube.aabb();
+		auto d = box::diagonal(aabb);
+		vec3 min = aabb.min.xyz;
+		vec3 max = aabb.max.xyz;
+		float dy = d.y * 0.5;
+		float offset = dot(d * 0.5f, { 0, 1, 0 });
+		auto diff = box::halfWidth(aabb) + min;
+
+		mat4 xform = mat4(1);
+	//	xform = scale(mat4(1), vec3(5));
+		xform = translate(xform, { 0, dy, 0 });
 		scene.shader("capture_triangles")([&] {
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
 			glEnable(GL_RASTERIZER_DISCARD);
@@ -574,7 +557,7 @@ public:
 	}
 
 	string toString(unsigned int n) {
-		int m = std::floor(n / float(MILLION));
+		float m = std::floor(n / float(MILLION));
 		if (m == 0) return to_string(n);
 		if (m < 1000) return to_string(m) + " million";
 		

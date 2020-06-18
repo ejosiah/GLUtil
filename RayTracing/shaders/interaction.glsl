@@ -75,7 +75,7 @@ void intialize(HitInfo hit, Ray ray, out SurfaceInteration interact) {
 		vec3 p = interact.p;
 		vec3 n = interact.n;
 
-		n = dot(-ray.direction, n) < 0 ? -n : n;
+	//	n = dot(-ray.direction, n) < 0 ? -n : n;
 
 		vec3 x, y;
 		orthonormalBasis(n, x, y);

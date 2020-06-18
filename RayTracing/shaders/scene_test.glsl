@@ -5,11 +5,19 @@
 bool anyHit(Ray ray) {
 	HitInfo local_hit;
 	local_hit.t = ray.tMax;
-	for (int i = 0; i < numSpheres; i++) {
-		Sphere s = sphere[i];
-		if (intersectSphere(ray, s, local_hit)) {
-			return true;
+
+	if (intersectCube(ray, bounds, local_hit)) {
+		for (int i = 0; i < numSpheres; i++) {
+			Sphere s = sphere[i];
+			if (intersectSphere(ray, s, local_hit)) {
+				return true;
+			}
 		}
+
+		//local_hit.t = ray.tMax;
+		//if (intersectsTriangle(ray, local_hit, 0)) {
+		//	return true;
+		//}
 	}
 
 	local_hit.t = ray.tMax;
@@ -50,13 +58,13 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 		//	}
 		//}
 
-		local_hit.t = hit.t;
-		if (intersectsTriangle(ray, local_hit, 0)) {
-			aHit = true;
-			if (local_hit.t < hit.t) {
-				hit = local_hit;
-			}
-		}
+		//local_hit.t = hit.t;
+		//if (intersectsTriangle(ray, local_hit, 0)) {
+		//	aHit = true;
+		//	if (local_hit.t < hit.t) {
+		//		hit = local_hit;
+		//	}
+		//}
 	}
 
 

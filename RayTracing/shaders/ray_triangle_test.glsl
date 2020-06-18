@@ -151,6 +151,8 @@ bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx) {
 		atomicCounterIncrement(test_count);
 		if (intersectCube(ray, node.box, lHit)) {
 			if (isLeaf(node)) {
+				//hit = lHit;
+				//return true;
 				if (intersect(ray, node.offset, node.size, lHit)) aHit = true;
 
 				if (toVisitOffset == 0) break;

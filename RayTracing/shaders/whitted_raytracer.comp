@@ -141,14 +141,6 @@ vec3 shade(SurfaceInteration interact){
 		f = 20.0;
 	}
 
-	if (interact.shape == PLANE || interact.shape == TRIANGLE) {
-		ka = vec3(0);
-		kd = Checkerboard(interact.uv);
-		//kd = texture(checkerboard, interact.uv).rgb;
-		ks = vec3(1);
-		f = 20.0;
-	}
-
 	float wi_dot_n = dot(wi, n);
 
 	//vec3 Li = ka * vec3(0.3) + I;
