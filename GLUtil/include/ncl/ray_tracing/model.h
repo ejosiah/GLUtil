@@ -43,7 +43,7 @@ namespace ncl {
 			int id;
 			int matId;
 			int padding;
-		//	glm::vec2 padding;
+		//	glm::glm::vec2 padding;
 		};
 #pragma pack(pop)
 
@@ -93,13 +93,56 @@ namespace ncl {
 
 #pragma pack(push, 1)
 		struct Triangle {
-			glm::vec4 a;
-			glm::vec4 b;
-			glm::vec4 c;
+			glm::vec3 a;
+			padding_4 padding0;
+
+			glm::vec3 b;
+			padding_4 padding1;
+
+			glm::vec3 c;
+			padding_4 padding2;
+
 			int objectToWorldId;
 			int worldToObjectId;
 			int id;
 			int matId;
+		};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+		struct Shading {
+			glm::vec3 n0;
+			int id;
+			
+			glm::vec3 n1;
+			padding_4 padding0;
+
+			glm::vec3 n2;
+			padding_4 padding1;
+
+			glm::vec3 t0;
+			padding_4 padding2;
+
+			glm::vec3 t1;
+			padding_4 padding3;
+
+			glm::vec3 t2;
+			padding_4 padding4;
+
+			glm::vec3 bi0;
+			padding_4 padding5;
+
+			glm::vec3 bi1;
+			padding_4 padding6;
+
+			glm::vec3 bi2;
+			padding_4 padding7;
+
+			glm::vec2 uv0;
+			glm::vec2 uv1;
+
+			glm::vec2 uv2;
+			padding_8 padding8;
 		};
 #pragma pack(pop)
 	}

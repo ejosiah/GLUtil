@@ -9,6 +9,13 @@ layout(binding=1) uniform sampler2D checkerboard;
 
 layout(binding=0, offset=0) uniform atomic_uint ray_count;
 layout(binding=0, offset=4) uniform atomic_uint shadow_ray_count;
+layout(binding=0, offset=8) uniform atomic_uint	test_count;
+
+layout(binding=1, offset=0) uniform atomic_uint triangle_test_count;
+layout(binding=1, offset=4) uniform atomic_uint sphere_test_count;
+layout(binding=1, offset=8) uniform atomic_uint plane_test_count;
+layout(binding=1, offset=12) uniform atomic_uint box_test_count;
+
 
 const int MAX_BOUNCES = 5;
 const float RRThreshold = 0.001;
@@ -22,6 +29,14 @@ uniform int numTriangles = 1;
 uniform int bounces = 5;
 uniform bool fetchFromTexture = true;
 uniform bool cullBackFace = false;
+
+// BVH start
+uniform float maxDepth;
+uniform int numNodes;
+uniform bool useLowPoly = false;
+uniform int lowPolyRoot;
+// BVH End
+
 
 #pragma include("ray_tracing_common.glsl")
 #pragma include("ray_tracing_model.glsl")
@@ -59,7 +74,15 @@ layout(std430, binding=7) buffer SHADING_SSB0{
 	Shading shadings[];
 };
 
-layout(std430, binding=8) buffer DEBUG_SSB0{
+layout(std430, binding=8) buffer BVH_SSBO{
+    BVHNode bvh[];
+};
+
+layout(std430, binding=9) buffer BVH_TRI_INDEX_SSBO{
+    int index[];
+};
+
+layout(std430, binding=11) buffer DEBUG_SSB0{
 	Debug debugs[];
 };
 
@@ -110,14 +133,18 @@ vec3 shade(SurfaceInteration interact){
 		kd = mat.diffuse.xyz;
 		ks = mat.specular.xyz;
 		f = mat.shine;
-	}
-	if(interact.shape == BOX){
-		return p;
-	}
-
-	if (interact.shape == PLANE) {
+	}else{
 		ka = vec3(0);
 		kd = Checkerboard(interact.uv);
+	//	kd = texture(checkerboard, interact.uv).rgb;
+		ks = vec3(1);
+		f = 20.0;
+	}
+
+	if (interact.shape == PLANE || interact.shape == TRIANGLE) {
+		ka = vec3(0);
+		kd = Checkerboard(interact.uv);
+		//kd = texture(checkerboard, interact.uv).rgb;
 		ks = vec3(1);
 		f = 20.0;
 	}
@@ -193,13 +220,13 @@ vec3 trace(Ray ray){
 		if(accum_pdf <= RRThreshold) break;
 		atomicCounterIncrement(ray_count);
 		HitInfo hit;
-		vec3 wo = -r.direction.xyz;
+		vec3 wo = -r.direction;
 		vec3 wi;
 		if (intersectScene(r, hit)){
 			SurfaceInteration interact;
 			intialize(hit, r, interact);
 
-//			if(interact.shape == TRIANGLE) return vec3(1, 0, 0);
+		//	if(interact.shape == BOX) return vec3(1, 0, 0);
 
 //			Ray shadow_ray;
 //			float lpdf;
@@ -266,7 +293,7 @@ vec3 trace(Ray ray){
 			r = spawnRay(interact, wi);
 		}
 		else{
-			color += accum_f * texture(environmentMap, r.direction.xyz).rgb;
+			color += accum_f * texture(environmentMap, r.direction).rgb;
 			weight += accum_f;
 			break;
 		}
@@ -284,7 +311,7 @@ vec3 trace1(Ray ray){
 		if(accum_pdf <= RRThreshold) break;
 		atomicCounterIncrement(ray_count);
 		HitInfo hit;
-		vec3 wo = -r.direction.xyz;
+		vec3 wo = -r.direction;
 		vec3 wi;
 		if (intersectScene(r, hit)){
 			SurfaceInteration interact;
@@ -326,7 +353,7 @@ vec3 trace1(Ray ray){
 			r = spawnRay(interact, wi);
 		}
 		else{
-			color += accum_f * texture(environmentMap, r.direction.xyz).rgb;
+			color += accum_f * texture(environmentMap, r.direction).rgb;
 			weight += accum_f;
 			break;
 		}
@@ -348,7 +375,7 @@ vec3 trace2(Ray ray){
 			color = vec3(0);
 		}
 	}else{
-		color = texture(environmentMap, r.direction.xyz).rgb;
+		color = texture(environmentMap, r.direction).rgb;
 	}
 	
 

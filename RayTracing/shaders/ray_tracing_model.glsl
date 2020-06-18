@@ -79,6 +79,7 @@ struct Triangle {
 
 struct Shading {
 	vec3 n0;
+	int id;
 	vec3 n1;
 	vec3 n2;
 	vec3 t0;
@@ -90,7 +91,6 @@ struct Shading {
 	vec2 uv0;
 	vec2 uv1;
 	vec2 uv2;
-	int id;
 };
 
 struct Camera {
@@ -149,6 +149,20 @@ struct Debug {
 	int id;
 	int shapeId;
 	float t;
+};
+
+const int ROOT = 0;
+const int LEFT = 0;
+const int RIGHT = 1;
+
+struct BVHNode {
+	Box box;
+	int splitAxis;
+	int id;
+	int offset;
+	int size;
+	int isLeaf;
+	int child[2];
 };
 
 Ray transform(mat4 m, Ray ray) {

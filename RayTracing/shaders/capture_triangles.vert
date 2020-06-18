@@ -11,6 +11,8 @@ layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
 layout(location=8) in mat4 xform;
 
+uniform mat4 model = mat4(1);
+
 out ncl_PerVetex {
 	smooth vec3 position;
 	smooth vec3 normal;
@@ -22,8 +24,9 @@ out ncl_PerVetex {
 
 
 void main(){
-	vec4 worldPos = xform * vec4(position, 1.0);
-	mat3 NM = transpose(inverse(mat3(xform)));
+	mat4 toWorld = model * xform;
+	vec4 worldPos = toWorld * vec4(position, 1.0);
+	mat3 NM = transpose(inverse(mat3(toWorld)));
 	ncl_out.normal = normalize(NM * normal);
 	ncl_out.tangent = normalize(NM * tangent);
 	ncl_out.bitangent = normalize(NM * bitangent);

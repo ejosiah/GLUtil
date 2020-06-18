@@ -160,6 +160,11 @@ namespace ncl {
 			Shader::boundShader->sendUniform4ui(name, v0, v1, v2, v3);
 		}
 
+		inline void send(const std::string& name, size_t size) {
+			ensureShaderbound();
+			Shader::boundShader->sendUniform1i(name, int(size));
+		}
+
 		inline void send(const std::string& name, GLsizei count, GLboolean transpose, glm::mat2 value) {
 			ensureShaderbound();
 			Shader::boundShader->sendUniformMatrix2fv(name, count, transpose, glm::value_ptr(value));

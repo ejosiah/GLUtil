@@ -39,3 +39,11 @@ vec3 flipNormal(vec3 wo, vec3 n) {
 float saturate(float x) {
 	return clamp(x, 0, 1);
 }
+
+void orthonormalBasis(vec3 n, out vec3 x, out vec3 y) {
+	float s = n.z >= 0.0 ? 1.0 : -1.0;
+	float a = -1.0 / (s + n.z);
+	float b = n.x * n.y * a;
+	x = vec3(1.0 + s * n.x * n.x * a, s * b, -s * n.x);
+	y = vec3(b, s + n.y * n.y * a, -n.y);
+}

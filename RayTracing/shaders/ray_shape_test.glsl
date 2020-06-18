@@ -2,8 +2,8 @@
 
 bool intersectPlane(Ray ray, Plane p, out HitInfo hit) {
 
-	float t = p.d - dot(p.n.xyz, ray.origin.xyz);
-	t /= dot(p.n.xyz, ray.direction.xyz);
+	float t = p.d - dot(p.n.xyz, ray.origin);
+	t /= dot(p.n.xyz, ray.direction);
 
 	if (t < 0 || t > ray.tMax) {
 		return false;
@@ -29,9 +29,9 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 	Ray r = transform(s.worldToObject, ray);
 //	Ray r = ray;
 
-	vec3 m = r.origin.xyz - s.c.xyz;
-	float a = dot(r.direction.xyz, r.direction.xyz);
-	float b = dot(m, ray.direction.xyz);
+	vec3 m = r.origin - s.c.xyz;
+	float a = dot(r.direction, r.direction);
+	float b = dot(m, ray.direction);
 	float c = dot(m, m) - s.r * s.r;
 
 	if (c > 0.0 && b > 0.0) return false;
@@ -49,7 +49,7 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 	if (tHit <= 0.0) tHit = t1;
 	if (tHit > r.tMax) return false;
 
-	vec3 p = r.origin.xyz + r.direction.xyz * tHit;
+	vec3 p = r.origin + r.direction * tHit;
 	p *= s.r / distance(p, s.c.xyz);
 	if (p.x == 0 && p.z == 0) p.x = 1E-5 * s.r;
 	float phi = atan(p.z, p.x);
@@ -60,7 +60,7 @@ bool intersectSphere(Ray ray, Sphere s, out HitInfo hit) {
 		if (t1 > ray.tMax) return false;
 
 		tHit = t1;
-		p = r.origin.xyz + r.direction.xyz * tHit;
+		p = r.origin + r.direction * tHit;
 		p *= s.r / distance(p, s.c.xyz);
 		if (p.x == 0.0 && p.z == 0.0) p.x = 1E-5 * s.r;
 		float phi = atan(p.z, p.x);
@@ -84,8 +84,8 @@ bool hasNoVolume(Box box) {
 
 bool intersectBox(Ray ray, Box box) {
 	if (hasNoVolume(box)) return false;
-	vec3   tMin = (box.min - ray.origin.xyz) / ray.direction.xyz;
-	vec3   tMax = (box.max - ray.origin.xyz) / ray.direction.xyz;
+	vec3   tMin = (box.min - ray.origin) / ray.direction;
+	vec3   tMax = (box.max - ray.origin) / ray.direction;
 	vec3     t1 = min(tMin, tMax);
 	vec3     t2 = max(tMin, tMax);
 	float tNear = max(max(t1.x, t1.y), t1.z);
@@ -95,8 +95,8 @@ bool intersectBox(Ray ray, Box box) {
 
 bool intersectCube(Ray ray, Box box, out HitInfo hit) {
 	if (hasNoVolume(box)) return false;
-	vec3   tMin = (box.min - ray.origin.xyz) / ray.direction.xyz;
-	vec3   tMax = (box.max - ray.origin.xyz) / ray.direction.xyz;
+	vec3   tMin = (box.min - ray.origin) / ray.direction;
+	vec3   tMax = (box.max - ray.origin) / ray.direction;
 	vec3     t1 = min(tMin, tMax);
 	vec3     t2 = max(tMin, tMax);
 	float tn = max(max(t1.x, t1.y), t1.z);
@@ -123,8 +123,8 @@ bool intersectCube(Ray ray, Box box, out HitInfo hit) {
 //bool triangleRayIntersect(Ray ray, Triangle tri, out float t, out float u, out float v, out float w) {
 //	vec3 ba = tri.b.xyz - tri.a.xyz;
 //	vec3 ca = tri.c.xyz - tri.a.xyz;
-//	vec3 pa = ray.origin.xyz - tri.a.xyz;
-//	vec3 pq = -ray.direction.xyz;
+//	vec3 pa = ray.origin - tri.a.xyz;
+//	vec3 pq = -ray.direction;
 //
 //	vec3 n = cross(ba, ca);
 //	float d = dot(pq, n);

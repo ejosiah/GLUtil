@@ -7,6 +7,8 @@
 #include "../GLUtil/include/ncl/ray_tracing/model.h"
 #include "../GLUtil/include/ncl/ray_tracing/Ray.h"
 #include "../GLUtil/include/ncl/geom/aabb2.h"
+#include "../GLUtil/include/ncl/geom/bvh2.h"
+#include "../GLUtil/include/ncl/data_structure/binary_tree.h"
 
 using namespace std;
 using namespace ncl;
@@ -14,8 +16,10 @@ using namespace gl;
 using namespace glm;
 namespace rt = ray_tracing;
 namespace box = geom::bvol::aabb;
+namespace bvh = geom::bvh;
 
 const unsigned int MILLION = 1000000;
+const unsigned int BILLION = 1000000000;
 const float DAY_LIGHT_ILLUMINANCE = 64000;
 const int MaxSpheres = 0;
 const int MAX_BOUNCES = 10;
@@ -79,6 +83,7 @@ public:
 
 		skybox = SkyBox::create(skyTextures, 0, scene);
 		auto numRays = scene.width() * scene.height();
+		numPixels = numRays;
 
 		checkerboard = new CheckerBoard_gpu(255, 255, WHITE, GRAY, 1, "checker");
 		checkerboard->compute();
@@ -90,6 +95,7 @@ public:
 		checkerboard->images().front().renderMode();
 
 		initObjs();
+		buildBVH();
 		scene.shader("whitted_raytracer")([&] {
 			plane_ssbo.sendToGPU(true);
 			light_ssbo.sendToGPU(true);
@@ -124,106 +130,6 @@ public:
 		materials.push_back(m);
 		planes.push_back(plane);
 
-		//rt::Plane plane1;
-		//plane1.n = { 0, 0, 1, 1 };
-		//plane1.d = 5;
-		//plane1.id = planes.size();
-		//plane1.matId = materials.size();
-		//plane1.max = vec4(vec3(20), 1);
-		//plane1.min = vec4(vec3(0), 1);
-
-		//rt::Material m1;
-		//m1.ambient = vec4(0);
-		//m1.diffuse = vec4(1, 0, 0, 1);
-		//m1.ior = 1.52;
-		//m1.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//m1.nBxDfs += 1;
-		//m1.kr = vec4(0.8, 0.8, 0.8, 1.0);
-		//m1.kt = vec4(0.8, 0.8, 0.8, 1.0);
-		//m1.shine = 10;
-		//materials.push_back(m1);
-		//planes.push_back(plane1);
-
-		//rt::Plane plane2;
-		//plane2.n = { 0, 0, 1, 1 };
-		//plane2.d = 10;
-		//plane2.id = planes.size();
-		//plane2.matId = materials.size();
-		//plane2.max = vec4(vec3(20), 1);
-		//plane2.min = vec4(vec3(0), 1);
-
-		//rt::Material m2;
-		//m2.ambient = vec4(0);
-		//m2.diffuse = vec4(1, 0, 0, 1);
-		//m2.ior = 1.52;
-		//m2.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//m2.nBxDfs += 1;
-		//m2.kr = vec4(0.8, 0.8, 0.8, 1.0);
-		//m2.kt = vec4(0.8, 0.8, 0.8, 1.0);
-		//m2.shine = 50;
-		//materials.push_back(m2);
-		//planes.push_back(plane2);
-
-		//rt::Plane plane3;
-		//plane3.n = { 1, 0, 0, 1 };
-		//plane3.d = 0;
-		//plane3.id = planes.size();
-		//plane3.matId = materials.size();
-		//plane3.max = vec4(vec3(20), 1);
-		//plane3.min = vec4(vec3(0), 1);
-
-		//rt::Material m3;
-		//m3.ambient = vec4(0);
-		//m3.diffuse = vec4(1, 0, 0, 1);
-		//m3.ior = 1.52;
-		//m3.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//m3.nBxDfs += 1;
-		//m3.kr = vec4(0.8, 0.8, 0.8, 1.0);
-		//m3.kt = vec4(0.8, 0.8, 0.8, 1.0);
-		//m3.shine = 0;
-		//materials.push_back(m3);
-		//planes.push_back(plane3);
-
-		//rt::Plane plane4;
-		//plane4.n = { -1, 0, 0, 1 };
-		//plane4.d = 0;
-		//plane4.id = planes.size();
-		//plane4.matId = materials.size();
-		//plane4.max = vec4(vec3(20), 1);
-		//plane4.min = vec4(vec3(0), 1);
-
-		//rt::Material m4;
-		//m4.ambient = vec4(0);
-		//m4.diffuse = vec4(1, 0, 0, 1);
-		//m4.ior = 1.52;
-		//m4.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//m4.nBxDfs += 1;
-		//m4.kr = vec4(0.8, 0.8, 0.8, 1.0);
-		//m4.kt = vec4(0.8, 0.8, 0.8, 1.0);
-		//m4.shine = 50;
-		//materials.push_back(m4);
-		//planes.push_back(plane4);
-
-		//rt::Plane plane5;
-		//plane5.n = { 0, 1, 0, 1 };
-		//plane5.d = 0;
-		//plane5.id = planes.size();
-		//plane5.matId = materials.size();
-		//plane5.max = vec4(vec3(20), 1);
-		//plane5.min = vec4(vec3(0), 1);
-
-		//rt::Material m5;
-		//m5.ambient = vec4(0);
-		//m5.diffuse = vec4(1, 0, 0, 1);
-		//m5.ior = 1.52;
-		//m5.bsdf[0] = rt::FRESNEL_SPECULAR;
-		//m5.nBxDfs += 1;
-		//m5.kr = vec4(0.8, 0.8, 0.8, 1.0);
-		//m5.kt = vec4(0.8, 0.8, 0.8, 1.0);
-		//m5.shine = 50;
-		//materials.push_back(m5);
-		//planes.push_back(plane5);
-
 		numPlanes = planes.size();
 
 		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 5 };
@@ -232,7 +138,7 @@ public:
 		initSpheres(materials);
 		initTriangles(materials);
 		material_ssbo = StorageBufferObj<rt::Material>{ materials, 3 };
-		debug_ssbo = StorageBufferObj<Debug>{ scene.width() * scene.height(), 8 };
+		debug_ssbo = StorageBufferObj<Debug>{ size_t(scene.width() * scene.height()), 8 };
 
 	}
 
@@ -347,15 +253,15 @@ public:
 		materials.push_back(mat);
 
 		//initNextIndex();
-	//	auto cube = Teapot{2};
-		auto cube = Cube{ 10 };
+		auto cube = Teapot{10};
+	//	auto cube = Cube{ 10 };
 		auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\cornell\\cube.obj" };
 
-		cube.get<vec3>(0, VAOObject::Position, [&](GlBuffer<vec3> buffer) {
-			for_each(buffer.begin(), buffer.end(), [&](auto v) {
-				bounds = box::Union(bounds, v);
-			});
-		});
+		//cube.get<vec3>(0, VAOObject::Position, [&](GlBuffer<vec3> buffer) {
+		//	for_each(buffer.begin(), buffer.end(), [&](auto v) {
+		//		bounds = box::Union(bounds, v);
+		//	});
+		//});
 
 		triangleData.numTriangles = cube.numTriangles();
 		triangleData.triangles.unit = 2;
@@ -381,37 +287,46 @@ public:
 			glBindTexture(GL_TEXTURE_BUFFER, triangleData.indices.buffer);
 			glTexBuffer(GL_TEXTURE_BUFFER, GL_RGB32I, cube.bufferFor(0, VAOObject::Indices));
 		}
+
+		numTriangles = 0;
+		for (int i = 0; i < cube.numMeshes(); i++) {
+			numTriangles += cube.numTriangles();
+		}
 		
+
 		initNextIndex();
-		triangle_ssbo = StorageBufferObj<rt::Triangle>{ 12,  6};
+		triangle_ssbo = StorageBufferObj<rt::Triangle>{ numTriangles,  6};
+		shading_ssbo = StorageBufferObj<rt::Shading>{ numTriangles,  7};
 		numTriangles = 1;
+		mat4 xform = scale(mat4(1), vec3(5));
+		xform = translate(xform, { 0, 0.5, 0 });
 		scene.shader("capture_triangles")([&] {
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
 			glEnable(GL_RASTERIZER_DISCARD);
 
+			send("model", xform);
 			send("materialId", materialId);
 			triangle_ssbo.sendToGPU(false);
+			shading_ssbo.sendToGPU(false);
 			shade(cube);
 			numTriangles = *(int*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_ONLY);
 			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
 			glDisable(GL_RASTERIZER_DISCARD);
 		});
 		
-		//triangle_ssbo.read([&](rt::Triangle* itr) {
-		//	stringstream ss;
-		//	for (int i = 0; i < numTriangles; i++) {
-		//		auto tri = *(itr+i);
-		//		ss << "[a : " << tri.a.xyz << ", ";
-		//		ss << "b: " << tri.b.xyz << ", ";
-		//		ss << "c: " << tri.c.xyz << ", ";
-		//		ss << "id: " << tri.id << "], ";
-		//		ss << "material: " << tri.matId << "]";
-		//		logger.info(ss.str());
-		//		ss.clear();
-		//		ss.str("");
-		//		//triangles.push_back(tri);
-		//	}
-		//});
+		triangle_ssbo.read([&](rt::Triangle* itr) {
+			stringstream ss;
+			for (int i = 0; i < numTriangles; i++) {
+				auto triangle = *(itr+i);
+				bounds = box::Union(bounds, triangle.a);
+				bounds = box::Union(bounds, triangle.b);
+				bounds = box::Union(bounds, triangle.c);
+				//logger.info(ss.str());
+				//ss.clear();
+				//ss.str("");
+				//triangles.push_back(tri);
+			}
+		});
 		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
 		//auto nextIndex = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
 		//logger.info("nextIndex: " + to_string(*nextIndex));
@@ -444,12 +359,53 @@ public:
 		send("numTriangles", numTriangles);
 	}
 
+	void buildBVH() {
+
+		bvh::BVH_SSO bvh_buffer;
+		bvh::BVH_TRI_INDEX index_buffer;
+
+		triangle_ssbo.read([&](rt::Triangle* ptr) {
+
+			auto getBounds = [](Bounds bounds, rt::Triangle triangle) {
+				bounds = box::Union(bounds, triangle.a);
+				bounds = box::Union(bounds, triangle.b);
+				bounds = box::Union(bounds, triangle.c);
+				return bounds;
+			};
+
+			bvhRoot = bvh::build(bvhRoot, ptr, numTriangles, getBounds, index_buffer, bvh_buffer, 16);
+		});
+
+		stats.height = ds::tree::height(bvhRoot);
+		stats.nodes = 0;
+
+		auto bvh_min = ds::tree::min(bvhRoot);
+		auto bvh_max = ds::tree::max(bvhRoot);
+
+		Mesh m;
+		int total = 0;
+		ds::tree::traverse(bvhRoot, [&](geom::bvh::BVHBuildNode* n) {
+			//	numNodes++;
+			if (n->isLeaf()) {
+				stats.nodes++;
+				vec4 color = n->leftChild ? CYAN : MAGENTA;
+				stats.primsPerNode += n->nPrimitives;
+				total++;
+			}
+			}, ds::tree::TraverseType::IN_ORDER);
+		stats.primsPerNode = stats.primsPerNode / total;
+		numNodes += ds::tree::size(bvhRoot);
+
+		bvh_ssbo = StorageBufferObj<bvh::LinearBVHNode>{ bvh_buffer.nodes, 8 };
+		primivite_indices_ssbo = StorageBufferObj<int>{ index_buffer.data, 9 };
+	}
+
 	void initRayCounter() {
-		unsigned counters[2]{ 0, 0 };
+		unsigned counters[3]{ 0, 0, 0 };
 		glGenBuffers(1, &rayCounterBuffer);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
-		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned) * 2, NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 2, counters);
+		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned) * 3, NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 3, counters);
 		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, rayCounterBuffer);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 	}
@@ -474,6 +430,8 @@ public:
 
 		light_ssbo.sendToGPU(true);
 		rays.sendToGPU(false);
+		bvh_ssbo.sendToGPU(false);
+		primivite_indices_ssbo.sendToGPU(false);
 		//triangle_ssbo.sendToGPU(true);
 		//send("numTriangles", numTriangles);
 		sendTriangles();
@@ -491,6 +449,8 @@ public:
 		send("numPlanes", numPlanes);
 		send("bounds.min", vec3(bounds.min));
 		send("bounds.max", vec3(bounds.max));
+		send("numNodes", numNodes);
+		send("cullBackFace", true);
 		glBindTextureUnit(0, skybox->buffer);
 		auto& img = checkerboard->images().front();
 		glBindTextureUnit(1, img.buffer());
@@ -600,23 +560,25 @@ public:
 			auto rayCounts = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
 			NumRays = rayCounts[0];
 			shadowRays = rayCounts[1];
-			rayCounts[0] = rayCounts[1] = 0;
+			testPerPixel = rayCounts[2];
+			rayCounts[0] = rayCounts[1] = rayCounts[2] = 0;
 			//glFlushMappedBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 2 * sizeof(unsigned));
 			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 		}
 
-		font.render("Rays: " + to_string(NumRays/ MILLION) + " million", 0, 100);
-		font.render("Shadow Rays: " + to_string(shadowRays/ MILLION) + "  million", 0, 110);
+		font.render("Rays: " + toString(NumRays), 0, 100);
+		font.render("Shadow Rays: " + toString(shadowRays), 0, 110);
+		font.render("Intersection Test: " + toString(testPerPixel), 0, 120);
+	
+	}
+
+	string toString(unsigned int n) {
+		int m = std::floor(n / float(MILLION));
+		if (m == 0) return to_string(n);
+		if (m < 1000) return to_string(m) + " million";
 		
-		//rt::Ray ray;
-		//rays.read([&](rt::Ray* ptr) {
-		//	ray = *ptr;
-		//	});
-		//stringstream ss;
-		//ss << "ray.origin: " << ray.origin.xyz;
-		//ss << "ray.direction: " << ray.direction.xyz;
-		//font.render(ss.str(), 0, 130);
+		return to_string(m / 1000) + " billion";
 	}
 
 	void update(float t) {
@@ -643,6 +605,9 @@ private:
 	StorageBufferObj<rt::Sphere> sphere_ssbo;
 	StorageBufferObj<rt::Material> material_ssbo;
 	StorageBufferObj<rt::Triangle> triangle_ssbo;
+	StorageBufferObj<rt::Shading> shading_ssbo;
+	StorageBufferObj<bvh::LinearBVHNode> bvh_ssbo;
+	StorageBufferObj<int> primivite_indices_ssbo;
 	StorageBufferObj<Debug> debug_ssbo;
 	CheckerBoard_gpu* checkerboard;
 	SkyBox* skybox;
@@ -658,9 +623,14 @@ private:
 	GLuint rayCounterBuffer;
 	GLuint nextIndexBuffer;
 	bool showRayCount = false;
-	int numTriangles = 12;
+	size_t numTriangles = 12;
 	vector<rt::Triangle> triangles;
+	bvh::BVHBuildNode* bvhRoot;
 	Bounds bounds;
+	bvh::BVHStats stats;
+	int numNodes = 0;
+	int testPerPixel;
+	int numPixels;
 };
 
 

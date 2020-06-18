@@ -11,7 +11,7 @@ void intialize(HitInfo hit, Ray ray, out SurfaceInteration interact) {
 	case SPHERE_SHAPE: {
 		Sphere s = sphere[hit.id];
 		Ray r = transform(s.worldToObject, ray);
-		vec3 p = r.origin.xyz + r.direction.xyz * hit.t;
+		vec3 p = r.origin + r.direction * hit.t;
 		p *= s.r / distance(p, s.c.xyz);
 		vec3 n = p - s.c.xyz;
 		float phi = atan(p.z, p.x);
@@ -75,40 +75,50 @@ void intialize(HitInfo hit, Ray ray, out SurfaceInteration interact) {
 		vec3 p = interact.p;
 		vec3 n = interact.n;
 
-		n = dot(-ray.direction.xyz, n) < 0 ? -n : n;
+		n = dot(-ray.direction, n) < 0 ? -n : n;
 
-		float s = n.z >= 0.0 ? 1.0 : -1.0;
-		float a = -1.0 / (s + n.z);
-		float b = n.x * n.y * a;
-		vec3 x = vec3(1.0 + s * n.x * n.x * a, s * b, -s * n.x);
-		vec3 y = vec3(b, s + n.y * n.y * a, -n.y);
+		vec3 x, y;
+		orthonormalBasis(n, x, y);
 		
 	//	interact.uv = vec2(p.x / whole, p.z / whole);
 		interact.uv = vec2(dot(p, x)/whole, dot(p, y)/whole);
 		break;
 	}
 	case BOX: {
-		interact.p = pointOnRay(ray, hit);
-		interact.n = interact.p;
-		interact.color = vec4(1, 0, 0, 1);
+		vec3 t1 = hit.extras.xyz;
+
+		vec3 p = pointOnRay(ray, hit);
+		vec3 n = -sign(ray.direction) * step(t1.yzx, t1.xyz) * step(t1.zxy, t1.xyz);
+		vec3 x, y;
+		orthonormalBasis(n, x, y);
+
+		interact.p = p;
+		interact.n = n;
+		interact.uv = vec2(dot(p, x)/5, dot(p, y)/5);
+		interact.color = vec4(1, 0, 0, 1);	
 		interact.matId = -1;
+		interact.shape = BOX;
 		break;
 	}
 	case TRIANGLE: {
 		Triangle tri;
 		Shading s;
-		fetchShading(hit.id, triangleData, tri, s);
-		//triangles[hit.id];
+		fetchShading(hit.id, tri, s);
 		float u = hit.extras.x;
 		float v = hit.extras.y;
 		float w = hit.extras.z;
-		vec3 p = ray.origin.xyz + ray.direction.xyz * hit.t;
-	//	vec2 uv = s.uv0 * u + s.uv1 * v + s.uv2 * w;
+		vec3 p = ray.origin + ray.direction * hit.t;
 		vec3 n = (s.n0 * u + s.n1 * v + s.n2 * w) * hit.extras.w;
+		
+		if (!isFrontFacing(tri, ray.origin)) {
+			swap(u, w);
+		}
+
+		vec2 uv = s.uv0 * u + s.uv1 * v + s.uv2 * w;
 
 		interact.p = p;
 		interact.n = n;
-		interact.uv = vec2(u, v);
+		interact.uv = uv;
 		interact.color = vec4(0.1, 0.1, 0.1, 1);
 		interact.matId = tri.matId;
 		interact.shape = TRIANGLE;

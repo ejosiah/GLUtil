@@ -53,7 +53,7 @@ void main(){
 	generateRay(csample, camera, ray);
 	int index = globalIndex();
 
-	Ray0 _ray = Ray0(ray.origin.xyz, ray.direction.xyz, 1000, vec2(5, 6));
+	Ray0 _ray = Ray0(ray.origin, ray.direction, 1000, vec2(5, 6));
 	rays[index] = ray;
 	rays0[index] = _ray;
 }

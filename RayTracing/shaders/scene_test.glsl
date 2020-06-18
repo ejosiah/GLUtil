@@ -28,8 +28,12 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 	bool aHit = false;
 
 	if (intersectCube(ray, bounds, local_hit)) {
+		atomicCounterIncrement(test_count);
+		//hit = local_hit;
+		//return true;
 		for (int i = 0; i < numSpheres; i++) {
 			Sphere s = sphere[i];
+			atomicCounterIncrement(test_count);
 			if (intersectSphere(ray, s, local_hit)) {
 				aHit = true;
 				if (local_hit.t < hit.t) {
@@ -38,8 +42,16 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 			}
 		}
 
+		//local_hit.t = hit.t;
+		//if (intersectsTriangle(ray, local_hit)) {
+		//	aHit = true;
+		//	if (local_hit.t < hit.t) {
+		//		hit = local_hit;
+		//	}
+		//}
+
 		local_hit.t = hit.t;
-		if (intersectsTriangle(ray, local_hit)) {
+		if (intersectsTriangle(ray, local_hit, 0)) {
 			aHit = true;
 			if (local_hit.t < hit.t) {
 				hit = local_hit;
@@ -70,6 +82,7 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 
 	local_hit.t = hit.t;
 	for (int i = 0; i < numPlanes; i++) {
+		atomicCounterIncrement(test_count);
 		if (intersectPlane(ray, plane[i], local_hit)) {
 			aHit = true;
 			if (local_hit.t < hit.t) {

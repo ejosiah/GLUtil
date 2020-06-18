@@ -16,6 +16,8 @@
 #define TEXTURE(id) GL_TEXTURE0 + id
 #endif // !TEXTURE(id)
 
+constexpr int paddingId = 0;
+
 
 namespace ncl {
 

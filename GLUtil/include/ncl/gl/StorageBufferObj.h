@@ -12,7 +12,7 @@ namespace ncl {
 
 			explicit StorageBufferObj(T, GLuint = 0);
 
-			StorageBufferObj(int count, GLuint id = 0);
+			StorageBufferObj(size_t count, GLuint id = 0);
 
 			explicit StorageBufferObj(std::vector<T>, GLuint = 0);
 

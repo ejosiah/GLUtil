@@ -26,19 +26,19 @@ struct Triangle {
 
 
 struct Shading {
-	vec4 n0;
-	vec4 n1;
-	vec4 n2;
-	vec4 t0;
-	vec4 t1;
-	vec4 t2;
-	vec4 bi0;
-	vec4 bi1;
-	vec4 bi2;
+	vec3 n0;
+	int id;
+	vec3 n1;
+	vec3 n2;
+	vec3 t0;
+	vec3 t1;
+	vec3 t2;
+	vec3 bi0;
+	vec3 bi1;
+	vec3 bi2;
 	vec2 uv0;
 	vec2 uv1;
 	vec2 uv2;
-	int id;
 };
 
 in ncl_PerVetex {
@@ -81,17 +81,17 @@ void main(){
 	triangle.matId = materialId;
 
 	Shading shading;
-	shading.n0 = vec4(ncl_in[0].normal, 0);
-	shading.n1 = vec4(ncl_in[1].normal, 0);
-	shading.n2 = vec4(ncl_in[2].normal, 0);
+	shading.n0 = ncl_in[0].normal;
+	shading.n1 = ncl_in[1].normal;
+	shading.n2 = ncl_in[2].normal;
 
-	shading.t0 = vec4(ncl_in[0].tangent, 0);
-	shading.t1 = vec4(ncl_in[1].tangent, 0);
-	shading.t2 = vec4(ncl_in[2].tangent, 0);
+	shading.t0 = ncl_in[0].tangent;
+	shading.t1 = ncl_in[1].tangent;
+	shading.t2 = ncl_in[2].tangent;
 
-	shading.bi0 = vec4(ncl_in[0].bitangent, 0);
-	shading.bi1 = vec4(ncl_in[1].bitangent, 0);
-	shading.bi2 = vec4(ncl_in[2].bitangent, 0);
+	shading.bi0 = ncl_in[0].bitangent;
+	shading.bi1 = ncl_in[1].bitangent;
+	shading.bi2 = ncl_in[2].bitangent;
 
 	shading.uv0 = ncl_in[0].texCoord;
 	shading.uv1 = ncl_in[1].texCoord;

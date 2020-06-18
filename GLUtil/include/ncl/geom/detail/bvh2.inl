@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include "../aabb2.h"
+#include "../../gl/common.h"
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <functional>
@@ -64,6 +65,7 @@ namespace ncl {
 				glm::vec3 centroid;
 			};
 
+#pragma pack(push, 1)
 			struct LinearBVHNode {
 				Bounds box;
 				int splitAxis;
@@ -72,7 +74,9 @@ namespace ncl {
 				int size;
 				int isLeaf;
 				int child[2];
+				ncl::padding_4 padding;
 			};
+#pragma pack(pop)
 
 			struct Bucket {
 				int count = 0; 

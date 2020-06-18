@@ -15,12 +15,17 @@ namespace ncl {
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
 			glBufferData(GL_SHADER_STORAGE_BUFFER, _size, NULL, GL_DYNAMIC_DRAW);
+
+			if(!v.empty()){
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _size, &_obj[0]);
+			}
+
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _idx, _buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 
 		template<typename T>
-		StorageBufferObj<T>::StorageBufferObj(int count, GLuint id)
+		StorageBufferObj<T>::StorageBufferObj(size_t count, GLuint id)
 			: _size{ sizeOf(count) }
 			, _idx{ id }{
 			glGenBuffers(1, &_buf);
