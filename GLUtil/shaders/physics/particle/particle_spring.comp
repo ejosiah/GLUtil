@@ -1,0 +1,78 @@
+#version 450 core
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+struct Particle{
+	vec3 position;
+	float damping;
+
+	vec3 velocity;
+	float inverseMass;
+
+	vec3 acceleration;
+	int forceGenerators;
+
+	vec3 forceAccum;
+	int _active;
+
+	float lifetime;
+};
+
+struct SpringData{
+	int otherId;
+	float k;
+	float l;
+};
+
+uniform int numParticles;
+uniform int id;
+
+layout(std430, binding=0) buffer PARTICLE_OUT_SSBO{
+	Particle particles_out[];
+};
+
+
+layout(std430, binding=1) buffer PARTICLE_IN_SSBO{
+	Particle particles_in[];
+};
+
+layout(std430, binding=2) buffer SPRING_DATA_SSB0{
+	SpringData info[];
+};
+
+ivec3 totalWorkGroups = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+
+int globalIndex(){
+	ivec3 size = totalWorkGroups;
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+}
+
+void main(){
+	int index = globalIndex();
+
+	if(index > numParticles) return;
+
+	
+	bool _active = bool(particles[index]._active);
+	Particle particle = particles[index];
+	
+
+	if(!_active) return;
+	if(particle.inverseMass <= 0.0) return;
+	if((particle.forceGenerators & id) != id) return;
+
+	SpringData data = info[index];
+
+	Particle other = particles[data.otherId];
+	vec3 dir = particle.position - other.position;
+	float k = data.k;
+	float lo = data.l;
+	float l = length(dir);
+	vec3 d = normalize(dir);
+
+	particle.forceAccum += -k * (l - lo) * d;
+
+	particles[index] = particle;
+}

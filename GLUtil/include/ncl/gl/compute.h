@@ -2,23 +2,36 @@
 
 #include <vector>
 #include <string>
+#include <functional>
+#include <glm/glm.hpp>
 #include <gl/gl_core_4_5.h>
 #include "textures.h"
-#include <glm/glm.hpp>
 #include "shader_binding.h"
 
 namespace ncl {
 	namespace gl {
+
+		using PreCompute = std::function<void()>;
+		using PostCompute = std::function<void()>;
+		static std::function<void()> NO_OP = [] {};
+
 		class Compute {
 		public:
 			Compute() {}
 
-			Compute(glm::ivec3 workers, std::vector<Image2D> images = {}, Shader* shader = nullptr)
-				:_workers(workers), _shader(shader), _images(images) {
+			Compute(glm::ivec3 workers, std::vector<Image2D> images = {}, Shader* shader = nullptr, PreCompute preCompute = NO_OP, PostCompute postCompute = NO_OP)
+				:_workers(workers)
+				, _shader(shader)
+				, _images(images) 
+				, _preCompute{ preCompute }
+				, _postCompute{ postCompute }
+			{
 
 			}
 
-			Compute(glm::ivec3 workers, std::vector<Image2D> images, std::string source):Compute(workers, images, from(source)) {
+			Compute(glm::ivec3 workers, std::vector<Image2D> images, std::string source, PreCompute preCompute = NO_OP, PostCompute postCompute = NO_OP)
+				:Compute(workers, images, from(source), preCompute, postCompute)
+			{
 
 			}
 
@@ -38,6 +51,7 @@ namespace ncl {
 			virtual void compute() {
 				(*_shader)([&] {
 					preCompute();
+					send("dt", dt);
 					for (auto& img : _images) {
 						img.computeMode();
 						img.sendTo(*_shader);
@@ -48,11 +62,15 @@ namespace ncl {
 			}
 
 			virtual void preCompute() {
+				_preCompute();
+			}
 
+			void update(float dt) {
+				this->dt = dt;
 			}
 
 			virtual void postCompute() {
-
+				_postCompute();
 			}
 
 			std::vector<Image2D>& images() {
@@ -63,6 +81,9 @@ namespace ncl {
 			glm::ivec3 _workers;
 			Shader * _shader;
 			std::vector<Image2D> _images;
+			float dt;
+			PreCompute _preCompute;
+			PostCompute _postCompute;
 		};
 
 		class CheckerBoard_gpu : public Compute {

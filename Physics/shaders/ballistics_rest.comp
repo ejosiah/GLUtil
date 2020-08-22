@@ -1,0 +1,59 @@
+#version 450 core
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+struct Particle{
+	vec3 position;
+	float damping;
+
+	vec3 velocity;
+	float inverseMass;
+
+	vec3 acceleration;
+	int forceGenerators;
+
+	vec3 forceAccum;
+	int _active;
+
+	float lifetime;
+};
+
+uniform float dt;
+uniform int numParticles;
+
+layout(std430, binding=0) buffer PARTICLE_SSBO{
+	Particle particles[];
+};
+
+layout(std430, binding=1) buffer PARTICLE1_SSBO{
+	Particle particles1[];
+};
+
+ivec3 totalWorkGroups = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+
+int globalIndex(){
+	ivec3 size = totalWorkGroups;
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+}
+
+
+void main(){
+	int index = globalIndex();
+
+	if(index > numParticles) return;
+
+	Particle particle = particles[index];
+	bool _active = bool(particle._active);
+
+	if(!_active) return;
+
+	if(particle.position.y < 0 || particle.lifetime > 5.0){
+		particle._active = 0;
+		particle.lifetime = 0;
+		particle.position = vec3(5000);
+		particles[index] = particle;
+	}
+
+}

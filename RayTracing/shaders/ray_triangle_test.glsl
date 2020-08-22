@@ -107,7 +107,7 @@ BVHNode getNode(int id) {
 	return nullNode;
 }
 
-bool intersect(Ray ray, int offset, int size, out HitInfo hit) {
+bool intersect(Ray ray, int offset, int size, out HitInfo hit, bool anyHit) {
 	hit.t = ray.tMax;
 
 	for (int i = 0; i < size; i++) {
@@ -122,6 +122,7 @@ bool intersect(Ray ray, int offset, int size, out HitInfo hit) {
 		}
 		atomicCounterIncrement(test_count);
 		if (triangleRayIntersect(ray, tri, t, u, v, w)) {
+			if (anyHit) return true;
 			if (t < hit.t) {
 				hit.t = t;
 				hit.shape = TRIANGLE;
@@ -138,7 +139,7 @@ bool negativeDir(Ray ray, int axis) {
 }
 
 
-bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx) {
+bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx, bool anyHit) {
 	if (numTriangles == 0) return false;
 	HitInfo lHit;
 
@@ -153,7 +154,10 @@ bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx) {
 			if (isLeaf(node)) {
 				//hit = lHit;
 				//return true;
-				if (intersect(ray, node.offset, node.size, lHit)) aHit = true;
+				if (intersect(ray, node.offset, node.size, lHit, anyHit)) {
+					if (anyHit) return true;
+					aHit = true;
+				}
 
 				if (toVisitOffset == 0) break;
 				currentNodeIndex = nodesToVisit[--toVisitOffset];
@@ -176,4 +180,12 @@ bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx) {
 	}
 	hit = lHit;
 	return aHit;
+}
+
+bool intersectsTriangle(Ray ray, out HitInfo hit, int rootIdx) {
+	return intersectsTriangle(ray, hit, rootIdx, false);
+}
+
+bool intersectsTriangleAnyHit(Ray ray, out HitInfo hit, int rootIdx) {
+	return intersectsTriangle(ray, hit, rootIdx, true);
 }

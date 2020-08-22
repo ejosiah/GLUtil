@@ -3,6 +3,7 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <optional>
 #include <iomanip>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -31,6 +32,9 @@
 #include <thread>
 #include <future>
 #include "../concurrency/concurrency.h"
+#include "compute.h"
+#include "../util/string_util.h"
+#include "../geom/aabb2.h"
 
 namespace ncl {
 	namespace gl {
@@ -128,15 +132,9 @@ namespace ncl {
 				sources.push_back(ShaderSource{ GL_FRAGMENT_SHADER,  per_fragment_lighting2_frag_shader , "default.frag" });
 				_sources.insert(make_pair("default", sources));
 				
-				for (auto& entry : _sources) {
-					Shader* shader = new Shader;
 
-					for (auto source : entry.second) {
-						shader->load(source);
-					}
-					
-					shader->createAndLinkProgram();
-					_shaders.insert(std::make_pair(entry.first, shader));
+				for (auto& entry : _sources) {
+					createProgram(entry.first, entry.second);
 				}
 
 				light[0].on = true;
@@ -147,11 +145,13 @@ namespace ncl {
 				glEnable(GL_CULL_FACE);
 				glCullFace(GL_BACK);
 
-				_fontColor = getForeGround();
-
+				
+				bounds(glm::vec3{-25, 0, -25}, glm::vec3{25});
 				init();
 				initDefaultCamera();
 				initCameras();
+				getActiveCameraController().setBounds(_bounds);
+				_fontColor = getForeGround();
 
 				_keyListeners.push_back([&](const Key& key) {
 					if (cameraControlActive) {
@@ -160,6 +160,29 @@ namespace ncl {
 					processInput(key);
 				});
 				sFont = Font::Arial(_fontSize, 0, _fontColor);
+
+				// create shader programs for sources added after initialization
+				for (auto& entry : _sources) {
+					if (_shaders.find(entry.first) == _shaders.end()) {
+						createProgram(entry.first, entry.second);
+					}
+				}
+
+				sceneBounds = aabbOutline(_bounds, BLACK);
+
+				_initialized = true;
+			}
+
+			void createProgram(std::string name, std::vector<ShaderSource> sources) {
+				Shader* shader = new Shader;
+
+				for (auto source : sources) {
+					shader->load(source);
+				}
+
+				ncl::Logger::get("Shader").info("compiling shader: " + name);
+				shader->createAndLinkProgram();
+				_shaders.insert(std::make_pair(name, shader)); 
 			}
 
 			void loadShaderImplicity() {
@@ -167,7 +190,7 @@ namespace ncl {
 
 				using namespace std;
 				using namespace std::filesystem;
-
+				std::optional<path> configPath;
 				for (auto& p : shader_loc) {
 					if (exists(p) && is_directory(p) && !p.empty()) {
 						for (auto& entry : directory_iterator(p)) {
@@ -179,12 +202,49 @@ namespace ncl {
 							if (!is_directory(path)) {
 								string filename = path.string();
 								if (Shader::isShader(filename)) {
-									ensureSources(name);
+									
 									ShaderSource source = Shader::extractFromFile(filename);
-									_sources[name].push_back(source);
+									if (Shader::shouldCompile(source)) {
+										ensureSources(name);
+										ncl::Logger::get("Shader").info("loaded shader: " + filename);
+										_sources[name].push_back(source);
+									}
+									else {
+										ncl::Logger::get("Shader").info("loading but not compiling shader: " + filename);
+										_uncompiled_sources[name +  ext ] = source;
+									}
 									implicityLoaded = true;
 								}
+								else if (ext == ".conf") {
+									configPath = path.string();
+								}
 							}
+						}
+					}
+				}
+				if (configPath) {
+					loadShaderFromConfig(*configPath);
+				}
+			}
+
+			void loadShaderFromConfig(const std::filesystem::path& path) {
+				auto contents = getText(path.string());
+				std::stringstream ss;
+				ss << contents;
+
+				std::string line;
+				while (std::getline(ss, line)) {
+					auto shaderInfo = ncl::split(line, ":");
+					if (shaderInfo.empty()) throw std::runtime_error{ "invalid shader config format: " + line };
+					auto name = shaderInfo[0];
+					ensureSources(name);
+
+					auto sourcesNames = ncl::split(shaderInfo[1], ",");
+					for (auto sourceName : sourcesNames) {
+						auto sources = getSources(ncl::trim(sourceName));
+						for (auto source : sources) {
+							_sources[name].push_back(source);
+							ncl::Logger::get("Shader").info("loaded shader source " + source.filename + " for " + name);
 						}
 					}
 				}
@@ -213,6 +273,8 @@ namespace ncl {
 				glClear(fBuffer);
 				display();
 				if (camInfoOn || _debug) {
+					sbr.str("");
+					sbr.clear();
 					sbr << "fps: " << std::setprecision(3) << std::to_string(fps) << "\n";
 					sbr.clear();
 					sbr << "Camera Settings:" << std::endl;
@@ -233,6 +295,12 @@ namespace ncl {
 			void update0(float elapsedTime) {
 				updateFrameRate(elapsedTime);
 				update(elapsedTime);
+				
+				for (auto compute : computations) {
+					compute->update(elapsedTime);
+					compute->compute();
+				}
+
 				if (cameraControlActive) {
 					getActiveCameraController().update(elapsedTime);
 				}
@@ -437,10 +505,63 @@ namespace ncl {
 				_sources[name].push_back(ShaderSource{ shaderType, source, ".shader." + std::to_string(shaderType) });
 			}
 
+			void addShader(std::string name, std::vector<ShaderSource> sources) {
+				for (auto source : sources) {
+					addShader(name, source);
+				}
+			}
+
+			void addShader(std::string name, ShaderSource source) {
+				ensureSources(name);
+				_sources[name].push_back(source);
+			}
+
+
 			void addShaderFromFile(std::string name, const std::string& filename) {
 				ensureSources(name);
 				ShaderSource source = Shader::extractFromFile(filename);
 				_sources[name].push_back(source);
+			}
+
+			std::vector<ShaderSource> getSources(std::initializer_list<std::string> names) {
+				std::vector<ShaderSource> res;
+				for (auto name : names) {
+					auto maybeSource = getSource(name);
+					if (maybeSource) {
+						res.push_back(*maybeSource);
+					}
+				}
+				return res;
+			}
+
+			std::optional<ShaderSource> getSource(std::string name) {
+				auto itr = _uncompiled_sources.find(name);
+				if (itr != _uncompiled_sources.end()) {
+					return itr->second;
+				}
+				return {};
+			}
+
+			std::vector<ShaderSource> getSources(std::string name) {
+				std::vector<ShaderSource> res;
+
+				auto ext = extractExt(name);
+				if (ext == "") {
+					for (auto entry : gl::extensions) {
+						auto source = getSource(name + "." + entry.first);
+						if (source) {
+							res.push_back(*source);
+						}
+					}
+				}
+				else {
+					auto source = getSource(name);
+					if (source) {
+						res.push_back(*source);
+					}
+				}
+
+				return res;
 			}
 
 			void ensureSources(std::string name) {
@@ -593,6 +714,23 @@ namespace ncl {
 				_fontColor = color;
 			}
 
+			void addCompute(Compute* compute) {
+				computations.push_back(compute);
+			}
+
+			bool initialized() {
+				return _initialized;
+			}
+
+			void bounds(glm::vec3 aMin, glm::vec3 aMax) {
+				_bounds = geom::bvol::aabb::Union(_bounds, aMin);
+				_bounds = geom::bvol::aabb::Union(_bounds, aMax);
+			}
+
+			geom::bvol::AABB2 bounds() {
+				return _bounds;
+			}
+
 			GlmCam cam;
 			_3DMotionEventHandler* _motionEventHandler;
 
@@ -602,11 +740,20 @@ namespace ncl {
 				_offScreenWindow = offScreenWindow;
 			}
 
+			void renderBounds() {
+				glLineWidth(10.0);
+				shader("flat")([&] {
+					send(activeCamera());
+					shade(sceneBounds);
+				});
+			}
+
 
 			int _width;
 			int _height;
 			const char* _title;
 			std::map<std::string, std::vector<ShaderSource>> _sources;
+			std::map<std::string, ShaderSource> _uncompiled_sources;
 			std::map <std::string, Shader*> _shaders;
 			GLbitfield fBuffer;
 			bool _requireMouse = true;
@@ -639,6 +786,10 @@ namespace ncl {
 			GLFWwindow* _offScreenWindow;
 			glm::vec4 _fontColor;
 			concurrency::ThreadPool executor{ 1 };
+			std::vector<Compute*> computations;
+			bool _initialized = false;
+			geom::bvol::AABB2 _bounds;
+			ProvidedMesh sceneBounds;
 		};
 	}
 }

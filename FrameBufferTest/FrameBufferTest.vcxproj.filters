@@ -28,5 +28,8 @@
     <None Include="shaders\screen.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\bmp_to_nmp.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

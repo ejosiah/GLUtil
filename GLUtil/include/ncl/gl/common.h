@@ -7,6 +7,7 @@
 #include <limits>
 #include <cmath>
 #include <vector>
+#include <fstream>
 
 #ifndef CHECK_GL_ERRORS
 #define CHECK_GL_ERRORS  assert(glGetError()==GL_NO_ERROR);
@@ -20,6 +21,17 @@ constexpr int paddingId = 0;
 
 
 namespace ncl {
+
+	struct padding_1 {
+		char p0;
+	};
+	struct padding_2 {
+		char p0, p1;
+	};
+
+	struct padding_3 {
+		char p0, p1, p2;
+	};
 
 	struct padding_4 {
 		int p0;

@@ -101,6 +101,8 @@ namespace ncl {
 				_width = width;
 				_height = height;
 				_name = name;
+
+			//	delete[] data;	TODO fix this, should not be shared
 			}
 
 			Texture2D(Config c) :config{ c } {
@@ -196,7 +198,12 @@ namespace ncl {
 
 		class Texture3D {
 		public:
-			Texture3D(unsigned char* data, GLuint width, GLuint height, GLuint depth, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR }) : _id(id) {
+			Texture3D(void* data, GLuint width, GLuint height, GLuint depth, GLuint id = nextId++, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec3 wrap = glm::vec3{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR }, GLenum type = GL_UNSIGNED_BYTE, std::function<void()> extraOptions = [] {}) 
+				: _id{ id }
+				, _width{ width }
+				, _height{ height }
+				, _depth{ depth }
+			{
 				/*	LoadData load = [&]() {
 				glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, wrap.t);
@@ -206,33 +213,36 @@ namespace ncl {
 				_width = width;
 				_height = height;
 				_depth = depth;*/
-				glGenTextures(1, &buffer);
+				glGenTextures(1, &_buffer);
 				glActiveTexture(TEXTURE(id));
-				glBindTexture(GL_TEXTURE_3D, buffer);
-				glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, GL_UNSIGNED_BYTE, data);
+				glBindTexture(GL_TEXTURE_3D, _buffer);
+				glTexImage3D(GL_TEXTURE_3D, 0, iFormat, width, height, depth, 0, format, type, data);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, wrap.s);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, wrap.t);
-				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, wrap.t);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, wrap.r);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, minMagfilter.x);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, minMagfilter.y);
-			}
+				extraOptions();
 
-			Texture3D() {}
+			//	delete[] data;
+			}
 
 			virtual ~Texture3D() {
-				glDeleteTextures(1, &buffer);
+				glDeleteTextures(1, &_buffer);
 			}
 
-			GLuint id() { return _id; }
+			inline GLuint id() { return _id; }
+	
+			inline GLuint buffer() { return _buffer;  }
 
-			GLuint width() { return _width; }
+			inline GLuint width() { return _width; }
 
-			GLuint height() { return _height; }
+			inline GLuint height() { return _height; }
 
-			GLuint depth() { return _depth; }
+			inline GLuint depth() { return _depth; }
 
 		private:
-			GLuint buffer;
+			GLuint _buffer;
 			GLuint _id;
 			GLuint _width;
 			GLuint _height;
@@ -254,7 +264,7 @@ namespace ncl {
 		class NoiseTex3D : public Texture3D {
 		public:
 			NoiseTex3D(Noise3D noise = Perlin3D, float freq = 4.0f, float ampl = 0.5f, int width = 64, int height = 64, int depth = 64)
-				:Texture3D(noise(freq, ampl, width, height, depth).get(), width, height, depth, nextId++, GL_RGBA8, GL_RGBA, glm::vec2{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
+				:Texture3D(noise(freq, ampl, width, height, depth).get(), width, height, depth, nextId++, GL_RGBA8, GL_RGBA, glm::vec3{ GL_REPEAT }, glm::vec2{ GL_LINEAR }) { // TODO free data memory
 
 			}
 		private:

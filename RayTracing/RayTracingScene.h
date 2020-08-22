@@ -21,7 +21,7 @@ namespace bvh = geom::bvh;
 const unsigned int MILLION = 1000000;
 const unsigned int BILLION = 1000000000;
 const float DAY_LIGHT_ILLUMINANCE = 64000;
-const int MaxSpheres = 100;
+const int MaxSpheres = 0;
 const int MAX_BOUNCES = 10;
 Logger& logger = Logger::get("ray");
 
@@ -239,14 +239,15 @@ public:
 
 	void initTriangles(vector< rt::Material>& materials) {
 		rt::Material mat;
-		mat.diffuse = RED;
-		mat.ambient = RED;
+		mat.diffuse = BLUE;
+		mat.ambient = BLUE;
 		mat.specular = WHITE;
-		mat.ior = 1.52;
+		mat.ior = 2.417;
 		mat.kr = WHITE;
 		mat.kt = WHITE;
 		mat.shine = 50;
 		mat.bsdf[0] = rt::BSDF_DIFFUSE;
+		mat.nBxDfs += 1;
 
 		int materialId = materials.size();
 		triangleData.matId = materialId;
@@ -254,34 +255,26 @@ public:
 		materials.push_back(mat);
 
 		//initNextIndex();
-		auto cube = Teapot{5};
-	//	auto cube = Cube{ 1 };
-	//	auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\stanford-dragon\\stanford-dragon.obj", true };
+		auto cube = Teapot{10};
+	//	auto cube = Cube{ 5 };
+	//	auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-orb\\lte-orb.obj", true, 5 };
 	//	auto model = new Model{ "C:\\Users\\Josiah\\OneDrive\\media\\models\\lte-glass\\lte_glass.obj", true, 20};
 	//	auto& cube = *model;
 
 	//	numTriangles = cube.numTriangles();
 
-		numTriangles = 0;
-		for (int i = 0; i < cube.numMeshes(); i++) {
-			numTriangles += cube.numTriangles();
-		}
-
 		initNextIndex();
-		triangle_ssbo = StorageBufferObj<rt::Triangle>{ numTriangles,  6};
-		shading_ssbo = StorageBufferObj<rt::Shading>{ numTriangles,  7};
-		numTriangles = 1;
+		triangle_ssbo = StorageBufferObj<rt::Triangle>{ 1000000,  6};
+		shading_ssbo = StorageBufferObj<rt::Shading>{ 1000000,  7};
 
 		auto aabb = cube.aabb();
 		auto d = box::diagonal(aabb);
 		vec3 min = aabb.min.xyz;
 		vec3 max = aabb.max.xyz;
-		float dy = d.y * 0.5;
-		float offset = dot(d * 0.5f, { 0, 1, 0 });
-		auto diff = box::halfWidth(aabb) + min;
+		float dy = abs(min.y);
 
 		mat4 xform = mat4(1);
-	//	xform = scale(mat4(1), vec3(5));
+	//	xform = scale(xform, vec3(3));
 		xform = translate(xform, { 0, dy, 0 });
 		scene.shader("capture_triangles")([&] {
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, nextIndexBuffer);
@@ -356,7 +349,7 @@ public:
 				return bounds;
 			};
 
-			bvhRoot = bvh::build(bvhRoot, ptr, numTriangles, getBounds, index_buffer, bvh_buffer, 16);
+			bvhRoot = bvh::build(bvhRoot, ptr, numTriangles, getBounds, index_buffer, bvh_buffer, 32);
 		});
 
 		stats.height = ds::tree::height(bvhRoot);
@@ -405,10 +398,10 @@ public:
 
 
 	void preCompute() {
-		auto& light = light_ssbo.get()[0];
-		light.lightToWorld = translate(mat4(1), { scene.activeCamera().getPosition() });
-		light.worldToLight = inverse(light.lightToWorld);
-		light.position = light.lightToWorld * vec4(0, 0, 0, 1);
+		//auto& light = light_ssbo.get()[0];
+		//light.lightToWorld = translate(mat4(1), { scene.activeCamera().getPosition() });
+		//light.worldToLight = inverse(light.lightToWorld);
+		//light.position = light.lightToWorld * vec4(0, 0, 0, 1);
 
 
 		light_ssbo.sendToGPU(true);
@@ -550,16 +543,22 @@ public:
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 		}
 
-		font.render("Rays: " + toString(NumRays), 0, 100);
-		font.render("Shadow Rays: " + toString(shadowRays), 0, 110);
-		font.render("Intersection Test: " + toString(testPerPixel), 0, 120);
+		font.render("Rays: " + toString(NumRays), 10, 100);
+		font.render("Shadow Rays: " + toString(shadowRays), 10, 110);
+		font.render("Intersection Test: " + toString(testPerPixel), 10, 120);
+
+		font.render("BVH Stats: ", 10, 150);
+		font.render("\theight: " + to_string(stats.height), 10, 160);
+		font.render("\tNo. of Nodes: " + to_string(numNodes), 10, 170);
+		font.render("\tNo. of Leaf Nodes: " + to_string(stats.nodes), 10, 180);
+		font.render("\tPrimitives per Node: " + to_string(int(stats.primsPerNode)), 10, 190);
 	
 	}
 
 	string toString(unsigned int n) {
 		float m = std::floor(n / float(MILLION));
 		if (m == 0) return to_string(n);
-		if (m < 1000) return to_string(m) + " million";
+		if (m < 1000) return to_string(int(m)) + " million";
 		
 		return to_string(m / 1000) + " billion";
 	}
@@ -574,11 +573,11 @@ public:
 			elapsedTime = 0.0f;
 		}
 		auto pos = vec3{ cos(et) * 10, 10, sin(et) * 10 };
-	//	auto pos = scene.activeCamera().getPosition();
-		//auto& light = *light_ssbo.get();
-		//light.lightToWorld = translate(mat4(1), { pos });
-		//light.worldToLight = inverse(light.lightToWorld);
-		//light.position = light.lightToWorld * vec4(0, 0, 0, 1);
+	////	auto pos = scene.activeCamera().getPosition();
+		auto& light = *light_ssbo.get();
+		light.lightToWorld = translate(mat4(1), { pos });
+		light.worldToLight = inverse(light.lightToWorld);
+		light.position = light.lightToWorld * vec4(0, 0, 0, 1);
 	}
 
 private:
@@ -606,7 +605,7 @@ private:
 	GLuint rayCounterBuffer;
 	GLuint nextIndexBuffer;
 	bool showRayCount = false;
-	size_t numTriangles = 12;
+	size_t numTriangles = 0;
 	vector<rt::Triangle> triangles;
 	bvh::BVHBuildNode* bvhRoot;
 	Bounds bounds;
@@ -633,7 +632,7 @@ public:
 	void init() override {
 		fontColor(YELLOW);
 		initDefaultCamera();
-		activeCamera().setPosition({ 0.818, 2.29, -1.26 });
+		activeCamera().setPosition({ 0, 0, 15 });
 	//	activeCamera().lookAt({ 0, 10, 0 }, vec3(0), { 0, 0, 1 });
 		camera_ssbo = gl::StorageBufferObj<rt::Camera>{ rt::Camera{} };
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
@@ -699,7 +698,7 @@ public:
 		//		}
 		//		});
 		//}
-		sFont->render("Bounces: " + to_string(raytracer->bounces()), 0, 70);
+		sFont->render("Bounces: " + to_string(raytracer->bounces()), 10, 70);
 		raytracer->log(*sFont);
 	}
 

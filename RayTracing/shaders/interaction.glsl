@@ -70,7 +70,7 @@ void intialize(HitInfo hit, Ray ray, out SurfaceInteration interact) {
 		interact.n1 = 1.0;
 		interact.n2 = material[interact.matId].ior;
 
-		float whole = 10;
+		float whole = 5;
 
 		vec3 p = interact.p;
 		vec3 n = interact.n;

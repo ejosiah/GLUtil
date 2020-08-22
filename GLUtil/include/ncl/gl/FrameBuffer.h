@@ -40,6 +40,7 @@ namespace ncl {
 				bool deleteTexture = true;
 				bool read = true;
 				bool write = true;
+				bool internalTexture = true;
 			};
 
 			enum class Status{ Complete, UnComplete};
@@ -70,6 +71,29 @@ namespace ncl {
 				return _textures.at(index);
 			}
 
+			inline void setTexture(Texture2D* texture, int index = 0) {
+				setTexture(texture->bufferId(), 0);
+			}
+
+			inline void setTexture(Texture3D* texture, int index = 0) {
+				setTexture(texture->buffer(), 0);
+			}
+			inline void setTexture(Texture2D& texture, int index = 0) {
+				setTexture(texture.bufferId(), 0);
+			}
+
+			inline void setTexture(Texture3D& texture, int index = 0) {
+				setTexture(texture.buffer(), 0);
+			}
+
+			inline void setTexture(GLuint texture, int index = 0) {
+				assert(_textures.size() > index);
+				glBindFramebuffer(config.fboTarget, _fbo);
+				_textures[index] = texture;
+				glFramebufferTexture(config.fboTarget, config.attachments[index].attachment, texture, 0);
+				glBindFramebuffer(config.fboTarget, 0);
+			}
+
 			inline int numAttachments() {
 				return _textures.size();
 			}
@@ -83,6 +107,10 @@ namespace ncl {
 			}
 
 			void use(std::function<void()> exec, GLuint layer = 0) const;
+
+			void use(Texture2D* texture, std::function<void()> exec, GLuint layer = 0);
+
+			void use(Texture3D* texture, std::function<void()> exec, GLuint layer = 0);
 
 			friend void transfer(FrameBuffer& source, FrameBuffer& destination);
 

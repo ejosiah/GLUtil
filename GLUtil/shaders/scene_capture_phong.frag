@@ -12,6 +12,11 @@ layout(binding = 3) uniform sampler2D normalMap;
 
 #pragma include("LightFieldProbe.glsl")
 
+struct Fog{
+	float max;
+	float min;
+};
+
 in VERTEX{
 	smooth vec3 position;
 	smooth vec4 lightSpacePos;
@@ -33,6 +38,7 @@ layout(location = 0) out vec4 fragColor;
 
 const vec3 globalAmbience = vec3(0.3);
 uniform vec3 lightColor = vec3(0.3);
+uniform bool isBump = false;
 vec3 worldPos = vert_in.position;
 vec2 uv = vert_in.uv;
 vec4 posInLight = vert_in.lightSpacePos;
@@ -44,8 +50,17 @@ vec3 getNormal() {
 
 	mat3 olm_inv = inverse(mat3(t.x, b.x, n.x, t.y, b.y, n.y, t.z, b.z, n.z));
 	vec3 tNormal = 2.0 * texture(normalMap, vert_in.uv).xyz - 1.0;
-	vec3 normal = olm_inv * tNormal;
+	vec3 normal = normalize(olm_inv * tNormal);
 	return gl_FrontFacing ? normal : -normal;
+}
+
+vec3 localNormal(){
+	if(!isBump){
+		 2.0 * texture(normalMap, vert_in.uv).xyz - 1.0;
+	}else{
+		float h = texture(normalMap, vert_in.uv).r;
+		return normalize(vec3(-dFdx(h), -dFdy(h), 1));
+	}
 }
 
 vec3 getNormal0() {
@@ -54,15 +69,14 @@ vec3 getNormal0() {
 	vec2 st1 = dFdx(uv);
 	vec2 st2 = dFdy(uv);
 
-	vec3 N = normalize(vert_in.normal);
-	vec3 T = normalize(Q1 * st2.t - Q2 * st1.t);
-	vec3 B = -normalize(cross(N, T));
-	mat3 TBN = mat3(T, B, N);
-
-	vec3 tNormal = 2.0 * texture(normalMap, vert_in.uv).xyz - 1.0;
-	//return normalize(TBN * tNormal);
-	//return gl_FrontFacing ? N : -N;
-	return N;
+	vec3 n = normalize(vert_in.normal);
+	vec3 t = normalize(Q1 * st2.t - Q2 * st1.t);
+	vec3 b = -normalize(cross(n, t));
+	vec3 m = localNormal();
+	
+	//vec3 N = normalize(m.x * t + m.y * b + m.z * n);
+	vec3 N = n;
+	return gl_FrontFacing ? N : -N;
 }
 
 float ShadowCalculation(vec3 worldPos, vec4 posInLight, vec3 lightPos, vec3 camPos, float NdotL);

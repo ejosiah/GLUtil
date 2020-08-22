@@ -47,6 +47,7 @@ namespace ncl {
 			GLenum ShaderType;
 			std::string data;
 			std::string filename;
+			bool compile = true;
 		};
 
 		class Shader {
@@ -161,6 +162,8 @@ namespace ncl {
 			static ShaderSource extractFromFile(const std::string& filename);
 
 			void load(const ShaderSource& source);
+
+			static bool shouldCompile(const ShaderSource& source);
 
 			static Shader* boundShader;
 			static Shader* previouslyBoundShader;

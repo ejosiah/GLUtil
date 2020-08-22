@@ -83,6 +83,14 @@ namespace ncl {
 				testCollision = false;
 			}
 
+			inline float getNear() {
+				return znear;
+			}
+
+			inline float getFar() {
+				return zfar;
+			}
+
 		private:
 			void rotateFirstPerson(float headingDegrees, float pitchDegrees);
 			void rotateFlight(float headingDegrees, float pitchDegrees, float rollDegrees);

@@ -15,7 +15,7 @@ namespace ncl {
 			
 			}
 
-			Plane(int r, int c, float l, float w, float numTiles, const glm::vec4& color = randomColor(), bool mapUVtoSize = true, glm::mat4 transform = glm::mat4(1))
+			Plane(int r, int c, float l, float w, float numTiles = 0, const glm::vec4& color = randomColor(), bool mapUVtoSize = true, glm::mat4 transform = glm::mat4(1))
 			:Shape(createMesh(w, l, r, c, numTiles, color, transform)){
 
 			}

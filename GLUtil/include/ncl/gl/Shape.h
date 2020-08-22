@@ -21,7 +21,7 @@ namespace ncl {
 			Shape() = default;
 
 			Shape(std::vector<Mesh> meshes, bool cullface = true, unsigned instanceCount = 1) 
-				:VAOObject(meshes)
+				:VAOObject(meshes, instanceCount)
 				, cullface(cullface)
 				, instanceCount(instanceCount)
 				, tfb(nullptr){
@@ -30,9 +30,18 @@ namespace ncl {
 					meshName[meshes[i].name] = i;
 				}
 				whiteTexture = new CheckerTexture(0, "white", WHITE, WHITE);
-				normalTexture = new CheckerTexture(0, "normalMap", BLUE, BLUE);
+
+				glm::vec4 packedNormal = glm::vec4(BLUE.xyz * glm::vec3(0.5) + glm::vec3(0.5), 0);
+				normalTexture = new CheckerTexture(0, "normalMap", packedNormal, packedNormal);
 				for (auto& mesh : meshes) {
-					_aabb = geom::bvol::aabb::Union(_aabb, mesh.positions);
+					glm::mat4 xform = mesh.hasXforms() ? mesh.xforms[0] : glm::mat4{ 1 };
+					std::vector<glm::vec3> positions;
+					positions.resize(mesh.positions.size());
+					std::transform(mesh.positions.begin(), mesh.positions.end(), positions.begin(), [&](auto p) {
+						glm::vec4 pXform = xform * glm::vec4(p, 1);
+						return glm::vec3(pXform);
+					});
+					_aabb = geom::bvol::aabb::Union(_aabb, positions);	// TODO _aabb for instances
 				}
 			}
 
@@ -71,12 +80,6 @@ namespace ncl {
 					assert(glIsVertexArray(vaoId) == GL_TRUE);
 					glBindVertexArray(vaoId);
 
-					//if (i == 34) {
-					//	shader.sendBool("isGround", true);
-					//}
-					//else {
-					//	shader.sendBool("isGround", false);
-					//}
 
 					if (useDefaultMaterial) {
 						Material& material = materials[i];
@@ -85,11 +88,11 @@ namespace ncl {
 						if (material.ambientMat != -1) {
 							glBindTextureUnit(0, material.ambientMat);
 						}
-						//else {
-						//	if (material.diffuseMat != -1) {
-						//		glBindTextureUnit(0, material.diffuseMat);
-						//	}
-						//}
+						else {
+							if (material.diffuseMat != -1) {
+								glBindTextureUnit(0, material.diffuseMat);
+							}
+						}
 						if (material.diffuseMat != -1) {
 							glBindTextureUnit(1, material.diffuseMat);
 						}
@@ -377,11 +380,24 @@ namespace ncl {
 				return size / sizeof(glm::vec3);
 			}
 
-			int numIndices(int meshId) const {
+			GLsizeiptr size() const {
+				GLsizeiptr total = 0;
+				int no_of_meshes = vaoIds.size();
+				for (int i = 0; i < no_of_meshes; i++) {
+					GLint size;
+					glBindBuffer(GL_ARRAY_BUFFER, buffers[i][Position]);
+					glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					total += size;
+				}
+				return total;
+			}
+
+			size_t numIndices(int meshId) const {
 				if (!indices[meshId]) return 0;
-				GLint size;
+				GLint64 size;
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferFor(meshId, Indices));
-				glGetBufferParameteriv(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+				glGetBufferParameteri64v(GL_ELEMENT_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 				return size/sizeof(unsigned int);
 			}
@@ -442,10 +458,10 @@ namespace ncl {
 				return vaoIds.size();
 			}
 
-			int numTriangles() {
+			unsigned int numTriangles() {
 				if (primitiveType[0] != GL_TRIANGLES) return 0; // TODO handle other triangle types
-				int n = 0;
-				int v = 0;
+				unsigned int n = 0;
+				unsigned int v = 0;
 				for (int i = 0; i < vaoIds.size(); i++) {
 					n += numIndices(i);
 					v += numVertices(i);
@@ -468,6 +484,18 @@ namespace ncl {
 
 			geom::bvol::AABB2 aabb() const {
 				return _aabb;
+			}
+
+			glm::vec3 aabbMin() const {
+				return _aabb.min.xyz;
+			}
+
+			glm::vec3 aabbMax() const {
+				return _aabb.max.xyz;
+			}
+
+			glm::vec3 midpoint() {
+				return geom::bvol::aabb::center(_aabb);
 			}
 
 		protected:
@@ -551,9 +579,12 @@ namespace ncl {
 			GLuint captureBuffer;
 			std::unordered_map<std::string, int> meshName;
 			Texture2D* whiteTexture = nullptr;
-			Texture2D* normalTexture = nullptr;
+			
 			bool useDefaultMaterial = true;
 			geom::bvol::AABB2 _aabb;
+
+			public:
+				Texture2D* normalTexture = nullptr;
 		};
 	}
 }

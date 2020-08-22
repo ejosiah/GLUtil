@@ -64,6 +64,8 @@ namespace ncl {
 				cam.model = xform * glm::translate(glm::mat4(1), { x, y, 0.0f }) * glm::scale(glm::mat4(1), glm::vec3{ sx,  sy, 0.0f });
 				send(cam);
 				shade(outline);
+
+
 				if (_opaque) {
 					cam.model = xform;
 					send(cam);

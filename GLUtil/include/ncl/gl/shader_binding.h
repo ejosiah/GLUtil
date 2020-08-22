@@ -104,16 +104,16 @@ namespace ncl {
 			Shader::boundShader->sendUniform4fv(name, 1, value);
 		}
 
-		inline void send(const std::string& name, glm::vec2& value) {
-			send2fv(name, glm::value_ptr(value));
+		inline void send(const std::string& name, const glm::vec2& value) {
+			send2fv(name, const_cast<float*>(glm::value_ptr(value)));
 		}
 
 		inline void send(const std::string& name, const glm::vec3& value) {
 			send3fv(name,  const_cast<float*>(glm::value_ptr(value)));
 		}
 
-		inline void send(const std::string& name, glm::vec4& value) {
-			send4fv(name, glm::value_ptr(value));
+		inline void send(const std::string& name, const glm::vec4& value) {
+			send4fv(name, const_cast<float*>(glm::value_ptr(value)));
 		}
 
 		inline void send(const std::string& name, GLint v0) {
@@ -237,6 +237,10 @@ namespace ncl {
 			Shader::boundShader->sendUniformMaterials(name, material);
 		}
 
+		inline void send(Camera* camera, const glm::mat4& model = glm::mat4(1)) {
+			ensureShaderbound();
+			Shader::boundShader->sendComputed(*camera, model);
+		}
 
 		inline void send(const Camera& camera, const glm::mat4& model = glm::mat4(1)){
 			ensureShaderbound();
@@ -293,6 +297,11 @@ namespace ncl {
 		inline void send(ShadowMap& shadowMap) {
 			ensureShaderbound();
 			shadowMap.sendTo(*Shader::boundShader);
+		}
+
+		inline void send(ShadowMap* shadowMap) {
+			ensureShaderbound();
+			shadowMap->sendTo(*Shader::boundShader);
 		}
 
 		inline void clearBindings() {

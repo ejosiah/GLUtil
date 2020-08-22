@@ -87,7 +87,7 @@ namespace ncl {
 
 			OminiDirectionalShadowMap() = default;
 
-			OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height);
+			OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float near = 1.0f, float far = 25.0f);
 
 			OminiDirectionalShadowMap(OminiDirectionalShadowMap&& source) noexcept;
 
@@ -121,10 +121,10 @@ namespace ncl {
 			float farPlane, nearPlane;
 		};
 
-		OminiDirectionalShadowMap::OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height)
+		OminiDirectionalShadowMap::OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float znear, float zfar)
 			: textureUnit{ textureUnit }
-			, nearPlane(1.0f)
-			, farPlane(25.0f) {
+			, nearPlane{ znear }
+			, farPlane{ zfar } {
 			auto config = FrameBuffer::Config{ width, height };
 			auto attachment = FrameBuffer::Attachment{};
 			config.depthTest = true;

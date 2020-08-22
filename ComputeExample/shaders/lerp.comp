@@ -14,7 +14,8 @@ float plot(vec2 st, float pct){
 void main(){
 	vec2 st = vec2(gl_GlobalInvocationID)/(vec2(gl_NumWorkGroups * gl_WorkGroupSize) - vec2(1));
 
-	float y =  sin(st.x * PI * 4);
+	float y =  ceil(sin(st.x * 2 * PI * 4));
+	//float y =  (1 - exp(-50 * st.x)) * exp(-4 * st.x);
 
 	vec3 color = vec3(y);
 

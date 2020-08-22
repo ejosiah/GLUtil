@@ -21,7 +21,7 @@ namespace ncl {
 
 		std::stack<GLuint> Shader::activePrograms;
 
-		std::string shaderName(GLenum shaderType) {
+		inline std::string shaderName(GLenum shaderType) {
 			switch (shaderType) {
 			case GL_VERTEX_SHADER: return "Vertex shader";
 			case GL_FRAGMENT_SHADER: return "Fragment shader";
@@ -314,7 +314,6 @@ namespace ncl {
 		ShaderSource Shader::extractFromFile(const std::string& filename) {
 			auto key = extractExt(filename);
 			GLenum shaderType = extensions.at(key);
-			ncl::Logger::get("Shader").info("loading shader: " + filename);
 			return ShaderSource{ shaderType,  ncl::getText(filename), filename };
 		}
 
@@ -651,6 +650,19 @@ namespace ncl {
 				storeIntermidate = false;
 			}
 			return result;
+		}
+
+		bool Shader::shouldCompile(const ShaderSource& source) {
+			using namespace std;
+			const regex SHOULD_COMPILE("^#pragma\\s*compile\\((on|off)\\)");
+			smatch matches;
+
+			if (regex_search(source.data, matches, SHOULD_COMPILE)) {
+				string flag = matches[1];
+				if (flag == "off") return false;
+				else return true;
+			}
+			return true;
 		}
 	}
 }

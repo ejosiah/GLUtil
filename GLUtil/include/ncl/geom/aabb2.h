@@ -92,6 +92,24 @@ namespace ncl {
 					if (aabb.max.z > aabb.min.z) o.z /= aabb.max.z - aabb.min.z;
 					return o;
 				}
+
+				inline bool encloses(const AABB2& aabb, const glm::vec3 p) {
+					using namespace glm;
+					auto aMin = vec3(aabb.min);
+					auto aMax = vec3(aabb.max);
+					auto signa = sign(p - aMin);
+					auto signb = sign(aMax - p);
+					auto res = dot(signa, signb);
+					return res == 3;
+				}
+
+				inline glm::vec3 closestPoint(const AABB2& aabb, const glm::vec3 p) {
+					auto q = p;
+					q = glm::max(q, glm::vec3(aabb.min));
+					q = glm::min(q, glm::vec3(aabb.max.xyz));
+
+					return q;
+				}
 			}
 		}
 	}

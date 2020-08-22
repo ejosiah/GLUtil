@@ -12,8 +12,8 @@ namespace ncl {
 		public:
 			Sphere() = default;
 
-			Sphere(GLfloat r, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1) :
-				Shape(createMesh(r, p, q, color), true, instances){
+			Sphere(GLfloat r, GLuint p = 50, GLuint q = 50, const glm::vec4& color = randomColor(), unsigned instances = 1, std::vector<glm::mat4> xforms = {}) :
+				Shape(createMesh(r, p, q, color, xforms), true, instances){
 			}
 
 			Sphere(const Sphere&) = delete;
@@ -31,7 +31,7 @@ namespace ncl {
 
 
 		protected:
-			std::vector<Mesh> createMesh(float r, int p, int q,const glm::vec4& color) {
+			std::vector<Mesh> createMesh(float r, int p, int q,const glm::vec4& color, std::vector<glm::mat4> xforms) {
 				Mesh mesh;
 
 				for (int j = 0; j <= q; j++) {
@@ -51,6 +51,7 @@ namespace ncl {
 				}
 
 				mesh.primitiveType = GL_TRIANGLE_STRIP;
+				mesh.xforms = xforms;
 				return std::vector<Mesh>(1, mesh);
 			} 
 

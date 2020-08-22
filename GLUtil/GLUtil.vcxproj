@@ -157,6 +157,9 @@
     <ClInclude Include="exampleScene.h" />
     <ClInclude Include="FontTest.h" />
     <ClInclude Include="include\glm\vec_util.h" />
+    <ClInclude Include="include\ncl\audio\wav\WaveFile.h" />
+    <ClInclude Include="include\ncl\audio\wav\wave_io.h" />
+    <ClInclude Include="include\ncl\collision\model.h" />
     <ClInclude Include="include\ncl\concurrency\concurrency.h" />
     <ClInclude Include="include\ncl\concurrency\thread_pool.h" />
     <ClInclude Include="include\ncl\configured_logger.h" />
@@ -200,6 +203,7 @@
     <ClInclude Include="include\ncl\gl\orientation.h" />
     <ClInclude Include="include\ncl\gl\PatchShape.h" />
     <ClInclude Include="include\ncl\gl\pbr.h" />
+    <ClInclude Include="include\ncl\gl\perlin_noise.h" />
     <ClInclude Include="include\ncl\gl\rayTracingUtilities.h" />
     <ClInclude Include="include\ncl\gl\Resolution.h" />
     <ClInclude Include="include\ncl\gl\SceneObject.h" />
@@ -223,6 +227,13 @@
     <ClInclude Include="include\ncl\gl\WithTrianglation.h" />
     <ClInclude Include="include\ncl\gl\WithTriangleAdjacency.h" />
     <ClInclude Include="include\ncl\octahedral.h" />
+    <ClInclude Include="include\ncl\physics\particle\ForceGenerator.h" />
+    <ClInclude Include="include\ncl\physics\particle\Particle.h" />
+    <ClInclude Include="include\ncl\physics\particle\ParticleIntegrator.h" />
+    <ClInclude Include="include\ncl\physics\particle\ParticleObject.h" />
+    <ClInclude Include="include\ncl\physics\particle\ParticleRegistry.h" />
+    <ClInclude Include="include\ncl\physics\particle\SpringForceGenerator.h" />
+    <ClInclude Include="include\ncl\type_wrapper.h" />
     <ClInclude Include="include\ncl\ray_tracing\camera.h" />
     <ClInclude Include="include\ncl\ray_tracing\Ray.h" />
     <ClInclude Include="include\ncl\ray_tracing\RayGenerator.h" />
@@ -241,6 +252,7 @@
     <ClInclude Include="include\ncl\units\units.h" />
     <ClInclude Include="include\ncl\util\profile.h" />
     <ClInclude Include="include\ncl\util\SphericalCoord.h" />
+    <ClInclude Include="include\ncl\util\string_util.h" />
     <ClInclude Include="shaders\irradiance_convolution.vert" />
     <ClInclude Include="shaders\scene_capture_phong.frag" />
     <ClInclude Include="TesellationExample.h" />
@@ -285,6 +297,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="build.gradle" />
+    <None Include="include\ncl\audio\wav\detail\wave_io.inl" />
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
     <None Include="include\ncl\gl\detail\ShadowMap.inl" />
@@ -297,7 +310,9 @@
     <None Include="include\shaders\compatibility.glsl" />
     <None Include="include\shaders\composite_diffuse.glsl" />
     <None Include="include\shaders\constants.glsl" />
+    <None Include="include\shaders\fbm.glsl" />
     <None Include="include\shaders\g3dmath.glsl" />
+    <None Include="include\shaders\hash.glsl" />
     <None Include="include\shaders\ibl_lighting.glsl" />
     <None Include="include\shaders\LightFieldProbe.glsl" />
     <None Include="include\shaders\lightFieldProbeModel.glsl" />
@@ -305,9 +320,11 @@
     <None Include="include\shaders\lighting.vert.glsl" />
     <None Include="include\shaders\lightModel.glsl" />
     <None Include="include\shaders\math.glsl" />
+    <None Include="include\shaders\noise.glsl" />
     <None Include="include\shaders\normal_calculator.glsl" />
     <None Include="include\shaders\octahedral.glsl" />
     <None Include="include\shaders\pbr_lights.glsl" />
+    <None Include="include\shaders\perlin.glsl" />
     <None Include="include\shaders\sampling.glsl" />
     <None Include="include\shaders\shadow.glsl" />
     <None Include="include\shaders\simple_light.vert" />
@@ -353,6 +370,8 @@
     <None Include="shaders\octahedral_render.frag" />
     <None Include="shaders\octahedral_render.geom" />
     <None Include="shaders\octahedral_skybox.frag" />
+    <None Include="shaders\particles_lfp.vert" />
+    <None Include="shaders\particle_identity.vert" />
     <None Include="shaders\pass_through.frag" />
     <None Include="shaders\pass_through.tcs" />
     <None Include="shaders\pass_through.tes" />
@@ -360,9 +379,15 @@
     <None Include="shaders\per_fragment_lighing.vert" />
     <None Include="shaders\per_fragment_lighting2.frag" />
     <None Include="shaders\per_fragment_lighting2.vert" />
+    <None Include="shaders\phong_lfp.frag" />
+    <None Include="shaders\phong_lfp.vert" />
     <None Include="shaders\phong_lighting2.vert" />
     <None Include="shaders\per_fragment_lighing.frag" />
     <None Include="shaders\phong_lighting.vert" />
+    <None Include="shaders\physics\particle\particle_contact_generator.comp" />
+    <None Include="shaders\physics\particle\particle_gravity.comp" />
+    <None Include="shaders\physics\particle\particle_integrator.comp" />
+    <None Include="shaders\physics\particle\particle_spring.comp" />
     <None Include="shaders\point_shadow_map.frag" />
     <None Include="shaders\point_shadow_map.geom" />
     <None Include="shaders\point_shadow_map.vert" />

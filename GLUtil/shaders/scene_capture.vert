@@ -6,6 +6,7 @@ layout(location=2) in vec3 tangent;
 layout(location=3) in vec3 bitangent;
 layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
+layout(location=6) in vec2 uv1;
 layout(location=8) in mat4 xform;
 
 out VERTEX{
@@ -19,6 +20,7 @@ out VERTEX{
 } vert_out;
 
 uniform mat4 M;
+uniform bool useUV1;
 
 void main(){
 	mat3 nform = transpose(inverse(mat3(M * xform)));
@@ -28,7 +30,7 @@ void main(){
 	vert_out.normal = nform * normal;
 	vert_out.tangent = nform * tangent;
 	vert_out.bitangent = nform * bitangent;
-	vert_out.uv = uv;
+	vert_out.uv = useUV1 ? uv1 : uv;
 	
 	gl_Position = vec4(vert_out.position, 1.0);
 }

@@ -44,7 +44,7 @@ public:
 	}
 
 	void display() override {
-		shader("compute")([&](Shader& s) {
+		shader("lerp")([&](Shader& s) {
 			image->computeMode();
 			image->sendTo(s);
 			glDispatchCompute(_width/32, _height/32, 1);

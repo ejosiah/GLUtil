@@ -1,6 +1,22 @@
 def username = System.getProperty('user.home');
 def includeDir = "$username/OneDrive/cpp/include"
 
+def ext(f){
+    def name = f.name
+    def start = name.lastIndexOf('.') + 1
+    def end = name.size() - 1
+    name[start..end]
+}
+
+
+
+def recurse(f){
+	def allowed = ['vert', 'frag', 'geom', 'comp', 'tess', 'tcs', 'tes', 'glsl']
+
+    if(f.file) [f]
+    else f.listFiles({ it.directory || allowed.contains(ext(it)) } as FileFilter).collect{ recurse(it) }
+}
+
 task installHeaders(type: Copy, dependsOn: 'compileShaders'){
 	from 'include'
 	into  includeDir
@@ -8,7 +24,8 @@ task installHeaders(type: Copy, dependsOn: 'compileShaders'){
 
 task compileShaders << {
 	println("transfering to $includeDir")
-	def src = new File('shaders').listFiles().findAll{ it.isFile() }
+//	def src = new File('shaders').listFiles().findAll{ it.isFile() }
+	def src = recurse(new File('shaders')).flatten()
 	def dest = new File("include/ncl/gl/shaders.h")
 	dest.delete()
 	dest << "#pragma once\n"

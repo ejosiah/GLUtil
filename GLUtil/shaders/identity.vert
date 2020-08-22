@@ -13,12 +13,13 @@ layout(location=2) in vec3 tangent;
 layout(location=3) in vec3 bitangent;
 layout(location=4) in vec4 color;
 layout(location=5) in vec2 uv;
+layout(location=6) in vec2 uv1;
 layout(location=8) in mat4 xform;
 
 out VERTEX {
 	smooth vec3 position;
 	smooth vec3 normal;
-	smooth vec2 texCoord;
+	smooth vec2 texCoord[8];
 	smooth vec4 color;
 } vertex;
 
@@ -29,7 +30,8 @@ void main(){
 	mat3 NM = transpose(inverse(mat3(MV)));
 	vertex.normal = normalize(NM * normal);
 	vertex.position = (MV * vec4(position, 1)).xyz;
-	vertex.texCoord = uv;
+	vertex.texCoord[0] = uv;
+	vertex.texCoord[1] = uv1;
 	vertex.color = color;
 
 	capture_position = (M * xform * vec4(position, 1.0)).xyz;

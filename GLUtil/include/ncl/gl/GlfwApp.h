@@ -261,6 +261,7 @@ namespace ncl {
 							glViewport(0, 0, width, height);
 							scene.resize(width, height);
 						}
+
 						scene.update0(Timer::get().lastFrameTime);
 						scene.display0();
 

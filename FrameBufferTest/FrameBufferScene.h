@@ -17,12 +17,14 @@ public:
 		addShader("fbo", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("fbo", GL_FRAGMENT_SHADER, texture_frag_shader);
 
-		addShader("screen", GL_VERTEX_SHADER, identity_vert_shader);
-		addShader("brdf", GL_VERTEX_SHADER, brdf_vert_shader);
-		addShader("brdf", GL_FRAGMENT_SHADER, bsdf_frag_shader);
+		//addShader("screen", GL_VERTEX_SHADER, identity_vert_shader);
+		//addShader("brdf", GL_VERTEX_SHADER, brdf_vert_shader);
+		//addShader("brdf", GL_FRAGMENT_SHADER, bsdf_frag_shader);
 
 		addShader("screen0", GL_VERTEX_SHADER, screen_vert_shader);
 		addShader("screen0", GL_FRAGMENT_SHADER, screen_frag_shader);
+
+		addShader("bmp_to_nmp", GL_VERTEX_SHADER, screen_vert_shader);
 	}
 
 	void init() override {
@@ -88,16 +90,21 @@ public:
 	void loadTextures() {
 		marble = new Texture2D("textures\\marble.jpg", 0);
 		metal = new Texture2D("textures\\metal.png", 0);
+		bmp = new Texture2D(path, 0);
 	}
 
 	void buildFrameBuffer() {
 		auto  config = FrameBuffer::defaultConfig( _width, _height);
 		config.clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+
+	//	Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = 0, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR })
+		scratchTexel = new Texture2D{ nullptr, (unsigned)_width, (unsigned)_height };
+
 		fbo = FrameBuffer{ config };
 	}
 
 	void display() override{
-		fbo.use([&]() {
+		fbo.use(scratchTexel, [&]() {
 			glEnable(GL_DEPTH_TEST);
 			shader("fbo")([&](Shader& s) {
 				cam.model = translate(mat4(1), vec3(-1.0f, 0.0f, -1.0f));
@@ -113,10 +120,12 @@ public:
 		});
 
 		shader("screen0")([&](Shader& s) {
-			glBindTextureUnit(0, fbo.texture());
+		//	glBindTextureUnit(0, fbo.texture());
+			glBindTextureUnit(0, scratchTexel->bufferId());
 			//send(brdf_lut);
-		//	sendArray("kernel", identity, 9);
-			//send(cam1);
+			sendArray("kernel", identity, 9);
+			send("flip", flip);
+			send(cam1);
 			shade(quad);
 		});
 	}
@@ -125,15 +134,24 @@ public:
 		cam.projection = perspective(pi<float>() / 3, aspectRatio, 0.1f, 100.f);
 	}
 
+	void processInput(const Key& key) override {
+		if (key.value() == 'o' && key.pressed()) {
+			flip = !flip;
+		}
+	}
 
 private:
 	FrameBuffer fbo;
+	Texture2D* scratchTexel;
 	ProvidedMesh* plane;
 	ProvidedMesh* quad;
 	Texture2D* marble;
 	Texture2D* metal;
 	Cube* cube;
 	GlmCam cam1;
+	Texture2D* bmp;
+//	string path = "C:\\Users\\Josiah\\OneDrive\\media\\models\\cannon\\Cannon_UV_Bump.tif";
+	string path = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\005\\front.jpg";
 	float blur[9] = {
 		1.0 / 16, 2.0 / 16, 1.0 / 16,
 		2.0 / 16, 4.0 / 16, 2.0 / 16,
@@ -179,4 +197,5 @@ private:
 		0, 0, 0
 	};
 	Texture2D* brdf_lut;
+	bool flip;
 };

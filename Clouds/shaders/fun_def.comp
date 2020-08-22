@@ -1,0 +1,3 @@
+#pragma compile(off)
+#pragma programs("noise")
+#pragma include("noise.glsl")

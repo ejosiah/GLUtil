@@ -73,6 +73,30 @@
     <Filter Include="Header Files\ray_tracing">
       <UniqueIdentifier>{56852758-c88f-42d5-bbfa-06f46b8a6f36}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\physics">
+      <UniqueIdentifier>{faf927e1-a755-4163-b520-df899b1bc5e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\physics\particle">
+      <UniqueIdentifier>{7c222896-b97b-4fe7-8321-190f4ae537fb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\physics">
+      <UniqueIdentifier>{d7aac735-7040-4e67-994c-df48c1091d23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders\physics\particle">
+      <UniqueIdentifier>{8d5c0c5e-6f9f-4d6e-a35c-a275e876b438}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\collision">
+      <UniqueIdentifier>{9eb07f13-a808-47ad-801e-2dfd2edfbc49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sound">
+      <UniqueIdentifier>{c164774b-bd4f-416d-9a56-ef733110c903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sound\wave">
+      <UniqueIdentifier>{b3e6097e-5c07-4dfb-be79-605f99a95dd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sound\wave\detail">
+      <UniqueIdentifier>{1b1f115b-97d0-4181-a983-e0a416579055}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -178,9 +202,6 @@
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="include\ncl\gl\Timer.h">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ncl\gl\util.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
     <ClInclude Include="FontTest.h">
@@ -437,6 +458,45 @@
     </ClInclude>
     <ClInclude Include="include\ncl\ray_tracing\model.h">
       <Filter>Header Files\ray_tracing</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\Particle.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\ParticleIntegrator.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\ForceGenerator.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\ParticleRegistry.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\ParticleObject.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\SpringForceGenerator.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\collision\model.h">
+      <Filter>Header Files\collision</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\util.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\util\string_util.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\type_wrapper.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\audio\wav\WaveFile.h">
+      <Filter>Header Files\sound\wave</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\audio\wav\wave_io.h">
+      <Filter>Header Files\sound\wave</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\perlin_noise.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -776,6 +836,45 @@
     </None>
     <None Include="include\ncl\gl\detail\textures.inl">
       <Filter>Header Files\core\detail</Filter>
+    </None>
+    <None Include="shaders\phong_lfp.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\phong_lfp.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\physics\particle\particle_integrator.comp">
+      <Filter>shaders\physics\particle</Filter>
+    </None>
+    <None Include="shaders\particles_lfp.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\particle_identity.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\physics\particle\particle_gravity.comp">
+      <Filter>shaders\physics\particle</Filter>
+    </None>
+    <None Include="shaders\physics\particle\particle_spring.comp">
+      <Filter>shaders\physics\particle</Filter>
+    </None>
+    <None Include="shaders\physics\particle\particle_contact_generator.comp">
+      <Filter>shaders\physics\particle</Filter>
+    </None>
+    <None Include="include\ncl\audio\wav\detail\wave_io.inl">
+      <Filter>Header Files\sound\wave\detail</Filter>
+    </None>
+    <None Include="include\shaders\hash.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\noise.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\fbm.glsl">
+      <Filter>shaders\include</Filter>
+    </None>
+    <None Include="include\shaders\perlin.glsl">
+      <Filter>shaders\include</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

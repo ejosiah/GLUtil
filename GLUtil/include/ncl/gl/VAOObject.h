@@ -17,8 +17,8 @@ namespace ncl {
 
 			VAOObject() = default;
 
-			VAOObject(std::vector<Mesh>& meshes)
-				:VBOObject(meshes)
+			VAOObject(std::vector<Mesh>& meshes, unsigned int instanceCount)
+				:VBOObject(meshes, instanceCount)
 				, currentContext{ glfwGetCurrentContext() } {
 				vaoIds = init();
 			}
@@ -38,6 +38,7 @@ namespace ncl {
 					glBindBuffer(GL_ARRAY_BUFFER, *buffer);
 					glEnableVertexAttribArray(Position);
 					glVertexAttribPointer(Position, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+				//	glVertexAttribPointer(Position, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 
 					if (normals[i]) {
 						glBindBuffer(GL_ARRAY_BUFFER, *(++buffer));

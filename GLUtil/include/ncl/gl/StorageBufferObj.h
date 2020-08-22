@@ -2,6 +2,7 @@
 
 #include <gl/gl_core_4_5.h>
 #include <functional>
+#include "../type_wrapper.h"
 
 namespace ncl {
 	namespace gl {
@@ -12,9 +13,11 @@ namespace ncl {
 
 			explicit StorageBufferObj(T, GLuint = 0);
 
-			StorageBufferObj(size_t count, GLuint id = 0);
+			explicit StorageBufferObj(size_t count, GLuint id = 0);
 
 			explicit StorageBufferObj(std::vector<T>, GLuint = 0);
+
+			explicit StorageBufferObj(Shape&, GLuint = 0);
 
 			StorageBufferObj(StorageBufferObj<T>&&) noexcept;
 
@@ -34,6 +37,10 @@ namespace ncl {
 
 			inline GLuint buffer() {
 				return _buf;
+			}
+
+			inline size_t count() {
+				return _size / sizeof(T);
 			}
 
 			template<typename U>

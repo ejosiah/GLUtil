@@ -52,7 +52,7 @@ public:
 		float pWidth = 270;
 		float pHeight = 720;
 		panel = new ui::Panel(pWidth, pHeight, scene, "Light Settings", { scene.width() - pWidth, scene.height() - pHeight });
-		panel->isOpaque(true);
+		panel->isOpaque(false);
 		//	panel->setForGroundColor(getForeGround());
 		panel->init();
 
@@ -146,7 +146,7 @@ public:
 			spot_panel = new Panel(250, 200, scene, "Spot Settings", { 10, da_panel->pos().y - 220 });
 			spot_panel->init();
 			float h = spot_panel->height();
-			arcSlider = new ArcSlider(scene, "Spot Angle", 30, 90, 100.0f, { 30, 70 });
+			arcSlider = new ArcSlider(scene, "Spot Angle",100.0f, { 30, 70 });
 			//	arcSlider->setForGroundColor(getForeGround());
 			arcSlider->init();
 
@@ -339,7 +339,7 @@ public:
 		paths.push_back("C:\\Users\\Josiah\\OneDrive\\media\\models\\Lucy-statue\\metallic-lucy-statue-stanford-scan.obj");
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
-		addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
+	//	addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
 		camInfoOn = true;
 		
 	}
@@ -431,7 +431,7 @@ public:
 			return root + path;
 		});
 
-		skybox = SkyBox::create(skyTextures, 7, *this, 1);
+		skybox = SkyBox::create(skyTextures, 0, *this, 1);
 	}
 
 	void createSkyBox() {
@@ -490,7 +490,7 @@ public:
 			Mouse::get()._recenter = false;
 		}
 		
-		light0->draw();
+		
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		shader("default")([&] {
 			send("gammaCorrect", gammaCorrect);
@@ -509,6 +509,8 @@ public:
 
 			for (auto obj : objects) obj->draw();
 		});
+
+		light0->draw();
 		skybox->render();
 	}
 

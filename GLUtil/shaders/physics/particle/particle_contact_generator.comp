@@ -1,0 +1,48 @@
+#version 450 core 
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1 ) in;
+
+struct Particle{
+	vec3 position;
+	float damping;
+
+	vec3 prevPosition;
+	float lifetime;
+
+	vec3 velocity;
+	float inverseMass;
+
+	vec3 acceleration;
+	int forceGenerators;
+
+	vec3 forceAccum;
+	int _active;
+
+};
+
+// I'm assuming all particles are spheres with a giving radius 
+
+uniform float dt;
+uniform int iterations = 1;
+uniform int numParticles;
+
+layout(std430, binding=0) buffer PARTICLE_SSBO{
+	Particle particles[];
+};
+
+ivec3 totalWorkGroups = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+
+int globalIndex(){
+	ivec3 size = totalWorkGroups;
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+}
+
+void main(){
+// store particles by position in space, makes for generating contact easier
+//	generate you contact data 
+//	check around you to see if you contact another particle
+//	add that to your contact data list, order your list by max seperating velocity
+//	keep checking until you have no more contacts left 
+}

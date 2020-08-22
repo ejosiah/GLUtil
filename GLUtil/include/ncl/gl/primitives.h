@@ -16,6 +16,8 @@
 #include "Vector.h"
 #include "DoubleBufferedObj.h"
 #include "AABBShape.h"
+#include "../geom/aabb2.h"
+
 
 namespace ncl {
 	namespace gl {
@@ -81,5 +83,40 @@ namespace ncl {
 
 			return mesh;
 		}
+
+		inline ProvidedMesh aabbOutline(const geom::bvol::AABB2& aabb, const glm::vec4 color = randomColor()) {
+			using namespace glm;
+			using namespace std;
+			Mesh mesh;
+			mesh.positions.push_back(vec3(aabb.min.x, aabb.min.y, aabb.max.z));
+			mesh.positions.push_back(vec3(aabb.min.x, aabb.min.y, aabb.min.z));
+			mesh.positions.push_back(vec3(aabb.min.x, aabb.max.y, aabb.min.z));
+			mesh.positions.push_back(vec3(aabb.min.x, aabb.max.y, aabb.max.z));
+			mesh.positions.push_back(vec3(aabb.max.x, aabb.min.y, aabb.min.z));
+			mesh.positions.push_back(vec3(aabb.max.x, aabb.max.y, aabb.min.z));
+			mesh.positions.push_back(vec3(aabb.max.x, aabb.min.y, aabb.max.z));
+			mesh.positions.push_back(vec3(aabb.max.x, aabb.max.y, aabb.max.z));
+
+
+			GLuint indices[] = {
+				3, 2, 2, 5, 5,
+				7, 7, 3, 3, 0,
+				0, 6, 6, 4, 4,
+				1, 1, 0, 0, 3,
+				5, 4, 2, 1, 7,
+				6
+			};
+
+			mesh.indices = vector<GLuint>(begin(indices), end(indices));
+			mesh.colors = vector<vec4>(8, color);
+			mesh.primitiveType = GL_LINES;
+
+			return ProvidedMesh{ mesh };
+		}
+
+		inline ProvidedMesh aabbOutline(const Shape& shape, const glm::vec4 color = randomColor()) {
+			return aabbOutline(shape.aabb(), color);
+		}
+
 	}
 }

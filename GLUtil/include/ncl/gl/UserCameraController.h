@@ -6,6 +6,7 @@
 #include "Model.h"
 #include <cstdlib>
 #include "../geom/Plane.h"
+#include "../geom/aabb2.h"
 
 namespace ncl {
 	namespace gl {
@@ -40,6 +41,7 @@ namespace ncl {
 			float orbitRollSpeed = CAMERA_SPEED_ORBIT_ROLL;
 			glm::vec3 acceleration = CAMERA_ACCELERATION;
 			glm::vec3 velocty = CAMERA_VELOCITY;
+			geom::bvol::AABB2 bounds;
 		};
 
 		class CameraController {
@@ -49,6 +51,7 @@ namespace ncl {
 			float floorHeight;
 			float cameraFloorOffset;
 			geom::Plane ground;
+			geom::bvol::AABB2 _bounds;
 			float fovx;
 			float zNear;
 			float zFar;
@@ -62,6 +65,7 @@ namespace ncl {
 			Camera::Mode mode;
 			Mesurements sceneDimentions;
 			Mesurements floor;
+			bool _move = true;
 			struct {
 				glm::vec3 position;
 				glm::quat orientation;
@@ -126,7 +130,6 @@ namespace ncl {
 				this->floor = floor;
 				this->ground = geom::Plane({ 0, 1, 0 }, 0);
 				this->cameraFloorOffset = 1;
-
 			}
 
 			virtual void init() {
@@ -175,6 +178,10 @@ namespace ncl {
 				}
 			}
 
+			void move(bool flag) {
+				_move = flag;
+			}
+
 			const glm::mat4& project() const {
 				return camera.getProjectionMatrix();
 			}
@@ -197,6 +204,10 @@ namespace ncl {
 				m = translate(m, model.position);
 
 				return m;
+			}
+
+			void setBounds(geom::bvol::AABB2 bounds) {
+				_bounds = bounds;
 			}
 
 			virtual void update(float elapsedTime)  {
@@ -269,54 +280,42 @@ namespace ncl {
 			// of the scene.
 
 				if (camera.getMode() != Camera::ORBIT) {
-					const glm::vec3 &pos = camera.getPosition();
-					glm::vec3 newPos(pos);
 
-					if (pos.x > bounds.max.x)
-						newPos.x = bounds.max.x;
+					using namespace geom::bvol;
 
-					if (pos.x < bounds.min.x)
-						newPos.x = bounds.min.x;
-
-					if (pos.y > bounds.max.y)
-						newPos.y = bounds.max.y;
-
-					if (pos.y < bounds.min.y)
-						newPos.y = bounds.min.y;
-
-					if (pos.z > bounds.max.z)
-						newPos.z = bounds.max.z;
-
-					if (pos.z < bounds.min.z)
-						newPos.z = bounds.min.z;
+					auto pos = camera.getPosition();
+					if (!aabb::encloses(_bounds, pos)) {
+						pos = aabb::closestPoint(_bounds, pos);
+					}
 
 					float depth = glm::dot(ground.n, pos);
 					if (depth < (ground.d + cameraFloorOffset)) {
-						newPos.y = cameraFloorOffset;
+						pos.y = cameraFloorOffset;
 					}
-
-					camera.setPosition(newPos);
+					camera.setPosition(pos);
 				}
 			}
 
 			void processUserInput() {
-				if (Keyboard::get().SPACE_BAR.pressed()) {
-					camera.setPreferTargetYAxisOrbiting(!camera.preferTargetYAxisOrbiting());
-				}
-				if (Keyboard::get().NUM_1.pressed()) {
-					updateMode(Camera::FIRST_PERSON);
-				}
-				if (Keyboard::get().NUM_2.pressed()) {
-					updateMode(Camera::SPECTATOR);
-				}
-				if (Keyboard::get().NUM_3.pressed()) {
-					updateMode(Camera::FLIGHT);
-				}
-				if (Keyboard::get().NUM_4.pressed()) {
-					updateMode(Camera::ORBIT);
-				}
+				if (_move) {
+					if (Keyboard::get().SPACE_BAR.pressed()) {
+						camera.setPreferTargetYAxisOrbiting(!camera.preferTargetYAxisOrbiting());
+					}
+					if (Keyboard::get().NUM_1.pressed()) {
+						updateMode(Camera::FIRST_PERSON);
+					}
+					if (Keyboard::get().NUM_2.pressed()) {
+						updateMode(Camera::SPECTATOR);
+					}
+					if (Keyboard::get().NUM_3.pressed()) {
+						updateMode(Camera::FLIGHT);
+					}
+					if (Keyboard::get().NUM_4.pressed()) {
+						updateMode(Camera::ORBIT);
+					}
 
-				movementDirection(direction);
+					movementDirection(direction);
+				}
 			}
 
 			void movementDirection(glm::vec3& direction) {

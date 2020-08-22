@@ -70,7 +70,7 @@ namespace ncl {
 				} irradiance;
 				std::string captureFragmentShader;
 				int lowResolutionDownsampleFactor = 16;
-				GLuint textureBindOffset = 0;
+				GLint textureBindOffset = 0;
 			};
 
 			LightFieldProbes() = default;

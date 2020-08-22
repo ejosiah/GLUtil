@@ -11,10 +11,11 @@ namespace ncl {
 		StorageBufferObj<T>::StorageBufferObj(std::vector<T> v, GLuint id)
 			:_obj{ v }
 			, _size{ sizeOf(v) }
-			, _idx{ id }{
+			, _idx{ id }
+		{
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			glBufferData(GL_SHADER_STORAGE_BUFFER, _size, NULL, GL_DYNAMIC_DRAW);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, _size, nullptr, GL_DYNAMIC_DRAW);
 
 			if(!v.empty()){
 				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, _size, &_obj[0]);
@@ -27,7 +28,8 @@ namespace ncl {
 		template<typename T>
 		StorageBufferObj<T>::StorageBufferObj(size_t count, GLuint id)
 			: _size{ sizeOf(count) }
-			, _idx{ id }{
+			, _idx{ id }
+		{
 			glGenBuffers(1, &_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
 			glBufferData(GL_SHADER_STORAGE_BUFFER, _size, NULL, GL_DYNAMIC_DRAW);
@@ -36,19 +38,31 @@ namespace ncl {
 		}
 
 		template<typename T>
-		StorageBufferObj<T>::StorageBufferObj(StorageBufferObj<T>&& source) noexcept {
+		StorageBufferObj<T>::StorageBufferObj(Shape& shape, GLuint id) 
+			:_size{ shape.size() }
+			, _idx{ id }
+			, _buf{ shape.bufferFor(0, VAOObject::Position) }
+		{
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, _idx, _buf);
+		}
+		
+		template<typename T>
+		StorageBufferObj<T>::StorageBufferObj(StorageBufferObj<T>&& source) noexcept 
+		{
 			transfer(source, *this);
 		}
 
 		template<typename T>
-		StorageBufferObj<T>::~StorageBufferObj() {
+		StorageBufferObj<T>::~StorageBufferObj() 
+		{
 			if (glIsBuffer(_buf) == GL_TRUE) {
 				glDeleteBuffers(1, &_buf);
 			}
 		}
 
 		template<typename T>
-		StorageBufferObj<T>& StorageBufferObj<T>::operator=(StorageBufferObj<T>&& source) {
+		StorageBufferObj<T>& StorageBufferObj<T>::operator=(StorageBufferObj<T>&& source) 
+		{
 			transfer(source, *this);
 			return *this;
 		}
@@ -84,10 +98,12 @@ namespace ncl {
 			}
 		}
 
+
+		// TODO change name to reflect use
 		template<typename T>
 		void StorageBufferObj<T>::read(std::function<void(T*)> use) {
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, _buf);
-			T* data = (T*)glMapNamedBuffer(_buf, GL_READ_ONLY);
+			T* data = (T*)glMapNamedBuffer(_buf, GL_READ_WRITE);
 			use(data);
 			glUnmapNamedBuffer(_buf);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);

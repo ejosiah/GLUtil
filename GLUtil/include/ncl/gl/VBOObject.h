@@ -16,10 +16,10 @@ namespace ncl {
 		public:
 			VBOObject() = default;
 
-			VBOObject(std::vector<Mesh>& meshes) {
+			VBOObject(std::vector<Mesh>& meshes, unsigned int instanceCount) {
 				for (auto& mesh : meshes) {
-					if (!mesh.hasXforms())
-						mesh.xforms.push_back(glm::mat4(1));
+					if (!mesh.hasXforms() || mesh.xforms.size() < instanceCount)
+						mesh.xforms = std::vector<glm::mat4>{ instanceCount, glm::mat4(1) };
 				}
 				int no_of_meshes = meshes.size();
 				normals = std::vector<bool>(no_of_meshes, false);
@@ -43,7 +43,6 @@ namespace ncl {
 						numBuffers++;
 					}
 
-
 					GLuint* buffer = new GLuint[numBuffers];
 					GLuint* nextBuffer = buffer;
 					std::vector<bool> attribs = std::vector<bool>(4, false);
@@ -52,6 +51,7 @@ namespace ncl {
 
 					glBindBuffer(GL_ARRAY_BUFFER, *nextBuffer);
 					glBufferData(GL_ARRAY_BUFFER, _sizeof(mesh.positions), &mesh.positions[0], GL_STATIC_DRAW);
+				//	glBufferData(GL_ARRAY_BUFFER, _sizeof(positions), &positions[0], GL_STATIC_DRAW);
 
 					if (mesh.hasNormals()) {
 						normals[i] = true;

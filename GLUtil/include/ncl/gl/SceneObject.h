@@ -2,10 +2,12 @@
 
 #include "Scene.h"
 #include "gl.h"
+#include "Shader.h"
+#include "Drawable.h"
 
 namespace ncl {
 	namespace gl {
-		class SceneObject {
+		class SceneObject : public Drawable {
 		public:
 			SceneObject(Scene* scene = nullptr) :_scene{ scene } {
 			}
@@ -14,7 +16,7 @@ namespace ncl {
 
 			}
 
-			virtual void render() {
+			virtual void render(bool shadowMode = false) {
 
 			}
 
@@ -23,6 +25,10 @@ namespace ncl {
 			}
 
 			virtual void processInput(const Key& key) {
+
+			}
+
+			virtual void draw(Shader& shader) {
 
 			}
 

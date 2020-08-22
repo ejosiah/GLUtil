@@ -1,0 +1,22 @@
+#version 450 core 
+#pragma compile(off)
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+
+layout(rgba32f, binding = 0 ) uniform image3D noiseImg;
+
+float fbm_perlin(float x, float y, float z, int octaves, int period);
+
+void main(){
+	
+	vec3 pos = vec3(gl_GlobalInvocationID)/(vec3(gl_NumWorkGroups * gl_WorkGroupSize));
+
+	vec4 color = vec4(0);
+	 color.r = fbm_perlin(pos.x, pos.y, pos.z, 1, 1);
+	 color.g = fbm_perlin(pos.x, pos.y, pos.z, 2, 1);
+	 color.b = fbm_perlin(pos.x, pos.y, pos.z, 3, 1);
+	 color.a = fbm_perlin(pos.x, pos.y, pos.z, 4, 1);
+
+	 imageStore(noiseImg, ivec3(gl_GlobalInvocationID), color);
+}
+
+#pragma include("fbm.glsl")

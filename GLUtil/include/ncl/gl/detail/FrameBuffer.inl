@@ -36,6 +36,7 @@ namespace ncl {
 				}
 				break;
 			case GL_TEXTURE_2D_ARRAY:
+			case GL_TEXTURE_3D:
 				glTexImage3D(a.texTarget, 0, a.internalFmt, c.width, c.height, a.numLayers, a.border, a.fmt, a.type, nullptr);
 				break;
 			case GL_TEXTURE_CUBE_MAP_ARRAY:
@@ -52,11 +53,20 @@ namespace ncl {
 			});
 		}
 
+		static inline bool containsTexture3DForColorAttachment(std::vector<FrameBuffer::Attachment>& attachments) {
+			return std::any_of(attachments.begin(), attachments.end(), [](FrameBuffer::Attachment a) {
+				return (a.texTarget == GL_TEXTURE_3D) && isColorAttachment(a.attachment);
+			});
+		}
+
+		
+
 		FrameBuffer::FrameBuffer(Config c, std::function<void()> extraTexConfig) :config{ c } {
 			glGenFramebuffers(1, &_fbo);
 			glBindFramebuffer(c.fboTarget, _fbo);
 
 			_textures.resize(c.attachments.size());
+
 			glGenTextures(c.attachments.size(), &_textures[0]);
 
 
@@ -96,6 +106,11 @@ namespace ncl {
 					for (int i = 0; i < 6; i++) {
 						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT32F, c.width, c.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 					}
+					glFramebufferTexture(c.fboTarget, GL_DEPTH_ATTACHMENT, _depth_stencil_tex, 0);
+				}
+				else if (containsTexture3DForColorAttachment(c.attachments)) {
+					auto depth = c.attachments[0].numLayers;	// add depth to config level;
+					glTexImage3D(GL_TEXTURE_3D, 0, GL_DEPTH_COMPONENT32F, c.width, c.height, depth, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 					glFramebufferTexture(c.fboTarget, GL_DEPTH_ATTACHMENT, _depth_stencil_tex, 0);
 				}
 				else {
@@ -166,6 +181,16 @@ namespace ncl {
 			}
 		}
 
+		void FrameBuffer::use(Texture2D* texture, std::function<void()> exec, GLuint layer) {
+			setTexture(texture);
+			use(exec, layer);
+		}
+
+		void FrameBuffer::use(Texture3D* texture, std::function<void()> exec, GLuint layer) {
+			setTexture(texture);
+			use(exec, layer);
+		}
+
 		void FrameBuffer::use(std::function<void()> exec, GLuint layer) const {
 			glGetIntegerv(GL_VIEWPORT, const_cast<GLint*>(viewport));
 
@@ -186,7 +211,7 @@ namespace ncl {
 			for (int i = 0; i < config.attachments.size(); i++) {
 				auto& a = config.attachments[i];
 				auto _tex = _textures[i];
-				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) {	// Todo check for all array textures
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY || a.texTarget == GL_TEXTURE_3D) {	// Todo check for all array textures
 					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, level, layer);
 				}
 				else {
@@ -203,7 +228,7 @@ namespace ncl {
 			for (auto i : attachments) {
 				auto& a = config.attachments[i];
 				auto _tex = _textures[i];
-				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY) {	// Todo check for all array textures
+				if (a.texTarget == GL_TEXTURE_2D_ARRAY || a.texTarget == GL_TEXTURE_CUBE_MAP_ARRAY || a.texTarget == GL_TEXTURE_3D) {	// Todo check for all array textures
 					glFramebufferTextureLayer(config.fboTarget, a.attachment, _tex, level, layer);
 				}
 				else {

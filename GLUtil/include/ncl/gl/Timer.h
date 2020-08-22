@@ -28,6 +28,10 @@ private:
     
 public:
     float lastFrameTime = 0.0f;
+
+	float timeSinceStart() {
+		return totalElapsedTime / 1000.f;
+	}
 	
     
 private:
