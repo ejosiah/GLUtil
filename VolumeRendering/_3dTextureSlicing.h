@@ -78,14 +78,14 @@ public:
 				});
 	//		});
 
-		if (once) {
-			once = false;
-			slices.read([&](int* ptr) {
-				for (int i = 0; i < 128; i++) {
-					logger.info("slice[" + to_string(i) + "]: " + to_string(*(ptr + i)));
-				}
-				});
-		}
+		//if (once) {
+		//	once = false;
+		//	slices.read([&](int* ptr) {
+		//		for (int i = 0; i < 128; i++) {
+		//		//	logger.info("slice[" + to_string(i) + "]: " + to_string(*(ptr + i)));
+		//		}
+		//		});
+		//}
 		//scene().renderText(10, 20, to_string(num_slices) + " slices");
 		//scene().renderText(scene().width() - 200, 10, "+ for more slices, - for less slices");
 

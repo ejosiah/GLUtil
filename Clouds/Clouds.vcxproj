@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Josiah\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\$(Username)\OneDrive\cpp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\$(Username)\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -142,9 +142,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="clouds_include.frag" />
+    <None Include="shaders\cloud.comp" />
     <None Include="shaders\clouds.frag" />
     <None Include="shaders\clouds.vert" />
     <None Include="shaders\fun_def.comp" />
+    <None Include="shaders\generate_rays.comp" />
     <None Include="shaders\noise.comp" />
     <None Include="shaders\perlin.comp" />
     <None Include="shaders\perlin_worley.frag" />

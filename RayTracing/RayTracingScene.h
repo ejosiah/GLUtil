@@ -21,7 +21,7 @@ namespace bvh = geom::bvh;
 const unsigned int MILLION = 1000000;
 const unsigned int BILLION = 1000000000;
 const float DAY_LIGHT_ILLUMINANCE = 64000;
-const int MaxSpheres = 0;
+const int MaxSpheres = 10;
 const int MAX_BOUNCES = 10;
 Logger& logger = Logger::get("ray");
 
@@ -76,7 +76,7 @@ public:
 			"front.jpg", "back.jpg"
 		};
 
-		string root = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\001\\";
+		string root = "C:\\Users\\" + username +  "\\OneDrive\\media\\textures\\skybox\\005\\";
 		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 			return root + path;
 		});

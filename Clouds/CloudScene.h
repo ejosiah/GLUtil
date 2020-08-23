@@ -1,5 +1,8 @@
 #pragma once
 
+#include <thread>
+#include <chrono>
+#include <fstream>
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/common.h"
@@ -7,7 +10,9 @@
 #include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
 #include "../GLUtil/include/ncl/gl/Resolution.h"
 #include "../GLUtil/include/ncl/units/units.h"
+#include "../GLUtil/include/ncl/gl/SkyBox.h"
 #include "../Physics/Floor.h"
+#include "../GLUtil/include/ncl/ray_tracing/RayGenerator.h"
 #include "Weather.h"
 #include "CloudUI.h"
 
@@ -17,12 +22,15 @@ using namespace ncl;
 using namespace gl;
 using namespace unit;
 
+namespace rt = ray_tracing;
+
 const unsigned WIDTH = Resolution::QHD.width;
 const unsigned HEIGHT = Resolution::QHD.height;
 
 class CloudScene : public Scene {
 public:
 	CloudScene() :Scene{ "Perlin-Worley Clouds", WIDTH, HEIGHT } {
+	//	_fullScreen = true;
 		camInfoOn = true;
 	//	_hideCursor = false;
 	//	_requireMouse = true;
@@ -31,6 +39,11 @@ public:
 		//		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
 		addShader("phong", GL_FRAGMENT_SHADER, phong_lfp_frag_shader);
 	//	addShader("clouds", GL_VERTEX_SHADER, identity_vert_shader);
+
+		addShader("screen", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
+		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
+		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 	}
 
 	void init() override {
@@ -46,9 +59,22 @@ public:
 
 		noiseQuad = ProvidedMesh{ screnSpaceQuad(), false, dim.z };
 		noiseQuad.defautMaterial(false);
+
+		// "c:\\temp\\low_frequncy_noise.raw"
+		float* noise = nullptr;
+
+		//ifstream fin;
+		//fin.open("c:\\temp\\low_frequncy_noise.raw", std::ios_base::binary);
+
+		//if (fin.good()) {
+		//	noise = new float[dim.x * dim.y * dim.z * 4];
+		//	fin.read(reinterpret_cast<char*>(noise), dim.x * dim.y * dim.z * sizeof(float) * 4);
+		//}
+		//fin.close();
 		
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		noiseTexture = new Texture3D{
-			nullptr,
+			noise,
 			dim.x,
 			dim.y,
 			dim.z,
@@ -76,28 +102,77 @@ public:
 		xform = scale(xform, vec3(1));
 		//auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
+		cube.defautMaterial(false);
 		cubeAABB = aabbOutline(cube.aabb(), BLACK);
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
 		cloudUI = new CloudUI{ weather, *this };
+		rayInit();
+	}
+
+	void rayInit() {
+
+		initSkyBox();
+		camera_ssbo = StorageBufferObj<rt::Camera>{ rt::Camera{} };
+		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
+
+		ivec3 workers = ivec3{ _width/32, _height / 32, 1 };
+		clouds = new Compute{ workers, { Image2D(_width, _height, GL_RGBA32F, "", 0) }, &shader("cloud"), [&] {
+			glBindTextureUnit(0, skybox->buffer);
+			rayGenerator->getRaySSBO().sendToGPU();
+		} };
+
+		addCompute(rayGenerator);
+		addCompute(clouds);
+	}
+
+	void initSkyBox() {
+		vector<string> skyTextures = vector<string>{
+			"right.jpg", "left.jpg",
+			"top.jpg", "bottom.jpg",
+			"front.jpg", "back.jpg"
+		};
+
+		string root = "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\skybox\\005\\";
+		transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
+			return root + path;
+			});
+
+		skybox = SkyBox::create(skyTextures, 0, *this);
 	}
 
 
 	void generateNoise() {
 		shader("noise")([&] {
-			glBindImageTexture(image, noiseTexture->buffer(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+			glBindImageTexture(image, noiseTexture->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 			glDispatchCompute(workers.x, workers.y, workers.z);
 		});
 
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+		float* noise = new float[dim.x * dim.y * dim.z * 4];
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glBindTexture(GL_TEXTURE_3D, noiseTexture->buffer());
+		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_FLOAT, (void*)noise);
+
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+		ofstream fout;
+		fout.open("c:\\temp\\low_frequncy_noise.raw", std::ios_base::binary);
+		if (fout.good()) {
+			fout.write(reinterpret_cast<char*>(noise), dim.x * dim.y * dim.z * sizeof(float) * 4);
+			fout.flush();
+		}
+		fout.close();
+		delete[] noise;
 	}
 
 	void display() override {
-		cloudUI->render();
+		//cloudUI->render();
 		//renderBounds();
-		
 	//	renderNoise();
 		renderClouds();
-		renderFloor();
+	//	renderFloor();
 		//shader("flat")([&] {
 		//	send(activeCamera());
 		//	shade(cubeAABB);
@@ -110,7 +185,9 @@ public:
 
 	void renderNoise() {
 		shader("render")([&] {
-			glBindTextureUnit(0, noiseTexture->buffer());
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_3D, noiseTexture->buffer());
+		//	glBindTextureUnit(0, noiseTexture->buffer());
 			send("dt", Timer::get().timeSinceStart());
 			send("numSlices", int(dim.z));
 			send("slice", 70.0f);
@@ -136,20 +213,26 @@ public:
 	}
 
 	void renderClouds() {
-		glEnable(GL_BLEND);
-		shader("clouds") ([&] {
-			send(activeCamera());
+		//glEnable(GL_BLEND);
+		//shader("clouds") ([&] {
+		//	send(activeCamera());
+		//	glBindTextureUnit(0, noiseTexture->buffer());
+		//	sendWeather();
+		////	send("cloudMinMax", cloudMinMax);
+		//	send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+		//	send("stepSize", stepSize);
+		//	send("camPos", activeCamera().getPosition());
+		//	send("texMin", vec3(cube.aabb().min));
+		//	send("texMax", vec3(cube.aabb().max));
+		//	shade(cube);
+		//});
+		//glDisable(GL_BLEND);
+		shader("screen")([&] {
+			clouds->images().front().renderMode();
+			glBindTextureUnit(0, clouds->images().front().buffer());
 			glBindTextureUnit(0, noiseTexture->buffer());
-			sendWeather();
-		//	send("cloudMinMax", cloudMinMax);
-			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
-			send("stepSize", stepSize);
-			send("camPos", activeCamera().getPosition());
-			send("texMin", vec3(cube.aabb().min));
-			send("texMax", vec3(cube.aabb().max));
-			shade(cube);
+			shade(quad);
 		});
-		glDisable(GL_BLEND);
 	}
 
 	void sendWeather() {
@@ -166,7 +249,7 @@ private:
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
 	Texture3D* noiseTexture;
-	const uvec3 dim{ 512, 512, 128 };
+	const uvec3 dim{ 256, 256, 128 };
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
 	Logger logger = Logger::get("Clouds");
@@ -179,4 +262,9 @@ private:
 	const vec2 cloudMinMax = vec2(50, 100);
 	const vec3 stepSize = vec3(1) / vec3(10);
 	CloudUI* cloudUI;
+	rt::RayGenerator* rayGenerator;
+	StorageBufferObj<rt::Camera> camera_ssbo;
+	SkyBox* skybox;
+	Compute* clouds;
+//	FrameBuffer perlin_worly_fb;
 };

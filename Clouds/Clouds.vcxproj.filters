@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\fun_def.comp">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\noise.comp">
       <Filter>Resource Files</Filter>
     </None>
@@ -43,6 +40,15 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="clouds_include.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\fun_def.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\generate_rays.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\cloud.comp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

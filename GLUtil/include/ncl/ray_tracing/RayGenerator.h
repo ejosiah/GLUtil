@@ -28,7 +28,7 @@ namespace ncl {
 			}
 
 			void preCompute() override {
-				update(*camera_ssbo->get(), *scene);
+				ray_tracing::update(*camera_ssbo->get(), *scene);
 				auto cam = camera_ssbo->get();
 				camera_ssbo->sendToGPU();
 				//rays.sendToGPU(false);

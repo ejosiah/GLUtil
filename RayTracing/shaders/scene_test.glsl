@@ -58,13 +58,13 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 		//	}
 		//}
 
-		local_hit.t = hit.t;
-		if (intersectsTriangle(ray, local_hit, 0)) {
-			aHit = true;
-			if (local_hit.t < hit.t) {
-				hit = local_hit;
-			}
-		}
+//		local_hit.t = hit.t;
+//		if (intersectsTriangle(ray, local_hit, 0)) {
+//			aHit = true;
+//			if (local_hit.t < hit.t) {
+//				hit = local_hit;
+//			}
+//		}
 	}
 
 

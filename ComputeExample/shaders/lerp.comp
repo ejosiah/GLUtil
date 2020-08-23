@@ -11,11 +11,23 @@ float plot(vec2 st, float pct){
 	return smoothstep(pct - 0.02, pct, st.y) - smoothstep(pct, pct + 0.02, st.y);
 }
 
+float getDensityHeightGradientForPoint(float height, float cloud_type) {
+	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
+	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
+	const vec4 cumulusGrad = vec4(0.01f, 0.0625f, 0.78f, 1.0f);
+	float stratus = 1.0f - clamp(cloud_type * 2.0f, 0, 1);
+	float stratocumulus = 1.0f - abs(cloud_type - 0.5f) * 2.0f;
+	float cumulus = clamp(cloud_type - 0.5f, 0, 1) * 2.0f;
+	vec4 cloudGradient = stratusGrad * stratus + stratocumulusGrad * stratocumulus + cumulusGrad * cumulus;
+	return smoothstep(cloudGradient.x, cloudGradient.y, height) - smoothstep(cloudGradient.z, cloudGradient.w, height);
+}
+
 void main(){
 	vec2 st = vec2(gl_GlobalInvocationID)/(vec2(gl_NumWorkGroups * gl_WorkGroupSize) - vec2(1));
 
-	float y =  ceil(sin(st.x * 2 * PI * 4));
 	//float y =  (1 - exp(-50 * st.x)) * exp(-4 * st.x);
+
+	float y = getDensityHeightGradientForPoint(st.x, 1);
 
 	vec3 color = vec3(y);
 

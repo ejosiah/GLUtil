@@ -1,0 +1,40 @@
+#version 450 core
+
+struct Ray {
+	vec3 origin;
+	vec3 direction;
+	float tMax;
+};
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+layout(rgba32f, binding=0) uniform image2D image;
+
+layout(binding = 0) uniform sampler3D cloudNoiseLowFreq;
+layout(binding = 0) uniform samplerCube environmentMap;
+
+layout(std430, binding=1) buffer RAY_SSB0{
+	Ray rays[];
+};
+
+int globalIndex();
+
+void main(){
+	int index = globalIndex();
+	Ray ray = rays[index];
+
+	vec2 size = vec2(gl_WorkGroupSize * gl_NumWorkGroups);
+
+	vec2 uv = vec2(gl_GlobalInvocationID)/(size - 1);
+
+	vec3 col = texture(environmentMap, ray.direction).rgb;
+	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(col, 1));
+}
+
+int globalIndex(){
+	ivec3 size = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+
+}
