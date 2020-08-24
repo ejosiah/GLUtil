@@ -106,7 +106,7 @@ int globalIndex(){
 }
 
 
-bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1) {
+bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out float t) {
 	vec3   tMin = (box.min - ray.origin) / ray.direction;
 	vec3   tMax = (box.max - ray.origin) / ray.direction;
 	vec3     t1 = min(tMin, tMax);
@@ -121,8 +121,9 @@ bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1) {
 	vec3 n = -sign(ray.direction) * step(t1.yzx, t1.xyz) * step(t1.zxy, t1.xyz);
 	vec3 x, y;
 	orthonormalBasis(n, x, y);
-	uv = vec2(dot(p0, x)/10, dot(p0, y)/10);
-
+	uv = vec2(dot(p0, x)/5, dot(p0, y)/5);
+	uv = abs(uv);
+	t = tn;
 	return tn < tf;
 }
 
@@ -348,55 +349,28 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 //	float density = sampleCloudDensity(ray.direction, atmosphere, weather, true);
 
 
-	if(intersectSphere(ray, atmosphere.innerRadius, p0)){
-		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
-		//float density = sampleCloud(p0/256);
-		//float density = sampleCloud(ray.direction);
-		float density = sampleCloudDensity(p0/100, atmosphere, weather, true);
-		density = density < 0 ? 0 : density;
-		return vec4(density);
-	//	return vec4(1, 0, 0, 1);
-		vec3 p = p0;
-		vec3 stepDir = ray.direction;
-		int count = 0;
-		for(int i = 0; i < 300; i++){
-
-			if(cloud_color.a > 0.99) break;
-			if(count > 5) break;
-			bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
-			if(outsideOuterAtmosphere) break;
-
-			p += stepDir;
-
-			float density = sampleCloud(p);
-			density = density < 0 ? 0 : density;
-			if(density == 0 ){
-				count++;
-			}else{
-				count = 0;
-			}
-
-			float prev_alpha = density - (density * cloud_color.a);
-			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
-			cloud_color.a += prev_alpha;
-		}
-	}else{
-		return vec4(0);
-	}
-
-//	if(intersectCube(ray, box, uv, p0, p1)){
-//		vec3 p = ray.origin;
-//	//	vec3 color = Checkerboard(uv);
-//		//return vec4(color, 1);
-//		vec3 stepDir = ray.direction * (1/10);
-//		bool stop = false;
-//		for(int i = 0; i < 1; i++){
-//			p += ray.direction;
-//	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
-//	//		if(stop) break;
+//	if(intersectSphere(ray, atmosphere.innerRadius, p0)){
+//		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
+//		//float density = sampleCloud(p0/256);
+//		//float density = sampleCloud(ray.direction);
+//		float density = sampleCloudDensity(p0/100, atmosphere, weather, true);
+//		density = density < 0 ? 0 : density;
+//		return vec4(density);
+//	//	return vec4(1, 0, 0, 1);
+//		vec3 p = p0;
+//		vec3 stepDir = ray.direction;
+//		int count = 0;
+//		for(int i = 0; i < 300; i++){
+//
+//			if(cloud_color.a > 0.99) break;
+//			if(count > 5) break;
+//			bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
+//			if(outsideOuterAtmosphere) break;
+//
+//			p += stepDir;
 //
 //			float density = sampleCloud(p);
-//
+//			density = density < 0 ? 0 : density;
 //			if(density == 0 ){
 //				count++;
 //			}else{
@@ -406,12 +380,42 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 //			float prev_alpha = density - (density * cloud_color.a);
 //			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
 //			cloud_color.a += prev_alpha;
-//
-//			if(cloud_color.a > 0.99) break;
-//			if(count > 5) break;
-//			
 //		}
-////	}
+//	}else{
+//		return vec4(0);
+//	}
+	
+	float t;
+	if(intersectCube(ray, box, uv, p0, p1, t)){
+	//	if(t < 0) return vec4(1, 0, 0, 1);
+		vec3 p = ray.origin;
+	//	vec3 color = Checkerboard(uv);
+		vec3 color = vec3(1, 0, 0);
+		return vec4(color, 1);
+		vec3 stepDir = ray.direction * (1/10);
+		bool stop = false;
+		for(int i = 0; i < 1; i++){
+			p += ray.direction;
+	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
+	//		if(stop) break;
+
+			float density = sampleCloud(p);
+
+			if(density == 0 ){
+				count++;
+			}else{
+				count = 0;
+			}
+
+			float prev_alpha = density - (density * cloud_color.a);
+			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
+			cloud_color.a += prev_alpha;
+
+			if(cloud_color.a > 0.99) break;
+			if(count > 5) break;
+			
+		}
+	}
 
 	return cloud_color;
 }

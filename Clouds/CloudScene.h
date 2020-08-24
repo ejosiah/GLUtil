@@ -136,7 +136,7 @@ public:
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
 			send("box.min", vec3(0));
-			send("box.max", vec3(50));
+			send("box.max", vec3(10));
 			send("dt", Timer::get().timeSinceStart());
 			send("stepDelta", stepSize);
 			sendWeather();
