@@ -130,5 +130,5 @@ out vec4 fragColor;
 void main(){
 	vec3 color = traceRay(vertex.position, camPos, weather).rgb;
 	vec3 skyCol = vec3(0.1, 0.5, 0.9);
-	fragColor = vec4(color + skyCol, 1);
+	fragColor = vec4(color, 1);
 }

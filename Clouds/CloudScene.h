@@ -24,8 +24,8 @@ using namespace unit;
 
 namespace rt = ray_tracing;
 
-const unsigned WIDTH = Resolution::QHD.width;
-const unsigned HEIGHT = Resolution::QHD.height;
+const unsigned WIDTH = Resolution::HD.width;
+const unsigned HEIGHT = Resolution::HD.width;
 
 class CloudScene : public Scene {
 public:
@@ -52,8 +52,11 @@ public:
 		bounds(vec3(-200), vec3(200));
 		initDefaultCamera();
 		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
-		activeCamera().collisionTestOff();
-//		activeCamera().setPosition({ 3.26, 24.6, 13.1 });
+	//	activeCamera().collisionTestOff();
+	//	activeCamera().setVelocity(vec3(50));
+	//	activeCamera().setPosition({ 3.26, 24.6, 13.1 });
+	//	deactivateCameraControl();
+	//	activeCamera().setPosition({ 0, 0, 60 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -98,8 +101,8 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ cloudMinMax.x, 20, 20, RED };
 		outer = new Hemisphere{ cloudMinMax.y, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 0.5, 0 });
-		xform = scale(xform, vec3(1));
+		auto xform = translate(mat4(1), { 0, 0, 0 });
+		xform = scale(xform, vec3(dim));
 		//auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
@@ -107,6 +110,12 @@ public:
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
 		cloudUI = new CloudUI{ weather, *this };
+
+		auto config = FrameBuffer::defaultConfig(_width, _height);
+		config.attachments[0].internalFmt = GL_RGBA32F;
+		config.attachments[0].fmt = GL_RGBA;
+		fb = FrameBuffer{ config };
+
 		rayInit();
 	}
 
@@ -117,9 +126,21 @@ public:
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 
 		ivec3 workers = ivec3{ _width/32, _height / 32, 1 };
-		clouds = new Compute{ workers, { Image2D(_width, _height, GL_RGBA32F, "", 0) }, &shader("cloud"), [&] {
-			glBindTextureUnit(0, skybox->buffer);
+
+		Image2D image = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "scene", 0};
+
+		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
+			glBindTextureUnit(1, fb.texture());
+			glBindTextureUnit(2, noiseTexture->buffer());
 			rayGenerator->getRaySSBO().sendToGPU();
+			send("atmosphere.innerRadius", float(100));
+			send("atmosphere.outerRadius", float(200));
+			send("box.min", vec3(0));
+			send("box.max", vec3(50));
+			send("dt", Timer::get().timeSinceStart());
+			send("stepDelta", stepSize);
+			sendWeather();
+
 		} };
 
 		addCompute(rayGenerator);
@@ -168,7 +189,7 @@ public:
 	}
 
 	void display() override {
-		//cloudUI->render();
+	//	cloudUI->render();
 		//renderBounds();
 	//	renderNoise();
 		renderClouds();
@@ -180,7 +201,13 @@ public:
 		//	shade(sphere);
 		//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
 		//	shade(sphere);
-		//});	
+		//});
+
+
+		//shader("screen")([&] {
+		//	glBindTextureUnit(0, fb.texture());
+		//	shade(quad);
+		//});
 	}
 
 	void renderNoise() {
@@ -227,6 +254,22 @@ public:
 		//	shade(cube);
 		//});
 		//glDisable(GL_BLEND);
+
+		//static bool once = true;
+		//if (once) {
+		//	once = false;
+		//	stringstream ss;
+		//	rayGenerator->getRaySSBO().read([&](rt::Ray* itr) {
+		//		for (int i = 0; i < 10; i++) {
+		//			auto ray = *(itr + i);
+		//			ss.str("");
+		//			ss.clear();
+		//			ss << "o: " << ray.origin << ", d: " << ray.direction;
+		//			logger.info(ss.str());
+		//		}
+		//	});
+		//}
+
 		shader("screen")([&] {
 			clouds->images().front().renderMode();
 			glBindTextureUnit(0, clouds->images().front().buffer());
@@ -241,6 +284,24 @@ public:
 		send("weather.percipitation", weather.percipitation);
 		send("weather.wind_direciton", weather.wind_direciton);
 		send("weather.cloud_speed", weather.cloud_speed);
+
+		//logger.info("cloud_coverage" + to_string(weather.cloud_coverage));
+	}
+
+	void renderSky() {
+		shader("sky")([&] {
+			send(activeCamera());
+			send("camPos", activeCamera().getPosition());
+			send("sunPos", vec3(50.0_km));
+			shade(outer);
+		});
+	}
+
+	void update(float dt) {
+		fb.use([&] {
+		//	renderSky();
+			renderFloor();
+		});
 	}
 
 private:
@@ -249,7 +310,7 @@ private:
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
 	Texture3D* noiseTexture;
-	const uvec3 dim{ 256, 256, 128 };
+	const uvec3 dim{ 256, 256, 256 };
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
 	Logger logger = Logger::get("Clouds");
@@ -260,11 +321,11 @@ private:
 	Cube cube;
 	Sphere sphere;
 	const vec2 cloudMinMax = vec2(50, 100);
-	const vec3 stepSize = vec3(1) / vec3(10);
+	const vec3 stepSize = vec3(1) / vec3(dim);
 	CloudUI* cloudUI;
 	rt::RayGenerator* rayGenerator;
 	StorageBufferObj<rt::Camera> camera_ssbo;
 	SkyBox* skybox;
 	Compute* clouds;
-//	FrameBuffer perlin_worly_fb;
+	FrameBuffer fb;
 };

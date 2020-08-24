@@ -51,7 +51,7 @@ namespace ncl {
 			virtual void compute() {
 				(*_shader)([&] {
 					preCompute();
-					send("dt", dt);
+				//	send("dt", dt);
 					for (auto& img : _images) {
 						img.computeMode();
 						img.sendTo(*_shader);

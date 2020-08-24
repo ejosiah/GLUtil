@@ -467,7 +467,7 @@ namespace ncl {
 
 			void sendTo(Shader& shader) {
 				if (mode == Mode::COMPUTE) {
-					glBindImageTexture(_img_id, _buffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, _format);
+					glBindImageTexture(_img_id, _buffer, 0, GL_FALSE, 0, GL_READ_WRITE, _format);
 					shader.sendUniform1i(_name, _img_id);
 				}
 				else {

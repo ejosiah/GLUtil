@@ -1,34 +1,101 @@
 #version 450 core
 
+#define PI (3.1415926535897932384626433832795)
+#define TWO_PI (6.283185307179586476925286766559)
+#define RED (vec3(1, 0, 0))
+#define GREEN (vec3(0, 1, 0))
+#define BLUE (vec3(0, 0, 1))
+#define BLACK (vec3(0, 0, 0))
+
+const int MAX_SAMPLES = 200;
+
+
+struct Box{
+	vec3 min;
+	vec3 max;
+};
+
+struct Weather{
+	float cloud_coverage;
+	float cloud_type;
+	float percipitation;
+	vec3 wind_direciton;
+	float cloud_speed;
+};
+
 struct Ray {
 	vec3 origin;
 	vec3 direction;
 	float tMax;
 };
 
+struct Atmosphere{
+	float innerRadius;
+	float outerRadius;
+};
+
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
 
 layout(rgba32f, binding=0) uniform image2D image;
 
-layout(binding = 0) uniform sampler3D cloudNoiseLowFreq;
-layout(binding = 0) uniform samplerCube environmentMap;
+layout(binding = 1) uniform sampler2D canvas;
+
+layout(binding = 2) uniform sampler3D cloudNoiseLowFreq;
+//layout(binding = 3) uniform sampler3D clouldNoiseHighFreq;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
 };
 
+
+uniform Weather weather;
+uniform Atmosphere atmosphere;
+uniform Box box;
+uniform vec3 stepDelta;
+
+
+bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1);
+
+vec3 Checkerboard(vec2 uv);
+
+void orthonormalBasis(vec3 n, out vec3 x, out vec3 y);
+
 int globalIndex();
+
+bool intersectSphere(Ray ray, float radius, out vec3 p);
+
+float saturate(float val);
+
+float heightFractionForPoint(vec3 pos, Atmosphere atmosphere);
+
+float densityHeightGradientForPoint(vec3 p, Atmosphere atmosphere, Weather weather);
+
+float remap(float x, float a, float b, float c, float d);
+
+float sampleCloudDensity(vec3 p, Weather weather, bool fullSample);
+
+vec4 traceRay(Ray ray, Atmosphere atmosphere, Weather weather);
+
+vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather);
+
+vec4 test(vec2 uv);
 
 void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 
-	vec2 size = vec2(gl_WorkGroupSize * gl_NumWorkGroups);
+	vec4 source = traceRay1(ray, atmosphere, weather);
 
-	vec2 uv = vec2(gl_GlobalInvocationID)/(size - 1);
+	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
+	vec3 dest = texture(canvas, _uv).rgb;
 
-	vec3 col = texture(environmentMap, ray.direction).rgb;
-	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(col, 1));
+	vec4 color;
+	color.a = 1;
+	color.rgb = source.rgb + dest * (1 - source.a);
+//	color.rgb = dest;
+
+	imageStore(image, ivec2(gl_GlobalInvocationID.xy), color);
 }
 
 int globalIndex(){
@@ -36,5 +103,315 @@ int globalIndex(){
 	ivec3 pos = ivec3(gl_GlobalInvocationID);
 
 	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+}
 
+
+bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1) {
+	vec3   tMin = (box.min - ray.origin) / ray.direction;
+	vec3   tMax = (box.max - ray.origin) / ray.direction;
+	vec3     t1 = min(tMin, tMax);
+	vec3     t2 = max(tMin, tMax);
+	float tn = max(max(t1.x, t1.y), t1.z);
+	float tf = min(min(t2.x, t2.y), t2.z);
+
+	if (tn > ray.tMax) return false;
+
+	p0 = ray.origin + tn * ray.direction;
+	p1 = ray.origin + tf * ray.direction;
+	vec3 n = -sign(ray.direction) * step(t1.yzx, t1.xyz) * step(t1.zxy, t1.xyz);
+	vec3 x, y;
+	orthonormalBasis(n, x, y);
+	uv = vec2(dot(p0, x)/10, dot(p0, y)/10);
+
+	return tn < tf;
+}
+
+
+bool intersectSphere(Ray ray, float radius, out vec3 p){
+	vec3 cs = vec3(0, 0, 0);
+	vec3 m = ray.origin - cs;
+	float b = dot(m, ray.direction);
+	float c = dot(m , m) - radius * radius;
+
+	// ray is facing away from sphere
+	if(c > 0 && b > 0) return false;
+
+	float discr = b * b - c;
+
+	// sqrt(-discr) imaginary number corresponds to ray missing sphere
+	if(discr < 0) return false; 
+
+	float t = 0;
+	t = -b - sqrt(discr);
+	
+	p = ray.origin + ray.direction * t;
+
+	return true;
+}
+
+float saturate(float val){
+	return clamp(val, 0.0, 1.0);
+}
+
+
+float heightFractionForPoint(vec3 pos, Atmosphere atmosphere){
+	float height_fraction = (pos.y - atmosphere.innerRadius);
+	height_fraction /= (atmosphere.outerRadius - atmosphere.innerRadius);
+
+	//return saturate(height_fraction);
+	return 0.5;
+}
+
+float densityHeightGradientForPoint(vec3 p, Atmosphere atmosphere, Weather weather){
+	
+	float height = heightFractionForPoint(p, atmosphere);
+	float cloud_type = weather.cloud_type;
+
+	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
+	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
+	const vec4 cumulusGrad = vec4(0.01f, 0.0625f, 0.78f, 1.0f);
+	float stratus = 1.0f - clamp(cloud_type * 2.0f, 0, 1);
+	float stratocumulus = 1.0f - abs(cloud_type - 0.5f) * 2.0f;
+	float cumulus = clamp(cloud_type - 0.5f, 0, 1) * 2.0f;
+	vec4 cloudGradient = stratusGrad * stratus + stratocumulusGrad * stratocumulus + cumulusGrad * cumulus;
+	return smoothstep(cloudGradient.x, cloudGradient.y, height) - smoothstep(cloudGradient.z, cloudGradient.w, height);
+}
+
+float remap(float x, float a, float b, float c, float d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
+float sampleCloudDensity(vec3 p, Atmosphere atmosphere, Weather weather, bool cheapSamples){
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, p, 0);
+	float perlinWorley = low_frequency_noise.r;
+	vec3 worley_low_freq = low_frequency_noise.gba;
+	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
+
+	float base_cloud = remap(perlinWorley, low_freq_fbm - 1.0, 1.0, 0.0, 1.0);
+
+	float density_height_grad = densityHeightGradientForPoint(p, atmosphere, weather);
+
+	base_cloud *= density_height_grad;
+
+
+	float cloud_coverage = weather.cloud_coverage;
+
+	float base_cloud_with_coverage = remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+
+	base_cloud_with_coverage *= cloud_coverage;
+
+	return base_cloud_with_coverage;
+}
+
+vec4 traceRay(Ray ray, Atmosphere atmosphere, Weather weather){
+
+	return vec4(sampleCloudDensity(ray.direction, atmosphere, weather, false));
+
+	vec3 startPosition;
+	bool aboveInnerAtmosphere = dot(ray.origin, ray.origin) > pow(atmosphere.innerRadius, 2);
+
+	if(aboveInnerAtmosphere){	
+		startPosition = ray.origin;
+	}else if(!intersectSphere(ray, atmosphere.innerRadius, startPosition)){
+		return vec4(1, 0, 0, 0);
+	}
+
+	vec3 stepDelta = ray.direction * ((atmosphere.outerRadius - atmosphere.innerRadius)/MAX_SAMPLES);
+	vec3 p = startPosition;
+	float density = 0.0;
+	float cloud_test = 0.0;
+	int zero_density_sample_count = 0;
+	const bool cheapSamples = true;
+	const bool expensiveSamples = false;
+
+	for(int i = 0; i < MAX_SAMPLES; i++){
+		bool aboveOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
+
+		if(aboveOuterAtmosphere) break;
+
+		if(cloud_test > 0.0){
+			float sampled_density = sampleCloudDensity(p, atmosphere, weather, expensiveSamples);
+			zero_density_sample_count += (sampled_density == 0.0 ? 1 : 0);
+			
+			if(zero_density_sample_count != 6){
+				density += sampled_density;
+				p += stepDelta;
+			}else{
+				cloud_test = 0.0;
+				zero_density_sample_count = 0;
+			}
+		}else{
+			cloud_test = sampleCloudDensity(p, atmosphere, weather, cheapSamples);
+			if(cloud_test == 0.0){
+				p += stepDelta;
+			}
+		}
+	}
+
+	return vec4(density);
+}
+
+uniform float dt;
+
+vec4 test(vec2 texCoord){
+	vec2 uv = texCoord;
+	uv  -= 0.02 * dt;
+
+	float z = 0;
+	//z = clamp(z, 0, 1);
+	vec3 pos = vec3(uv, z);
+
+	float perlinWorley = texture(cloudNoiseLowFreq, vec3(uv * 0.5, z)).x;
+	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
+
+	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+
+    // cloud shape modeled after the GPU Pro 7 chapter
+    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
+	cloud = cloud < 0 ? 0 : cloud;
+
+
+	vec2 st = texCoord;
+	st.x *= 5.0;
+
+    vec3 col = vec3(0);
+	if (st.x < 1.0)
+        col += perlinWorley;
+    else if(st.x < 2.)
+        col += worley.x;
+    else if(st.x < 3.)
+        col += worley.y;
+	else if(st.x < 4.)
+        col += worley.z;
+    else if(st.x < 5.)
+        col += cloud;
+
+	bvec3 isBlack = equal(col, vec3(0));
+//	if(all(isBlack)) col = vec3(1, 0, 0);
+            
+    // column dividers
+    float div = smoothstep(.01, 0., abs(st.x - 1.));
+    div += smoothstep(.01, 0., abs(st.x - 2.));
+	div += smoothstep(.01, 0., abs(st.x - 3.));
+    div += smoothstep(.01, 0., abs(st.x - 4.));
+        
+    col = mix(col, vec3(0., 0., .866), div);
+
+    return vec4(cloud);
+//	return vec4(0);
+//	float cloud_density = sampleCloudDensity(pos, weather);
+	
+//    fragcol = vec4(vec3(cloud_density), 0.8);
+    
+//    col = vec3(gl_FragCoord.xy/vec2(1024, 720), 0);
+ //   fragcol = vec4(texture(noise, pos).rgb, 1);
+}
+
+void orthonormalBasis(vec3 n, out vec3 x, out vec3 y) {
+	float s = n.z >= 0.0 ? 1.0 : -1.0;
+	float a = -1.0 / (s + n.z);
+	float b = n.x * n.y * a;
+	x = vec3(1.0 + s * n.x * n.x * a, s * b, -s * n.x);
+	y = vec3(b, s + n.y * n.y * a, -n.y);
+}
+
+vec3 Checkerboard(vec2 uv)
+{
+	return vec3(mod(floor(uv.x * 4.0) + floor(uv.y * 4.0), 2.0) < 1.0 ? 1.0 : 0.4);
+}
+
+float sampleCloud(vec3 pos){
+
+	float perlinWorley = texture(cloudNoiseLowFreq, pos).x;
+	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
+
+	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+
+    // cloud shape modeled after the GPU Pro 7 chapter
+    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
+	cloud = cloud < 0 ? 0 : cloud;
+
+	return cloud;
+}
+
+vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
+	vec2 uv;
+	vec3 p0;
+	vec3 p1;
+	vec4 cloud_color = vec4(0);
+	int count = 0;
+
+	if(ray.direction.y < 0) return vec4(0);
+
+//	float density = sampleCloudDensity(ray.direction, atmosphere, weather, true);
+
+
+	if(intersectSphere(ray, atmosphere.innerRadius, p0)){
+		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
+		//float density = sampleCloud(p0/256);
+		//float density = sampleCloud(ray.direction);
+		float density = sampleCloudDensity(p0/100, atmosphere, weather, true);
+		density = density < 0 ? 0 : density;
+		return vec4(density);
+	//	return vec4(1, 0, 0, 1);
+		vec3 p = p0;
+		vec3 stepDir = ray.direction;
+		int count = 0;
+		for(int i = 0; i < 300; i++){
+
+			if(cloud_color.a > 0.99) break;
+			if(count > 5) break;
+			bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
+			if(outsideOuterAtmosphere) break;
+
+			p += stepDir;
+
+			float density = sampleCloud(p);
+			density = density < 0 ? 0 : density;
+			if(density == 0 ){
+				count++;
+			}else{
+				count = 0;
+			}
+
+			float prev_alpha = density - (density * cloud_color.a);
+			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
+			cloud_color.a += prev_alpha;
+		}
+	}else{
+		return vec4(0);
+	}
+
+//	if(intersectCube(ray, box, uv, p0, p1)){
+//		vec3 p = ray.origin;
+//	//	vec3 color = Checkerboard(uv);
+//		//return vec4(color, 1);
+//		vec3 stepDir = ray.direction * (1/10);
+//		bool stop = false;
+//		for(int i = 0; i < 1; i++){
+//			p += ray.direction;
+//	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
+//	//		if(stop) break;
+//
+//			float density = sampleCloud(p);
+//
+//			if(density == 0 ){
+//				count++;
+//			}else{
+//				count = 0;
+//			}
+//
+//			float prev_alpha = density - (density * cloud_color.a);
+//			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
+//			cloud_color.a += prev_alpha;
+//
+//			if(cloud_color.a > 0.99) break;
+//			if(count > 5) break;
+//			
+//		}
+////	}
+
+	return cloud_color;
 }

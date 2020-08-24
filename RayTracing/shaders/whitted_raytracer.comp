@@ -378,9 +378,7 @@ void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 	
-	//vec3 color = trace(ray);
-	vec3 color = texture(environmentMap, ray.direction).rgb;
-
+	vec3 color = trace(ray);
 
 	color /= color + vec3(1.0);
 	color = pow(color, vec3(1.0/2.2));

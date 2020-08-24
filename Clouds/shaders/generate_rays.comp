@@ -60,5 +60,5 @@ void generateRay(in vec2 pos, in Camera camera, inout Ray ray) {
 	ray.origin = (camera.cameraToWorld * origin).xyz;
 	direction = mat3(camera.cameraToWorld) * direction;
 	ray.direction = normalize(direction);
-	ray.tMax = 1000;
+	ray.tMax = 1000000;
 }

@@ -58,13 +58,22 @@ bool intersectScene(Ray ray, out HitInfo hit) {
 		//	}
 		//}
 
-//		local_hit.t = hit.t;
-//		if (intersectsTriangle(ray, local_hit, 0)) {
-//			aHit = true;
-//			if (local_hit.t < hit.t) {
-//				hit = local_hit;
-//			}
-//		}
+		local_hit.t = hit.t;
+		if (intersectsTriangle(ray, local_hit, 0)) {
+			aHit = true;
+			if (local_hit.t < hit.t) {
+				hit = local_hit;
+			}
+		}
+
+		Box aBox = Box(vec3(0), vec3(5));
+		local_hit.t = hit.t;
+		if (intersectCube(ray, aBox, local_hit)) {
+			aHit = true;
+			if (local_hit.t < hit.t) {
+				hit = local_hit;
+			}
+		}
 	}
 
 

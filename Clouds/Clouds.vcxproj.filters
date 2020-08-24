@@ -51,6 +51,15 @@
     <None Include="shaders\cloud.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\sky.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\sky.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\cloud.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">
