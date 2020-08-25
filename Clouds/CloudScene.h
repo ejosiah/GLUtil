@@ -102,8 +102,8 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-	//	auto xform = translate(mat4(1), { 0, dim.y * 0.5, 0 });
-	//	xform = scale(xform, vec3(dim));
+	//	auto xform = translate(mat4(1), { 0, 5, 0 });
+		//xform = scale(xform, vec3(10));
 		auto xform = mat4(1);
 		cube = Cube{ 10, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
@@ -199,14 +199,14 @@ public:
 
 		renderClouds();
 	//	renderFloor();
-		//shader("flat")([&] {
-		//	send(activeCamera());
-		//	shade(cubeAABB);
-		//	send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-		//	shade(sphere);
-		//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-		//	shade(sphere);
-		//});
+		shader("flat")([&] {
+			send(activeCamera());
+			shade(cubeAABB);
+			send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+			shade(sphere);
+			send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+			shade(sphere);
+		});
 
 
 		//shader("screen")([&] {
@@ -226,7 +226,7 @@ public:
 			send("slice", float(slice));
 			sendWeather();
 			//	send("cloudMinMax", cloudMinMax);
-			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+			send("cloudMinMax", vec2(cube.aabbMin().x, cube.aabbMax().y));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
 			send("texMin", vec3(cube.aabb().min));
@@ -260,6 +260,7 @@ public:
 			send("camPos", activeCamera().getPosition());
 			send("texMin", vec3(cube.aabb().min));
 			send("texMax", vec3(cube.aabb().max));
+			send("dt", Timer::get().timeSinceStart());
 			shade(cube);
 			glDisable(GL_BLEND);
 		});
