@@ -31,7 +31,7 @@ class CloudScene : public Scene {
 public:
 	CloudScene() :Scene{ "Perlin-Worley Clouds", WIDTH, HEIGHT } {
 	//	_fullScreen = true;
-		camInfoOn = true;
+	//	camInfoOn = true;
 	//	_hideCursor = false;
 	//	_requireMouse = true;
 		addShader("render", GL_VERTEX_SHADER, screen_vert_shader);
@@ -44,11 +44,11 @@ public:
 		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
-		_fontColor = WHITE;
 	}
 
 	void init() override {
 		glDisable(GL_CULL_FACE);
+		setForeGroundColor(WHITE);
 		_modelHeight = 5.0f;
 		bounds(vec3(-200), vec3(200));
 		initDefaultCamera();
@@ -193,8 +193,8 @@ public:
 	void display() override {
 	//	cloudUI->render();
 		//renderBounds();
-	//	renderNoise();
-		renderClouds();
+		renderNoise();
+	//	renderClouds();
 	//	renderFloor();
 		//shader("flat")([&] {
 		//	send(activeCamera());
@@ -210,6 +210,7 @@ public:
 		//	glBindTextureUnit(0, fb.texture());
 		//	shade(quad);
 		//});
+		sFont->render("current slice: " + to_string(slice), 10, 10);
 	}
 
 	void renderNoise() {
@@ -219,7 +220,7 @@ public:
 		//	glBindTextureUnit(0, noiseTexture->buffer());
 			send("dt", Timer::get().timeSinceStart());
 			send("numSlices", int(dim.z));
-			send("slice", 70.0f);
+			send("slice", float(slice));
 			sendWeather();
 			//	send("cloudMinMax", cloudMinMax);
 			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
@@ -307,13 +308,24 @@ public:
 		});
 	}
 
+	void processInput(const Key& key) override {
+		if (key.pressed()) {
+			switch (key.value()) {
+			case ' ':
+				slice += 1;
+				slice %= dim.z;
+				break;
+			}
+		}
+	}
+
 private:
 	ProvidedMesh quad;
 	ProvidedMesh noiseQuad;
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
 	Texture3D* noiseTexture;
-	const uvec3 dim{ 512, 512, 512 };
+	const uvec3 dim = uvec3(64);
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
 	Logger logger = Logger::get("Clouds");
@@ -331,4 +343,5 @@ private:
 	SkyBox* skybox;
 	Compute* clouds;
 	FrameBuffer fb;
+	int slice = 0;
 };

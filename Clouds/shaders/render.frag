@@ -36,7 +36,8 @@ float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
 	float height_fraction = (pos.y - cloudMinMax.x);
 	height_fraction /= (cloudMinMax.y - cloudMinMax.x);
 
-	return saturate(height_fraction);
+	//return saturate(height_fraction);
+	return 0.5;
 }
 
 float densityHeightGradientForPoint(vec3 p, Weather weather){
@@ -58,70 +59,81 @@ float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
 float sampleCloudDensity(vec3 p, Weather weather){
-	// low_frequency_noise
-	// hight_frequency_noise
-	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, p, 0);
+	
+	//vec3 voxelCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
+	vec3 voxelCoord = p;
+
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, voxelCoord, 0);
 	float perlinWorley = low_frequency_noise.r;
 	vec3 worley_low_freq = low_frequency_noise.gba;
 	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
 
 	float base_cloud = remap(perlinWorley, low_freq_fbm - 1.0, 1.0, 0.0, 1.0);
-	base_cloud = remap(base_cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
 
 	float density_height_grad = densityHeightGradientForPoint(p, weather);
 
 	base_cloud *= density_height_grad;
 
-	return base_cloud;
-	//return perlinWorley;
+
+	float cloud_coverage = weather.cloud_coverage;
+
+	float base_cloud_with_coverage = remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+
+	base_cloud_with_coverage *= cloud_coverage;
+
+	return base_cloud_with_coverage;
 }
 
 void main(){
 	vec2 uv = texCoord;
-	uv  -= 0.02 * dt;
+//	uv  -= 0.02 * dt;
 
 	float z = slice/numSlices;
 	//z = clamp(z, 0, 1);
 	vec3 pos = vec3(uv, z);
 
-	float perlinWorley = texture(cloudNoiseLowFreq, vec3(uv * 0.5, z)).x;
-	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
-
-	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
-
-    // cloud shape modeled after the GPU Pro 7 chapter
-    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
-    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
-
-
-	vec2 st = texCoord;
-	st.x *= 5.0;
-
-    vec3 col = vec3(0);
-	if (st.x < 1.0)
-        col += perlinWorley;
-    else if(st.x < 2.)
-        col += worley.x;
-    else if(st.x < 3.)
-        col += worley.y;
-	else if(st.x < 4.)
-        col += worley.z;
-    else if(st.x < 5.)
-        col += cloud;
-
-	bvec3 isBlack = equal(col, vec3(0));
-//	if(all(isBlack)) col = vec3(1, 0, 0);
-            
-    // column dividers
-    float div = smoothstep(.01, 0., abs(st.x - 1.));
-    div += smoothstep(.01, 0., abs(st.x - 2.));
-	div += smoothstep(.01, 0., abs(st.x - 3.));
-    div += smoothstep(.01, 0., abs(st.x - 4.));
-        
-    col = mix(col, vec3(0., 0., .866), div);
-
-    fragcol = vec4(col, 1.0);
+//	float perlinWorley = texture(cloudNoiseLowFreq, vec3(uv * 0.5, z)).x;
+//	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
+//
+//	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+//
+//    // cloud shape modeled after the GPU Pro 7 chapter
+//    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+//    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
+//
+//
+//	vec2 st = texCoord;
+//	st.x *= 5.0;
+//
+//    vec3 col = vec3(0);
+//	if (st.x < 1.0)
+//        col += perlinWorley;
+//    else if(st.x < 2.)
+//        col += worley.x;
+//    else if(st.x < 3.)
+//        col += worley.y;
+//	else if(st.x < 4.)
+//        col += worley.z;
+//    else if(st.x < 5.)
+//        col += cloud;
+//
+//	bvec3 isBlack = equal(col, vec3(0));
+////	if(all(isBlack)) col = vec3(1, 0, 0);
+//            
+//    // column dividers
+//    float div = smoothstep(.01, 0., abs(st.x - 1.));
+//    div += smoothstep(.01, 0., abs(st.x - 2.));
+//	div += smoothstep(.01, 0., abs(st.x - 3.));
+//    div += smoothstep(.01, 0., abs(st.x - 4.));
+//        
+//    col = mix(col, vec3(0., 0., .866), div);
+	float density = sampleCloudDensity(pos, weather);
+    fragcol = vec4(vec3(density), 1.0);
 //	float cloud_density = sampleCloudDensity(pos, weather);
 	
 //    fragcol = vec4(vec3(cloud_density), 0.8);
