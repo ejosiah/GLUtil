@@ -44,6 +44,7 @@ public:
 		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
+		_fontColor = WHITE;
 	}
 
 	void init() override {
@@ -52,11 +53,12 @@ public:
 		bounds(vec3(-200), vec3(200));
 		initDefaultCamera();
 		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
-	//	activeCamera().collisionTestOff();
-	//	activeCamera().setVelocity(vec3(50));
+		activeCamera().collisionTestOff();
+		activeCamera().setVelocity(vec3(50));
 	//	activeCamera().setPosition({ 3.26, 24.6, 13.1 });
 	//	deactivateCameraControl();
-	//	activeCamera().setPosition({ 0, 0, 60 });
+		activeCamera().setAcceleration(vec3(10));
+		activeCamera().setPosition({ 0, 0, 250 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -99,9 +101,9 @@ public:
 		auto lightPos = vec3{ 0, 500, 10 };
 		light[0].position = vec4{ lightPos, 1 };
 		floor = new Floor(this, vec2(60.0_km));
-		inner = new Hemisphere{ cloudMinMax.x, 20, 20, RED };
-		outer = new Hemisphere{ cloudMinMax.y, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 0, 0 });
+		inner = new Hemisphere{ 1000000, 20, 20, RED };
+		outer = new Hemisphere{ 10000, 20, 20, GREEN };
+		auto xform = translate(mat4(1), { 0, dim.y * 0.5, 0 });
 		xform = scale(xform, vec3(dim));
 		//auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
@@ -241,18 +243,19 @@ public:
 
 	void renderClouds() {
 		//glEnable(GL_BLEND);
-		//shader("clouds") ([&] {
-		//	send(activeCamera());
-		//	glBindTextureUnit(0, noiseTexture->buffer());
-		//	sendWeather();
-		////	send("cloudMinMax", cloudMinMax);
-		//	send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
-		//	send("stepSize", stepSize);
-		//	send("camPos", activeCamera().getPosition());
-		//	send("texMin", vec3(cube.aabb().min));
-		//	send("texMax", vec3(cube.aabb().max));
-		//	shade(cube);
-		//});
+		shader("clouds") ([&] {
+			send(activeCamera());
+			glBindTextureUnit(0, noiseTexture->buffer());
+			glBindTextureUnit(2, fb.texture());
+			sendWeather();
+		//	send("cloudMinMax", cloudMinMax);
+			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+			send("stepSize", stepSize);
+			send("camPos", activeCamera().getPosition());
+			send("texMin", vec3(cube.aabb().min));
+			send("texMax", vec3(cube.aabb().max));
+			shade(cube);
+		});
 		//glDisable(GL_BLEND);
 
 		//static bool once = true;
@@ -270,12 +273,12 @@ public:
 		//	});
 		//}
 
-		shader("screen")([&] {
-			clouds->images().front().renderMode();
-			glBindTextureUnit(0, clouds->images().front().buffer());
-			glBindTextureUnit(0, noiseTexture->buffer());
-			shade(quad);
-		});
+		//shader("screen")([&] {
+		//	clouds->images().front().renderMode();
+		//	glBindTextureUnit(0, clouds->images().front().buffer());
+		//	glBindTextureUnit(0, noiseTexture->buffer());
+		//	shade(quad);
+		//});
 	}
 
 	void sendWeather() {
@@ -299,7 +302,7 @@ public:
 
 	void update(float dt) {
 		fb.use([&] {
-		//	renderSky();
+			renderSky();
 			renderFloor();
 		});
 	}
@@ -310,7 +313,7 @@ private:
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
 	Texture3D* noiseTexture;
-	const uvec3 dim{ 256, 256, 256 };
+	const uvec3 dim{ 512, 512, 512 };
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
 	Logger logger = Logger::get("Clouds");

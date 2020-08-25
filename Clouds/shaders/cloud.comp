@@ -7,7 +7,7 @@
 #define BLUE (vec3(0, 0, 1))
 #define BLACK (vec3(0, 0, 0))
 
-const int MAX_SAMPLES = 200;
+const int MAX_SAMPLES = 10;
 
 
 struct Box{
@@ -182,8 +182,16 @@ float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
 float sampleCloudDensity(vec3 p, Atmosphere atmosphere, Weather weather, bool cheapSamples){
-	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, p, 0);
+	
+	//vec3 voxelCoord = remap(p, vec3(atmosphere.innerRadius), vec3(atmosphere.outerRadius), vec3(0.0), vec3(1.0));
+	vec3 voxelCoord = p;
+
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, voxelCoord, 0);
 	float perlinWorley = low_frequency_noise.r;
 	vec3 worley_low_freq = low_frequency_noise.gba;
 	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
@@ -211,13 +219,19 @@ vec4 traceRay(Ray ray, Atmosphere atmosphere, Weather weather){
 	vec3 startPosition;
 	bool aboveInnerAtmosphere = dot(ray.origin, ray.origin) > pow(atmosphere.innerRadius, 2);
 
-	if(aboveInnerAtmosphere){	
-		startPosition = ray.origin;
-	}else if(!intersectSphere(ray, atmosphere.innerRadius, startPosition)){
-		return vec4(1, 0, 0, 0);
+//	if(aboveInnerAtmosphere){	
+//		startPosition = ray.origin;
+//	}else if(!intersectSphere(ray, atmosphere.innerRadius, startPosition)){
+//		return vec4(1, 0, 0, 0);
+//	}
+	
+
+	if(!intersectSphere(ray, atmosphere.innerRadius, startPosition)){
+		return vec4(0);
 	}
 
-	vec3 stepDelta = ray.direction * ((atmosphere.outerRadius - atmosphere.innerRadius)/MAX_SAMPLES);
+	//vec3 stepDelta = ray.direction * ((atmosphere.outerRadius - atmosphere.innerRadius)/MAX_SAMPLES);
+	vec3 stepDelta = ray.direction * (1.0/MAX_SAMPLES);
 	vec3 p = startPosition;
 	float density = 0.0;
 	float cloud_test = 0.0;
@@ -226,9 +240,11 @@ vec4 traceRay(Ray ray, Atmosphere atmosphere, Weather weather){
 	const bool expensiveSamples = false;
 
 	for(int i = 0; i < MAX_SAMPLES; i++){
-		bool aboveOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
+	//	bool aboveOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
 
-		if(aboveOuterAtmosphere) break;
+	//	if(aboveOuterAtmosphere) break;
+
+		if(density > 0.99) break;
 
 		if(cloud_test > 0.0){
 			float sampled_density = sampleCloudDensity(p, atmosphere, weather, expensiveSamples);
@@ -240,6 +256,7 @@ vec4 traceRay(Ray ray, Atmosphere atmosphere, Weather weather){
 			}else{
 				cloud_test = 0.0;
 				zero_density_sample_count = 0;
+				break;
 			}
 		}else{
 			cloud_test = sampleCloudDensity(p, atmosphere, weather, cheapSamples);
@@ -342,7 +359,7 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 	vec3 p0;
 	vec3 p1;
 	vec4 cloud_color = vec4(0);
-	int count = 0;
+	//int count = 0;
 
 	if(ray.direction.y < 0) return vec4(0);
 
@@ -350,57 +367,27 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 
 
 //	if(intersectSphere(ray, atmosphere.innerRadius, p0)){
-//		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
-//		//float density = sampleCloud(p0/256);
-//		//float density = sampleCloud(ray.direction);
-//		float density = sampleCloudDensity(p0/100, atmosphere, weather, true);
-//		density = density < 0 ? 0 : density;
-//		return vec4(density);
-//	//	return vec4(1, 0, 0, 1);
-//		vec3 p = p0;
-//		vec3 stepDir = ray.direction;
-//		int count = 0;
-//		for(int i = 0; i < 300; i++){
-//
-//			if(cloud_color.a > 0.99) break;
-//			if(count > 5) break;
-//			bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
-//			if(outsideOuterAtmosphere) break;
-//
-//			p += stepDir;
-//
-//			float density = sampleCloud(p);
-//			density = density < 0 ? 0 : density;
-//			if(density == 0 ){
-//				count++;
-//			}else{
-//				count = 0;
-//			}
-//
-//			float prev_alpha = density - (density * cloud_color.a);
-//			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
-//			cloud_color.a += prev_alpha;
-//		}
-//	}else{
-//		return vec4(0);
-//	}
-	
-	float t;
-	if(intersectCube(ray, box, uv, p0, p1, t)){
-	//	if(t < 0) return vec4(1, 0, 0, 1);
-		vec3 p = ray.origin;
-	//	vec3 color = Checkerboard(uv);
-		vec3 color = vec3(1, 0, 0);
-		return vec4(color, 1);
-		vec3 stepDir = ray.direction * (1/10);
-		bool stop = false;
-		for(int i = 0; i < 1; i++){
-			p += ray.direction;
-	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
-	//		if(stop) break;
+		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
+		//float density = sampleCloud(p0/256);
+		//float density = sampleCloud(ray.direction);
+		float density = sampleCloudDensity(ray.direction, atmosphere, weather, true);
+		density = density < 0 ? 0 : density;
+		return vec4(density);
+	//	return vec4(1, 0, 0, 1);
+		vec3 p = p0;
+		vec3 stepDir = ray.direction;
+		int count = 0;
+		for(int i = 0; i < 300; i++){
 
-			float density = sampleCloud(p);
+			if(cloud_color.a > 0.99) break;
+			if(count > 5) break;
+		//	bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
+		//	if(outsideOuterAtmosphere) break;
 
+			p += stepDir;
+
+			float density = sampleCloudDensity(p0, atmosphere, weather, true);
+			density = density < 0 ? 0 : density;
 			if(density == 0 ){
 				count++;
 			}else{
@@ -410,12 +397,43 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 			float prev_alpha = density - (density * cloud_color.a);
 			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
 			cloud_color.a += prev_alpha;
-
-			if(cloud_color.a > 0.99) break;
-			if(count > 5) break;
-			
 		}
-	}
+//	}else{
+//		return vec4(0);
+//	}
 
+	
+//	float t;
+//	if(intersectCube(ray, box, uv, p0, p1, t)){
+//	//	if(t < 0) return vec4(1, 0, 0, 1);
+//		vec3 p = ray.origin;
+//	//	vec3 color = Checkerboard(uv);
+//		vec3 color = vec3(1, 0, 0);
+//		return vec4(color, 1);
+//		vec3 stepDir = ray.direction * (1/10);
+//		bool stop = false;
+//		for(int i = 0; i < 1; i++){
+//			p += ray.direction;
+//	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
+//	//		if(stop) break;
+//
+//			float density = sampleCloud(p);
+//
+//			if(density == 0 ){
+//				count++;
+//			}else{
+//				count = 0;
+//			}
+//
+//			float prev_alpha = density - (density * cloud_color.a);
+//			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
+//			cloud_color.a += prev_alpha;
+//
+//			if(cloud_color.a > 0.99) break;
+//			if(count > 5) break;
+//			
+//		}
+//	}
+//
 	return cloud_color;
 }

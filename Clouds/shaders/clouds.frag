@@ -14,6 +14,7 @@ struct Weather{
 
 layout(binding = 0) uniform sampler3D cloudNoiseLowFreq;
 layout(binding = 1) uniform sampler3D clouldNoiseHighFreq;
+layout(binding = 2) uniform sampler2D diffuseTexture;
 
 uniform Weather weather;
 uniform vec2 cloudMinMax;
@@ -40,7 +41,8 @@ float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
 	float height_fraction = (pos.y - cloudMinMax.x);
 	height_fraction /= (cloudMinMax.y - cloudMinMax.x);
 
-	return saturate(height_fraction);
+	//return saturate(height_fraction);
+	return 0.5;
 }
 
 float densityHeightGradientForPoint(vec3 p, Weather weather){
@@ -62,23 +64,34 @@ float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
 float sampleCloudDensity(vec3 p, Weather weather){
-	// low_frequency_noise
-	// hight_frequency_noise
-	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, p, 0);
+	
+	vec3 voxelCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
+	//vec3 voxelCoord = p;
+
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, voxelCoord, 0);
 	float perlinWorley = low_frequency_noise.r;
 	vec3 worley_low_freq = low_frequency_noise.gba;
 	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
 
 	float base_cloud = remap(perlinWorley, low_freq_fbm - 1.0, 1.0, 0.0, 1.0);
-//	base_cloud = remap(base_cloud, 0.3, 1.0, 0., 1.0); // fake cloud coverage
 
 	float density_height_grad = densityHeightGradientForPoint(p, weather);
 
 	base_cloud *= density_height_grad;
 
-	return base_cloud;
-	//return perlinWorley;
+
+	float cloud_coverage = weather.cloud_coverage;
+
+	float base_cloud_with_coverage = remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+
+	base_cloud_with_coverage *= cloud_coverage;
+
+	return base_cloud_with_coverage;
 }
 
 //float sampleCloudDensity(vec3 p, Weather weather){
@@ -96,12 +109,19 @@ float sampleCloudDensity(vec3 p, Weather weather){
 //	return cloud;
 //}
 
+bool insideCube(vec3 pos){
+	return dot(sign(pos - texMin), sign(texMax - pos)) == 3;
+}
+
 vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 	vec3 viewDir = worldPos - camPos;
 	vec3 viewDir_norm = normalize(viewDir);
 	
 //	vec3 pos = camPos;
-	vec3 pos = worldPos;
+
+//	if(insideCube(camPos)) return vec4(1, 0, 0, 1);
+
+	vec3 pos = insideCube(camPos) ? camPos : worldPos;
 	vec3 dirStep = viewDir_norm * stepSize;
 
 	bool stop = false;
@@ -109,9 +129,7 @@ vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 	for(int i = 0; i < MAX_SAMPLES; i++){
 		pos += dirStep;
 
-//		stop = dot(pos, pos) > pow(cloudMinMax.y, 2);
-		stop = dot(sign(pos - texMin), sign(texMax - pos)) < 3;
-		if(stop) break;
+		if(!insideCube(pos)) break;
 
 		float cloud_density = sampleCloudDensity(pos, weather);
 		float prev_alpha = cloud_density - (cloud_density * cloud_color.a);
@@ -128,7 +146,10 @@ vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 out vec4 fragColor;
 
 void main(){
-	vec3 color = traceRay(vertex.position, camPos, weather).rgb;
-	vec3 skyCol = vec3(0.1, 0.5, 0.9);
-	fragColor = vec4(color, 1);
+	vec2 uv = gl_FragCoord.xy /vec2(1279, 719);
+	vec4 src = traceRay(vertex.position, camPos, weather);
+	vec3 skyColor = vec3(0.1, 0.5, 0.9);
+	//vec3 dest = texture(diffuseTexture, uv).rgb;
+	fragColor.a = 1;
+	fragColor.rgb = src.rgb + (1 - src.a) * skyColor;
 }
