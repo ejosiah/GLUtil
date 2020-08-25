@@ -60,6 +60,12 @@
     <None Include="shaders\cloud.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\ray_marching.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\ray_marching.vert">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">

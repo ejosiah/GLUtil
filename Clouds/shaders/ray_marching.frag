@@ -2,7 +2,7 @@
 
 #pragma compile(on)
 
-layout(binding = 0 ) uniform sampler3D volume;
+layout(binding = 0 ) uniform sampler3D cloudNoiseLowFreq;
 uniform vec3 camPos;
 uniform vec3 stepSize;
 
@@ -29,10 +29,24 @@ vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+float sampleCloud(vec3 p){
+
+	float perlinWorley = texture(cloudNoiseLowFreq, p).x;
+	vec3 worley = texture(cloudNoiseLowFreq, p).yzw;
+
+	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+
+    // cloud shape modeled after the GPU Pro 7 chapter
+    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+    cloud = remap(cloud, 0.8, 1.0, 0., 1.0); // fake cloud coverage
+
+	return cloud;
+}
+
 void main(){
 	
 	//vec3 dataPos = insideCube(camPos) ? camPos : pos;
-	vec3 dataPos = remap(pos, vec3(-3), vec3(3), vec3(0), vec3(1));
+	vec3 dataPos = remap(pos, vec3(-5), vec3(5), vec3(0), vec3(1));
 //	dataPos += 0.5; // from [-0.5, 0.5] to [0, 1]
 	vec3 geomDir = normalize(pos - camPos);
 
@@ -47,7 +61,7 @@ void main(){
 
 		if(stop) break;
 
-		float voxel = texture(volume, dataPos).r;
+		float voxel = sampleCloud(dataPos);
 
 		float prev_alpha = voxel - (voxel * fragColor.a);
 		fragColor.rgb = prev_alpha * vec3(voxel) + fragColor.rgb;
@@ -55,6 +69,4 @@ void main(){
 
 		if(fragColor.a > 0.99) break; 
 	}
-	//if(fragColor.r == 0.0) discard;
-
 }

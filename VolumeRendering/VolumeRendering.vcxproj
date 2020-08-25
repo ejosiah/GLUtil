@@ -151,6 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\common.geom" />
+    <None Include="shaders\noise.comp" />
     <None Include="shaders\ray_marching.vert" />
     <None Include="shaders\ray_marching.frag" />
     <None Include="shaders\slicer.frag" />

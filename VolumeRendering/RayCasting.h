@@ -21,7 +21,8 @@ public:
 	void render(bool shadowMode) override {
 		scene().shader("ray_marching")([&] {
 			glEnable(GL_BLEND);
-			glBindTextureUnit(0, texture->buffer());
+		//	glBindTextureUnit(0, texture->buffer());
+			glBindTextureUnit(0, noiseTexture->buffer());
 			send(scene().activeCamera());
 			send("stepSize", vec3(1.0f / XDIM, 1.0f / YDIM, 1.0f / ZDIM));
 			send("camPos", scene().activeCamera().getPosition());
@@ -31,7 +32,7 @@ public:
 	}
 
 	void init() override {
-		cube =  Cube{ 1 };
+		cube =  Cube{ 6 };
 	}
 
 private:

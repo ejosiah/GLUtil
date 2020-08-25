@@ -67,12 +67,13 @@ public:
 		//fb.use([&] {
 			scene().shader("slicer")([&] {
 				send(slices);
-				send(scene().activeCamera());
+				send(scene().activeCamera(), scale(mat4(1), vec3(6)));
 				send("viewDir", viewDir);
 				send("num_slices", num_slices);
 				glEnable(GL_BLEND);
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				glBindTextureUnit(0, texture->buffer());
+				//glBindTextureUnit(0, texture->buffer());
+				glBindTextureUnit(0, noiseTexture->buffer());
 				shade(textureSlices);
 				glDisable(GL_BLEND);
 				});

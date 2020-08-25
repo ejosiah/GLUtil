@@ -53,12 +53,11 @@ public:
 		bounds(vec3(-200), vec3(200));
 		initDefaultCamera();
 		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
-		activeCamera().collisionTestOff();
-		activeCamera().setVelocity(vec3(50));
-	//	activeCamera().setPosition({ 3.26, 24.6, 13.1 });
+	//	activeCamera().collisionTestOff();
+	//	activeCamera().setVelocity(vec3(10));
 	//	deactivateCameraControl();
-		activeCamera().setAcceleration(vec3(10));
-		activeCamera().setPosition({ 0, 0, 250 });
+	//	activeCamera().setAcceleration(vec3(10));
+		activeCamera().setPosition({ 0, 0, 10 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -103,14 +102,15 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, dim.y * 0.5, 0 });
-		xform = scale(xform, vec3(dim));
-		//auto xform = mat4(1);
-		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
+	//	auto xform = translate(mat4(1), { 0, dim.y * 0.5, 0 });
+	//	xform = scale(xform, vec3(dim));
+		auto xform = mat4(1);
+		cube = Cube{ 10, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
 		cubeAABB = aabbOutline(cube.aabb(), BLACK);
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
+		weather.cloud_coverage = 0;
 		cloudUI = new CloudUI{ weather, *this };
 
 		auto config = FrameBuffer::defaultConfig(_width, _height);
@@ -193,8 +193,11 @@ public:
 	void display() override {
 	//	cloudUI->render();
 		//renderBounds();
-		renderNoise();
-	//	renderClouds();
+	//	renderNoise();
+		renderSky();
+		renderFloor();
+
+		renderClouds();
 	//	renderFloor();
 		//shader("flat")([&] {
 		//	send(activeCamera());
@@ -241,10 +244,12 @@ public:
 			floor->render();
 		});
 	}
-
+	stringstream ss;
 	void renderClouds() {
 		//glEnable(GL_BLEND);
-		shader("clouds") ([&] {
+		shader("ray_marching") ([&] {
+			//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND);
 			send(activeCamera());
 			glBindTextureUnit(0, noiseTexture->buffer());
 			glBindTextureUnit(2, fb.texture());
@@ -256,22 +261,23 @@ public:
 			send("texMin", vec3(cube.aabb().min));
 			send("texMax", vec3(cube.aabb().max));
 			shade(cube);
+			glDisable(GL_BLEND);
 		});
 		//glDisable(GL_BLEND);
 
 		//static bool once = true;
 		//if (once) {
 		//	once = false;
-		//	stringstream ss;
-		//	rayGenerator->getRaySSBO().read([&](rt::Ray* itr) {
-		//		for (int i = 0; i < 10; i++) {
-		//			auto ray = *(itr + i);
-		//			ss.str("");
-		//			ss.clear();
-		//			ss << "o: " << ray.origin << ", d: " << ray.direction;
-		//			logger.info(ss.str());
-		//		}
-		//	});
+			
+			//rayGenerator->getRaySSBO().read([&](rt::Ray* itr) {
+			//	for (int i = 0; i < 1; i++) {
+			//		auto ray = *(itr + i);
+			//		ss.str("");
+			//		ss.clear();
+			//		ss << "o: " << ray.origin << ", d: " << ray.direction;
+			//		logger.info(ss.str());
+			//	}
+			//});
 		//}
 
 		//shader("screen")([&] {
@@ -306,6 +312,7 @@ public:
 			renderSky();
 			renderFloor();
 		});
+		setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 
 	void processInput(const Key& key) override {
@@ -325,7 +332,7 @@ private:
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
 	Texture3D* noiseTexture;
-	const uvec3 dim = uvec3(64);
+	const uvec3 dim = uvec3(128);
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
 	Logger logger = Logger::get("Clouds");

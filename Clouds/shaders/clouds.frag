@@ -1,6 +1,6 @@
 #version 450 core
 
-const int MAX_SAMPLES = 1;
+const int MAX_SAMPLES = 10;
 
 
 struct Weather{
@@ -22,6 +22,7 @@ uniform vec3 camPos;
 uniform vec3 stepSize;
 uniform vec3 texMin = vec3(-0.5);
 uniform vec3 texMax = vec3(0.5);
+uniform float cloud_coverage;
 
 in VERTEX {
 	smooth vec3 position;
@@ -70,8 +71,8 @@ vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
 
 float sampleCloudDensity(vec3 p, Weather weather){
 	
-	vec3 voxelCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
-	//vec3 voxelCoord = p;
+//	vec3 voxelCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
+	vec3 voxelCoord = mod(p, 128)/128;
 
 	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, voxelCoord, 0);
 	float perlinWorley = low_frequency_noise.r;
@@ -85,7 +86,8 @@ float sampleCloudDensity(vec3 p, Weather weather){
 	base_cloud *= density_height_grad;
 
 
-	float cloud_coverage = weather.cloud_coverage;
+//	float cloud_coverage = weather.cloud_coverage;
+	float cloud_coverage = 0.85;
 
 	float base_cloud_with_coverage = remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
 
@@ -121,7 +123,8 @@ vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 
 //	if(insideCube(camPos)) return vec4(1, 0, 0, 1);
 
-	vec3 pos = insideCube(camPos) ? camPos : worldPos;
+	//vec3 pos = insideCube(camPos) ? camPos : worldPos;
+	vec3 pos = worldPos;
 	vec3 dirStep = viewDir_norm * stepSize;
 
 	bool stop = false;
@@ -132,13 +135,14 @@ vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 		if(!insideCube(pos)) break;
 
 		float cloud_density = sampleCloudDensity(pos, weather);
+		cloud_density = cloud_density < 0 ? 0 : cloud_density;
+
 		float prev_alpha = cloud_density - (cloud_density * cloud_color.a);
 		cloud_color.rgb += prev_alpha * vec3(cloud_density);
-		cloud_color.a == prev_alpha;
+		cloud_color.a += prev_alpha;
 
 		if(cloud_color.a > 0.99) break; // fully saturated, 
 	}
-
 	return cloud_color;
 }
 
@@ -146,10 +150,9 @@ vec4 traceRay(vec3 worldPos, vec3 camPos, Weather weather){
 out vec4 fragColor;
 
 void main(){
-	vec2 uv = gl_FragCoord.xy /vec2(1279, 719);
 	vec4 src = traceRay(vertex.position, camPos, weather);
 	vec3 skyColor = vec3(0.1, 0.5, 0.9);
 	//vec3 dest = texture(diffuseTexture, uv).rgb;
-	fragColor.a = 1;
-	fragColor.rgb = src.rgb + (1 - src.a) * skyColor;
+	//fragColor.rgb = src.rgb + (1 - src.a) * skyColor;
+	fragColor = src;
 }

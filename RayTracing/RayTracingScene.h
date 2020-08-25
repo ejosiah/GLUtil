@@ -131,6 +131,13 @@ public:
 		materials.push_back(m);
 		planes.push_back(plane);
 
+
+		plane.n = { -1, 0, 0, 1 };
+		plane.d = 10;
+		plane.id = planes.size();
+		plane.matId = -1;
+		planes.push_back(plane);
+
 		numPlanes = planes.size();
 
 		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 5 };
@@ -151,7 +158,8 @@ public:
 	//	light.flags = rt::DISTANT_LIGHT;
 		light.I = vec4(vec3(1), 80);
 	//	light.I = vec4(vec3(1), 1);
-		light.lightToWorld = translate(mat4(1), { 0, 10, 10 });
+	//	light.lightToWorld = translate(mat4(1), { 0, 10, 10 });
+		light.lightToWorld = translate(mat4(1), { 0, 20, 20 });
 		light.worldToLight = inverse(light.lightToWorld);
 		light.position = light.lightToWorld * vec4(0, 0, 0, 1);
 	//	light.position = vec4(0, 1, 0, 1);

@@ -54,6 +54,7 @@ uniform Atmosphere atmosphere;
 uniform Box box;
 uniform vec3 stepDelta;
 
+bool intersectPlane(Ray ray, vec3 n, float d, out float t, out vec2 uv);
 
 bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1);
 
@@ -85,15 +86,27 @@ void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 
-	vec4 source = traceRay1(ray, atmosphere, weather);
+	vec2 uv;
+	float t = ray.tMax;
+	float t0;
+	vec4 color = vec4(0);
+//	if(intersectPlane(ray, vec3(0, 1, 0), 0, t0, uv)){
+//		t = t0;
+//		color.rgb = Checkerboard(uv);
+//	}
 
+	t0 = ray.tMax;
+	if(intersectPlane(ray, vec3(1, 0, 0), 0, t0, uv)){
+		//if(t0 < t){
+			t = t0;
+			color.rgb = Checkerboard(uv);
+			color.a = 1;
+		//}
+	}
 	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
 	vec3 dest = texture(canvas, _uv).rgb;
 
-	vec4 color;
-	color.a = 1;
-	color.rgb = source.rgb + dest * (1 - source.a);
-//	color.rgb = dest;
+	color.rgb = color.rgb + dest * (1 - color.a);
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), color);
 }
@@ -125,6 +138,26 @@ bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out 
 	uv = abs(uv);
 	t = tn;
 	return tn < tf;
+}
+
+bool intersectPlane(Ray ray, vec3 n, float d, out float t, out vec2 uv) {
+
+	t = d - dot(n, ray.origin);
+	t /= dot(n, ray.direction);
+
+	if (t < 0 || t > ray.tMax) {
+		return false;
+	}
+
+	vec3 p = ray.origin + t * ray.direction;
+
+	vec3 x, y;
+	orthonormalBasis(n, x, y);
+		
+	//	interact.uv = vec2(p.x / whole, p.z / whole);
+	uv = vec2(dot(p, x)/10, dot(p, y)/10);
+
+	return true;
 }
 
 
@@ -358,82 +391,11 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 	vec2 uv;
 	vec3 p0;
 	vec3 p1;
-	vec4 cloud_color = vec4(0);
-	//int count = 0;
-
-	if(ray.direction.y < 0) return vec4(0);
-
-//	float density = sampleCloudDensity(ray.direction, atmosphere, weather, true);
+	float t;
+	if(intersectPlane(ray, vec3(1, 0, 0), 0, t, uv)){
+		return vec4(Checkerboard(uv), 1);
+	}
 
 
-//	if(intersectSphere(ray, atmosphere.innerRadius, p0)){
-		//float density = sampleCloud(p0/pow(atmosphere.innerRadius, 2));
-		//float density = sampleCloud(p0/256);
-		//float density = sampleCloud(ray.direction);
-		float density = sampleCloudDensity(ray.direction, atmosphere, weather, true);
-		density = density < 0 ? 0 : density;
-		return vec4(density);
-	//	return vec4(1, 0, 0, 1);
-		vec3 p = p0;
-		vec3 stepDir = ray.direction;
-		int count = 0;
-		for(int i = 0; i < 300; i++){
-
-			if(cloud_color.a > 0.99) break;
-			if(count > 5) break;
-		//	bool outsideOuterAtmosphere = dot(p, p) > pow(atmosphere.outerRadius, 2);
-		//	if(outsideOuterAtmosphere) break;
-
-			p += stepDir;
-
-			float density = sampleCloudDensity(p0, atmosphere, weather, true);
-			density = density < 0 ? 0 : density;
-			if(density == 0 ){
-				count++;
-			}else{
-				count = 0;
-			}
-
-			float prev_alpha = density - (density * cloud_color.a);
-			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
-			cloud_color.a += prev_alpha;
-		}
-//	}else{
-//		return vec4(0);
-//	}
-
-	
-//	float t;
-//	if(intersectCube(ray, box, uv, p0, p1, t)){
-//	//	if(t < 0) return vec4(1, 0, 0, 1);
-//		vec3 p = ray.origin;
-//	//	vec3 color = Checkerboard(uv);
-//		vec3 color = vec3(1, 0, 0);
-//		return vec4(color, 1);
-//		vec3 stepDir = ray.direction * (1/10);
-//		bool stop = false;
-//		for(int i = 0; i < 1; i++){
-//			p += ray.direction;
-//	//		stop = dot(sign(p - box.min), sign(box.max - p)) < 3;
-//	//		if(stop) break;
-//
-//			float density = sampleCloud(p);
-//
-//			if(density == 0 ){
-//				count++;
-//			}else{
-//				count = 0;
-//			}
-//
-//			float prev_alpha = density - (density * cloud_color.a);
-//			cloud_color.rgb = prev_alpha * vec3(density) + cloud_color.rgb;
-//			cloud_color.a += prev_alpha;
-//
-//			if(cloud_color.a > 0.99) break;
-//			if(count > 5) break;
-//			
-//		}
-//	}
-//
-	return cloud_color;
+	return vec4(0);
 }

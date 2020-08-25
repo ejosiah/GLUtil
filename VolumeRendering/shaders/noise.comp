@@ -1,0 +1,42 @@
+#version 450 core 
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z  = 8) in;
+
+layout(rgba32f, binding = 0) uniform image3D noise;
+
+float remap(float x, float a, float b, float c, float d);
+
+float worleyFbm(vec3 p, float freq);
+
+float perlinfbm(vec3 p, float freq, int octaves);
+
+
+void main(){
+	vec3 pos = vec3(gl_GlobalInvocationID)/(vec3(gl_NumWorkGroups * gl_WorkGroupSize));
+    
+    float slices = 128.; // number of layers of the 3d texture
+    float freq = 4.;
+    
+    float pfbm= mix(1., perlinfbm(pos, 4., 7), .5);
+    pfbm = abs(pfbm * 2. - 1.); // billowy perlin noise
+    
+    vec4 col = vec4(0.);
+    col.g += worleyFbm(pos, freq);
+    col.b += worleyFbm(pos, freq*2.);
+    col.a += worleyFbm(pos, freq*4.);
+    col.r += remap(pfbm, 0., 1., col.g, 1.); // perlin-worley
+
+    	float perlinWorley = col.r;
+	vec3 worley = col.gba;
+
+	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+
+    // cloud shape modeled after the GPU Pro 7 chapter
+    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
+
+    imageStore(noise, ivec3(gl_GlobalInvocationID), vec4(vec3(cloud), 1));
+}
+
+#pragma include("noise.glsl")
+//#pragma include("hash.glsl")

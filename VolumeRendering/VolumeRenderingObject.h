@@ -50,6 +50,24 @@ public:
 		else {
 			throw std::runtime_error{ "unable to load volume file: " + volume_file };
 		}
+
+		noiseTexture = new Texture3D{
+			nullptr,
+			XDIM,
+			YDIM,
+			ZDIM,
+			0,
+			GL_RGBA32F,
+			GL_RGBA,
+			glm::vec3{ GL_REPEAT },
+			glm::vec2{ GL_LINEAR },
+			GL_FLOAT
+		};
+
+		scene().shader("noise")([&] {
+			glBindImageTexture(image, noiseTexture->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+			glDispatchCompute(workers.x, workers.y, workers.z);
+			});
 	}
 
 	inline string name() {
@@ -58,9 +76,12 @@ public:
 
 protected:
 	const std::string volume_file = "media/Engine256.raw";
-	GLuint XDIM = 256;
-	GLuint YDIM = 256;
-	GLuint ZDIM = 256;
+	const GLuint XDIM = 256;
+	const GLuint YDIM = 256;
+	const GLuint ZDIM = 256;
 	Texture3D* texture;
 	string _name;
+	Texture3D* noiseTexture;
+	GLuint image = 0;
+	uvec3 workers = uvec3(XDIM, YDIM, ZDIM) / uvec3(8, 8, 8);
 };

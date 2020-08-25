@@ -14,7 +14,7 @@ using namespace gl;
 class VolumeRenderingScene : public Scene {
 public:
 	VolumeRenderingScene() :Scene("Volume Rendering Techniques") {
-	//	camInfoOn = true;
+		camInfoOn = true;
 		addShaderFromFile("slicer", "shaders/common.geom");
 		_modelHeight = 0.1;
 	}
@@ -31,6 +31,7 @@ public:
 		itr = volumenRenders.begin();
 		current = *itr;
 		setBackGroundColor({ 0.5, 0.5, 1, 1 });
+		glDisable(GL_CULL_FACE);
 	}
 
 	void display() override {
