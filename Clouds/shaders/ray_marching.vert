@@ -15,8 +15,8 @@ out ncl_PerVertex{
 };
 
 void main(){
-	pos = position;
-	uv = position + vec3(0.5); // from [-0.5, 0.5] to [0, 1]
+	vec4 localPos = xform * vec4(position, 1);
+	pos = localPos.xyz;
 
-	gl_Position = MVP * vec4(position, 1);
+	gl_Position = MVP * localPos;
 }

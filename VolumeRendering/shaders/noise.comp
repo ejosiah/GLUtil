@@ -40,3 +40,9 @@ void main(){
 
 #pragma include("noise.glsl")
 //#pragma include("hash.glsl")
+
+
+float remap(float x, float a, float b, float c, float d)
+{
+    return (((x - a) / (b - a)) * (d - c)) + c;
+}

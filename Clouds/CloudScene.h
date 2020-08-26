@@ -34,6 +34,7 @@ public:
 	//	camInfoOn = true;
 	//	_hideCursor = false;
 	//	_requireMouse = true;
+		_fontSize = 15;
 		addShader("render", GL_VERTEX_SHADER, screen_vert_shader);
 		addShader("phong", GL_VERTEX_SHADER, phong_lfp_vert_shader);
 		//		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
@@ -75,7 +76,7 @@ public:
 		//	fin.read(reinterpret_cast<char*>(noise), dim.x * dim.y * dim.z * sizeof(float) * 4);
 		//}
 		//fin.close();
-		
+		fontColor(BLACK);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		noiseTexture = new Texture3D{
 			noise,
@@ -102,15 +103,16 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-	//	auto xform = translate(mat4(1), { 0, 5, 0 });
-		//xform = scale(xform, vec3(10));
-		auto xform = mat4(1);
-		cube = Cube{ 10, WHITE, vector<mat4>{1, xform }, false };
+		auto xform = translate(mat4(1), { 0, 5, 0 });
+		xform = scale(xform, vec3(10));
+	//	auto xform = mat4(1);
+		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
+		auto aabb = cube.aabb();
 		cubeAABB = aabbOutline(cube.aabb(), BLACK);
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
-		weather.cloud_coverage = 0;
+		weather.cloud_coverage = 0.65;
 		cloudUI = new CloudUI{ weather, *this };
 
 		auto config = FrameBuffer::defaultConfig(_width, _height);
@@ -194,26 +196,33 @@ public:
 	//	cloudUI->render();
 		//renderBounds();
 	//	renderNoise();
-		renderSky();
-		renderFloor();
+	//	renderSky();
+	//	renderFloor();
 
 		renderClouds();
 	//	renderFloor();
-		shader("flat")([&] {
-			send(activeCamera());
-			shade(cubeAABB);
-			send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-			shade(sphere);
-			send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-			shade(sphere);
-		});
+	//	shader("flat")([&] {
+	//		send(activeCamera());
+	//		shade(cubeAABB);
+			//send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+			//shade(sphere);
+			//send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+			//shade(sphere);
+	//	});
 
 
 		//shader("screen")([&] {
 		//	glBindTextureUnit(0, fb.texture());
 		//	shade(quad);
 		//});
-		sFont->render("current slice: " + to_string(slice), 10, 10);
+
+		sbr.str("");
+		sbr.clear();
+		sbr << "Weather Data:\n";
+		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
+		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
+		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
+		sFont->render(sbr.str(), 20, 20);
 	}
 
 	void renderNoise() {
@@ -258,8 +267,8 @@ public:
 			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
-			send("texMin", vec3(cube.aabb().min));
-			send("texMax", vec3(cube.aabb().max));
+			send("bMin", cube.aabbMin());
+			send("bMax", cube.aabbMax());
 			send("dt", Timer::get().timeSinceStart());
 			shade(cube);
 			glDisable(GL_BLEND);
@@ -323,7 +332,28 @@ public:
 				slice += 1;
 				slice %= dim.z;
 				break;
+			case 'y':
+				weather.cloud_coverage += 0.01;
+				break;
+			case 'Y':
+				weather.cloud_coverage -= 0.01;
+				break;
+			case 'u':
+				weather.cloud_type += 0.01;
+				break;
+			case 'U':
+				weather.cloud_type -= 0.01;
+				break;
+			case 'i':
+				weather.percipitation += 0.01;
+				break;
+			case 'I':
+				weather.percipitation -= 0.01;
+				break;
 			}
+			weather.cloud_coverage = glm::clamp(weather.cloud_coverage, 0.1f, 0.9f);
+			weather.cloud_type = glm::clamp(weather.cloud_type, 0.0f, 1.0f);
+			weather.percipitation = glm::clamp(weather.percipitation, 0.0f, 1.0f);
 		}
 	}
 

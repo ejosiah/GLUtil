@@ -16,12 +16,6 @@ vec3 hash33(vec3 p)
     return -1. + 2. * vec3(q) * UIF;
 }
 
-
-float remap(float x, float a, float b, float c, float d)
-{
-    return (((x - a) / (b - a)) * (d - c)) + c;
-}
-
 // Gradient noise by iq (modified to be tileable)
 float gradientNoise(vec3 x, float freq)
 {
@@ -113,4 +107,20 @@ float worleyFbm(vec3 p, float freq)
     return worleyNoise(p * freq, freq) * .625 +
         worleyNoise(p * freq * 2., freq * 2.) * .25 +
         worleyNoise(p * freq * 4., freq * 4.) * .125;
+}
+
+vec2 curlNoise(vec2 uv)
+{
+    vec2 eps = vec2(0., 1.);
+
+    float n1, n2, a, b;
+    n1 = perlinNoise(uv + eps);
+    n2 = perlinNoise(uv - eps);
+    a = (n1 - n2) / (2. * eps.y);
+
+    n1 = perlinNoise(uv + eps.yx);
+    n2 = perlinNoise(uv - eps.yx);
+    b = (n1 - n2) / (2. * eps.y);
+
+    return vec2(a, -b);
 }

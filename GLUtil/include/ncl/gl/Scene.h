@@ -146,12 +146,12 @@ namespace ncl {
 				glCullFace(GL_BACK);
 
 				
+				_fontColor = getForeGround();
 				bounds(glm::vec3{-25, 0, -25}, glm::vec3{25});
 				init();
 				initDefaultCamera();
 				initCameras();
 				getActiveCameraController().setBounds(_bounds);
-				_fontColor = getForeGround();
 
 				_keyListeners.push_back([&](const Key& key) {
 					if (cameraControlActive) {
@@ -295,6 +295,7 @@ namespace ncl {
 			void update0(float elapsedTime) {
 				updateFrameRate(elapsedTime);
 				update(elapsedTime);
+
 				
 				for (auto compute : computations) {
 					compute->update(elapsedTime);
