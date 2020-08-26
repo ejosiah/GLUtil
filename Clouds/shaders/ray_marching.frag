@@ -25,7 +25,7 @@ uniform vec3 bMax;
 uniform Weather weather;
 uniform vec2 cloudMinMax;
 uniform float eccentricity = 0.2;
-uniform vec3 lightPos;
+uniform vec3 lightPos = vec3(20);
 
 in ncl_PerVertex{
 	smooth vec3 pos;
@@ -60,7 +60,7 @@ float henyeyGreenstein(vec3 lightDir, vec3 viewDir, float g){
 //vec2 curlNoise(vec2 uv);
 
 vec3 sampleCoord(vec3 p){
-	return remap(p, bMin, bMax, texMin, texMax);
+	return remap(p, bMin, bMax, vec3(0), vec3(1));
 }
 
 float saturate(float val){
@@ -142,12 +142,12 @@ float lightEnergy(float sampleDensity, float percipitation, float eccentricity, 
 }
 
 const vec3 noise_kernel[] = {
-	vec3(0.61666, 0.2839560.205325),
-	vec3(-0.684221, -0.6672110.618786),
-	vec3(-0.730418, 0.8479310.628352),
-	vec3(-0.618689, -0.7192690.0778813),
-	vec3(-0.876086, -0.611552-0.981934),
-	vec3(-0.971202, 0.228621-0.502767)
+	vec3(-0.316253, 0.147451, -0.902035),
+	vec3(0.208214, 0.114857, -0.669561),
+	vec3(-0.398435, -0.105541, -0.722259),
+	vec3(0.0849315, -0.644174, 0.0471824),
+	vec3(0.470606, 0.99835, 0.498875),
+	vec3(-0.207847, -0.176372, -0.847792)
 };
 
 float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
@@ -157,10 +157,10 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 
 	float density = 0;
 	vec3 p = samplePos;
-	for(int i = 0; i <= 6; i++){
+	for(int i = 0; i < 6; i++){
 		p += lightStep * (coneSpreadMultiplier * noise_kernel[i] * float(i));
 
-		density += sampleCloudDensity(p, weather, lod + 1, true);
+		density += sampleCloudDensity(p, weather);
 	}
 
 	return density;
@@ -169,7 +169,7 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 
 void main(){
 	
-
+	fragColor = vec4(0);
 	vec3 dataPos = pos;
 
 	vec3 geomDir = normalize(pos - camPos);
@@ -193,7 +193,7 @@ void main(){
 		float energy = 1;
 		if(density != 0){
 			float d = sampleCloudDensityAlongCone(dataPos, dirStep);
-			energy = lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
+			energy = 100 * lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
 		}
 
 		float prev_alpha = density - (density * fragColor.a);
@@ -203,7 +203,7 @@ void main(){
 		if(fragColor.a > 0.99) break; 
 	}
 
-//	fragColor.rgb *= lightEnergy(fragColor.a);
+	fragColor.rgb /= 1 + fragColor.rgb;
 }
 
 //#pragma include("noise.glsl")

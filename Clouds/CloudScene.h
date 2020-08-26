@@ -51,14 +51,14 @@ public:
 		glDisable(GL_CULL_FACE);
 		setForeGroundColor(WHITE);
 		_modelHeight = 5.0f;
-		bounds(vec3(-200), vec3(200));
+		bounds(vec3(-100.0_km), vec3(100.0_km));
 		initDefaultCamera();
 		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
 	//	activeCamera().collisionTestOff();
-	//	activeCamera().setVelocity(vec3(10));
+		activeCamera().setVelocity(vec3(50));
 	//	deactivateCameraControl();
-	//	activeCamera().setAcceleration(vec3(10));
-		activeCamera().setPosition({ 0, 0, 10 });
+	//	activeCamera().setAcceleration(vec3(100));
+		activeCamera().setPosition({ 0, 0, 100 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -103,8 +103,8 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 5, 0 });
-		xform = scale(xform, vec3(10));
+		auto xform = translate(mat4(1), { 0, 100, 0 });
+		xform = scale(xform, vec3(100));
 	//	auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
@@ -196,19 +196,18 @@ public:
 	//	cloudUI->render();
 		//renderBounds();
 	//	renderNoise();
-	//	renderSky();
-	//	renderFloor();
+		renderSky();
+		renderFloor();
 
 		renderClouds();
-	//	renderFloor();
-	//	shader("flat")([&] {
-	//		send(activeCamera());
-	//		shade(cubeAABB);
-			//send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-			//shade(sphere);
-			//send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-			//shade(sphere);
-	//	});
+		shader("flat")([&] {
+			send(activeCamera());
+			shade(cubeAABB);
+			send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+			shade(sphere);
+			send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+			shade(sphere);
+		});
 
 
 		//shader("screen")([&] {
@@ -270,6 +269,7 @@ public:
 			send("bMin", cube.aabbMin());
 			send("bMax", cube.aabbMax());
 			send("dt", Timer::get().timeSinceStart());
+			send("lightPos", vec3(50.0_km));
 			shade(cube);
 			glDisable(GL_BLEND);
 		});
