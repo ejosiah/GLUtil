@@ -6,7 +6,7 @@
 struct Weather{
 	float cloud_coverage;
 	float cloud_type;
-	float percipitation;
+	float precipitation;
 	vec3 wind_direciton;
 	float cloud_speed;
 };
@@ -25,6 +25,7 @@ uniform vec3 bMax;
 uniform Weather weather;
 uniform vec2 cloudMinMax;
 uniform float eccentricity = 0.2;
+uniform vec3 lightPos;
 
 in ncl_PerVertex{
 	smooth vec3 pos;
@@ -140,6 +141,32 @@ float lightEnergy(float sampleDensity, float percipitation, float eccentricity, 
 	return 2.0 * exp(-d * p) * (1 - exp(-2 * d)) * hg;
 }
 
+const vec3 noise_kernel[] = {
+	vec3(0.61666, 0.2839560.205325),
+	vec3(-0.684221, -0.6672110.618786),
+	vec3(-0.730418, 0.8479310.628352),
+	vec3(-0.618689, -0.7192690.0778813),
+	vec3(-0.876086, -0.611552-0.981934),
+	vec3(-0.971202, 0.228621-0.502767)
+};
+
+float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
+	vec3 lightStep = direction * 0.1;
+	float coneSpreadMultiplier = length(lightStep);
+	int lod = -1;
+
+	float density = 0;
+	vec3 p = samplePos;
+	for(int i = 0; i <= 6; i++){
+		p += lightStep * (coneSpreadMultiplier * noise_kernel[i] * float(i));
+
+		density += sampleCloudDensity(p, weather, lod + 1, true);
+	}
+
+	return density;
+}
+
+
 void main(){
 	
 
@@ -160,11 +187,17 @@ void main(){
 
 		//float density = sampleCloud(dataPos);
 		float density = sampleCloudDensity(dataPos, weather);
+		density = clamp(density, 0, 1);
 
 		//;
+		float energy = 1;
+		if(density != 0){
+			float d = sampleCloudDensityAlongCone(dataPos, dirStep);
+			energy = lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
+		}
 
 		float prev_alpha = density - (density * fragColor.a);
-		fragColor.rgb = prev_alpha * vec3(density) + fragColor.rgb;
+		fragColor.rgb += energy * prev_alpha * vec3(density);
 		fragColor.a += prev_alpha;
 
 		if(fragColor.a > 0.99) break; 
