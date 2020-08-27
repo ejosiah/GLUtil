@@ -93,9 +93,9 @@ public:
 
 		highFreqNoise = new Texture3D{
 			noise,
-			dim.x,
-			dim.y,
-			dim.z,
+			32,
+			32,
+			32,
 			0,
 			GL_RGBA32F,
 			GL_RGBA,
@@ -147,8 +147,8 @@ public:
 		Image2D image = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "scene", 0};
 
 		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
-			glBindTextureUnit(1, fb.texture());
-			glBindTextureUnit(2, lowFreqNoise->buffer());
+		//	glBindTextureUnit(1, fb.texture());
+		//	glBindTextureUnit(2, lowFreqNoise->buffer());
 			rayGenerator->getRaySSBO().sendToGPU();
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
@@ -182,9 +182,16 @@ public:
 
 	void generateNoise() {
 		shader("noise")([&] {
+
+			send("octave", 0);
+			send("doPerlinWorley", true);
 			glBindImageTexture(0, lowFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-			glBindImageTexture(1, highFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 			glDispatchCompute(workers.x, workers.y, workers.z);
+
+			send("octave", 3);
+			send("doPerlinWorley", false);
+			glBindImageTexture(0, highFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+			glDispatchCompute(4, 4, 4);
 		});
 
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
@@ -214,14 +221,14 @@ public:
 	//	renderFloor();
 
 		renderClouds();
-		shader("flat")([&] {
-			send(activeCamera());
-			shade(cubeAABB);
-			send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-			shade(sphere);
-			send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-			shade(sphere);
-		});
+		//shader("flat")([&] {
+		//	send(activeCamera());
+		//	shade(cubeAABB);
+		//	send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+		//	shade(sphere);
+		//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+		//	shade(sphere);
+		//});
 
 
 		//shader("screen")([&] {
@@ -273,11 +280,10 @@ public:
 			//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			send(activeCamera());
 			glBindTextureUnit(0, lowFreqNoise->buffer());
 			glBindTextureUnit(1, highFreqNoise->buffer());
+			send(activeCamera());
 			sendWeather();
-		//	send("cloudMinMax", cloudMinMax);
 			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
@@ -333,10 +339,10 @@ public:
 	}
 
 	void update(float dt) {
-		fb.use([&] {
-			renderSky();
-			renderFloor();
-		});
+		//fb.use([&] {
+		//	renderSky();
+		//	renderFloor();
+		//});
 		setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 

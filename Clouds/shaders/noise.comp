@@ -3,10 +3,9 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z  = 8) in;
 
 layout(rgba32f, binding = 0) uniform image3D noise;
-layout(rgba32f, binding = 1) uniform image3D highFreqNoise;
 
-uniform float freq;
-uniform bool doPerlinWorley;
+uniform float octave = 0;
+uniform bool doPerlinWorley = true;
 
 float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
@@ -24,28 +23,21 @@ float perlinfbm(vec3 p, float freq, int octaves);
 void main(){
 	vec3 pos = vec3(gl_GlobalInvocationID)/(vec3(gl_NumWorkGroups * gl_WorkGroupSize));
     
-    float slices = 128.; // number of layers of the 3d texture
-    float freq = 4.;
-    
-    float pfbm= mix(1., perlinfbm(pos, 4., 7), .5);
-    pfbm = abs(pfbm * 2. - 1.); // billowy perlin noise
-    
-    vec4 col = vec4(0.);
-    col.g += worleyFbm(pos, freq);
-    col.b += worleyFbm(pos, freq*2.);
-    col.a += worleyFbm(pos, freq*4.);
-    col.r += remap(pfbm, 0., 1., col.g, 1.); // perlin-worley
+    float freq = 4;
+    int offset = doPerlinWorley ? 1 : 0;
+    vec4 col = vec4(0);
+
+    for(int i = 0; i < 3; i++){
+        col[i + offset] = worleyFbm(pos, freq * pow(2, octave + i));
+    }
+
+    if(doPerlinWorley){
+        float pfbm= mix(1., perlinfbm(pos, 4., 7), .5);
+        pfbm = abs(pfbm * 2. - 1.); // billowy perlin noise
+        col.r += remap(pfbm, 0., 1., col[offset], 1.); 
+    }
 
     imageStore(noise, ivec3(gl_GlobalInvocationID), col);
-
-    // high requency
-    col = vec4(0);
-    col.r += worleyFbm(pos, freq*8);
-    col.g += worleyFbm(pos, freq*16.);
-    col.b += worleyFbm(pos, freq*32.);
-    col.a += worleyFbm(pos, freq*64);
-
-    imageStore(highFreqNoise, ivec3(gl_GlobalInvocationID), col);
 }
 
 #pragma include("noise.glsl")
