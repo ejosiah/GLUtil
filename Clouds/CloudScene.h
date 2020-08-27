@@ -24,8 +24,8 @@ using namespace unit;
 
 namespace rt = ray_tracing;
 
-const unsigned WIDTH = Resolution::HD.width;
-const unsigned HEIGHT = Resolution::HD.width;
+const unsigned WIDTH = 1024;
+const unsigned HEIGHT = 960;
 
 class CloudScene : public Scene {
 public:
@@ -78,7 +78,20 @@ public:
 		//fin.close();
 		fontColor(BLACK);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		noiseTexture = new Texture3D{
+		lowFreqNoise = new Texture3D{
+			noise,
+			dim.x,
+			dim.y,
+			dim.z,
+			0,
+			GL_RGBA32F,
+			GL_RGBA,
+			glm::vec3{ GL_REPEAT },
+			glm::vec2{ GL_LINEAR },
+			GL_FLOAT
+		};
+
+		highFreqNoise = new Texture3D{
 			noise,
 			dim.x,
 			dim.y,
@@ -103,7 +116,7 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 100, 0 });
+		auto xform = translate(mat4(1), { 0, 50, 0 });
 		xform = scale(xform, vec3(100));
 	//	auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
@@ -135,7 +148,7 @@ public:
 
 		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
 			glBindTextureUnit(1, fb.texture());
-			glBindTextureUnit(2, noiseTexture->buffer());
+			glBindTextureUnit(2, lowFreqNoise->buffer());
 			rayGenerator->getRaySSBO().sendToGPU();
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
@@ -169,7 +182,8 @@ public:
 
 	void generateNoise() {
 		shader("noise")([&] {
-			glBindImageTexture(image, noiseTexture->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+			glBindImageTexture(0, lowFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+			glBindImageTexture(1, highFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 			glDispatchCompute(workers.x, workers.y, workers.z);
 		});
 
@@ -177,7 +191,7 @@ public:
 
 		float* noise = new float[dim.x * dim.y * dim.z * 4];
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glBindTexture(GL_TEXTURE_3D, noiseTexture->buffer());
+		glBindTexture(GL_TEXTURE_3D, lowFreqNoise->buffer());
 		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_FLOAT, (void*)noise);
 
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
@@ -196,8 +210,8 @@ public:
 	//	cloudUI->render();
 		//renderBounds();
 	//	renderNoise();
-		renderSky();
-		renderFloor();
+	//	renderSky();
+	//	renderFloor();
 
 		renderClouds();
 		shader("flat")([&] {
@@ -221,19 +235,19 @@ public:
 		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
 		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
 		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
-		sFont->render(sbr.str(), 20, 20);
+	//	sFont->render(sbr.str(), 20, 20);
 	}
 
 	void renderNoise() {
 		shader("render")([&] {
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_3D, noiseTexture->buffer());
-		//	glBindTextureUnit(0, noiseTexture->buffer());
+			glBindTexture(GL_TEXTURE_3D, lowFreqNoise->buffer());
+		//	glBindTextureUnit(0, lowFreqNoise->buffer());
 			send("dt", Timer::get().timeSinceStart());
 			send("numSlices", int(dim.z));
 			send("slice", float(slice));
 			sendWeather();
-			//	send("cloudMinMax", cloudMinMax);
+			//	send("cloudMinMax", cloudMinMax);	
 			send("cloudMinMax", vec2(cube.aabbMin().x, cube.aabbMax().y));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
@@ -258,9 +272,10 @@ public:
 		shader("ray_marching") ([&] {
 			//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 			send(activeCamera());
-			glBindTextureUnit(0, noiseTexture->buffer());
-			glBindTextureUnit(2, fb.texture());
+			glBindTextureUnit(0, lowFreqNoise->buffer());
+			glBindTextureUnit(1, highFreqNoise->buffer());
 			sendWeather();
 		//	send("cloudMinMax", cloudMinMax);
 			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
@@ -293,7 +308,7 @@ public:
 		//shader("screen")([&] {
 		//	clouds->images().front().renderMode();
 		//	glBindTextureUnit(0, clouds->images().front().buffer());
-		//	glBindTextureUnit(0, noiseTexture->buffer());
+		//	glBindTextureUnit(0, lowFreqNoise->buffer());
 		//	shade(quad);
 		//});
 	}
@@ -362,7 +377,8 @@ private:
 	ProvidedMesh noiseQuad;
 	ProvidedMesh cubeAABB;
 	Compute* noiseGenerator;
-	Texture3D* noiseTexture;
+	Texture3D* lowFreqNoise;
+	Texture3D* highFreqNoise;
 	const uvec3 dim = uvec3(128);
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;

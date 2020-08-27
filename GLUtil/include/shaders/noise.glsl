@@ -9,6 +9,14 @@ This tab contains all the necessary noise functions required to model a cloud sh
 #define UI3 uvec3(UI0, UI1, 2798796415U)
 #define UIF (1.0 / float(0xffffffffU))
 
+// Hash functions by Dave_Hoskins
+float hash12(vec2 p)
+{
+	uvec2 q = uvec2(ivec2(p)) * uvec2(1597334673U, 3812015801U);
+	uint n = (q.x ^ q.y) * 1597334673U;
+	return float(n) * (1.0 / float(0xffffffffU));
+}
+
 vec3 hash33(vec3 p)
 {
     uvec3 q = uvec3(ivec3(p)) * UI3;
@@ -56,6 +64,19 @@ float gradientNoise(vec3 x, float freq)
         u.y * u.z * (va - vc - ve + vg) +
         u.z * u.x * (va - vb - ve + vf) +
         u.x * u.y * u.z * (-va + vb + vc - vd + ve - vf - vg + vh);
+}
+
+float perlinNoise(vec2 x) {
+    vec2 i = floor(x);
+    vec2 f = fract(x);
+
+	float a = hash12(i);
+    float b = hash12(i + vec2(1.0, 0.0));
+    float c = hash12(i + vec2(0.0, 1.0));
+    float d = hash12(i + vec2(1.0, 1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 }
 
 // Tileable 3D worley noise

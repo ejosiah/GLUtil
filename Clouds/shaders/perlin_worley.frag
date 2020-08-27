@@ -1,5 +1,8 @@
 #version 450 core
 
+#pragma compile(off)
+
+
 uniform int numSlices;
 //uniform int slice;
 

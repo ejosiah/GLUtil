@@ -12,11 +12,12 @@ struct Weather{
 };
 
 layout(binding = 0 ) uniform sampler3D cloudNoiseLowFreq;
+layout(binding = 1 ) uniform sampler3D cloudNoiseHighFreq;
 
 const float _4_PI = 12.566370614359172953850573533118; 
 uniform vec3 camPos;
 uniform vec3 stepSize;
-uniform vec3 dt;
+uniform float dt;
 const int MAX_SAMPLES = 300;
 const vec3 texMin = vec3(0);
 const vec3 texMax = vec3(1);
@@ -57,10 +58,11 @@ float henyeyGreenstein(vec3 lightDir, vec3 viewDir, float g){
 	return num / denum;
 }
 
-//vec2 curlNoise(vec2 uv);
+vec2 curlNoise(vec2 uv);
 
 vec3 sampleCoord(vec3 p){
 	return remap(p, bMin, bMax, vec3(0), vec3(1));
+	//return p/100;
 }
 
 float saturate(float val){
@@ -113,7 +115,25 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	base_cloud_with_coverage *= cloud_coverage;
 
-	return base_cloud_with_coverage;
+//	return base_cloud_with_coverage;
+   float height_fraction = heightFractionForPoint(p, cloudMinMax);
+
+	vec2 curl = curlNoise(densityCoord.xy * dt);
+	p.xz = curl * (1 - height_fraction);
+
+	densityCoord = sampleCoord(p);
+
+	vec3 high_frequency_noise = textureLod(cloudNoiseHighFreq, densityCoord * 0.1, 0).rgb;
+
+	float high_freq_fbm = dot(high_frequency_noise, vec3(0.625, 0.25, 0.125));
+
+	height_fraction = heightFractionForPoint(p, cloudMinMax);
+
+	float high_freq_noise_modifier = mix(high_freq_fbm, 1 - high_freq_fbm, saturate(height_fraction * 10));
+
+	float final_cloud = remap(base_cloud_with_coverage, high_freq_noise_modifier * 0.2, 1.0, 0.0, 1.0);
+
+	return final_cloud;
 }
 
 float sampleCloud(vec3 p){
@@ -171,6 +191,7 @@ void main(){
 	
 	fragColor = vec4(0);
 	vec3 dataPos = pos;
+//	dataPos += (weather.wind_direciton + vec3(0, 0.1, 0)) * dt * weather.cloud_speed;
 
 	vec3 geomDir = normalize(pos - camPos);
 	vec3 stepSize = (bMax-bMin)/textureSize(cloudNoiseLowFreq, 0);
@@ -206,4 +227,4 @@ void main(){
 	fragColor.rgb /= 1 + fragColor.rgb;
 }
 
-//#pragma include("noise.glsl")
+#pragma include("noise.glsl")

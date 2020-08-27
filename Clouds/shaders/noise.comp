@@ -3,8 +3,18 @@
 layout(local_size_x = 8, local_size_y = 8, local_size_z  = 8) in;
 
 layout(rgba32f, binding = 0) uniform image3D noise;
+layout(rgba32f, binding = 1) uniform image3D highFreqNoise;
 
-float remap(float x, float a, float b, float c, float d);
+uniform float freq;
+uniform bool doPerlinWorley;
+
+float remap(float x, float a, float b, float c, float d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
+vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
 
 float worleyFbm(vec3 p, float freq);
 
@@ -27,6 +37,15 @@ void main(){
     col.r += remap(pfbm, 0., 1., col.g, 1.); // perlin-worley
 
     imageStore(noise, ivec3(gl_GlobalInvocationID), col);
+
+    // high requency
+    col = vec4(0);
+    col.r += worleyFbm(pos, freq*8);
+    col.g += worleyFbm(pos, freq*16.);
+    col.b += worleyFbm(pos, freq*32.);
+    col.a += worleyFbm(pos, freq*64);
+
+    imageStore(highFreqNoise, ivec3(gl_GlobalInvocationID), col);
 }
 
 #pragma include("noise.glsl")
