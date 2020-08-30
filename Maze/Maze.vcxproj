@@ -153,6 +153,8 @@
     <ClCompile Include="Maze.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Clouds\shaders\perlin_worley.vert" />
+    <None Include="..\Clouds\shaders\ray_marching.vert" />
     <None Include="shaders\floor.frag" />
     <None Include="shaders\floor.geom" />
     <None Include="shaders\floor.tese" />

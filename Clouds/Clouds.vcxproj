@@ -152,9 +152,7 @@
     <None Include="shaders\perlin.comp" />
     <None Include="shaders\perlin_worley.frag" />
     <None Include="shaders\perlin_worley.geom" />
-    <None Include="shaders\perlin_worley.vert" />
     <None Include="shaders\ray_marching.frag" />
-    <None Include="shaders\ray_marching.vert" />
     <None Include="shaders\render.frag" />
     <None Include="shaders\sky.frag" />
     <None Include="shaders\sky.vert" />

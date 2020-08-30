@@ -97,7 +97,7 @@ float sampleCloudDensity(vec3 p, Weather weather){
 //	vec3 densityCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
 	vec3 densityCoord = sampleCoord(p);
 
-	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, densityCoord, 0);
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, densityCoord, 3);
 	float perlinWorley = low_frequency_noise.r;
 	vec3 worley_low_freq = low_frequency_noise.gba;
 	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
@@ -111,7 +111,7 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	float cloud_coverage = weather.cloud_coverage;
 
-	float base_cloud_with_coverage = remap(base_cloud, cloud_coverage, 1.0, 0.0, 1.0);
+	float base_cloud_with_coverage = remap(base_cloud, 1 - cloud_coverage, 1.0, 0.0, 1.0);
 
 	base_cloud_with_coverage *= cloud_coverage;
 
@@ -123,7 +123,7 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	densityCoord = sampleCoord(p);
 
-	vec3 high_frequency_noise = textureLod(cloudNoiseHighFreq, densityCoord * 0.1, 0).rgb;
+	vec3 high_frequency_noise = texture(cloudNoiseHighFreq, densityCoord * 0.1).rgb;
 
 	float high_freq_fbm = dot(high_frequency_noise, vec3(0.625, 0.25, 0.125));
 
@@ -214,7 +214,7 @@ void main(){
 		float energy = 1;
 		if(density != 0){
 			float d = sampleCloudDensityAlongCone(dataPos, dirStep);
-			energy = 100 * lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
+			energy = 200 * lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
 		}
 
 		float prev_alpha = density - (density * fragColor.a);

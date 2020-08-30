@@ -27,9 +27,6 @@
     <None Include="shaders\perlin_worley.geom">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\perlin_worley.vert">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\perlin.comp">
       <Filter>Resource Files</Filter>
     </None>
@@ -61,9 +58,6 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\ray_marching.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\ray_marching.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

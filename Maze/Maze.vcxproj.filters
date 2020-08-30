@@ -58,5 +58,11 @@
     <None Include="shaders\floor.tese">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\Clouds\shaders\ray_marching.vert">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="..\Clouds\shaders\perlin_worley.vert">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

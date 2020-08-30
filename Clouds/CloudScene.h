@@ -24,8 +24,8 @@ using namespace unit;
 
 namespace rt = ray_tracing;
 
-const unsigned WIDTH = 1024;
-const unsigned HEIGHT = 960;
+const unsigned WIDTH = 1920;
+const unsigned HEIGHT = 1024;
 
 class CloudScene : public Scene {
 public:
@@ -55,7 +55,7 @@ public:
 		initDefaultCamera();
 		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
 	//	activeCamera().collisionTestOff();
-		activeCamera().setVelocity(vec3(50));
+	//	activeCamera().setVelocity(vec3(50));
 	//	deactivateCameraControl();
 	//	activeCamera().setAcceleration(vec3(100));
 		activeCamera().setPosition({ 0, 0, 100 });
@@ -65,31 +65,32 @@ public:
 		noiseQuad = ProvidedMesh{ screnSpaceQuad(), false, dim.z };
 		noiseQuad.defautMaterial(false);
 
-		// "c:\\temp\\low_frequncy_noise.raw"
 		float* noise = nullptr;
 
-		//ifstream fin;
-		//fin.open("c:\\temp\\low_frequncy_noise.raw", std::ios_base::binary);
+		TextureConfig texConfig;
+		texConfig.internalFmt = GL_RGBA32F;
+		texConfig.fmt = GL_RGBA;
+		texConfig.type = GL_FLOAT;
+		texConfig.levels = 5;
+		texConfig.mipMap = true;
+		Data data{ dim.x, dim.y, dim.z };
 
-		//if (fin.good()) {
-		//	noise = new float[dim.x * dim.y * dim.z * 4];
-		//	fin.read(reinterpret_cast<char*>(noise), dim.x * dim.y * dim.z * sizeof(float) * 4);
-		//}
-		//fin.close();
 		fontColor(BLACK);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		lowFreqNoise = new Texture3D{
-			noise,
-			dim.x,
-			dim.y,
-			dim.z,
-			0,
-			GL_RGBA32F,
-			GL_RGBA,
-			glm::vec3{ GL_REPEAT },
-			glm::vec2{ GL_LINEAR },
-			GL_FLOAT
-		};
+		//lowFreqNoise = new Texture3D{
+		//	noise,
+		//	dim.x,
+		//	dim.y,
+		//	dim.z,
+		//	0,
+		//	GL_RGBA32F,
+		//	GL_RGBA,
+		//	glm::vec3{ GL_REPEAT },
+		//	glm::vec2{ GL_LINEAR },
+		//	GL_FLOAT
+		//};
+
+		lowFreqNoise = new Texture3D{ data, texConfig };
 
 		highFreqNoise = new Texture3D{
 			noise,
@@ -131,6 +132,19 @@ public:
 		auto config = FrameBuffer::defaultConfig(_width, _height);
 		config.attachments[0].internalFmt = GL_RGBA32F;
 		config.attachments[0].fmt = GL_RGBA;
+
+		FrameBuffer::Attachment depthAttach;
+		depthAttach.attachment = GL_DEPTH_ATTACHMENT;
+		depthAttach.magFilter = depthAttach.minfilter = GL_NEAREST;
+		depthAttach.wrap_s = depthAttach.wrap_t = depthAttach.wrap_r = GL_CLAMP_TO_EDGE;
+		depthAttach.internalFmt = depthAttach.fmt = GL_DEPTH_COMPONENT;
+		depthAttach.type = GL_FLOAT;
+		depthAttach.attachment = GL_DEPTH_ATTACHMENT;
+		config.attachments.push_back(depthAttach);
+
+		config.depthTest = true;
+		config.stencilTest = false;
+		config.depthAndStencil = false;
 		fb = FrameBuffer{ config };
 
 		rayInit();
@@ -147,8 +161,9 @@ public:
 		Image2D image = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "scene", 0};
 
 		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
-		//	glBindTextureUnit(1, fb.texture());
-		//	glBindTextureUnit(2, lowFreqNoise->buffer());
+			glBindTextureUnit(1, fb.texture());
+			glBindTextureUnit(2, fb.texture(1));
+			glBindTextureUnit(3, lowFreqNoise->buffer());
 			rayGenerator->getRaySSBO().sendToGPU();
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
@@ -183,34 +198,20 @@ public:
 	void generateNoise() {
 		shader("noise")([&] {
 
-			send("octave", 0);
-			send("doPerlinWorley", true);
-			glBindImageTexture(0, lowFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-			glDispatchCompute(workers.x, workers.y, workers.z);
+			for (int level = 0; level < 5; level++) {
+				unsigned factor = std::pow(2.0, level);
+				auto numGroups = workers / factor;
+				send("octave", 0);
+				send("doPerlinWorley", true);
+				glBindImageTexture(0, lowFreqNoise->buffer(), level, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+				glDispatchCompute(numGroups.x, numGroups.y, numGroups.z);
+			}
 
 			send("octave", 3);
 			send("doPerlinWorley", false);
 			glBindImageTexture(0, highFreqNoise->buffer(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 			glDispatchCompute(4, 4, 4);
 		});
-
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-		float* noise = new float[dim.x * dim.y * dim.z * 4];
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-		glBindTexture(GL_TEXTURE_3D, lowFreqNoise->buffer());
-		glGetTexImage(GL_TEXTURE_3D, 0, GL_RGBA, GL_FLOAT, (void*)noise);
-
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
-		ofstream fout;
-		fout.open("c:\\temp\\low_frequncy_noise.raw", std::ios_base::binary);
-		if (fout.good()) {
-			fout.write(reinterpret_cast<char*>(noise), dim.x * dim.y * dim.z * sizeof(float) * 4);
-			fout.flush();
-		}
-		fout.close();
-		delete[] noise;
 	}
 
 	void display() override {
@@ -242,7 +243,7 @@ public:
 		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
 		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
 		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
-	//	sFont->render(sbr.str(), 20, 20);
+		sFont->render(sbr.str(), 20, 20);
 	}
 
 	void renderNoise() {
@@ -276,47 +277,33 @@ public:
 	stringstream ss;
 	void renderClouds() {
 		//glEnable(GL_BLEND);
-		shader("ray_marching") ([&] {
-			//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			glBindTextureUnit(0, lowFreqNoise->buffer());
-			glBindTextureUnit(1, highFreqNoise->buffer());
-			send(activeCamera());
-			sendWeather();
-			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
-			send("stepSize", stepSize);
-			send("camPos", activeCamera().getPosition());
-			send("bMin", cube.aabbMin());
-			send("bMax", cube.aabbMax());
-			send("dt", Timer::get().timeSinceStart());
-			send("lightPos", vec3(50.0_km));
-			shade(cube);
-			glDisable(GL_BLEND);
-		});
+		//shader("ray_marching") ([&] {
+		//	//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		//	glEnable(GL_BLEND);
+		//	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		//	glBindTextureUnit(0, lowFreqNoise->buffer());
+		//	glBindTextureUnit(1, highFreqNoise->buffer());
+		//	send(activeCamera());
+		//	sendWeather();
+		//	send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+		//	send("stepSize", stepSize);
+		//	send("camPos", activeCamera().getPosition());
+		//	send("bMin", cube.aabbMin());
+		//	send("bMax", cube.aabbMax());
+		//	send("dt", Timer::get().timeSinceStart());
+		//	send("lightPos", vec3(50.0_km));
+		//	shade(cube);
+		//	glDisable(GL_BLEND);
+		//});
 		//glDisable(GL_BLEND);
 
-		//static bool once = true;
-		//if (once) {
-		//	once = false;
-			
-			//rayGenerator->getRaySSBO().read([&](rt::Ray* itr) {
-			//	for (int i = 0; i < 1; i++) {
-			//		auto ray = *(itr + i);
-			//		ss.str("");
-			//		ss.clear();
-			//		ss << "o: " << ray.origin << ", d: " << ray.direction;
-			//		logger.info(ss.str());
-			//	}
-			//});
-		//}
 
-		//shader("screen")([&] {
-		//	clouds->images().front().renderMode();
-		//	glBindTextureUnit(0, clouds->images().front().buffer());
-		//	glBindTextureUnit(0, lowFreqNoise->buffer());
-		//	shade(quad);
-		//});
+
+		shader("screen")([&] {
+			clouds->images().front().renderMode();
+			glBindTextureUnit(0, clouds->images().front().buffer());
+			shade(quad);
+		});
 	}
 
 	void sendWeather() {
@@ -339,10 +326,10 @@ public:
 	}
 
 	void update(float dt) {
-		//fb.use([&] {
-		//	renderSky();
-		//	renderFloor();
-		//});
+		fb.use([&] {
+			renderSky();
+			renderFloor();
+		});
 		setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 

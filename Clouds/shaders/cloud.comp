@@ -40,9 +40,10 @@ layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding=0) uniform image2D image;
 
 layout(binding = 1) uniform sampler2D canvas;
+layout(binding = 2) uniform sampler2D depthBuffer;
 
-layout(binding = 2) uniform sampler3D cloudNoiseLowFreq;
-//layout(binding = 3) uniform sampler3D clouldNoiseHighFreq;
+layout(binding = 3) uniform sampler3D cloudNoiseLowFreq;
+layout(binding = 4) uniform sampler3D clouldNoiseHighFreq;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
@@ -90,23 +91,24 @@ void main(){
 	float t = ray.tMax;
 	float t0;
 	vec4 color = vec4(0);
-//	if(intersectPlane(ray, vec3(0, 1, 0), 0, t0, uv)){
-//		t = t0;
-//		color.rgb = Checkerboard(uv);
-//	}
+	color.a = 1;
+	if(intersectPlane(ray, vec3(0, 1, 0), 0, t0, uv)){
+		t = t0;
+		color.rgb = Checkerboard(uv);
+	}
 
 	t0 = ray.tMax;
 	if(intersectPlane(ray, vec3(1, 0, 0), 0, t0, uv)){
-		//if(t0 < t){
+		if(t0 < t){
 			t = t0;
 			color.rgb = Checkerboard(uv);
 			color.a = 1;
-		//}
+		}
 	}
-	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
-	vec3 dest = texture(canvas, _uv).rgb;
+//	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
+//	vec3 dest = texture(canvas, _uv).rgb;
 
-	color.rgb = color.rgb + dest * (1 - color.a);
+	//color.rgb = color.rgb + dest * (1 - color.a);
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), color);
 }

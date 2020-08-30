@@ -3,6 +3,7 @@
 #include "gl_commands.h"
 #include <glm/vec2.hpp>
 #include <variant>
+#include <optional>
 #include <functional>
 #include <algorithm>
 #include "Image.h"
@@ -15,10 +16,53 @@
 namespace ncl {
 	namespace gl {
 
+		struct TextureConfig {
+			GLenum texTarget = GL_TEXTURE_2D;
+			GLint levels = 1;
+			GLint internalFmt = GL_RGBA8;
+			GLint fmt = GL_RGBA;
+			GLint border = 0;
+			GLfloat borderColor[4]{ 1.0f, 1.0f, 1.0f, 1.0f };
+			GLenum type = GL_UNSIGNED_BYTE;
+			GLenum magFilter = GL_LINEAR;
+			GLenum minfilter = GL_LINEAR;
+			GLenum wrap_s = GL_REPEAT;
+			GLenum wrap_t = GL_REPEAT;
+			GLenum wrap_r = GL_REPEAT;
+			GLsizei numLayers = 1;
+			bool mipMap = false;
+		};
+
 		struct Data {
-			void* contents;
+
+			Data() = delete;
+
+			constexpr Data(GLuint width, GLuint height, GLuint depth = 0):
+				Data(
+					static_cast<GLsizei>( width ),
+					static_cast<GLsizei>( height),
+					static_cast<GLsizei>( depth )
+				)
+			{}
+
+			constexpr Data(GLsizei width, GLsizei height, GLsizei depth = 0)
+				: contents{ {} }
+				, width{ width }
+				, height{ height }
+				, depth{ depth }
+			{}
+
+			constexpr Data(void* contents, GLsizei width, GLsizei height, GLsizei depth = 0)
+				: contents{ contents }
+				, width {width } 
+				, height{ height }
+				, depth{ depth }
+			{}
+
+			std::optional<void*> contents;
 			GLsizei width;
 			GLsizei height;
+			GLsizei depth;
 		};
 
 		using Content = std::variant<std::string, Data>;
@@ -49,7 +93,7 @@ namespace ncl {
 				return {
 					image.data(),
 					image.height(),
-					image.width()
+					image.width(),
 				};
 			}
 
@@ -227,6 +271,39 @@ namespace ncl {
 			//	delete[] data;
 			}
 
+			Texture3D(Content content, TextureConfig config, std::function<void()> extraOptions = [] {})
+			{
+				auto data = std::visit(TextureVisitor{}, content);
+				this->_width = data.width;
+				this->_height = data.height;
+				this->_depth = data.depth;
+
+				assert(_depth > 0);
+
+				auto contents = *data.contents;
+
+				glGenTextures(1, &_buffer);
+				glActiveTexture(TEXTURE(0));
+				glBindTexture(GL_TEXTURE_3D, _buffer);
+				glTexImage3D(GL_TEXTURE_3D, 0, config.internalFmt, _width, _height, _depth, 0, config.fmt, config.type, contents);
+				if (config.mipMap) {
+					glGenerateMipmap(GL_TEXTURE_3D);
+					glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
+					glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, config.levels);
+				}
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, config.wrap_s);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, config.wrap_t);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, config.wrap_r);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, config.minfilter);
+				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, config.magFilter);
+				extraOptions();
+
+				if (contents != nullptr) {
+					delete contents;
+				}
+
+			}
+
 			virtual ~Texture3D() {
 				glDeleteTextures(1, &_buffer);
 			}
@@ -242,11 +319,11 @@ namespace ncl {
 			inline GLuint depth() { return _depth; }
 
 		private:
-			GLuint _buffer;
-			GLuint _id;
-			GLuint _width;
-			GLuint _height;
-			GLuint _depth;
+			GLuint _buffer = 0;
+			GLuint _id = 0;
+			GLuint _width = 0;
+			GLuint _height = 0;
+			GLuint _depth = 0;
 
 
 		};
