@@ -3,7 +3,7 @@
 
 layout(binding=0, offset=0) uniform atomic_uint next_index;
 
-layout(std430, binding = 0) buffer DEPTH_CAPTURE{
+layout(std430, binding = 1) buffer DEPTH_CAPTURE{
 	float depth_values[];
 };
 
@@ -19,7 +19,7 @@ out vec4 fragColor;
 void main(){
 	atomicCounterIncrement(next_index);
 	int index = int(atomicCounter(next_index));
-	depth_values[index] = index;
+	depth_values[index] = gl_FragCoord.z;
 	fragColor = vec4(vec3(gl_FragCoord.z), 1);
 }
 

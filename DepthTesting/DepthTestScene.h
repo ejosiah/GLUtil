@@ -22,7 +22,10 @@ public:
 
 	void init() override {
 		cam.view = lookAt({ 0, 0, 20 }, vec3(0), { 0, 1, 0 });
+		cam.model = mat4(1);
+		cam.projection = perspective(quarter_pi<float>(), aspectRatio, 0.1f, 100.f);
 		points.emplace_back(0, 0, 10);
+		points.emplace_back(0, 0, 8);
 		points.emplace_back(1, 0, 8);
 		points.emplace_back(2, 0, 6);
 		points.emplace_back(3, 0, 4);
@@ -34,9 +37,10 @@ public:
 		mesh.colors = vector<vec4>{ points.size(), RED };
 		mesh.positions = vector<vec3>(begin(points), end(points));
 		point_mesh = ProvidedMesh{ mesh };
+		point_mesh.defautMaterial(false);
 
 		createNextIndex();
-		depth_values = StorageBufferObj<float>{ size_t{points.size()}, 0 };
+		depth_values = StorageBufferObj<float>{ size_t{points.size()}, 1 };
 
 		glPointSize(5.0);
 		setBackGroundColor(BLACK);
@@ -83,7 +87,7 @@ public:
 		}
 		sbr << "\n\nProjection Space points:\n";
 		std::transform(begin(xform_points), end(xform_points), begin(xform_points), [&](auto& p) {
-			auto out_p = cam.projection * cam.view * p;
+			auto out_p = cam.projection * cam.view * cam.model * p;
 			sbr << "\t" << out_p << "\n";
 			return out_p;
 			});
@@ -96,12 +100,12 @@ public:
 		
 
 		sbr << "\n\nDepth Values\n";
-		depth_values.read([&](float* itr) {
-			for (int i = 0; i < points.size(); i++) {
-				auto value = *(itr + i);
-				sbr << "\t" << value << "\n";
-			}
-		});
+		auto _near = 0.1f;
+		auto _far = 100.f;
+		for (auto& p : points) {
+			auto value = (1/p.z - 1/_near) / (1/_far - 1/_near);
+			sbr << "\t" << value << "\n";
+		}
 
 		sFont->render(sbr.str(), 10, 10);
 	}
