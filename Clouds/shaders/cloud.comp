@@ -8,6 +8,7 @@
 #define BLACK (vec3(0, 0, 0))
 
 const int MAX_SAMPLES = 10;
+const float EPSILSON = 0.000001; 
 
 
 struct Box{
@@ -54,10 +55,11 @@ uniform Weather weather;
 uniform Atmosphere atmosphere;
 uniform Box box;
 uniform vec3 stepDelta;
+uniform mat4 MVP;
 
 bool intersectPlane(Ray ray, vec3 n, float d, out float t, out vec2 uv);
 
-bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1);
+bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out float tn, out float tr);
 
 vec3 Checkerboard(vec2 uv);
 
@@ -83,32 +85,65 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather);
 
 vec4 test(vec2 uv);
 
+float depthValue(vec3 p);
+
 void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 
+
+	bool aHit = false;
 	vec2 uv;
 	float t = ray.tMax;
 	float t0;
 	vec4 color = vec4(0);
 	color.a = 1;
-	if(intersectPlane(ray, vec3(0, 1, 0), 0, t0, uv)){
-		t = t0;
-		color.rgb = Checkerboard(uv);
-	}
 
-	t0 = ray.tMax;
-	if(intersectPlane(ray, vec3(1, 0, 0), 0, t0, uv)){
+
+	Box box = Box(vec3(-1), vec3(9));
+
+	vec3 p0, p1;
+	float t1;
+	if(intersectCube(ray, box, uv, p0, p1, t0, t1)){
+		aHit = true;
 		if(t0 < t){
 			t = t0;
 			color.rgb = Checkerboard(uv);
-			color.a = 1;
 		}
 	}
-//	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
-//	vec3 dest = texture(canvas, _uv).rgb;
+	t0 = t0 < 0 ? t1 : t0;
+
+//	t0 = ray.tMax;
+//	if(intersectPlane(ray, vec3(0, 1, 0), 0, t0, uv)){
+//		aHit = true;
+//		if(t0 < t){
+//			t = t0;
+//			color.rgb = Checkerboard(uv);
+//		}
+//	}
+
+//	t0 = ray.tMax;
+//	if(intersectPlane(ray, vec3(1, 0, 0), 0, t0, uv)){
+//		if(t0 < t){
+//			t = t0;
+//			color.rgb = Checkerboard(uv);
+//			color.a = 1;
+//		}
+//	}
+	vec2 _uv = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
+	vec3 dest = texture(canvas, _uv).rgb;
 
 	//color.rgb = color.rgb + dest * (1 - color.a);
+	//color.rgb = dest;
+
+	vec3 p = ray.origin + ray.direction * t0;
+	float depthSrc = depthValue(p);
+	float depthDest = texture(depthBuffer, _uv).r;
+	if(aHit && depthSrc < depthDest){
+		color.rgb = color.rgb + dest * (1 - color.a);
+	}else{
+		color.rgb = dest;
+	}
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), color);
 }
@@ -120,16 +155,25 @@ int globalIndex(){
 	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
 }
 
+bool pointInBox(Box box, vec3 p){
+	return dot(sign(p - box.min), sign(box.max -p)) == 3;
+}
 
-bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out float t) {
+
+bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out float tn, out float tf) {	
+	
+	bvec3 rayParallelToSlab = lessThan(abs(ray.direction), vec3(EPSILSON));
+
+	if(any(rayParallelToSlab) && pointInBox(box, ray.origin)) return false;
+
 	vec3   tMin = (box.min - ray.origin) / ray.direction;
 	vec3   tMax = (box.max - ray.origin) / ray.direction;
 	vec3     t1 = min(tMin, tMax);
 	vec3     t2 = max(tMin, tMax);
-	float tn = max(max(t1.x, t1.y), t1.z);
-	float tf = min(min(t2.x, t2.y), t2.z);
+	tn = max(max(t1.x, t1.y), t1.z);
+	tf = min(min(t2.x, t2.y), t2.z);
 
-	if (tn > ray.tMax) return false;
+	if (tn > ray.tMax || tf < 0) return false;
 
 	p0 = ray.origin + tn * ray.direction;
 	p1 = ray.origin + tf * ray.direction;
@@ -138,7 +182,6 @@ bool intersectCube(Ray ray, Box box, out vec2 uv, out vec3 p0, out vec3 p1, out 
 	orthonormalBasis(n, x, y);
 	uv = vec2(dot(p0, x)/5, dot(p0, y)/5);
 	uv = abs(uv);
-	t = tn;
 	return tn < tf;
 }
 
@@ -400,4 +443,11 @@ vec4 traceRay1(Ray ray, Atmosphere atmosphere, Weather weather){
 
 
 	return vec4(0);
+}
+
+float depthValue(vec3 p){
+	vec4 pos = MVP * vec4(p, 1);
+
+	// apply perspective division and remap from [-1, 1] to [0, 1]
+	return (pos.z/pos.w) * 0.5 + 0.5;
 }

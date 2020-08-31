@@ -31,10 +31,11 @@ class CloudScene : public Scene {
 public:
 	CloudScene() :Scene{ "Perlin-Worley Clouds", WIDTH, HEIGHT } {
 	//	_fullScreen = true;
-	//	camInfoOn = true;
+		camInfoOn = true;
 	//	_hideCursor = false;
 	//	_requireMouse = true;
 		_fontSize = 15;
+		_fontColor = WHITE;
 		addShader("render", GL_VERTEX_SHADER, screen_vert_shader);
 		addShader("phong", GL_VERTEX_SHADER, phong_lfp_vert_shader);
 		//		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
@@ -165,6 +166,7 @@ public:
 			glBindTextureUnit(2, fb.texture(1));
 			glBindTextureUnit(3, lowFreqNoise->buffer());
 			rayGenerator->getRaySSBO().sendToGPU();
+			send(activeCamera());
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
 			send("box.min", vec3(0));
@@ -239,11 +241,15 @@ public:
 
 		sbr.str("");
 		sbr.clear();
-		sbr << "Weather Data:\n";
-		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
-		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
-		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
-		sFont->render(sbr.str(), 20, 20);
+		//sbr << "Weather Data:\n";
+		//sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
+		//sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
+		//sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
+		//sFont->render(sbr.str(), 20, 20);
+		if (showRay) {
+			sbr << "origin: " << ray.origin << ", direction: " << ray.direction;
+			sFont->render(sbr.str(), 20, 100);
+		}
 	}
 
 	void renderNoise() {
@@ -276,34 +282,31 @@ public:
 	}
 	stringstream ss;
 	void renderClouds() {
-		//glEnable(GL_BLEND);
-		//shader("ray_marching") ([&] {
-		//	//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		//	glEnable(GL_BLEND);
-		//	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		//	glBindTextureUnit(0, lowFreqNoise->buffer());
-		//	glBindTextureUnit(1, highFreqNoise->buffer());
-		//	send(activeCamera());
-		//	sendWeather();
-		//	send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
-		//	send("stepSize", stepSize);
-		//	send("camPos", activeCamera().getPosition());
-		//	send("bMin", cube.aabbMin());
-		//	send("bMax", cube.aabbMax());
-		//	send("dt", Timer::get().timeSinceStart());
-		//	send("lightPos", vec3(50.0_km));
-		//	shade(cube);
-		//	glDisable(GL_BLEND);
-		//});
-		//glDisable(GL_BLEND);
-
-
-
-		shader("screen")([&] {
-			clouds->images().front().renderMode();
-			glBindTextureUnit(0, clouds->images().front().buffer());
-			shade(quad);
+		shader("ray_marching") ([&] {
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			glBindTextureUnit(0, lowFreqNoise->buffer());
+			glBindTextureUnit(1, highFreqNoise->buffer());
+			send(activeCamera());
+			sendWeather();
+			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+			send("stepSize", stepSize);
+			send("camPos", activeCamera().getPosition());
+			send("bMin", cube.aabbMin());
+			send("bMax", cube.aabbMax());
+			send("dt", Timer::get().timeSinceStart());
+			send("lightPos", vec3(50.0_km));
+			shade(cube);
+			glDisable(GL_BLEND);
 		});
+
+
+
+		//shader("screen")([&] {
+		//	clouds->images().front().renderMode();
+		//	glBindTextureUnit(0, clouds->images().front().buffer());
+		//	shade(quad);
+		//});
 	}
 
 	void sendWeather() {
@@ -358,6 +361,10 @@ public:
 			case 'I':
 				weather.percipitation -= 0.01;
 				break;
+			case 'l':
+				rayGenerator->getRaySSBO().read([&](rt::Ray* itr) { ray = *itr; });
+				showRay = true;
+				break;
 			}
 			weather.cloud_coverage = glm::clamp(weather.cloud_coverage, 0.1f, 0.9f);
 			weather.cloud_type = glm::clamp(weather.cloud_type, 0.0f, 1.0f);
@@ -390,5 +397,7 @@ private:
 	SkyBox* skybox;
 	Compute* clouds;
 	FrameBuffer fb;
+	rt::Ray ray;
+	bool showRay = false;
 	int slice = 0;
 };

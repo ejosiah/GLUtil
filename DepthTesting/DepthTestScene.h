@@ -31,6 +31,7 @@ public:
 		points.emplace_back(3, 0, 4);
 		points.emplace_back(4, 0, 2);
 		points.emplace_back(5, 0, 0);
+		points.emplace_back(0, 0, 21);
 
 		Mesh mesh;
 		mesh.primitiveType = GL_POINTS;
@@ -102,8 +103,8 @@ public:
 		sbr << "\n\nDepth Values\n";
 		auto _near = 0.1f;
 		auto _far = 100.f;
-		for (auto& p : points) {
-			auto value = (1/p.z - 1/_near) / (1/_far - 1/_near);
+		for (auto& p : xform_points) {
+			auto value = (p.z/p.w) * 0.5 + 0.5;
 			sbr << "\t" << value << "\n";
 		}
 
