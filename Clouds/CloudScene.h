@@ -59,7 +59,7 @@ public:
 	//	activeCamera().setVelocity(vec3(50));
 	//	deactivateCameraControl();
 	//	activeCamera().setAcceleration(vec3(100));
-		activeCamera().setPosition({ 0, 0, 100 });
+		activeCamera().setPosition({ 0, 0, 10 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -247,7 +247,11 @@ public:
 		//sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
 		//sFont->render(sbr.str(), 20, 20);
 		if (showRay) {
+			auto p = ray.origin + ray.direction * 10.0f;
+			auto d = depthValue(p);
 			sbr << "origin: " << ray.origin << ", direction: " << ray.direction;
+			sbr << "\nposition: " << p;
+			sbr << "\ndepth value: " << d;
 			sFont->render(sbr.str(), 20, 100);
 		}
 	}
@@ -282,31 +286,31 @@ public:
 	}
 	stringstream ss;
 	void renderClouds() {
-		shader("ray_marching") ([&] {
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			glBindTextureUnit(0, lowFreqNoise->buffer());
-			glBindTextureUnit(1, highFreqNoise->buffer());
-			send(activeCamera());
-			sendWeather();
-			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
-			send("stepSize", stepSize);
-			send("camPos", activeCamera().getPosition());
-			send("bMin", cube.aabbMin());
-			send("bMax", cube.aabbMax());
-			send("dt", Timer::get().timeSinceStart());
-			send("lightPos", vec3(50.0_km));
-			shade(cube);
-			glDisable(GL_BLEND);
-		});
-
-
-
-		//shader("screen")([&] {
-		//	clouds->images().front().renderMode();
-		//	glBindTextureUnit(0, clouds->images().front().buffer());
-		//	shade(quad);
+		//shader("ray_marching") ([&] {
+		//	glEnable(GL_BLEND);
+		//	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		//	glBindTextureUnit(0, lowFreqNoise->buffer());
+		//	glBindTextureUnit(1, highFreqNoise->buffer());
+		//	send(activeCamera());
+		//	sendWeather();
+		//	send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+		//	send("stepSize", stepSize);
+		//	send("camPos", activeCamera().getPosition());
+		//	send("bMin", cube.aabbMin());
+		//	send("bMax", cube.aabbMax());
+		//	send("dt", Timer::get().timeSinceStart());
+		//	send("lightPos", vec3(50.0_km));
+		//	shade(cube);
+		//	glDisable(GL_BLEND);
 		//});
+
+
+
+		shader("screen")([&] {
+			clouds->images().front().renderMode();
+			glBindTextureUnit(0, clouds->images().front().buffer());
+			shade(quad);
+		});
 	}
 
 	void sendWeather() {
@@ -370,6 +374,22 @@ public:
 			weather.cloud_type = glm::clamp(weather.cloud_type, 0.0f, 1.0f);
 			weather.percipitation = glm::clamp(weather.percipitation, 0.0f, 1.0f);
 		}
+	}
+
+	float depthValue(vec3 p) {
+		auto MVP = activeCamera().getViewProjectionMatrix();
+		vec4 pos = MVP * vec4(p, 1);
+
+		if (pos.w == 0) return 1;
+
+		// apply perspective division
+		float d = pos.z / pos.w;
+
+		// outside NDC [-1, 1]
+		if (d < -1 || d > 1) return 1;
+
+		// remap from NDC [-1, 1] to screen space [0, 1]
+		return d * 0.5 + 0.5;
 	}
 
 private:

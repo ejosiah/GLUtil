@@ -31,7 +31,7 @@ public:
 		points.emplace_back(3, 0, 4);
 		points.emplace_back(4, 0, 2);
 		points.emplace_back(5, 0, 0);
-		points.emplace_back(0, 0, 21);
+		points.emplace_back(0, 0, 19.5);
 
 		Mesh mesh;
 		mesh.primitiveType = GL_POINTS;
