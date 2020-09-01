@@ -52,14 +52,14 @@ public:
 		glDisable(GL_CULL_FACE);
 		setForeGroundColor(WHITE);
 		_modelHeight = 5.0f;
-		bounds(vec3(-100.0_km), vec3(100.0_km));
+		bounds(vec3(-1.0_km), vec3(1.0_km));
 		initDefaultCamera();
-		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
+		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 1.0_km);
 	//	activeCamera().collisionTestOff();
 	//	activeCamera().setVelocity(vec3(50));
 	//	deactivateCameraControl();
 	//	activeCamera().setAcceleration(vec3(100));
-		activeCamera().setPosition({ 0, 0, 10 });
+		activeCamera().setPosition({ 0, 0, 100 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -169,10 +169,14 @@ public:
 			send(activeCamera());
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
-			send("box.min", vec3(0));
-			send("box.max", vec3(10));
 			send("dt", Timer::get().timeSinceStart());
-			send("stepDelta", stepSize);
+			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+			send("stepSize", stepSize);
+			send("camPos", activeCamera().getPosition());
+			send("bMin", cube.aabbMin());
+			send("bMax", cube.aabbMax());
+			send("dt", Timer::get().timeSinceStart());
+			send("lightPos", vec3(50.0_km));
 			sendWeather();
 
 		} };
@@ -334,7 +338,7 @@ public:
 
 	void update(float dt) {
 		fb.use([&] {
-			renderSky();
+		//	renderSky();
 			renderFloor();
 		});
 		setBackGroundColor({ 0.5, 0.5, 1, 1 });

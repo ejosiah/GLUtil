@@ -2,6 +2,10 @@
 
 #pragma compile(on)
 
+struct Box{
+	vec3 min;
+	vec3 max;
+};
 
 struct Weather{
 	float cloud_coverage;

@@ -150,10 +150,10 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 }
 
 
-vec4 matchCloud(vec3 origin, vec4 direction){
+vec4 matchCloud(vec3 origin, vec3 direction){
 	
 	
-	fragColor = vec4(0);
+	vec4 fragColor = vec4(0);
 	vec3 dataPos = origin;
 //	dataPos += (weather.wind_direciton + vec3(0, 0.1, 0)) * dt * weather.cloud_speed;
 
