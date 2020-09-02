@@ -117,9 +117,9 @@ public:
 		light[0].position = vec4{ lightPos, 1 };
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
-		outer = new Hemisphere{ 10000, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 50, 0 });
-		xform = scale(xform, vec3(100));
+		outer = new Hemisphere{ 400, 20, 20, GREEN };
+		auto xform = translate(mat4(1), { 0, 500, 0 });
+		xform = scale(xform, vec3(1000));
 	//	auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
@@ -127,7 +127,9 @@ public:
 		cubeAABB = aabbOutline(cube.aabb(), BLACK);
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
-		weather.cloud_coverage = 0.65;
+		weather.cloud_coverage = 0.70;
+		weather.cloud_type = 0.8;
+		weather.percipitation = 1.0;
 		cloudUI = new CloudUI{ weather, *this };
 
 		auto config = FrameBuffer::defaultConfig(_width, _height);
@@ -142,7 +144,7 @@ public:
 		depthAttach.type = GL_FLOAT;
 		depthAttach.attachment = GL_DEPTH_ATTACHMENT;
 		config.attachments.push_back(depthAttach);
-
+		config.clearColor = vec4(0.53, 0.81, 0.92, 1.0);
 		config.depthTest = true;
 		config.stencilTest = false;
 		config.depthAndStencil = false;
@@ -341,7 +343,7 @@ public:
 		//	renderSky();
 			renderFloor();
 		});
-		setBackGroundColor({ 0.5, 0.5, 1, 1 });
+	//	setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 
 	void processInput(const Key& key) override {

@@ -13,7 +13,7 @@ vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
 float henyeyGreenstein(vec3 lightDir, vec3 viewDir, float g){
 	vec3 L = normalize(lightDir);
 	vec3 V = normalize(viewDir);
-	float _2gcos0 = 2 * g * dot(L, V);
+	float _2gcos0 = 2 * g * max(0, dot(L, V));
 	float gg = g * g;
 	float num = 1 - gg;
 	float denum = _4_PI * pow(1 + gg - _2gcos0, 1.5);
