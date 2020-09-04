@@ -13,13 +13,14 @@ namespace ncl {
 		public:
 			RayGenerator(){}
 
-			RayGenerator(gl::Scene& scene, gl::StorageBufferObj<Camera>& camera_ssbo)
+			RayGenerator(gl::Scene& scene, gl::StorageBufferObj<Camera>& camera_ssbo, float tMax = 10000)
 				: Compute{ glm::vec3{ scene.width() / 32.0f, scene.height() / 32.0f, 1.0f }
 					, {}
 					, &scene.shader("generate_rays") }
 				, scene{ &scene }
 				, camera_ssbo{ &camera_ssbo }
 				, numRays{ size_t(scene.width() * scene.height()) }
+				, tMax{ tMax }
 			{
 				rays = gl::StorageBufferObj<Ray>{ numRays, 1 };
 				scene.shader("generate_rays").use([&] {
@@ -31,6 +32,7 @@ namespace ncl {
 				ray_tracing::update(*camera_ssbo->get(), *scene);
 				auto cam = camera_ssbo->get();
 				camera_ssbo->sendToGPU();
+				_shader->sendUniform1f("tMax", tMax);
 				//rays.sendToGPU(false);
 			}
 
@@ -47,6 +49,7 @@ namespace ncl {
 			gl::StorageBufferObj<Camera>* camera_ssbo;
 			gl::StorageBufferObj<Ray> rays;
 			size_t numRays;
+			float tMax;
 		};
 	}
 }

@@ -156,7 +156,7 @@ namespace ncl {
 			viewProjMatrix = projMatrix * viewMatrix;
 
 			this->fovx = fovx;
-			aspectRatio = aspect;
+			this->aspectRatio = aspect;
 			this->znear = znear;
 			this->zfar = zfar;
 		}

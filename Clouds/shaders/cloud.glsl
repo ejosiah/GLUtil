@@ -6,6 +6,11 @@ float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
 
+
+vec2 remap(vec2 x, vec2 a, vec2 b, vec2 c, vec2 d) {
+	return (((x - a) / (b - a)) * (d - c)) + c;
+}
+
 vec3 remap(vec3 x, vec3 a, vec3 b, vec3 c, vec3 d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
 }
@@ -24,25 +29,36 @@ float henyeyGreenstein(vec3 lightDir, vec3 viewDir, float g){
 vec2 curlNoise(vec2 uv);
 
 vec3 sampleCoord(vec3 p){
-	return remap(p, bMin, bMax, vec3(0), vec3(1));
-	//return p/100;
+	//return remap(p, bMin, bMax, vec3(0), vec3(5));
+	return p/1000;
+}
+
+vec2 weatherSampleCoord(vec3 p) {
+	return remap(p.xz, -vec2(tMax), vec2(tMax), vec2(0), vec2(1));
 }
 
 float saturate(float val){
 	return clamp(val, 0, 1);
 }
 
-float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
-	float height_fraction = (pos.y - bMin.y);
-	height_fraction /= (bMax.y - bMin.y);
+//float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
+//	float height_fraction = (pos.y - bMin.y);
+//	height_fraction /= (bMax.y - bMin.y);
+//
+//	return saturate(height_fraction);
+//}
 
+float heightFractionForPoint(vec3 pos) {
+	float height_fraction = distance(pos, cloudMin) / distance(cloudMin, cloudMax);
 	return saturate(height_fraction);
 }
 
 float densityHeightGradientForPoint(vec3 p, Weather weather){
 	
-	float height = heightFractionForPoint(p, cloudMinMax);
+	float height = heightFractionForPoint(p);
 	float cloud_type = weather.cloud_type;
+//	vec2 uv = weatherSampleCoord(p);
+//	float cloud_type = texture(weatherData, uv).b;
 
 	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
 	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -73,13 +89,16 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 
 	float cloud_coverage = weather.cloud_coverage;
+	//vec2 uv = weatherSampleCoord(p);
+	//float cloud_coverage = texture(weatherData, uv).r;
 
 	float base_cloud_with_coverage = remap(base_cloud, 1 - cloud_coverage, 1.0, 0.0, 1.0);
 
 	base_cloud_with_coverage *= cloud_coverage;
 
 //	return base_cloud_with_coverage;
-   float height_fraction = heightFractionForPoint(p, cloudMinMax);
+	
+   float height_fraction = heightFractionForPoint(p);
 
 	vec2 curl = curlNoise(densityCoord.xy * dt);
 	p.xz = curl * (1 - height_fraction);
@@ -90,7 +109,7 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	float high_freq_fbm = dot(high_frequency_noise, vec3(0.625, 0.25, 0.125));
 
-	height_fraction = heightFractionForPoint(p, cloudMinMax);
+	height_fraction = heightFractionForPoint(p);
 
 	float high_freq_noise_modifier = mix(high_freq_fbm, 1 - high_freq_fbm, saturate(height_fraction * 10));
 
@@ -152,21 +171,30 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 
 vec4 matchCloud(vec3 origin, vec3 direction){
 	
+	vec3 windDir = vec3(1, 0, 0);
+	float cloud_speed = 10.0;
+	float cloud_top_offset = 10.0;
+	float height_fraction = heightFractionForPoint(origin);
+	vec3 p = origin + height_fraction * windDir * cloud_top_offset;
+	p += (windDir + vec3(0, 0.1, 0)) * dt * cloud_speed;
 	
 	vec4 fragColor = vec4(0);
+	//vec3 dataPos = p;
 	vec3 dataPos = origin;
 //	dataPos += (weather.wind_direciton + vec3(0, 0.1, 0)) * dt * weather.cloud_speed;
 
 	vec3 geomDir = normalize(direction);
-	vec3 stepSize = (bMax-bMin)/textureSize(cloudNoiseLowFreq, 0);
+	//vec3 stepSize = (bMax-bMin)/textureSize(cloudNoiseLowFreq, 0);
+	float samples = textureSize(cloudNoiseLowFreq, 0).x;
+	vec3 stepSize = (cloudMax - cloudMin)/ samples;
 	vec3 dirStep = geomDir * stepSize;
 
 	bool stop = false;
 
-	for(int i = 0; i < MAX_SAMPLES; i++){
+	for(int i = 0; i < samples; i++){
 		dataPos += dirStep;
 
-		stop = dot(sign(dataPos - bMin), sign(bMax - dataPos)) < 3;
+	//	stop = dot(sign(dataPos - bMin), sign(bMax - dataPos)) < 3;
 
 		if(stop) break;
 
@@ -178,7 +206,10 @@ vec4 matchCloud(vec3 origin, vec3 direction){
 		float energy = 1;
 		if(density != 0){
 			float d = sampleCloudDensityAlongCone(dataPos, dirStep);
-			energy = 200 * lightEnergy(d, weather.precipitation, eccentricity, dataPos, camPos, lightPos);
+			//vec2 uv = weatherSampleCoord(dataPos);
+			//float p = texture(weatherData, uv).g;
+			float p = weather.precipitation;
+			energy = 200 * lightEnergy(d, p, eccentricity, dataPos, camPos, lightPos);
 		}
 
 		float prev_alpha = density - (density * fragColor.a);

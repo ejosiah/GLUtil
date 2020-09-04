@@ -286,6 +286,7 @@ namespace ncl {
 				glActiveTexture(TEXTURE(0));
 				glBindTexture(GL_TEXTURE_3D, _buffer);
 				glTexImage3D(GL_TEXTURE_3D, 0, config.internalFmt, _width, _height, _depth, 0, config.fmt, config.type, contents);
+				extraOptions();
 				if (config.mipMap) {
 					glGenerateMipmap(GL_TEXTURE_3D);
 					glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
@@ -296,7 +297,7 @@ namespace ncl {
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, config.wrap_r);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, config.minfilter);
 				glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, config.magFilter);
-				extraOptions();
+				
 
 				if (contents != nullptr) {
 					delete contents;

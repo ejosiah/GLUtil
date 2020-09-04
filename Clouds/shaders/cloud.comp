@@ -45,6 +45,7 @@ layout(binding = 2) uniform sampler2D depthBuffer;
 
 layout(binding = 3) uniform sampler3D cloudNoiseLowFreq;
 layout(binding = 4) uniform sampler3D cloudNoiseHighFreq;
+layout(binding = 5) uniform sampler2D weatherData;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
@@ -65,6 +66,11 @@ uniform vec3 bMax;
 uniform vec2 cloudMinMax;
 uniform float eccentricity = 0.2;
 uniform vec3 lightPos = vec3(20);
+uniform float r0;
+uniform float r1;
+uniform vec3 center;
+uniform float tMax;
+vec3 cloudMin, cloudMax;
 
 bool intersectPlane(Ray ray, vec3 n, float d, out float t, out vec2 uv);
 
@@ -76,7 +82,9 @@ void orthonormalBasis(vec3 n, out vec3 x, out vec3 y);
 
 int globalIndex();
 
-bool intersectSphere(Ray ray, float radius, out vec3 p);
+bool intersectSphere(Ray ray, float radius, vec3 center, out float t0, out float t1);
+
+bool intersectShell(Ray ray, float r0, float r1, vec3 center, out vec3 p, out vec3 cloudMin, vec3 cloudMax);
 
 float depthValue(vec3 p);
 
@@ -92,28 +100,37 @@ void main(){
 	float t = ray.tMax;
 	float t0;
 	vec4 color = vec4(0);
-	color.a = 1;
+	color.a = 0.5;
 
 
 	Box box = Box(bMin, bMax);
 
 	vec3 p0, p1;
 	float t1;
-	if(intersectCube(ray, box, uv, p0, p1, t0, t1)){
+//	if(intersectCube(ray, box, uv, p0, p1, t0, t1)){
+//		aHit = true;
+//		if(t0 < t){
+//			t = t0;
+//			color.rgb = Checkerboard(uv);
+//		}
+//	}
+//
+	vec3 p;
+	if(intersectShell(ray, r0, r1, center, p, cloudMin, cloudMax)){
 		aHit = true;
-		if(t0 < t){
-			t = t0;
-			color.rgb = Checkerboard(uv);
-		}
+	//	color = vec4(1, 0, 0, 1);
 	}
-	t0 = t0 < 0 ? t1/10 : t0;
 
-	vec3 p = ray.origin + ray.direction * t0;
+//	t0 = t0 < 0 ? t1/10 : t0;
+//	t0 = t0 < 0 ? t1 : t0;
+
+//	vec3 p = ray.origin + ray.direction * t0;
 	float depthSrc = depthValue(p);
 	float depthDest = texture(depthBuffer, fragCoord).r;
 	if(aHit && depthSrc < depthDest){
 		vec3 dest = texture(canvas, fragCoord).rgb;
-		color = matchCloud(p, ray.direction);
+		color =  matchCloud(p, ray.direction);
+	//	color = vec4(1, 0, 0, 0.5);
 		color.rgb = color.rgb + dest * (1 - color.a);
 	}else{
 		color.rgb = texture(canvas, fragCoord).rgb;
@@ -185,8 +202,8 @@ bool intersectPlane(Ray ray, vec3 n, float d, out float t, out vec2 uv) {
 }
 
 
-bool intersectSphere(Ray ray, float radius, out vec3 p){
-	vec3 cs = vec3(0, 0, 0);
+bool intersectSphere(Ray ray, float radius,  vec3 center, out float t0, out float t1){
+	vec3 cs = center;
 	vec3 m = ray.origin - cs;
 	float b = dot(m, ray.direction);
 	float c = dot(m , m) - radius * radius;
@@ -199,14 +216,33 @@ bool intersectSphere(Ray ray, float radius, out vec3 p){
 	// sqrt(-discr) imaginary number corresponds to ray missing sphere
 	if(discr < 0) return false; 
 
-	float t = 0;
-	t = -b - sqrt(discr);
-	
-	p = ray.origin + ray.direction * t;
+	//t = 0;
+	t0 = -b - sqrt(discr);
+	t1 = -b + sqrt(discr);
 
 	return true;
 }
 
+
+bool intersectShell(Ray ray, float r0, float r1, vec3 center, out vec3 p, out vec3 cloudMin, vec3 cloudMax){
+	
+	float t0, t1, t2, t3;
+	bool inner = intersectSphere(ray, r0, center, t0, t1);
+
+	if(inner){
+		if(t0 < 0){ // we are inside inner atmosphere
+			p = ray.origin + ray.direction * t1;
+			cloudMin = p;
+			intersectSphere(ray, r1, center, t0, t1);	// this should always be true
+			cloudMax = ray.origin + ray.direction * t1;
+			return true;
+		}
+		// TODO when we are between outer and inner atmosphere
+		// when we are above outer atmosphere
+	}
+
+	return false;
+}
 
 void orthonormalBasis(vec3 n, out vec3 x, out vec3 y) {
 	float s = n.z >= 0.0 ? 1.0 : -1.0;
