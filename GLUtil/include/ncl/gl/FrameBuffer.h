@@ -72,14 +72,14 @@ namespace ncl {
 			}
 
 			inline void setTexture(Texture2D* texture, int index = 0) {
-				setTexture(texture->bufferId(), 0);
+				setTexture(texture->buffer(), 0);
 			}
 
 			inline void setTexture(Texture3D* texture, int index = 0) {
 				setTexture(texture->buffer(), 0);
 			}
 			inline void setTexture(Texture2D& texture, int index = 0) {
-				setTexture(texture.bufferId(), 0);
+				setTexture(texture.buffer(), 0);
 			}
 
 			inline void setTexture(Texture3D& texture, int index = 0) {

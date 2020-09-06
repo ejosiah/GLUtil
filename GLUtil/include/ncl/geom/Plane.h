@@ -27,6 +27,10 @@ namespace ncl {
 				d = dot(n, a);
 			}
 
+			explicit operator glm::vec4() const {
+				return glm::vec4(n, d);
+			}
+
 			static Plane Null() {
 				auto inf = std::numeric_limits<float>::infinity();
 				return { {inf, inf, inf}, inf };

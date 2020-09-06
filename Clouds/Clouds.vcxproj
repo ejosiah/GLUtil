@@ -146,6 +146,7 @@
     <None Include="shaders\cloud.glsl" />
     <None Include="shaders\clouds.frag" />
     <None Include="shaders\clouds.vert" />
+    <None Include="shaders\frustum_cull.geom" />
     <None Include="shaders\fun_def.comp" />
     <None Include="shaders\generate_rays.comp" />
     <None Include="shaders\noise.comp" />
@@ -156,10 +157,15 @@
     <None Include="shaders\render.frag" />
     <None Include="shaders\sky.frag" />
     <None Include="shaders\sky.vert" />
+    <None Include="shaders\terrain.frag" />
+    <None Include="shaders\terrain.geom" />
+    <None Include="shaders\terrain.tese" />
+    <None Include="shaders\terrain.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h" />
     <ClInclude Include="CloudUI.h" />
+    <ClInclude Include="Terrain.h" />
     <ClInclude Include="Weather.h" />
   </ItemGroup>
   <ItemGroup>

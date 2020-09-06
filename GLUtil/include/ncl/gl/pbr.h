@@ -103,23 +103,23 @@ namespace ncl {
 			}
 
 			inline GLuint albedo() {
-				return _albedo->bufferId();
+				return _albedo->buffer();
 			}
 
 			inline GLuint normal() {
-				return _normal->bufferId();
+				return _normal->buffer();
 			}
 
 			inline GLuint metalness() {
-				return _metalness->bufferId();
+				return _metalness->buffer();
 			}
 
 			inline GLuint roughness() {
-				return _roughness->bufferId();
+				return _roughness->buffer();
 			}
 
 			inline GLuint ambientOcclusion() {
-				return _ambientOcclusion->bufferId();
+				return _ambientOcclusion->buffer();
 			}
 
 		private:

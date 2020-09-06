@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <memory>
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/common.h"
@@ -15,6 +16,7 @@
 #include "../GLUtil/include/ncl/ray_tracing/RayGenerator.h"
 #include "Weather.h"
 #include "CloudUI.h"
+#include "Terrain.h"
 
 using namespace std;
 using namespace glm;
@@ -49,17 +51,19 @@ public:
 	}
 
 	void init() override {
+		
 		glDisable(GL_CULL_FACE);
 		setForeGroundColor(WHITE);
 		_modelHeight = 5.0f;
-		bounds(vec3(-1.0_km), vec3(1.0_km));
+		bounds(vec3(-30.0_km), vec3(30.0_km));
 		initDefaultCamera();
-		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 1.0_km);
+		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
 	//	activeCamera().collisionTestOff();
-	//	activeCamera().setVelocity(vec3(50));
+		activeCamera().setVelocity(vec3(100));
 	//	deactivateCameraControl();
-	//	activeCamera().setAcceleration(vec3(100));
-		activeCamera().setPosition({ 0, 0, 100 });
+		activeCamera().setAcceleration(vec3(100));
+		activeCamera().setPosition({ -26, 8000, -260 });
+	//	activeCamera().setPosition({ 0, 100, 0 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -78,6 +82,7 @@ public:
 
 		fontColor(BLACK);
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		
 		//lowFreqNoise = new Texture3D{
 		//	noise,
 		//	dim.x,
@@ -91,6 +96,8 @@ public:
 		//	GL_FLOAT
 		//};
 
+		weatherData = new Texture2D{ "C:\\Users\\Josiah\\OneDrive\\media\\textures\\weather\\weather07.png" };
+
 		lowFreqNoise = new Texture3D{ data, texConfig };
 
 		highFreqNoise = new Texture3D{
@@ -102,7 +109,7 @@ public:
 			GL_RGBA32F,
 			GL_RGBA,
 			glm::vec3{ GL_REPEAT },
-			glm::vec2{ GL_LINEAR },
+			glm::vec2{ GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR },
 			GL_FLOAT
 		};
 
@@ -118,7 +125,7 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 400, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 500, 0 });
+		auto xform = translate(mat4(1), { 0, 1000, 0 });
 		xform = scale(xform, vec3(1000));
 	//	auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
@@ -127,10 +134,37 @@ public:
 		cubeAABB = aabbOutline(cube.aabb(), BLACK);
 	//	cube = Cube{ 1, WHITE};
 		sphere = Sphere{ 0.5 };
-		weather.cloud_coverage = 0.70;
-		weather.cloud_type = 0.8;
-		weather.percipitation = 1.0;
+		weather.cloud_coverage = 1.0;
+		weather.cloud_type = 1.0;
+		weather.percipitation = 0;
 		cloudUI = new CloudUI{ weather, *this };
+
+		auto image = Image{ "media\\mount_everest.png" };
+		auto d = image.data();
+		vec3 vMin = vec3(numeric_limits<float>::max());
+		vec3 vMax = vec3(numeric_limits<float>::min());
+		for (int i = 0; i < image.height(); i++) {
+			for (int j = 0; j < 1; j++) {
+				int id = (i * image.width() + j) * 4;
+				vec3 height;
+				height.r = *(d + id)/255.0f;
+				height.g = *(d + id + 1)/255.0f;
+				height.b = *(d + id + 2)/255.0f;
+
+				vMin = glm::min(height, vMin);
+				vMax = glm::max(height, vMax);
+
+			}
+		}
+
+		sbr << "min height: " << vMin;
+		sbr << "\nmax height: " << vMax;
+		logger.info(sbr.str());
+		sbr.str("");
+		sbr.clear();
+
+		terrain = std::make_unique<Terrain>(*this, float(2.0_km), 1000.0f, "media\\mount_everest.png");
+
 
 		auto config = FrameBuffer::defaultConfig(_width, _height);
 		config.attachments[0].internalFmt = GL_RGBA32F;
@@ -150,6 +184,8 @@ public:
 		config.depthAndStencil = false;
 		fb = FrameBuffer{ config };
 
+		
+
 		rayInit();
 	}
 
@@ -162,16 +198,24 @@ public:
 		ivec3 workers = ivec3{ _width/32, _height / 32, 1 };
 
 		Image2D image = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "scene", 0};
+		sample_point = StorageBufferObj<vec4>{ size_t(_width * _height), 2 };
+		sample_point.read([&](vec4* p) {
+			for (int i = 0; i < _width * _height; i++) {
+				*(p + i) = vec4(0);
+			}
+			});
 
 		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
 			glBindTextureUnit(1, fb.texture());
 			glBindTextureUnit(2, fb.texture(1));
 			glBindTextureUnit(3, lowFreqNoise->buffer());
+			glBindTextureUnit(4, highFreqNoise->buffer());
+			glBindTextureUnit(5, weatherData->buffer());
+			sample_point.sendToGPU();
 			rayGenerator->getRaySSBO().sendToGPU();
 			send(activeCamera());
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
-			send("dt", Timer::get().timeSinceStart());
 			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
@@ -182,6 +226,8 @@ public:
 			sendWeather();
 
 		} };
+
+
 
 		addCompute(rayGenerator);
 		addCompute(clouds);
@@ -206,12 +252,13 @@ public:
 	void generateNoise() {
 		shader("noise")([&] {
 
-			for (int level = 0; level < 5; level++) {
+			for (int level = 0; level < 1; level++) {			
 				unsigned factor = std::pow(2.0, level);
 				auto numGroups = workers / factor;
 				send("octave", 0);
 				send("doPerlinWorley", true);
 				glBindImageTexture(0, lowFreqNoise->buffer(), level, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+				CHECK_GL_ERRORS
 				glDispatchCompute(numGroups.x, numGroups.y, numGroups.z);
 			}
 
@@ -229,16 +276,8 @@ public:
 	//	renderSky();
 	//	renderFloor();
 
-		renderClouds();
-		//shader("flat")([&] {
-		//	send(activeCamera());
-		//	shade(cubeAABB);
-		//	send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-		//	shade(sphere);
-		//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-		//	shade(sphere);
-		//});
-
+	//	renderClouds();
+		terrain->render();
 
 		//shader("screen")([&] {
 		//	glBindTextureUnit(0, fb.texture());
@@ -252,6 +291,16 @@ public:
 		//sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
 		//sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
 		//sFont->render(sbr.str(), 20, 20);
+		//sample_point.read([&](vec4* itr) {
+		//	for (int i = 0; i < _width * _height; i++) {
+		//		auto p = *(itr + i);
+		//		if (length(p) != 0) {
+		//			sbr << "sample point " << i << ": " << p;
+		//			break;
+		//		}
+		//	}
+		//	});
+		//sFont->render(sbr.str(), 20, 20);
 		if (showRay) {
 			auto p = ray.origin + ray.direction * 10.0f;
 			auto d = depthValue(p);
@@ -260,6 +309,7 @@ public:
 			sbr << "\ndepth value: " << d;
 			sFont->render(sbr.str(), 20, 100);
 		}
+	//	logger.info("time: " + to_string(Timer::get().timeSinceStart()));
 	}
 
 	void renderNoise() {
@@ -339,10 +389,19 @@ public:
 	}
 
 	void update(float dt) {
-		fb.use([&] {
-		//	renderSky();
-			renderFloor();
-		});
+		//fb.use([&] {
+		////	renderSky();
+		//	shader("flat")([&] {
+		//		send(activeCamera());
+		//		shade(cubeAABB);
+		//		send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+		//		shade(sphere);
+		//		send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+		//		shade(sphere);
+		//		});
+		//	//renderFloor();
+		//	terrain->render();
+		//});
 	//	setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 
@@ -402,9 +461,11 @@ private:
 	ProvidedMesh quad;
 	ProvidedMesh noiseQuad;
 	ProvidedMesh cubeAABB;
+	std::unique_ptr<Terrain> terrain;
 	Compute* noiseGenerator;
 	Texture3D* lowFreqNoise;
 	Texture3D* highFreqNoise;
+	Texture2D* weatherData;
 	const uvec3 dim = uvec3(128);
 	uvec3 workers = dim / uvec3(8, 8, 8);
 	GLuint image = 0;
@@ -423,6 +484,8 @@ private:
 	SkyBox* skybox;
 	Compute* clouds;
 	FrameBuffer fb;
+	StorageBufferObj<vec4> sample_point;
+	StorageBufferObj<float> height_data;
 	rt::Ray ray;
 	bool showRay = false;
 	int slice = 0;

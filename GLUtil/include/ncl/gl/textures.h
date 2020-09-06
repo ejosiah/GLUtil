@@ -128,11 +128,13 @@ namespace ncl {
 
 		class Texture2D {
 		public:
+			Texture2D() = default;
+
 			Texture2D(std::string path, GLuint id = 0, std::string name = "", GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, glm::vec2 wrap = glm::vec2{ GL_REPEAT }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR })
 				: _id(id) {
 				Image img(path);
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, img.width(), img.height(), 0, format, GL_UNSIGNED_BYTE, img.data()); };
-				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
+				loadTexture(GL_TEXTURE_2D, _buffer, id, wrap, minMagfilter, load);
 				_width = img.width();
 				_height = img.height();
 				_name = name;
@@ -141,7 +143,7 @@ namespace ncl {
 			Texture2D(void* data, GLuint width, GLuint height, std::string name = "", GLuint id = 0, GLuint iFormat = GL_RGBA8, GLuint format = GL_RGBA, GLenum dataType = GL_UNSIGNED_BYTE, glm::vec2 wrap = glm::vec2{ GL_CLAMP_TO_EDGE }, glm::vec2 minMagfilter = glm::vec2{ GL_LINEAR }) 
 				: _id(id) {
 				LoadData load = [&]() { glTexImage2D(GL_TEXTURE_2D, 0, iFormat, width, height, 0, format, dataType, data); };
-				loadTexture(GL_TEXTURE_2D, buffer, id, wrap, minMagfilter, load);
+				loadTexture(GL_TEXTURE_2D, _buffer, id, wrap, minMagfilter, load);
 				_width = width;
 				_height = height;
 				_name = name;
@@ -149,7 +151,7 @@ namespace ncl {
 			//	delete[] data;	TODO fix this, should not be shared
 			}
 
-			Texture2D(Config c) :config{ c } {
+			Texture2D(Content content, TextureConfig config, std::function<void()> extraOptions = [] {}) {
 
 			}
 
@@ -157,7 +159,7 @@ namespace ncl {
 				if (glIsTexture(texture) == GL_FALSE) {
 					throw std::to_string(texture) + "is not a valid texture object";
 				}
-				this->buffer = texture;
+				this->_buffer = texture;
 				this->_id = unit;
 				this->_width = 0;
 				this->_height = 0;
@@ -165,56 +167,42 @@ namespace ncl {
 				this->deleteBuffer = false;
 			}
 
-			Texture2D(const Texture2D& source) {
-				this->buffer = source.buffer;
-				this->_id = source._id;
-				this->_width = source._width;
-				this->_height = source._height;
-				this->_name = source._name;
-				this->deleteBuffer = false;
-			}
+			Texture2D(const Texture2D& source) = delete;
+
 
 			Texture2D(Texture2D&& source) noexcept {
 				transfer(source, *this);
 			}
 
-			virtual ~Texture2D() {
-				if (deleteBuffer && glIsTexture(buffer) == GL_TRUE) {
-					glDeleteTextures(1, &buffer);
-				}
-			}
-
-			Texture2D& operator=(const Texture2D& source) noexcept {
-				this->buffer = source.buffer;
-				this->_id = source._id;
-				this->_width = source._width;
-				this->_height = source._height;
-				this->_name = source._name;
-				this->deleteBuffer = false;
-				return *this;
-			}
+			Texture2D& operator=(const Texture2D& source) = delete;
 
 			Texture2D& operator=(Texture2D&& source) noexcept {
 				transfer(source, *this);
 				return *this;
 			}
 
+			virtual ~Texture2D() {
+				if (deleteBuffer && glIsTexture(_buffer) == GL_TRUE) {
+					glDeleteTextures(1, &_buffer);
+				}
+			}
+
 			friend inline void transfer(Texture2D& source, Texture2D& dest) {
 				dest._id = source._id;
-				dest.buffer = source.buffer;
+				dest._buffer = source._buffer;
 				dest._width = source._width;
 				dest._height = source._height;
 				dest._name = source._name;
 				dest.deleteBuffer = source.deleteBuffer;
 
-				source.buffer = 0;
+				source._buffer = 0;
 			}
 
 			GLuint id() { return _id; }
 
 			GLuint unit() { return _id; }
 
-			GLuint bufferId() { return buffer; }
+			GLuint buffer() { return _buffer; }
 
 			GLuint width() { return _width; }
 
@@ -223,18 +211,17 @@ namespace ncl {
 			void sendTo(Shader& shader) {
 				//glActiveTexture(TEXTURE(_id));
 				//glBindTexture(GL_TEXTURE_2D, buffer);
-				glBindTextureUnit(_id, buffer);
+				glBindTextureUnit(_id, _buffer);
 			//	if(!_name.empty()) shader.sendUniform1i(_name, _id);
 				//glActiveTexture(TEXTURE(0));
 			}
 
 		private:
-			GLuint buffer;
-			GLuint _id;
-			GLuint _width;
-			GLuint _height;
-			std::string _name;
-			Config config;
+			GLuint _buffer = 0;
+			GLuint _id = 0;
+			GLuint _width = 0;
+			GLuint _height = 0;
+			std::string _name = "";
 			bool deleteBuffer = true;
 
 

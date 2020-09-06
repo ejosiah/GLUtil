@@ -101,14 +101,14 @@ namespace ncl {
 							glBindTextureUnit(2, material.specularMat);
 						}
 						else {
-							glBindTextureUnit(2, whiteTexture->bufferId());
+							glBindTextureUnit(2, whiteTexture->buffer());
 						}
 
 						if (material.bumpMap != -1) {
 							glBindTextureUnit(3, material.bumpMap);
 						}
 						else {
-							glBindTextureUnit(3, normalTexture->bufferId());
+							glBindTextureUnit(3, normalTexture->buffer());
 						}
 
 						shader.sendUniformMaterial("material[0]", material);
@@ -168,14 +168,14 @@ namespace ncl {
 							glBindTextureUnit(2, material.specularMat);
 						}
 						else {
-							glBindTextureUnit(2, whiteTexture->bufferId());
+							glBindTextureUnit(2, whiteTexture->buffer());
 						}
 
 						if (material.bumpMap != -1) {
 							glBindTextureUnit(3, material.bumpMap);
 						}
 						else {
-							glBindTextureUnit(3, normalTexture->bufferId());
+							glBindTextureUnit(3, normalTexture->buffer());
 						}
 
 						shader.sendUniformMaterial("material[0]", material);
@@ -246,20 +246,20 @@ namespace ncl {
 				if (attribute < Position || attribute > Color)
 					throw std::runtime_error("invalid attribute id");
 				glBindVertexArray(vaoIds[0]);
-				int bufferId = 0;
+				int buffer = 0;
 				switch (attribute) {
 				case Position:
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
 						if (attributes[0][i]) {
-							bufferId++;
+							buffer++;
 						}
 					}
 				}
-				float* data = (float*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_WRITE);
+				float* data = (float*)glMapNamedBuffer(buffers[0][buffer], GL_READ_WRITE);
 				consume(data);
-				glUnmapNamedBuffer(buffers[0][bufferId]);
+				glUnmapNamedBuffer(buffers[0][buffer]);
 				glBindVertexArray(0);
 			}
 
@@ -268,41 +268,41 @@ namespace ncl {
 				if (attribute < Position || attribute > Color)
 					throw std::runtime_error("invalid attribute id");
 				glBindVertexArray(vaoIds[0]);
-				int bufferId = 0;
+				int buffer = 0;
 				switch (attribute) {
 				case Position:
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
 						if (attributes[0][i]) {
-							bufferId++;
+							buffer++;
 						}
 					}
 				}
-				T* data = (T*)glMapNamedBuffer(buffers[0][bufferId], GL_READ_WRITE);
+				T* data = (T*)glMapNamedBuffer(buffers[0][buffer], GL_READ_WRITE);
 				consume(data);
-				glUnmapNamedBuffer(buffers[0][bufferId]);
+				glUnmapNamedBuffer(buffers[0][buffer]);
 				glBindVertexArray(0);
 			}
 
 			GLuint bufferFor(int meshId, int attribute) const {
 				if (attribute < Position || attribute > Indices)
 					throw std::runtime_error("invalid attribute id");
-				int bufferId = 0;
+				int buffer = 0;
 				switch (attribute) {
 				case Position:
 					break;
 				case Indices:
-					bufferId = numBuffers - 1;
+					buffer = numBuffers - 1;
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
 						if (attributes[meshId][i]) {
-							bufferId++;
+							buffer++;
 						}
 					}
 				}
-				return buffers[meshId][bufferId];
+				return buffers[meshId][buffer];
 			}
 
 
@@ -313,31 +313,31 @@ namespace ncl {
 				if (attribute < Position || attribute > Indices)
 					throw std::runtime_error("invalid attribute id");
 				glBindVertexArray(vaoIds[meshId]);
-				int bufferId = 0;
+				int buffer = 0;
 				switch (attribute) {
 				case Position:
 					break;
 				case Indices:	
-					bufferId = numBuffers - 1;
+					buffer = numBuffers - 1;
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
 						if (attributes[meshId][i]) {
-							bufferId++;
+							buffer++;
 						}
 					}
 				}
-				T* data = (T*)glMapNamedBuffer(buffers[meshId][bufferId], GL_READ_ONLY);
+				T* data = (T*)glMapNamedBuffer(buffers[meshId][buffer], GL_READ_ONLY);
 				use(data);
-				glUnmapNamedBuffer(buffers[meshId][bufferId]);
+				glUnmapNamedBuffer(buffers[meshId][buffer]);
 				glBindVertexArray(0);
 			}
 
 			template<typename T>
 			void get(unsigned int meshId, int attribute, std::function<void(GlBuffer<T>)> use) const {
 				auto vaoId = vaoIds[meshId];
-				auto bufferId = bufferFor(meshId, attribute);
-				use(GlBuffer<T>{ vaoId, bufferId });
+				auto buffer = bufferFor(meshId, attribute);
+				use(GlBuffer<T>{ vaoId, buffer });
 			}
 
 			 glm::vec3 getFirstVertex() const {
@@ -350,23 +350,23 @@ namespace ncl {
 				if (attribute < Position || attribute > Indices)
 					throw std::runtime_error("invalid attribute id");
 				glBindVertexArray(vaoIds[meshId]);
-				int bufferId = 0;
+				int buffer = 0;
 				switch (attribute) {
 				case Position:
 					break;
 				case Indices:
-					bufferId = numBuffers - 1;
+					buffer = numBuffers - 1;
 					break;
 				default:
 					for (int i = 0; i < attribute; i++) {
 						if (attributes[meshId][i]) {
-							bufferId++;
+							buffer++;
 						}
 					}
 				}
-				T* data = (T*)glMapNamedBuffer(buffers[meshId][bufferId], GL_READ_ONLY);
+				T* data = (T*)glMapNamedBuffer(buffers[meshId][buffer], GL_READ_ONLY);
 				R res = mapper(data);
-				glUnmapNamedBuffer(buffers[meshId][bufferId]);
+				glUnmapNamedBuffer(buffers[meshId][buffer]);
 				glBindVertexArray(0);
 				return res;
 			}

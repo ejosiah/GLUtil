@@ -191,13 +191,13 @@ namespace ncl {
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
 						diffuse = new Texture2D(texPath, 1);
-						material.diffuseMat = diffuse->bufferId();
+						material.diffuseMat = diffuse->buffer();
 						material.diffuseTexPath = texPath;
 						material.usingDefaultMat = false;
 					}
 					else {
 						diffuse = new CheckerTexture(0, "diffuseMap", material.diffuse, material.diffuse);
-						material.diffuseMat = diffuse->bufferId();
+						material.diffuseMat = diffuse->buffer();
 						material.usingDefaultMat = false;
 					}
 
@@ -205,7 +205,7 @@ namespace ncl {
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
 						ambient = new Texture2D(texPath, 0);
-						material.ambientMat = ambient->bufferId();
+						material.ambientMat = ambient->buffer();
 						material.ambientTexPath = texPath;
 					}
 					else if (material.diffuseMat > -1) {
@@ -214,14 +214,14 @@ namespace ncl {
 					}
 					else {
 						ambient = new CheckerTexture(0, "ambientMap", material.ambient, material.ambient);
-						material.ambientMat = ambient->bufferId();
+						material.ambientMat = ambient->buffer();
 					}
 
 					ret = aiMaterial->GetTexture(aiTextureType_SPECULAR, 0, &path);
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
 						specular = new Texture2D(texPath, 2);
-						material.specularMat = diffuse->bufferId();
+						material.specularMat = diffuse->buffer();
 						material.specularTexPath = texPath;
 					}
 
@@ -229,7 +229,7 @@ namespace ncl {
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
 						normal = new Texture2D(texPath, 4);
-						material.bumpMap = diffuse->bufferId();
+						material.bumpMap = diffuse->buffer();
 						material.bumpTexPath = texPath;
 					}
 
@@ -237,7 +237,7 @@ namespace ncl {
 					if (ret == aiReturn_SUCCESS) {
 						string texPath = parent + path.C_Str();
 						normal = new Texture2D(texPath, 4);
-						material.bumpMap = diffuse->bufferId();
+						material.bumpMap = diffuse->buffer();
 						material.bumpTexPath = texPath;
 					}
 

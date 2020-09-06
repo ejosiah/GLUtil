@@ -718,5 +718,44 @@ namespace ncl {
 			}
 		}
 
+		void Camera::calcuateFrustumPlanes(geom::Plane* planes) {
+			glm::vec3 cN = eye + target * znear;
+			glm::vec3 cF = eye + target * zfar;
+
+			float Hnear = 2.0f * tan(fovx / 2.0f) * znear;
+			float Wnear = Hnear * aspectRatio;
+			float Hfar = 2.0f * tan(fovx / 2.0f) * zfar;
+			float Wfar = Hfar * aspectRatio;
+			float hHnear = Hnear / 2.0f;
+			float hWnear = Wnear / 2.0f;
+			float hHfar = Hfar / 2.0f;
+			float hWfar = Wfar / 2.0f;
+
+
+			glm::vec3 farPts[4];
+
+			auto up = yAxis;
+			auto right = xAxis;
+
+			farPts[0] = cF + up * hHfar - right * hWfar;
+			farPts[1] = cF - up * hHfar - right * hWfar;
+			farPts[2] = cF - up * hHfar + right * hWfar;
+			farPts[3] = cF + up * hHfar + right * hWfar;
+
+			glm::vec3 nearPts[4];
+			nearPts[0] = cN + up * hHnear - right * hWnear;
+			nearPts[1] = cN - up * hHnear - right * hWnear;
+			nearPts[2] = cN - up * hHnear + right * hWnear;
+			nearPts[3] = cN + up * hHnear + right * hWnear;
+
+
+			planes[0] = geom::Plane(nearPts[3], nearPts[0], farPts[0]);
+			planes[1] = geom::Plane(nearPts[1], nearPts[2], farPts[2]);
+			planes[2] = geom::Plane(nearPts[0], nearPts[1], farPts[1]);
+			planes[3] = geom::Plane(nearPts[2], nearPts[3], farPts[2]);
+			planes[4] = geom::Plane(nearPts[0], nearPts[3], nearPts[2]);
+			planes[5] = geom::Plane(farPts[3], farPts[0], farPts[1]);
+		}
+
 	}
 }

@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "orientation.h"
 #include "Shader.h"
+#include "../geom/Plane.h"
 
 namespace ncl {
 	namespace gl {
@@ -73,6 +74,9 @@ namespace ncl {
 			void setRotationSpeed(float rotationSpeed);
 			void setVelocity(const glm::vec3 &velocity);
 			void setVelocity(float x, float y, float z);
+
+			void calcuateFrustumPlanes(geom::Plane* planes);
+
 			std::string modeAsString() const;
 
 			inline void collisionTestOn() {

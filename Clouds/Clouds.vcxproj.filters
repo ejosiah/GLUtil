@@ -60,6 +60,21 @@
     <None Include="shaders\ray_marching.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\terrain.tese">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\terrain.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\terrain.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\terrain.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\frustum_cull.geom">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">
@@ -69,6 +84,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CloudUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

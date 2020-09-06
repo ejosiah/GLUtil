@@ -121,6 +121,26 @@ float perlinfbm(vec3 p, float freq, int octaves)
     return noise;
 }
 
+float perlinfbm(vec2 p, float freq, int octaves, float H)
+{
+    float G = exp2(-H);
+    float amp = 1.;
+    float noise = 0.;
+    for (int i = 0; i < octaves; ++i)
+    {
+        noise += amp * perlinNoise(p * freq);
+        freq *= 2.;
+        amp *= G;
+    }
+
+    return noise;
+}
+
+float perlinfbm(vec2 p, float freq, int octaves)
+{
+    return perlinfbm(p, freq, octaves, 1);
+}
+
 // Tileable Worley fbm inspired by Andrew Schneider's Real-Time Volumetric Cloudscapes
 // chapter in GPU Pro 7.
 float worleyFbm(vec3 p, float freq)

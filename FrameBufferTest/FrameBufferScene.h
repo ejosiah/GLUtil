@@ -119,9 +119,10 @@ public:
 			glDisable(GL_DEPTH_TEST);
 		});
 
-		shader("screen0")([&](Shader& s) {
+		shader("bmp_to_nmp")([&](Shader& s) {
 		//	glBindTextureUnit(0, fbo.texture());
-			glBindTextureUnit(0, scratchTexel->bufferId());
+		//	glBindTextureUnit(0, scratchTexel->buffer());
+			glBindTextureUnit(0, bmp->buffer());
 			//send(brdf_lut);
 			sendArray("kernel", identity, 9);
 			send("flip", flip);
@@ -151,7 +152,8 @@ private:
 	GlmCam cam1;
 	Texture2D* bmp;
 //	string path = "C:\\Users\\Josiah\\OneDrive\\media\\models\\cannon\\Cannon_UV_Bump.tif";
-	string path = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\005\\front.jpg";
+	string path = "..\\Clouds\\media\\height_map.png";
+//	string path = "C:\\Users\\Josiah\\OneDrive\\media\\textures\\skybox\\005\\front.jpg";
 	float blur[9] = {
 		1.0 / 16, 2.0 / 16, 1.0 / 16,
 		2.0 / 16, 4.0 / 16, 2.0 / 16,

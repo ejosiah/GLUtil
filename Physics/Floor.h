@@ -22,9 +22,9 @@ public:
 		using namespace gcl;
 		plane = new Plane(4, 4, _dim.x, _dim.y, _dim.x/40);
 		checkerboard = new CheckerTexture(0, "", WHITE, GRAY);
-		plane->material().ambientMat = checkerboard->bufferId();
-		plane->material().diffuseMat = checkerboard->bufferId();
-		plane->material().specularMat = checkerboard->bufferId();
+		plane->material().ambientMat = checkerboard->buffer();
+		plane->material().diffuseMat = checkerboard->buffer();
+		plane->material().specularMat = checkerboard->buffer();
 	}
 
 	void render(bool shadowMode = false) override {
