@@ -62,7 +62,8 @@ public:
 		activeCamera().setVelocity(vec3(100));
 	//	deactivateCameraControl();
 		activeCamera().setAcceleration(vec3(100));
-		activeCamera().setPosition({ -26, 8000, -260 });
+		activeCamera().setPosition({ -26, 176, -260 });
+	//	activeCamera().setPosition({ -26, 1000, 3000 });
 	//	activeCamera().setPosition({ 0, 100, 0 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
@@ -96,7 +97,7 @@ public:
 		//	GL_FLOAT
 		//};
 
-		weatherData = new Texture2D{ "C:\\Users\\Josiah\\OneDrive\\media\\textures\\weather\\weather07.png" };
+		weatherData = new Texture2D{ "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\weather\\weather07.png" };
 
 		lowFreqNoise = new Texture3D{ data, texConfig };
 
@@ -125,8 +126,8 @@ public:
 		floor = new Floor(this, vec2(60.0_km));
 		inner = new Hemisphere{ 1000000, 20, 20, RED };
 		outer = new Hemisphere{ 400, 20, 20, GREEN };
-		auto xform = translate(mat4(1), { 0, 1000, 0 });
-		xform = scale(xform, vec3(1000));
+		auto xform = translate(mat4(1), { 0, 1.5_km, 0 });
+		xform = scale(xform, {4.0_km, 2.0_km, 4.0_km});
 	//	auto xform = mat4(1);
 		cube = Cube{ 1, WHITE, vector<mat4>{1, xform }, false };
 		cube.defautMaterial(false);
@@ -163,7 +164,7 @@ public:
 		sbr.str("");
 		sbr.clear();
 
-		terrain = std::make_unique<Terrain>(*this, float(2.0_km), 1000.0f, "media\\mount_everest.png");
+		terrain = std::make_unique<Terrain>(*this, float(2.0_km), 1000.0f, "media\\height_map.png");
 
 
 		auto config = FrameBuffer::defaultConfig(_width, _height);
@@ -258,7 +259,7 @@ public:
 				send("octave", 0);
 				send("doPerlinWorley", true);
 				glBindImageTexture(0, lowFreqNoise->buffer(), level, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-				CHECK_GL_ERRORS
+			//	CHECK_GL_ERRORS
 				glDispatchCompute(numGroups.x, numGroups.y, numGroups.z);
 			}
 
@@ -276,7 +277,7 @@ public:
 	//	renderSky();
 	//	renderFloor();
 
-	//	renderClouds();
+		renderClouds();
 		terrain->render();
 
 		//shader("screen")([&] {
@@ -389,19 +390,19 @@ public:
 	}
 
 	void update(float dt) {
-		//fb.use([&] {
-		////	renderSky();
-		//	shader("flat")([&] {
-		//		send(activeCamera());
-		//		shade(cubeAABB);
-		//		send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-		//		shade(sphere);
-		//		send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-		//		shade(sphere);
-		//		});
-		//	//renderFloor();
-		//	terrain->render();
-		//});
+		fb.use([&] {
+		//	renderSky();
+			shader("flat")([&] {
+				send(activeCamera());
+				shade(cubeAABB);
+				send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+				shade(sphere);
+				send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+				shade(sphere);
+				});
+			//renderFloor();
+			terrain->render();
+		});
 	//	setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 
