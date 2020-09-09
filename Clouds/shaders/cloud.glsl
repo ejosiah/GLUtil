@@ -34,6 +34,7 @@ vec3 sampleCoord(vec3 p){
 
 vec2 weatherSampleCoord(vec3 p) {
 	return remap(p.xz, -vec2(1000), vec2(1000), vec2(0), vec2(1));
+	return remap(p.xz, bMin.xz, bMax.zy, vec2(0), vec2(1));
 }
 
 
@@ -51,9 +52,9 @@ float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
 float densityHeightGradientForPoint(vec3 p, Weather weather){
 	
 	float height = heightFractionForPoint(p, cloudMinMax);
-	//float cloud_type = weather.cloud_type;
+	float cloud_type = weather.cloud_type;
 	vec2 uv = weatherSampleCoord(p);
-	float cloud_type = texture(weatherData, uv).b;
+	//float cloud_type = texture(weatherData, uv).b;
 
 	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
 	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -84,8 +85,8 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 
 	vec2 uv = weatherSampleCoord(p);
-//	float cloud_coverage = weather.cloud_coverage;
-	float cloud_coverage = texture(weatherData, uv).r;
+	float cloud_coverage = weather.cloud_coverage;
+//	float cloud_coverage = texture(weatherData, uv).r;
 
 	float base_cloud_with_coverage = remap(base_cloud, 1 - cloud_coverage, 1.0, 0.0, 1.0);
 
@@ -199,7 +200,8 @@ vec4 matchCloud(vec3 origin, vec3 direction){
 		float energy = 1;
 		if(density != 0){
 			vec2 uv = weatherSampleCoord(p);
-			float precipitation = texture(weatherData, uv).g;
+			//float precipitation = texture(weatherData, uv).g;
+			float precipitation = weather.precipitation;
 			float d = sampleCloudDensityAlongCone(dataPos, dirStep);
 			energy = 200 * lightEnergy(d, precipitation, eccentricity, dataPos, camPos, lightPos);
 		}

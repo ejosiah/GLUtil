@@ -161,12 +161,14 @@
     <None Include="shaders\terrain.geom" />
     <None Include="shaders\terrain.tese" />
     <None Include="shaders\terrain.vert" />
+    <None Include="shaders\weather.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h" />
     <ClInclude Include="CloudUI.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="Weather.h" />
+    <ClInclude Include="WeatherGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clouds.cpp" />

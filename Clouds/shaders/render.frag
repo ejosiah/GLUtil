@@ -25,7 +25,7 @@ in ncl_PerVertex{
 	smooth vec2 texCoord;
 };
 
-out vec4 fragcol;
+out vec4 fragColor;
 
 float saturate(float val){
 	return clamp(val, 0.0, 1.0);
@@ -97,47 +97,43 @@ void main(){
 	//z = clamp(z, 0, 1);
 	vec3 pos = vec3(uv, z);
 
-//	float perlinWorley = texture(cloudNoiseLowFreq, vec3(uv * 0.5, z)).x;
-//	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
-//
-//	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
-//
-//    // cloud shape modeled after the GPU Pro 7 chapter
-//    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
-//    cloud = remap(cloud, 0.85, 1.0, 0., 1.0); // fake cloud coverage
-//
-//
-//	vec2 st = texCoord;
-//	st.x *= 5.0;
-//
-//    vec3 col = vec3(0);
-//	if (st.x < 1.0)
-//        col += perlinWorley;
-//    else if(st.x < 2.)
-//        col += worley.x;
-//    else if(st.x < 3.)
-//        col += worley.y;
-//	else if(st.x < 4.)
-//        col += worley.z;
-//    else if(st.x < 5.)
-//        col += cloud;
-//
-//	bvec3 isBlack = equal(col, vec3(0));
-////	if(all(isBlack)) col = vec3(1, 0, 0);
-//            
-//    // column dividers
-//    float div = smoothstep(.01, 0., abs(st.x - 1.));
-//    div += smoothstep(.01, 0., abs(st.x - 2.));
-//	div += smoothstep(.01, 0., abs(st.x - 3.));
-//    div += smoothstep(.01, 0., abs(st.x - 4.));
-//        
-//    col = mix(col, vec3(0., 0., .866), div);
-	float density = sampleCloudDensity(pos, weather);
-    fragcol = vec4(vec3(density), 1.0);
-//	float cloud_density = sampleCloudDensity(pos, weather);
-	
-//    fragcol = vec4(vec3(cloud_density), 0.8);
+	float perlinWorley = texture(cloudNoiseLowFreq, vec3(uv * 0.5, z)).x;
+//	perlinWorley = remap(perlinWorley, 0.5, 1.0, 0., 1.0);
+	vec3 worley = texture(cloudNoiseLowFreq, pos).yzw;
+
+	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
+
+    // cloud shape modeled after the GPU Pro 7 chapter
+    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
+    cloud = remap(cloud, 0.65, 1.0, 0., 1.0); // fake cloud coverage
+
+
+	vec2 st = texCoord;
+	st.x *= 5.0;
+
+    vec3 col = vec3(0);
+	if (st.x < 1.0)
+        col += perlinWorley;
+    else if(st.x < 2.)
+        col += worley.x;
+    else if(st.x < 3.)
+        col += worley.y;
+	else if(st.x < 4.)
+        col += worley.z;
+    else if(st.x < 5.)
+        col += cloud;
+
+	bvec3 isBlack = equal(col, vec3(0));
+//	if(all(isBlack)) col = vec3(1, 0, 0);
+            
+    // column dividers
+    float div = smoothstep(.01, 0., abs(st.x - 1.));
+    div += smoothstep(.01, 0., abs(st.x - 2.));
+	div += smoothstep(.01, 0., abs(st.x - 3.));
+    div += smoothstep(.01, 0., abs(st.x - 4.));
+        
+    col = mix(col, vec3(0., 0., .866), div);
+
     
-//    col = vec3(gl_FragCoord.xy/vec2(1024, 720), 0);
- //   fragcol = vec4(texture(noise, pos).rgb, 1);
+    fragColor = vec4(vec3(perlinWorley), 1);
 }

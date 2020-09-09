@@ -273,12 +273,12 @@ public:
 	void display() override {
 	//	cloudUI->render();
 		//renderBounds();
-	//	renderNoise();
+		renderNoise();
 	//	renderSky();
 	//	renderFloor();
 
-		renderClouds();
-		terrain->render();
+	//	renderClouds();
+	//	terrain->render();
 
 		//shader("screen")([&] {
 		//	glBindTextureUnit(0, fb.texture());
@@ -287,10 +287,10 @@ public:
 
 		sbr.str("");
 		sbr.clear();
-		//sbr << "Weather Data:\n";
-		//sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
-		//sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
-		//sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
+		sbr << "Weather Data:\n";
+		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
+		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
+		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
 		//sFont->render(sbr.str(), 20, 20);
 		//sample_point.read([&](vec4* itr) {
 		//	for (int i = 0; i < _width * _height; i++) {
@@ -392,14 +392,14 @@ public:
 	void update(float dt) {
 		fb.use([&] {
 		//	renderSky();
-			shader("flat")([&] {
-				send(activeCamera());
-				shade(cubeAABB);
-				send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-				shade(sphere);
-				send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-				shade(sphere);
-				});
+			//shader("flat")([&] {
+			//	send(activeCamera());
+			//	shade(cubeAABB);
+			//	send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+			//	shade(sphere);
+			//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+			//	shade(sphere);
+			//	});
 			//renderFloor();
 			terrain->render();
 		});

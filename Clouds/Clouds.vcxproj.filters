@@ -75,6 +75,9 @@
     <None Include="shaders\frustum_cull.geom">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\weather.comp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
