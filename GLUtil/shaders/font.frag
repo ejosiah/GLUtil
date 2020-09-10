@@ -12,5 +12,5 @@ out vec4 fragColor;
 
 void main(){
 	float alpha = texture(glyph, texCoord).r;
-	fragColor = vec4(1, 1, 1, alpha) * color;
+	fragColor = vec4(color.rgb, alpha);
 }
