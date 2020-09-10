@@ -56,6 +56,9 @@ public:
 		case 'd':
 			currentOption = Option::Density;
 			break;
+		case ' ':
+			randomize();
+			break;
 		}
 		switch (currentOption) {
 		case Option::Seed:
@@ -82,6 +85,18 @@ public:
 			break;
 		}
 	}
+
+	void randomize() {
+		seed = rngReal(0, 1, nextSeed())();
+		bias = rngReal(0, 1, nextSeed())();
+		density = rngReal(0, 1, nextSeed())();
+	}
+
+	void reset() {
+		seed = 0;
+		density = 1;
+	}
+
 protected:
 	float bias = 0.0f;
 	float seed = rngReal(0, 1, nextSeed())();
