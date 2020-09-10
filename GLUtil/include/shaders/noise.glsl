@@ -109,6 +109,7 @@ float worleyNoise(vec3 uv, float freq)
 float perlinfbm(vec3 p, float freq, int octaves)
 {
     float G = exp2(-.85);
+    float G = exp2(-1);
     float amp = 1.;
     float noise = 0.;
     for (int i = 0; i < octaves; ++i)

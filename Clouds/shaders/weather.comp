@@ -27,8 +27,11 @@ void main(){
 
 	switch(mode){
 		case CLOUD_COVERAGE:
-			float f0 = perlinfbm(fragCoord, 4, 1);
-			f0 = remap(f0, -1, 1, 0, 1);
+			float f0 = perlinfbm(fragCoord, 2, 1);
+			float f1 = perlinfbm(fragCoord, 2, 2);
+			float f2 = perlinfbm(fragCoord, 2, 3);
+			float f3 = perlinfbm(fragCoord, 2, 4);
+			
 			color.r = f0;
 			break;
 		case CLOUD_TYPE:
