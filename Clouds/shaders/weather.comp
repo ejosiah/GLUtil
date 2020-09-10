@@ -1,18 +1,22 @@
 #version 450 core 
 
-#pragma compile(off)
-
-#define CLOUD_COVERAGE 0
-#define CLOUD_TYPE 1
-#define PRECIPITATION 2
+#define CLOUD_COVERAGE 1
+#define CLOUD_TYPE 2
+#define PRECIPITATION 3
+#define PI 3.1415926535897932384626433832795
 
 layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(rgba32f, binding = 0) uniform image2D out_image;
 
-uniform int mode;
+uniform int mode = 0;
+uniform float bais = 0;
+uniform float uCycles = 1;
+uniform float uSeed = 0;
+uniform float uDensity = 1;
 
 float perlinfbm(vec2 p, float freq, int octaves);
+float perlinfbm(vec3 p, float freq, int octaves);
 
 float remap(float x, float a, float b, float c, float d){
 	return (((x - a) / (b - a)) * (d - c)) + c;
@@ -21,22 +25,29 @@ float remap(float x, float a, float b, float c, float d){
 const vec2 fragCoord = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
 
 void main(){
-	vec4 color = vec4(0);
-
-
-
+	vec4 color = imageLoad(out_image, ivec2(gl_GlobalInvocationID.xy));
+	float sum = 0;
+	float t = 0;
 	switch(mode){
 		case CLOUD_COVERAGE:
-			float f0 = perlinfbm(fragCoord, 2, 1);
-			float f1 = perlinfbm(fragCoord, 2, 2);
-			float f2 = perlinfbm(fragCoord, 2, 3);
-			float f3 = perlinfbm(fragCoord, 2, 4);
-			
-			color.r = f0;
+			sum = perlinfbm(vec3(fragCoord, uSeed), 2, 7); 
+			t = cos(uCycles * PI * sum);
+			t = remap(t, -1, 1, 0, 1);
+			t = clamp(bais + t, 0, 1);
+			t = remap(t, 1 - uDensity, 1, 0, 1);
+			color.r = mix(0, 1, t);
 			break;
 		case CLOUD_TYPE:
+			sum = perlinfbm(vec3(fragCoord, uSeed), 2, 7);
+			t = cos(uCycles * PI * sum);
+			t = remap(t, 1 - uDensity, 1, 0, 1);
+			color.b = mix(0, 1, t);
 			break;
 		case PRECIPITATION:
+			sum = perlinfbm(vec3(fragCoord, uSeed), 2, 7);
+			t = cos(uCycles * PI * sum);
+			t = remap(t, 1 - uDensity, 1, 0, 1);
+			color.g = mix(0, 1, t);
 			break;
 	}
 

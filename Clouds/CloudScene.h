@@ -17,6 +17,7 @@
 #include "Weather.h"
 #include "CloudUI.h"
 #include "Terrain.h"
+#include "WeatherGenerator.h"
 
 using namespace std;
 using namespace glm;
@@ -33,7 +34,7 @@ class CloudScene : public Scene {
 public:
 	CloudScene() :Scene{ "Perlin-Worley Clouds", WIDTH, HEIGHT } {
 	//	_fullScreen = true;
-		camInfoOn = true;
+	//	camInfoOn = true;
 	//	_hideCursor = false;
 	//	_requireMouse = true;
 		_fontSize = 15;
@@ -51,7 +52,7 @@ public:
 	}
 
 	void init() override {
-		
+		Font::Arial(15, 0, WHITE);
 		glDisable(GL_CULL_FACE);
 		setForeGroundColor(WHITE);
 		_modelHeight = 5.0f;
@@ -228,7 +229,7 @@ public:
 
 		} };
 
-
+		weatherGenerator = std::make_unique<WeatherGenerator>(*this);
 
 		addCompute(rayGenerator);
 		addCompute(clouds);
@@ -273,7 +274,7 @@ public:
 	void display() override {
 	//	cloudUI->render();
 		//renderBounds();
-		renderNoise();
+	//	renderNoise();
 	//	renderSky();
 	//	renderFloor();
 
@@ -291,7 +292,7 @@ public:
 		sbr << "\tcloud coverage:\t" << weather.cloud_coverage << "\n";
 		sbr << "\tcloud type:\t\t" << weather.cloud_type << "\n";
 		sbr << "\tprecipitation:\t\t" << weather.percipitation << "\n";
-		//sFont->render(sbr.str(), 20, 20);
+	//	sFont->render(sbr.str(), 20, 20);
 		//sample_point.read([&](vec4* itr) {
 		//	for (int i = 0; i < _width * _height; i++) {
 		//		auto p = *(itr + i);
@@ -301,16 +302,17 @@ public:
 		//		}
 		//	}
 		//	});
-		//sFont->render(sbr.str(), 20, 20);
-		if (showRay) {
-			auto p = ray.origin + ray.direction * 10.0f;
-			auto d = depthValue(p);
-			sbr << "origin: " << ray.origin << ", direction: " << ray.direction;
-			sbr << "\nposition: " << p;
-			sbr << "\ndepth value: " << d;
-			sFont->render(sbr.str(), 20, 100);
-		}
+		////sFont->render(sbr.str(), 20, 20);
+		//if (showRay) {
+		//	auto p = ray.origin + ray.direction * 10.0f;
+		//	auto d = depthValue(p);
+		//	sbr << "origin: " << ray.origin << ", direction: " << ray.direction;
+		//	sbr << "\nposition: " << p;
+		//	sbr << "\ndepth value: " << d;
+		//	sFont->render(sbr.str(), 20, 100);
+		//}
 	//	logger.info("time: " + to_string(Timer::get().timeSinceStart()));
+		weatherGenerator->render();
 	}
 
 	void renderNoise() {
@@ -440,6 +442,7 @@ public:
 			weather.cloud_type = glm::clamp(weather.cloud_type, 0.0f, 1.0f);
 			weather.percipitation = glm::clamp(weather.percipitation, 0.0f, 1.0f);
 		}
+		weatherGenerator->processInput(key);
 	}
 
 	float depthValue(vec3 p) {
@@ -487,6 +490,7 @@ private:
 	FrameBuffer fb;
 	StorageBufferObj<vec4> sample_point;
 	StorageBufferObj<float> height_data;
+	std::unique_ptr<WeatherGenerator> weatherGenerator;
 	rt::Ray ray;
 	bool showRay = false;
 	int slice = 0;
