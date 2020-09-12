@@ -78,6 +78,9 @@
     <None Include="shaders\weather.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\weather_gen.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">

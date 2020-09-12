@@ -7,6 +7,8 @@
 #include "../GLUtil/include/ncl/gl/compute.h"
 #include "../GLUtil/include/ncl/gl/shader_binding.h"
 #include "../GLUtil/include/ncl/gl/common.h"
+#include "../GLUtil/include/ncl/gl/FrameBuffer.h"
+#include "../GLUtil/include/ncl/gl/Image.h"
 
 using namespace ncl;
 using namespace gl;
@@ -31,6 +33,7 @@ public:
 
 class AbstractWeatherProcessor : public WeatherModeProcessor {
 public:
+
 	virtual void contextInfo(std::stringstream& sbr) override {
 		if (currentOption == Option::Seed) {
 			sbr << ", current option: seed\n";
@@ -149,7 +152,20 @@ public:
 		AbstractWeatherProcessor::sendData();
 		send("mode", static_cast<int>(WeatherMode::Percipitation));
 	}
+};
 
+class AllProcessor : public WeatherModeProcessor {
+	void contextInfo(std::stringstream& sbr) override {
+
+	}
+
+	void processInput(const Key& key) override {
+
+	}
+
+	void sendData() override {
+		send("mode", static_cast<int>(WeatherMode::All));
+	}
 };
 
 class WeatherGenerator : public SceneObject {
@@ -166,11 +182,16 @@ public:
 		processors[WeatherMode::CloudCovarage] = new CloudCoverageProcessor;
 		processors[WeatherMode::CloudType] = new CloudTypeProcessor;
 		processors[WeatherMode::Percipitation] = new PrecipitationProcessor;
+		processors[WeatherMode::All] = new AllProcessor;
 		initGenerator();
+
+		auto config = FrameBuffer::defaultConfig(1024, 1024);
+		fb = FrameBuffer{ config };
 	}
 
 	void initGenerator() {
 		auto wokers = ivec3{ 128, 128, 1 };
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		generator = std::make_unique<Compute>(
 			wokers,
 			std::vector<Image2D>{ Image2D{1024, 1024} },
@@ -184,9 +205,10 @@ public:
 	
 
 	void render(bool shadowMode = false) override {
-		scene().shader("screen")([&] {
+		scene().shader("weather_gen")([&] {
 			generator->images().front().renderMode();
 			glBindTextureUnit(0, generator->images().front().buffer());
+			send("mode", static_cast<int>(currentMode));
 			shade(quad);
 		});
 
@@ -194,6 +216,41 @@ public:
 		sbr.str("");
 		processors[currentMode]->contextInfo(sbr);
 		scene().renderText(20, 20, sbr.str(), Font::Arial(15, 0, WHITE));
+	}
+
+	void save() {
+		fb.use([&] {
+			scene().shader("screen")([&] {
+				generator->images().front().renderMode();
+				glBindTextureUnit(0, generator->images().front().buffer());
+				shade(quad);
+			});
+		});
+
+		auto data = new char[1024 * 1024 * 4];
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		glReadPixels(0, 0, 1024, 1024, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		unsigned id;
+		ilGenImages(1, &id);
+		ilBindImage(id);
+		ilEnable(IL_ORIGIN_SET);
+		ilOriginFunc(IL_ORIGIN_LOWER_LEFT);
+		auto success = ilTexImage(1024, 1024, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, data);
+		delete[] data;
+		if (success) {
+			success = ilSave(IL_PNG, "media\\weather.png");
+			if (!success) {
+				logger.error("unable to save weather image");
+			}
+			else {
+				logger.info("weather data successfully saved at media\\weather.png");
+			}
+		}
+		else {
+			logger.error("unable to create texture image for saving");
+		}
+		ilDeleteImages(1, &id);
 	}
 
 	void processInput(const Key& key) override {
@@ -207,6 +264,12 @@ public:
 				break;
 			case '3':
 				currentMode = WeatherMode::Percipitation;
+				break;
+			case '4':
+				currentMode = WeatherMode::All;
+				break;
+			case 's':
+				save();
 				break;
 			}
 
@@ -224,4 +287,6 @@ private:
 	std::unique_ptr<Compute> generator;
 	std::map<WeatherMode, WeatherModeProcessor*> processors;
 	std::stringstream sbr;
+	FrameBuffer fb;
+	Logger logger = Logger::get("Weather");
 };

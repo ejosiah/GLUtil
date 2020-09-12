@@ -49,6 +49,8 @@ public:
 		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
 		addShader("skybox", GL_VERTEX_SHADER, skybox_vert_shader);
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
+
+		addShader("weather_gen", GL_VERTEX_SHADER, screen_vert_shader);
 	}
 
 	void init() override {

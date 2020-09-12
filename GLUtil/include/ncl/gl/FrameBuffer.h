@@ -14,8 +14,8 @@ namespace ncl {
 			struct Attachment {
 				GLenum texTarget = GL_TEXTURE_2D;
 				GLint texLevel = 0;
-				GLint internalFmt = GL_RGB;
-				GLint fmt = GL_RGB;
+				GLint internalFmt = GL_RGBA;
+				GLint fmt = GL_RGBA;
 				GLint border = 0;
 				GLfloat borderColor[4]{ 1.0f, 1.0f, 1.0f, 1.0f };
 				GLenum type = GL_UNSIGNED_BYTE;

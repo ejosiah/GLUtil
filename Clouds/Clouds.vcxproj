@@ -162,6 +162,7 @@
     <None Include="shaders\terrain.tese" />
     <None Include="shaders\terrain.vert" />
     <None Include="shaders\weather.comp" />
+    <None Include="shaders\weather_gen.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h" />
