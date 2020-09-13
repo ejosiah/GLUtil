@@ -62,6 +62,9 @@ public:
 		case ' ':
 			randomize();
 			break;
+		case '/':
+			reset();
+			break;
 		}
 		switch (currentOption) {
 		case Option::Seed:
@@ -84,7 +87,7 @@ public:
 			case '=':
 				density += 0.01;
 			}
-			density = glm::clamp(density, 0.001f, 1.0f);
+			density = glm::clamp(density, 0.0f, 1.0f);
 			break;
 		}
 	}
