@@ -9,7 +9,7 @@
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
-const int MAX_SAMPLES = 96;
+const int MAX_SAMPLES = 185;
 const float EPSILSON = 0.000001; 
 const vec2 fragCoord = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
 

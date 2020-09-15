@@ -27,14 +27,14 @@ float henyeyGreenstein(vec3 lightDir, vec3 viewDir, float g){
 
 vec2 curlNoise(vec2 uv);
 
+float mipLevel = 0;
+
 vec3 sampleCoord(vec3 p){
-	return remap(p, bMin, bMax, vec3(0), vec3(6));
-	//return p/100;
+	return remap(p, bMin, bMax, vec3(0), vec3(4));
 }
 
 vec2 weatherSampleCoord(vec3 p) {
-	return remap(p.xz, -vec2(1000), vec2(1000), vec2(0), vec2(1));
-	return remap(p.xz, bMin.xz, bMax.zy, vec2(0), vec2(1));
+	return remap(p.xz, bMin.xz, bMax.xz, vec2(0), vec2(1));
 }
 
 
@@ -52,9 +52,9 @@ float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
 float densityHeightGradientForPoint(vec3 p, Weather weather){
 	
 	float height = heightFractionForPoint(p, cloudMinMax);
-	float cloud_type = weather.cloud_type;
+	//float cloud_type = weather.cloud_type;
 	vec2 uv = weatherSampleCoord(p);
-	//float cloud_type = texture(weatherData, uv).b;
+	float cloud_type = texture(weatherData, uv).b;
 
 	const vec4 stratusGrad = vec4(0.02f, 0.05f, 0.09f, 0.11f);
 	const vec4 stratocumulusGrad = vec4(0.02f, 0.2f, 0.48f, 0.625f);
@@ -67,12 +67,11 @@ float densityHeightGradientForPoint(vec3 p, Weather weather){
 }
 
 
-float sampleCloudDensity(vec3 p, Weather weather){
+float sampleCloudDensity(vec3 p, Weather weather, float mipLevel){
 	
-//	vec3 densityCoord = remap(p, vec3(cloudMinMax.x), vec3(cloudMinMax.y), vec3(0.0), vec3(1.0));
 	vec3 densityCoord = sampleCoord(p);
 
-	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, densityCoord, 3);
+	vec4 low_frequency_noise = textureLod(cloudNoiseLowFreq, densityCoord, mipLevel);
 	float perlinWorley = low_frequency_noise.r;
 	vec3 worley_low_freq = low_frequency_noise.gba;
 	float low_freq_fbm = dot(worley_low_freq, vec3(0.625, 0.25, 0.125));
@@ -83,16 +82,16 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	base_cloud *= density_height_grad;
 
-
 	vec2 uv = weatherSampleCoord(p);
-	float cloud_coverage = weather.cloud_coverage;
-//	float cloud_coverage = texture(weatherData, uv).r;
+//	float cloud_coverage = weather.cloud_coverage;
+	float cloud_coverage = texture(weatherData, uv).r;
 
 	float base_cloud_with_coverage = remap(base_cloud, 1 - cloud_coverage, 1.0, 0.0, 1.0);
 
 	base_cloud_with_coverage *= cloud_coverage;
 
-//	return base_cloud_with_coverage;
+	//return base_cloud_with_coverage;
+
    float height_fraction = heightFractionForPoint(p, cloudMinMax);
 
 	vec2 curl = curlNoise(densityCoord.xy * dt);
@@ -100,7 +99,7 @@ float sampleCloudDensity(vec3 p, Weather weather){
 
 	densityCoord = sampleCoord(p);
 
-	vec3 high_frequency_noise = texture(cloudNoiseHighFreq, densityCoord * 0.1).rgb;
+	vec3 high_frequency_noise = textureLod(cloudNoiseHighFreq, densityCoord * 0.1, mipLevel).rgb;
 
 	float high_freq_fbm = dot(high_frequency_noise, vec3(0.625, 0.25, 0.125));
 
@@ -111,20 +110,6 @@ float sampleCloudDensity(vec3 p, Weather weather){
 	float final_cloud = remap(base_cloud_with_coverage, high_freq_noise_modifier * 0.2, 1.0, 0.0, 1.0);
 
 	return final_cloud;
-}
-
-float sampleCloud(vec3 p){
-	vec3 coord = sampleCoord(p);
-	float perlinWorley = texture(cloudNoiseLowFreq, coord).x;
-	vec3 worley = texture(cloudNoiseLowFreq, coord).yzw;
-
-	float wfbm = dot(worley, vec3(0.625, 0.125, 0.25));
-
-    // cloud shape modeled after the GPU Pro 7 chapter
-    float cloud = remap(perlinWorley, wfbm - 1.0, 1.0, 0.0, 1.0);
-    cloud = remap(cloud, 0.8, 1.0, 0., 1.0); // fake cloud coverage
-
-	return cloud;
 }
 
 float lightEnergy(float sampleDensity, float percipitation, float eccentricity, vec3 samplePos, vec3 camPos, vec3 lightPos){
@@ -157,7 +142,7 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 	for(int i = 0; i < 6; i++){
 		p += lightStep * (coneSpreadMultiplier * noise_kernel[i] * float(i));
 
-		density += sampleCloudDensity(p, weather);
+		density += sampleCloudDensity(p, weather, mipLevel + 1);
 	}
 
 	return density;
@@ -167,7 +152,7 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 vec4 matchCloud(vec3 origin, vec3 direction){
 	
 	vec3 windDir = -vec3(1, 0, 0);
-	float cloud_speed = 100.0;
+	float cloud_speed = 100;
 	float cloud_top_offset = 10.0;
 	float height_fraction = heightFractionForPoint(origin, cloudMinMax);
 	vec3 p = origin;
@@ -178,9 +163,9 @@ vec4 matchCloud(vec3 origin, vec3 direction){
 	vec3 dataPos = p;
 
 	vec3 geomDir = normalize(direction);
-	//float samples = textureSize(cloudNoiseLowFreq, 0).x;
-	float samples = MAX_SAMPLES;
-	vec3 stepSize = (bMax-bMin)/samples;
+	float samples = textureSize(cloudNoiseLowFreq, int(mipLevel)).x;
+	//float samples = MAX_SAMPLES ;
+	vec3 stepSize = (bMax-bMin)/vec3(textureSize(cloudNoiseLowFreq, int(mipLevel)));
 	vec3 dirStep = geomDir * stepSize;
 
 	bool stop = false;
@@ -193,7 +178,7 @@ vec4 matchCloud(vec3 origin, vec3 direction){
 		if(stop) break;
 
 		//float density = sampleCloud(dataPos);
-		float density = sampleCloudDensity(dataPos, weather);
+		float density = sampleCloudDensity(dataPos, weather, mipLevel);
 		density = clamp(density, 0, 1);
 
 		//;

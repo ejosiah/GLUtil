@@ -502,7 +502,7 @@ namespace ncl {
 		public:
 			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0, GLuint img_id = 0): 
 				_id(id), _buffer(buffer), _img_id(img_id), _format(format), _name(name) {
-				if (glIsBuffer(_buffer) == GL_FALSE) {
+				if (glIsTexture(_buffer) == GL_FALSE) {
 					glGenTextures(1, &_buffer);
 				}
 				glActiveTexture(TEXTURE(_id));
@@ -512,7 +512,7 @@ namespace ncl {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 				if (_name == "") _name = std::string("image") + std::to_string(id);
-				gl::objectLabel(GL_BUFFER, _buffer, "image2D:" + name);
+				gl::objectLabel(GL_TEXTURE, _buffer, "image2D:" + name);
 
 				mode = Mode::COMPUTE;
 			}

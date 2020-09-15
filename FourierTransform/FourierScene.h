@@ -452,7 +452,7 @@ public:
 		float steps = 4.0f / maxSamples;
 		
 		if (privFreq != freq) {
-			t = clamp(t + dt, 0.0f, 1.0f);
+			t = glm::clamp(t + dt, 0.0f, 1.0f);
 			float f = mix(privFreq, freq, t);
 			currentFreq = f;
 			
@@ -516,11 +516,12 @@ public:
 	}
 
 	float g(float t) {
-		float _3revs = 3 * glm::two_pi<float>();
-		float _2revs = 2 * glm::two_pi<float>();
-		float _4revs = 4 * TWO_PI;
-		float _5revs = 5 * TWO_PI;
-		return 0.3 * (cos(_3revs * t) + cos(_2revs * t) + 1.8);
+		//float _3revs = 3 * glm::two_pi<float>();
+		//float _2revs = 2 * glm::two_pi<float>();
+		//float _4revs = 4 * TWO_PI;
+		//float _5revs = 5 * TWO_PI;
+		//return 0.3 * (cos(_3revs * t) + cos(_2revs * t) + 1.8);
+		return cos(t);
 	//	return 0.5 * (cos(_5revs * t) + 1);
 	//	return cos(TWO_PI * 3 * t) * exp(-PI * t * t);
 	//	return (sin(TWO_PI * 2 * t) + sin(TWO_PI * 3 * t)) * exp(-3.0f * t);

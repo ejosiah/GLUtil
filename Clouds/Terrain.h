@@ -13,7 +13,7 @@ using namespace glm;
 
 class Terrain : public SceneObject {
 public:
-	Terrain(Scene& scene, float _length, float numGrids, std::optional<std::string> heightMapPath = {})
+	Terrain(Scene& scene, float _length, float numGrids, std::optional<std::string> heightMapPath = {}, std::optional<std::string> normalMapPath = {})
 		:SceneObject(&scene)
 		,_length(_length)
 		, _numGrids(numGrids)
@@ -21,7 +21,7 @@ public:
 
 	{
 		if (!generated) {
-			initHeightMap(*heightMapPath);
+			initHeightMap(*heightMapPath, *normalMapPath);
 		}
 		init();
 	}
@@ -50,20 +50,29 @@ public:
 
 	}
 
-	void initHeightMap(std::string path) {
+	void initHeightMap(std::string path, std::string normalMapPath) {
 		if (!generated) {
 			heightMap = Texture2D{ path , 0, "heightMap"};
+			normalMap = Texture2D{ normalMapPath , 1, "normalMap"};
 		}
 	}
 
 	void render(bool shadowMode = false) {
 		scene().shader("terrain")([&] {
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 			glBindTextureUnit(0, heightMap.buffer());
+			glBindTextureUnit(1, normalMap.buffer());
 
 			send("generated", generated);
 			send(scene().activeCamera());
 			send("camPos", scene().activeCamera().getPosition());
 			send("sunPos", vec3(50000));
+			shade(patch);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		});
+		scene().shader("face_normal")([&] {
+			send(scene().activeCamera());
+			send("normal_length", 10.0f);
 			shade(patch);
 		});
 	}
@@ -74,6 +83,7 @@ private:
 	bool generated;
 	ProvidedMesh patch;
 	Texture2D heightMap;
+	Texture2D normalMap;
 	TextureBuffer* patchBuffer;
 
 };

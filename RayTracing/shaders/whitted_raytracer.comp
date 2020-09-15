@@ -35,6 +35,7 @@ uniform float maxDepth;
 uniform int numNodes;
 uniform bool useLowPoly = false;
 uniform int lowPolyRoot;
+uniform float currentSample;
 // BVH End
 
 
@@ -378,6 +379,7 @@ void main(){
 	int index = globalIndex();
 	Ray ray = rays[index];
 	
+
 	vec3 color = trace(ray);
 
 	color /= color + vec3(1.0);
@@ -385,6 +387,10 @@ void main(){
 //	color = triangles[index%12].a.xyz;
 //	debug.wo = vec4(weight, 0);
 	debugs[index] = debug;
+
+	vec3 destColor = imageLoad(image, ivec2(gl_GlobalInvocationID.xy)).rgb;
+	float n = currentSample + 1;
+	color = mix(destColor, color, 1/n);
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1));
 }

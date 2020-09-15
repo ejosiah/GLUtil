@@ -132,11 +132,11 @@ public:
 		planes.push_back(plane);
 
 
-		plane.n = { -1, 0, 0, 1 };
-		plane.d = 10;
-		plane.id = planes.size();
-		plane.matId = -1;
-		planes.push_back(plane);
+		//plane.n = { -1, 0, 0, 1 };
+		//plane.d = 10;
+		//plane.id = planes.size();
+		//plane.matId = -1;
+		//planes.push_back(plane);
 
 		numPlanes = planes.size();
 
@@ -435,6 +435,7 @@ public:
 		send("bounds.max", vec3(bounds.max));
 		send("numNodes", numNodes);
 		send("cullBackFace", true);
+		send("currentSample", currentSample);
 		glBindTextureUnit(0, skybox->buffer);
 		auto& img = checkerboard->images().front();
 		glBindTextureUnit(1, img.buffer());
@@ -443,6 +444,7 @@ public:
 
 	bool once = true;
 	void postCompute() override {
+		currentSample++;
 		if (once) {
 			once = false;
 		////	debug_ssbo.read([&](Debug* ptr) {
@@ -512,6 +514,10 @@ public:
 		//	}
 		//	});
 		}
+	}
+
+	void restartSampling() {
+		currentSample = 0;
 	}
 
 	void processInput(const Key& key) {
@@ -621,6 +627,7 @@ private:
 	int numNodes = 0;
 	int testPerPixel;
 	int numPixels;
+	float currentSample = 0;
 };
 
 
