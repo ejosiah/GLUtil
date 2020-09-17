@@ -1,3 +1,8 @@
+float ditherPattern[4][4] = { { 0.0f, 0.5f, 0.125f, 0.625f},
+{ 0.75f, 0.22f, 0.875f, 0.375f},
+{ 0.1875f, 0.6875f, 0.0625f, 0.5625},
+{ 0.9375f, 0.4375f, 0.8125f, 0.3125} };
+
 bool insideCube(vec3 pos){
 	return dot(sign(pos - texMin), sign(texMax - pos)) == 3;
 }
@@ -90,9 +95,8 @@ float sampleCloudDensity(vec3 p, Weather weather, float mipLevel){
 
 	base_cloud_with_coverage *= cloud_coverage;
 
-	//return base_cloud_with_coverage;
-
    float height_fraction = heightFractionForPoint(p, cloudMinMax);
+
 
 	vec2 curl = curlNoise(densityCoord.xy * dt);
 	p.xz = curl * (1 - height_fraction);
@@ -148,32 +152,40 @@ float sampleCloudDensityAlongCone(vec3 samplePos, vec3 direction){
 	return density;
 }
 
-
-vec4 matchCloud(vec3 origin, vec3 direction){
+float hash13(vec3 p3)
+{
+	p3 = fract(p3 * .1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
+}
+vec4 matchCloud(vec3 origin, vec3 direction, ivec2 pixelPos){
 	
+	float ditherValue = ditherPattern[pixelPos.x % 4][pixelPos.y % 4];
 	vec3 windDir = -vec3(1, 0, 0);
-	float cloud_speed = 100;
+	float cloud_speed = 0;
 	float cloud_top_offset = 10.0;
 	float height_fraction = heightFractionForPoint(origin, cloudMinMax);
-	vec3 p = origin;
+	vec3 p = origin; // +(direction / ditherValue);
 	p +=  height_fraction * windDir * cloud_top_offset;
 	p += (windDir + vec3(0, 0, 0)) * dt * cloud_speed;
 	
 	vec4 fragColor = vec4(0);
-	vec3 dataPos = p;
+	
 
 	vec3 geomDir = normalize(direction);
-	float samples = textureSize(cloudNoiseLowFreq, int(mipLevel)).x;
-	//float samples = MAX_SAMPLES ;
-	vec3 stepSize = (bMax-bMin)/vec3(textureSize(cloudNoiseLowFreq, int(mipLevel)));
+	//float samples = textureSize(cloudNoiseLowFreq, int(mipLevel)).x;
+	float samples = 256 ;
+	//vec3 stepSize = abs(bMax- bMin)/vec3(textureSize(cloudNoiseLowFreq, int(mipLevel)));
+	vec3 stepSize = abs(bMax - bMin) / samples;
 	vec3 dirStep = geomDir * stepSize;
+	vec3 dataPos = p;
 
 	bool stop = false;
 
 	for(int i = 0; i < samples; i++){
 		dataPos += dirStep;
 
-		//stop = dot(sign(dataPos - bMin), sign(bMax - dataPos)) < 3;
+	//	stop = dot(sign(dataPos - bMin), sign(bMax - dataPos)) < 3;
 
 		if(stop) break;
 

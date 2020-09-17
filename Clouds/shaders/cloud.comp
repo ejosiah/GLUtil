@@ -6,6 +6,7 @@
 #define GREEN (vec3(0, 1, 0))
 #define BLUE (vec3(0, 0, 1))
 #define BLACK (vec3(0, 0, 0))
+#define BG_COLOR vec3(0.53, 0.81, 0.92)
 
 layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 
@@ -38,14 +39,15 @@ struct Atmosphere{
 	float outerRadius;
 };
 
-layout(rgba32f, binding=0) uniform image2D image;
+layout(rgba32f, binding=0) uniform image2D color_buffer;
+layout(rgba32f, binding=1) uniform image2D depth_buffer;
 
-layout(binding = 1) uniform sampler2D canvas;
-layout(binding = 2) uniform sampler2D depthBuffer;
+layout(binding = 2) uniform sampler2D canvas;
+layout(binding = 3) uniform sampler2D depthBuffer;
 
-layout(binding = 3) uniform sampler3D cloudNoiseLowFreq;
-layout(binding = 4) uniform sampler3D cloudNoiseHighFreq;
-layout(binding = 5) uniform sampler2D weatherData;
+layout(binding = 4) uniform sampler3D cloudNoiseLowFreq;
+layout(binding = 5) uniform sampler3D cloudNoiseHighFreq;
+layout(binding = 6) uniform sampler2D weatherData;
 
 layout(std430, binding=1) buffer RAY_SSB0{
 	Ray rays[];
@@ -84,7 +86,7 @@ bool intersectSphere(Ray ray, float radius, out vec3 p);
 
 float depthValue(vec3 p);
 
-vec4 matchCloud(vec3 origin, vec3 direction);
+vec4 matchCloud(vec3 origin, vec3 direction, ivec2 pixelPos);
 
 void main(){
 	int index = globalIndex();
@@ -117,14 +119,18 @@ void main(){
 	float depthDest = texture(depthBuffer, fragCoord).r;
 	if(aHit && depthSrc < depthDest){
 		vec3 dest = texture(canvas, fragCoord).rgb;
-		color = matchCloud(p, ray.direction);
+	//	vec3 dest = BG_COLOR;
+		color = matchCloud(p, ray.direction, ivec2(gl_GlobalInvocationID));
 		color.rgb = color.rgb + dest * (1 - color.a);
+		imageStore(depth_buffer, ivec2(gl_GlobalInvocationID.xy), vec4(depthSrc));
 	}else{
 		sample_point[globalIndex()] = vec4(0);
-		color.rgb = texture(canvas, fragCoord).rgb;
+	//	color.rgb = texture(canvas, fragCoord).rgb;
+		color.rgb = BG_COLOR;
+		imageStore(depth_buffer, ivec2(gl_GlobalInvocationID.xy), vec4(1));
 	}
 
-	imageStore(image, ivec2(gl_GlobalInvocationID.xy), color);
+	imageStore(color_buffer, ivec2(gl_GlobalInvocationID.xy), color);
 }
 
 int globalIndex(){

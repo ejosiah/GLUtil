@@ -70,11 +70,11 @@ public:
 			shade(patch);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		});
-		scene().shader("face_normal")([&] {
-			send(scene().activeCamera());
-			send("normal_length", 10.0f);
-			shade(patch);
-		});
+		//scene().shader("face_normal")([&] {
+		//	send(scene().activeCamera());
+		//	send("normal_length", 10.0f);
+		//	shade(patch);
+		//});
 	}
 
 private:

@@ -51,6 +51,9 @@ public:
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 
 		addShader("weather_gen", GL_VERTEX_SHADER, screen_vert_shader);
+
+		addShader("cloud_render", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("render_scene", GL_VERTEX_SHADER, screen_vert_shader);
 	}
 
 	void init() override {
@@ -100,7 +103,7 @@ public:
 		//	GL_FLOAT
 		//};
 
-		//weatherData = new Texture2D{ "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\weather\\weather05.png" };
+	//	weatherData = new Texture2D{ "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\weather\\weather06.png" };
 		weatherData = new Texture2D{ "media\\weather2.png" };
 
 		lowFreqNoise = new Texture3D{ data, texConfig };
@@ -220,7 +223,11 @@ public:
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 
 		ivec3 workers = ivec3{ _width/32, _height / 32, 1 };
-		Image2D image = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "scene", 0};
+		Image2D colorBuffer = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "color_buffer", 0};
+
+		//CHECK_GL_ERRORS
+		Image2D depthBuffer = Image2D{ (unsigned)_width, (unsigned)_height, GL_RGBA32F, "depth_buffer", 1 };
+		//CHECK_GL_ERRORS
 		
 		
 		sample_point = StorageBufferObj<vec4>{ size_t(_width * _height), 2 };
@@ -230,13 +237,12 @@ public:
 			}
 			});
 		
-		clouds = new Compute{ workers, { image }, &shader("cloud"), [&] {
-			glBindTextureUnit(1, fb.texture());
-			glBindTextureUnit(2, fb.texture(1));
-			glBindTextureUnit(3, lowFreqNoise->buffer());
-		//	glBindTextureUnit(3, lowFreqNoise1);
-			glBindTextureUnit(4, highFreqNoise->buffer());
-			glBindTextureUnit(5, weatherData->buffer());
+		clouds = new Compute{ workers, { colorBuffer, depthBuffer }, &shader("cloud"), [&] {
+			glBindTextureUnit(2, fb.texture());
+			glBindTextureUnit(3, fb.texture(1));
+			glBindTextureUnit(4, lowFreqNoise->buffer());
+			glBindTextureUnit(5, highFreqNoise->buffer());
+			glBindTextureUnit(6, weatherData->buffer());
 			sample_point.sendToGPU();
 			rayGenerator->getRaySSBO().sendToGPU();
 			send(activeCamera());
@@ -255,8 +261,8 @@ public:
 		
 		weatherGenerator = std::make_unique<WeatherGenerator>(*this);
 
-		addCompute(rayGenerator);
-		addCompute(clouds);
+		//addCompute(rayGenerator);
+		//addCompute(clouds);
 	}
 
 	void initSkyBox() {
@@ -302,13 +308,16 @@ public:
 	//	renderSky();
 	//	renderFloor();
 
-		renderClouds();
 	//	terrain->render();
+		renderClouds();
 
-		//shader("screen")([&] {
-		//	glBindTextureUnit(0, fb.texture());
-		//	shade(quad);
-		//});
+		
+
+		shader("render_scene")([&] {
+			glBindTextureUnit(0, fb.texture());
+			glBindTextureUnit(1, fb.texture(1));
+			shade(quad);
+		});
 
 		//sbr.str("");
 		//sbr.clear();
@@ -390,9 +399,11 @@ public:
 
 
 
-		shader("screen")([&] {
+		shader("cloud_render")([&] {
 			clouds->images().front().renderMode();
-			glBindTextureUnit(0, clouds->images().front().buffer());
+			glBindTextureUnit(0, clouds->images().at(0).buffer());
+			glBindTextureUnit(1, clouds->images().at(1).buffer());
+			send("resolution", vec2(_width, _height));
 			shade(quad);
 		});
 	}
@@ -416,7 +427,14 @@ public:
 		});
 	}
 
-	void update(float dt) {
+	void update(float t) {
+		frameCount++;
+		dt += t;
+		frameCount %= 5;
+		if (frameCount == 0) {
+			rayGenerator->compute();
+			clouds->compute();
+		}
 		fb.use([&] {
 		//	renderSky();
 			shader("flat")([&] {
@@ -493,6 +511,7 @@ private:
 	Compute* noiseGenerator;
 	Texture3D* lowFreqNoise;
 	Texture3D* highFreqNoise;
+	Texture2D cloudDepthBuffer;
 	GLuint lowFreqNoise1;
 	Texture2D* weatherData;
 	const uvec3 dim = uvec3(128);
@@ -519,4 +538,6 @@ private:
 	rt::Ray ray;
 	bool showRay = false;
 	int slice = 0;
+	int frameCount;
+	float dt;
 };

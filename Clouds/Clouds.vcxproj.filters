@@ -93,6 +93,12 @@
     <None Include="shaders\face_normal.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\cloud_render.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\render_scene.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">
