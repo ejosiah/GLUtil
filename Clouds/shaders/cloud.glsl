@@ -35,7 +35,8 @@ vec2 curlNoise(vec2 uv);
 float mipLevel = 0;
 
 vec3 sampleCoord(vec3 p){
-	return remap(p, bMin, bMax, vec3(0), vec3(4));
+//	return remap(p, vec3(-EARTH_RADIUS, CLOUDS_START, EARTH_RADIUS), vec3(-EARTH_RADIUS, CLOUDS_END, EARTH_RADIUS), vec3(0), vec3(4));
+	return p * 0.0005;
 }
 
 vec2 weatherSampleCoord(vec3 p) {
@@ -48,8 +49,8 @@ float saturate(float val){
 }
 
 float heightFractionForPoint(vec3 pos, vec2 cloudMinMax){
-	float height_fraction = (pos.y - bMin.y);
-	height_fraction /= (bMax.y - bMin.y);
+	float height_fraction = (pos.y - cloudMinMax.x);
+	height_fraction /= (cloudMinMax.y - cloudMinMax.x);
 
 	return saturate(height_fraction);
 }
@@ -158,11 +159,11 @@ float hash13(vec3 p3)
 	p3 += dot(p3, p3.yzx + 33.33);
 	return fract((p3.x + p3.y) * p3.z);
 }
-vec4 matchCloud(vec3 origin, vec3 direction, ivec2 pixelPos){
+vec4 matchCloud(vec3 origin, vec3 direction, vec3 exitPoint, ivec2 pixelPos){
 	
 	float ditherValue = ditherPattern[pixelPos.x % 4][pixelPos.y % 4];
 	vec3 windDir = -vec3(1, 0, 0);
-	float cloud_speed = 0;
+	float cloud_speed = 100;
 	float cloud_top_offset = 10.0;
 	float height_fraction = heightFractionForPoint(origin, cloudMinMax);
 	vec3 p = origin; // +(direction / ditherValue);
@@ -170,13 +171,12 @@ vec4 matchCloud(vec3 origin, vec3 direction, ivec2 pixelPos){
 	p += (windDir + vec3(0, 0, 0)) * dt * cloud_speed;
 	
 	vec4 fragColor = vec4(0);
-	
 
 	vec3 geomDir = normalize(direction);
 	//float samples = textureSize(cloudNoiseLowFreq, int(mipLevel)).x;
 	float samples = 256 ;
 	//vec3 stepSize = abs(bMax- bMin)/vec3(textureSize(cloudNoiseLowFreq, int(mipLevel)));
-	vec3 stepSize = abs(bMax - bMin) / samples;
+	vec3 stepSize = abs(exitPoint - origin) / samples;
 	vec3 dirStep = geomDir * stepSize;
 	vec3 dataPos = p;
 
@@ -185,7 +185,7 @@ vec4 matchCloud(vec3 origin, vec3 direction, ivec2 pixelPos){
 	for(int i = 0; i < samples; i++){
 		dataPos += dirStep;
 
-	//	stop = dot(sign(dataPos - bMin), sign(bMax - dataPos)) < 3;
+	//	stop = dot(dataPos, dataPos) > dot(exitPoint, exitPoint);
 
 		if(stop) break;
 

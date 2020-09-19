@@ -90,6 +90,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "audio", "audio\audio.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clouds", "Clouds\Clouds.vcxproj", "{0AB247EC-990A-435A-9846-7F9FF1DF3A81}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VolumetricLights", "VolumetricLights\VolumetricLights.vcxproj", "{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -426,6 +428,14 @@ Global
 		{0AB247EC-990A-435A-9846-7F9FF1DF3A81}.Release|x64.Build.0 = Release|x64
 		{0AB247EC-990A-435A-9846-7F9FF1DF3A81}.Release|x86.ActiveCfg = Release|Win32
 		{0AB247EC-990A-435A-9846-7F9FF1DF3A81}.Release|x86.Build.0 = Release|Win32
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Debug|x64.ActiveCfg = Debug|x64
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Debug|x64.Build.0 = Debug|x64
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Debug|x86.ActiveCfg = Debug|Win32
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Debug|x86.Build.0 = Debug|Win32
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x64.ActiveCfg = Release|x64
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x64.Build.0 = Release|x64
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x86.ActiveCfg = Release|Win32
+		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

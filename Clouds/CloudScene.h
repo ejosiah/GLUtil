@@ -19,6 +19,12 @@
 #include "Terrain.h"
 #include "WeatherGenerator.h"
 
+#define EARTH_RADIUS 150000
+#define EARTH_CENTER vec3(0, 0, -EARTH_RADIUS)
+#define CLOUDS_START 1500
+#define CLOUDS_END 5000
+#define MAX_CLOUD_DISTANCE 12000.0
+
 using namespace std;
 using namespace glm;
 using namespace ncl;
@@ -63,14 +69,13 @@ public:
 		_modelHeight = 5.0f;
 		bounds(vec3(-30.0_km), vec3(30.0_km));
 		initDefaultCamera();
-		activeCamera().perspective(60.0f, _width / _height, 10.0_cm, 100.0_km);
+		activeCamera().perspective(60.0f, float(_width) / _height, 10.0_cm, 1000.0_km);
 	//	activeCamera().collisionTestOff();
 		activeCamera().setVelocity(vec3(100));
 	//	deactivateCameraControl();
 		activeCamera().setAcceleration(vec3(100));
 		activeCamera().setPosition({ -26, 176, -260 });
-	//	activeCamera().setPosition({ -26, 4000, 4000 });
-	//	activeCamera().setPosition({ 0, 100, 0 });
+	//	activeCamera().setPosition({ -26, EARTH_RADIUS + CLOUDS_END + 100, EARTH_RADIUS + 100 });
 		quad = ProvidedMesh{ screnSpaceQuad() };
 		quad.defautMaterial(false);
 
@@ -103,7 +108,7 @@ public:
 		//	GL_FLOAT
 		//};
 
-	//	weatherData = new Texture2D{ "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\weather\\weather06.png" };
+	//	weatherData = new Texture2D{ "C:\\Users\\" + username + "\\OneDrive\\media\\textures\\weather\\weather07.png" };
 		weatherData = new Texture2D{ "media\\weather2.png" };
 
 		lowFreqNoise = new Texture3D{ data, texConfig };
@@ -248,13 +253,16 @@ public:
 			send(activeCamera());
 			send("atmosphere.innerRadius", float(100));
 			send("atmosphere.outerRadius", float(200));
-			send("cloudMinMax", vec2(cube.aabbMin().y, cube.aabbMax().y));
+			send("cloudMinMax", vec2(CLOUDS_START, CLOUDS_END));
 			send("stepSize", stepSize);
 			send("camPos", activeCamera().getPosition());
 			send("bMin", cube.aabbMin());
 			send("bMax", cube.aabbMax());
 			send("dt", Timer::get().timeSinceStart());
 			send("lightPos", vec3(50.0_km));
+			send("r0", float(EARTH_RADIUS + CLOUDS_START));
+			send("r1", float(EARTH_RADIUS + CLOUDS_END));
+			send("center", vec3(0, -EARTH_RADIUS, 0));
 			sendWeather();
 
 		} };
@@ -428,25 +436,26 @@ public:
 	}
 
 	void update(float t) {
+
+		fb.use([&] {
+		//	renderSky();
+			//shader("flat")([&] {
+			//	send(activeCamera());
+			//	shade(cubeAABB);
+			//	send(activeCamera(), translate(mat4(1), cube.aabbMin()));
+			//	shade(sphere);
+			//	send(activeCamera(), translate(mat4(1), cube.aabbMax()));
+			//	shade(sphere);
+			//	});
+			terrain->render();
+		});
 		frameCount++;
 		dt += t;
-		frameCount %= 5;
+		frameCount %= 16;
 		if (frameCount == 0) {
 			rayGenerator->compute();
 			clouds->compute();
 		}
-		fb.use([&] {
-		//	renderSky();
-			shader("flat")([&] {
-				send(activeCamera());
-				shade(cubeAABB);
-				send(activeCamera(), translate(mat4(1), cube.aabbMin()));
-				shade(sphere);
-				send(activeCamera(), translate(mat4(1), cube.aabbMax()));
-				shade(sphere);
-				});
-			terrain->render();
-		});
 	//	setBackGroundColor({ 0.5, 0.5, 1, 1 });
 	}
 
@@ -540,4 +549,10 @@ private:
 	int slice = 0;
 	int frameCount;
 	float dt;
+	const float h = 1.0_km;
+	const float l = 5.0_km;
+	const float diag = std::sqrt(l * l + l * l);
+	const float r0 = (std::pow(diag / 2, 2) + std::pow(h, 2)) / (2 * h);
+	const float r1 = r0 + 0.5_km;
+	const float center = r0 - h;
 };

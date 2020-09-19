@@ -242,6 +242,14 @@ namespace ncl {
 				xbfEnabled = false;
 			}
 
+			void cullBackFaceOn() {
+				cullface = true;
+			}
+
+			void cullBackFaceOff() {
+				cullface = false;
+			}
+
 			void update(int attribute, std::function<void(float*)> consume) {
 				if (attribute < Position || attribute > Color)
 					throw std::runtime_error("invalid attribute id");

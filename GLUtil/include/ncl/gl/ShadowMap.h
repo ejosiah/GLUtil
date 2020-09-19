@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include "Shader.h"
 #include "shaders.h"
-#include "shader_binding.h"
+#include "Scene.h"
 #include "FrameBuffer.h"
 #include <functional>
 
@@ -146,8 +146,8 @@ namespace ncl {
 			shadowShader.load({ GL_FRAGMENT_SHADER, point_shadow_map_frag_shader, "point_shadow_map.frag" });
 			shadowShader.createAndLinkProgram();
 
-			debugShader.load({ GL_VERTEX_SHADER, point_shadow_map_render_vert_shader, "point_shadow_map.vert" });
-			debugShader.load({ GL_FRAGMENT_SHADER, point_shadow_map_render_frag_shader, "point_shadow_map.frag" });
+			debugShader.load({ GL_VERTEX_SHADER, point_shadow_map_render_vert_shader, "point_shadow_map_debug.vert" });
+			debugShader.load({ GL_FRAGMENT_SHADER, point_shadow_map_render_frag_shader, "point_shadow_map_debug.frag" });
 			debugShader.createAndLinkProgram();
 
 			cube = Cube{ 1 };
@@ -173,10 +173,10 @@ namespace ncl {
 					shadowShader.sendUniform3fv("lightPos", 1, glm::value_ptr(lightView.position));
 					shadowShader.sendUniformMatrix4fv("M", 1, false, glm::value_ptr(glm::mat4{ 1 }));
 					shadowShader.sendUniformMatrix4fv("projection", 1, false, glm::value_ptr(lightView.projection));
-					for (int i = 0; i < 6; i++) {
-						shadowShader.sendUniformMatrix4fv("view[" + std::to_string(i) + "]", 1, false, glm::value_ptr(lightView.views[i]));
-					}
-					//shadowShader.sendUniformMatrix4fv("view", 6, false, glm::value_ptr(lightView.views[0]));
+					//for (int i = 0; i < 6; i++) {
+					//	shadowShader.sendUniformMatrix4fv("view[" + std::to_string(i) + "]", 1, false, glm::value_ptr(lightView.views[i]));
+					//}
+					shadowShader.sendUniformMatrix4fv("view", 6, false, glm::value_ptr(lightView.views[0]));
 					scene();
 					});
 				});
