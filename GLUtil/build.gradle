@@ -22,18 +22,20 @@ task installHeaders(type: Copy, dependsOn: 'compileShaders'){
 	into  includeDir
 }
 
-task compileShaders << {
-	println("transfering to $includeDir")
-//	def src = new File('shaders').listFiles().findAll{ it.isFile() }
-	def src = recurse(new File('shaders')).flatten()
-	def dest = new File("include/ncl/gl/shaders.h")
-	dest.delete()
-	dest << "#pragma once\n"
-	dest << "#include <iostream>\n"
-	src.findAll{ !it.text.contains("#pragma nocomp") }.each{
-		def name = it.name.replace(".", "_")
-		dest << "const std::string ${name}_shader = \""
-		it.eachLine{ line -> dest << "${line.replace("\"", "\\\"")}\\n"   }
-		dest << '";\n'
+task compileShaders {
+	doLast{
+		println("transfering to $includeDir")
+	//	def src = new File('shaders').listFiles().findAll{ it.isFile() }
+		def src = recurse(new File('shaders')).flatten()
+		def dest = new File("include/ncl/gl/shaders.h")
+		dest.delete()
+		dest << "#pragma once\n"
+		dest << "#include <iostream>\n"
+		src.findAll{ !it.text.contains("#pragma nocomp") }.each{
+			def name = it.name.replace(".", "_")
+			dest << "const std::string ${name}_shader = \""
+			it.eachLine{ line -> dest << "${line.replace("\"", "\\\"")}\\n"   }
+			dest << '";\n'
+		}
 	}
 }

@@ -71,8 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Josiah\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\$(Username)\OneDrive\cpp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\$(Username)\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -149,6 +149,7 @@
   <ItemGroup>
     <None Include="shaders\holes.frag" />
     <None Include="shaders\holes.vert" />
+    <None Include="shaders\holes_onFragment.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

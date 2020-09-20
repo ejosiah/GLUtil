@@ -9,6 +9,7 @@
 #include "Scene.h"
 #include "FrameBuffer.h"
 #include <functional>
+#include <optional>
 
 namespace ncl {
 	namespace gl {
@@ -87,7 +88,7 @@ namespace ncl {
 
 			OminiDirectionalShadowMap() = default;
 
-			OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float near = 1.0f, float far = 25.0f);
+			OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float near = 1.0f, float far = 25.0f, std::optional<std::string> onFragment = {});
 
 			OminiDirectionalShadowMap(OminiDirectionalShadowMap&& source) noexcept;
 
@@ -121,7 +122,7 @@ namespace ncl {
 			float farPlane, nearPlane;
 		};
 
-		OminiDirectionalShadowMap::OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float znear, float zfar)
+		OminiDirectionalShadowMap::OminiDirectionalShadowMap(GLuint textureUnit, glm::vec3 position, GLsizei width, GLsizei height, float znear, float zfar, std::optional<std::string> onFragment)
 			: textureUnit{ textureUnit }
 			, nearPlane{ znear }
 			, farPlane{ zfar } {
@@ -141,13 +142,17 @@ namespace ncl {
 			config.attachments.push_back(attachment);
 			frameBuffer = FrameBuffer{ config };
 
+			auto _onFrag = onFragment.value_or(point_shadow_on_fragment_frag_shader);
 			shadowShader.load({ GL_VERTEX_SHADER, point_shadow_map_vert_shader, "point_shadow_map.vert" });
 			shadowShader.load({ GL_GEOMETRY_SHADER, point_shadow_map_geom_shader, "point_shadow_map.geom" });
 			shadowShader.load({ GL_FRAGMENT_SHADER, point_shadow_map_frag_shader, "point_shadow_map.frag" });
+			shadowShader.load({ GL_FRAGMENT_SHADER, _onFrag, "point_shadow_map_onFragment.frag" });
 			shadowShader.createAndLinkProgram();
 
 			debugShader.load({ GL_VERTEX_SHADER, point_shadow_map_render_vert_shader, "point_shadow_map_debug.vert" });
 			debugShader.load({ GL_FRAGMENT_SHADER, point_shadow_map_render_frag_shader, "point_shadow_map_debug.frag" });
+
+
 			debugShader.createAndLinkProgram();
 
 			cube = Cube{ 1 };

@@ -876,6 +876,9 @@
     <None Include="include\shaders\perlin.glsl">
       <Filter>shaders\include</Filter>
     </None>
+    <None Include="shaders\point_shadow_on_fragment.frag">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="media\textures\floor_color_map.tga">

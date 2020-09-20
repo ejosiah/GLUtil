@@ -393,6 +393,7 @@
     <None Include="shaders\point_shadow_map.vert" />
     <None Include="shaders\point_shadow_map_render.frag" />
     <None Include="shaders\point_shadow_map_render.vert" />
+    <None Include="shaders\point_shadow_on_fragment.frag" />
     <None Include="shaders\probe_render.frag" />
     <None Include="shaders\probe_render.vert" />
     <None Include="shaders\scene_capture.geom" />

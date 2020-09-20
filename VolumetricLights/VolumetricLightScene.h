@@ -53,42 +53,28 @@ public:
 		logger.info("radius: " + to_string(r));
 		glPointSize(5);
 
-		shadowMap = OminiDirectionalShadowMap{ 5, lightPos, 1024, 1024};
+		auto onFragment = getSource("holes_onFragment.frag")->data;
+
+		shadowMap = OminiDirectionalShadowMap{ 5, lightPos, 1024, 1024, 0.1f, 10.0f, onFragment};
 		cube = Cube{ 1 };
 	}
 
 	void display() override {
 		shadowMap.update(lightPos);
 		shadowMap.capture([&] {
-			shader("holes")([&] {
-				holesSsbo.sendToGPU();
-				send("num_holes", numPoints);
-			//	send(activeCamera());
-				shade(sphere);
-			});
-
-			//shader("flat")([&] {
-			//	send(activeCamera());
-			//	shade(sphereBounds);
-			//});
-			});
+			holesSsbo.sendToGPU();
+			send("num_holes", numPoints);
+			shade(sphere);
+		});
 		
 		
 
-		//shader("holes")([&] {
-		//	glBindTextureUnit(5, shadowMap.texture());
-		//	holesSsbo.sendToGPU();
-		//	send("num_holes", numPoints);
-		//	send(activeCamera());
-		//	shade(sphere);
-		//});
-
-		shader("debug_shadow_map")([&] {
-			glDepthFunc(GL_LEQUAL);
-			glBindTextureUnit(0, shadowMap.texture());
+		shader("holes")([&] {
+			glBindTextureUnit(5, shadowMap.texture());
+			holesSsbo.sendToGPU();
+			send("num_holes", numPoints);
 			send(activeCamera());
-			shade(cube);
-			glDepthFunc(GL_LESS);
+			shade(sphere);
 		});
 
 	}
