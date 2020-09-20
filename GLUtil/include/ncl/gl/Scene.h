@@ -308,6 +308,7 @@ namespace ncl {
 			}
 
 			void updateFrameRate(float elapsedTime) {
+				_elapsedFrames++;
 				static float totalTime = 0.0f;
 				static int frames = 0;
 
@@ -732,6 +733,10 @@ namespace ncl {
 				return _bounds;
 			}
 
+			float elapsedFrames() {
+				return _elapsedFrames;
+			}
+
 			GlmCam cam;
 			_3DMotionEventHandler* _motionEventHandler;
 
@@ -775,6 +780,7 @@ namespace ncl {
 			glm::vec4 _foreground;
 			int activeCam = 0;
 			float fps;
+			float _elapsedFrames = 0;
 			bool cameraControlActive = true;
 			bool camInfoOn = false;
 			Font* sFont;

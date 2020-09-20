@@ -35,14 +35,11 @@ namespace ncl {
 		}
 
 
-		inline glm::vec3 pointInSphere(float x, float y) {
-			float sin0 = ::sqrt(1 - x * x);
-			float phi = 2 * glm::pi<float>() * y;
-			return glm::vec3{
-				::cos(phi) * sin0,
-				::sin(phi) * sin0,
-				::cos(x)
-			};
+		inline glm::vec3 pointInSphere(float u, float v) {
+			float z = 1 - 2 * u;
+			float r = std::sqrt(std::max(0.0f, (1 - z * z)));
+			float phi = glm::two_pi<float>() * v;
+			return glm::vec3(r * std::cos(phi), r * std::sin(phi), z);
 		}
 
 

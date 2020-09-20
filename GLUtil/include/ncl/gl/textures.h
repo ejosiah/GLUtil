@@ -500,19 +500,25 @@ namespace ncl {
 
 		class Image2D {
 		public:
-			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint id = 0, GLuint buffer = 0, GLuint img_id = 0): 
+			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint img_id = 0, GLuint id = 0, GLuint buffer = 0):
 				_id(id), _buffer(buffer), _img_id(img_id), _format(format), _name(name) {
-				if (glIsBuffer(_buffer) == GL_FALSE) {
+				if (glIsTexture(_buffer) == GL_FALSE) {
 					glGenTextures(1, &_buffer);
 				}
 				glActiveTexture(TEXTURE(_id));
+				CHECK_GL_ERRORS
 				glBindTexture(GL_TEXTURE_2D, _buffer);
+				CHECK_GL_ERRORS
 				glTexStorage2D(GL_TEXTURE_2D, 1, _format, width, height);
+				CHECK_GL_ERRORS
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Todo pass in gl_tex_params
+				CHECK_GL_ERRORS
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+				CHECK_GL_ERRORS
 
 				if (_name == "") _name = std::string("image") + std::to_string(id);
-				gl::objectLabel(GL_BUFFER, _buffer, "image2D:" + name);
+				gl::objectLabel(GL_TEXTURE, _buffer, "image2D:" + name);
+				CHECK_GL_ERRORS
 
 				mode = Mode::COMPUTE;
 			}

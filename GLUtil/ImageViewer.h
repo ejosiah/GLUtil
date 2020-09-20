@@ -99,8 +99,8 @@ public:
 		//	texture0 = pbr::generate_brdf_lookup_table(0);
 		//}
 
-		auto texId0 = texture0->bufferId();
-		auto texId1 = texture1->bufferId();
+		auto texId0 = texture0->buffer();
+		auto texId1 = texture1->buffer();
 		plane->defautMaterial(false);
 
 		shader("image")([&](Shader& s) {
@@ -108,17 +108,17 @@ public:
 			//glActiveTexture(GL_TEXTURE0);
 
 		//	glBindTextureUnit(0, texId0);
-		//	glBindTexture(GL_TEXTURE_2D, texture0->bufferId());
+		//	glBindTexture(GL_TEXTURE_2D, texture0->buffer());
 		//	s.sendUniform1i("image0", texture0->unit());
 
 		//	glActiveTexture(GL_TEXTURE1);
-		//	glBindTexture(GL_TEXTURE_2D, texture1->bufferId());
+		//	glBindTexture(GL_TEXTURE_2D, texture1->buffer());
 		//	s.sendUniform1i("image1", texture1->unit());
 		//	glBindTextureUnit(1, texId1);
 			
 			send(texture1);
 			send(texture0);
-			glBindTextureUnit(2, texture2->bufferId());
+			glBindTextureUnit(2, texture2->buffer());
 		//	send(&board->images().front());
 			s.sendUniformMatrix4fv("MVP", 1, GL_FALSE, &projection[0][0]);
 			plane->draw(s);

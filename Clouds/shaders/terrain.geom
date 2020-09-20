@@ -1,17 +1,21 @@
 #version 450 core
 
 layout(triangles) in;
-layout(triangle_strip, max_vertices = 3) out;
+layout(triangle_strip, max_vertices = 6) out;
 
 uniform vec4 frustumPlanes[6];
+uniform mat4 MVP;
+uniform float normal_length = 1;
 
 smooth in vec2 uv[3];
 smooth in vec3 worldPos[3];
+
 
 out ncl_PerVertex{
 	vec3 worldPos;
 	vec3 normal;
 	vec2 uv;
+	bool isNormal;
 } ncl_out;
 
 
@@ -44,6 +48,8 @@ bool triangleInFrustum(){
 	));
 }
 
+
+
 void main(){
 
 	vec3 n = calcNormal();
@@ -53,6 +59,7 @@ void main(){
 		ncl_out.uv = uv[i];
 		ncl_out.normal = n;
 		ncl_out.worldPos = worldPos[i];
+		ncl_out.isNormal = false;
 		EmitVertex();
 	}
 	EndPrimitive();

@@ -81,6 +81,24 @@
     <None Include="shaders\weather_gen.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\bumpToNormal.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\face_normal.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\face_normal.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\face_normal.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\cloud_render.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\render_scene.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CloudScene.h">
@@ -97,6 +115,9 @@
     </ClInclude>
     <ClInclude Include="WeatherGenerator.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shaders\face_normal.tese">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

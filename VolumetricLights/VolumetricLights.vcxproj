@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{0AB247EC-990A-435A-9846-7F9FF1DF3A81}</ProjectGuid>
-    <RootNamespace>Clouds</RootNamespace>
+    <ProjectGuid>{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}</ProjectGuid>
+    <RootNamespace>VolumetricLights</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -69,13 +69,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\$(Username)\OneDrive\cpp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\$(Username)\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\Josiah\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -83,18 +83,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -102,6 +90,18 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,45 +141,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="clouds_include.frag" />
-    <None Include="shaders\bumpToNormal.frag" />
-    <None Include="shaders\cloud.comp" />
-    <None Include="shaders\cloud.glsl" />
-    <None Include="shaders\clouds.frag" />
-    <None Include="shaders\clouds.vert" />
-    <None Include="shaders\cloud_render.frag" />
-    <None Include="shaders\face_normal.frag" />
-    <None Include="shaders\face_normal.geom" />
-    <None Include="shaders\face_normal.vert" />
-    <None Include="shaders\frustum_cull.geom" />
-    <None Include="shaders\fun_def.comp" />
-    <None Include="shaders\generate_rays.comp" />
-    <None Include="shaders\noise.comp" />
-    <None Include="shaders\perlin.comp" />
-    <None Include="shaders\perlin_worley.frag" />
-    <None Include="shaders\perlin_worley.geom" />
-    <None Include="shaders\ray_marching.frag" />
-    <None Include="shaders\render.frag" />
-    <None Include="shaders\render_scene.frag" />
-    <None Include="shaders\sky.frag" />
-    <None Include="shaders\sky.vert" />
-    <None Include="shaders\terrain.frag" />
-    <None Include="shaders\terrain.geom" />
-    <None Include="shaders\terrain.tese" />
-    <None Include="shaders\terrain.vert" />
-    <None Include="shaders\weather.comp" />
-    <None Include="shaders\weather_gen.frag" />
+    <ClInclude Include="VolumetricLightScene.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CloudScene.h" />
-    <ClInclude Include="CloudUI.h" />
-    <ClInclude Include="shaders\face_normal.tese" />
-    <ClInclude Include="Terrain.h" />
-    <ClInclude Include="Weather.h" />
-    <ClInclude Include="WeatherGenerator.h" />
+    <ClCompile Include="volumeLights.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="clouds.cpp" />
+    <None Include="shaders\holes.frag" />
+    <None Include="shaders\holes.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
