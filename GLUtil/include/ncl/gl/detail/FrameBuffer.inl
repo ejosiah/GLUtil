@@ -193,9 +193,10 @@ namespace ncl {
 
 		void FrameBuffer::use(std::function<void()> exec, GLuint layer) const {
 			glGetIntegerv(GL_VIEWPORT, const_cast<GLint*>(viewport));
+			static GLfloat cc[4];
+			glGetFloatv(GL_COLOR_CLEAR_VALUE, cc);
 
 			glBindFramebuffer(config.fboTarget, _fbo);
-
 
 
 			auto [r, g, b, a] = toTuple(config.clearColor); 
@@ -205,6 +206,7 @@ namespace ncl {
 			exec();
 			glBindFramebuffer(config.fboTarget, 0);
 			glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+			glClearColor(cc[0], cc[1], cc[2], cc[3]);
 		}
 
 		void FrameBuffer::attachTextureFor(GLuint layer, GLuint level) const{
