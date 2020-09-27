@@ -24,55 +24,11 @@ public:
 		
 	}
 
-	std::vector<ncl::gl::Mesh> createMesh(const fsim::ScalarField& field, int p, int q, const glm::vec4& color, int w) {
-		using namespace ncl::gl;
-		using namespace glm;
-
-		Mesh mesh;
-		float max = std::numeric_limits<float>::min();
-		float min = std::numeric_limits<float>::max();
-		for (int j = 0; j < q; j++) {
-			for (int i = 0; i < p; i++) {
-				float x = w * i / float(p) - w/2;
-				float y = w * j / float(q) - w/2;
-				vec3 point = { x, y, 0 };
-				float z = field.sample(point);
-				min = std::min(z, min);
-				max = std::max(z, max);
-				mesh.positions.push_back({ x, y, z });
-				mesh.normals.push_back( glm::normalize( field.gradient(point) ));
-				mesh.uvs[0].push_back(glm::vec2(i/float(p), j/float(q)));
-
-			}
-		}
-
-		float h = max - min;
-		mesh.colors = std::vector<vec4>(mesh.positions.size());
-		for (int i = 0; i < mesh.positions.size(); i++) {
-			float ratio = (mesh.positions[i].z - min) / h;
-			float r = smoothstep(0.6f, 0.8f, ratio);
-			float g = smoothstep(0.0f, 0.4f, ratio) - smoothstep(0.8f, 1.0f, ratio);
-			float b = 1 - smoothstep(0.4f, 0.6f, ratio);
-			mesh.colors[i] = { r, g, b, 1 };
-		}
-
-		for (int j = 0; j < q; j++) {
-			for (int i = 0; i <= p; i++) {
-				mesh.indices.push_back((j + 1) * (p + 1) + i);
-				mesh.indices.push_back(j * (p + 1) + i);
-			}
-		}
-
-		mesh.primitiveType = GL_POINTS;
-		return std::vector<Mesh>(1, mesh);
-	}
-
 	void init() {
 		initField();
 		initPatch();
 
 		float ar = float(scene().width()) / scene().height();
-	//	cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
 		cam.projection = perspective(half_pi<float>() / 2.0f, ar, 0.1f, 1000.0f);
 	}
 
@@ -100,6 +56,7 @@ public:
 		float n = 1024;
 		GLfloat* heightMapData = new GLfloat[n * n];
 		GLfloat* laplacianMapData = new GLfloat[n * n];
+		GLfloat* gradiantMapData = new GLfloat[n * n * 3];
 
 		for (int j = 0; j < n; j++) {
 			for (int i = 0; i < n; i++) {
@@ -116,6 +73,12 @@ public:
 				heightMapData[idx] = val;
 				laplacianMapData[idx] = lapVal;
 
+				auto n = pack(grad);
+				auto gradId = idx * 3;
+				gradiantMapData[gradId] = n.x;
+				gradiantMapData[gradId + 1] = n.y;
+				gradiantMapData[gradId + 2] = n.z;
+
 				minVal = std::min(val, minVal);
 				maxVal = std::max(val, maxVal);
 
@@ -124,13 +87,18 @@ public:
 			}
 		}
 
-		heightMap = Texture2D( heightMapData, n, n, "heightMapData", 0, GL_R32F, GL_RED, GL_FLOAT );
+		heightMap = Texture2D( heightMapData, n, n, "heightMap", 0, GL_R32F, GL_RED, GL_FLOAT );
 		laplacianMap = Texture2D(laplacianMapData, n, n, "laplacianMap", 0, GL_R32F, GL_RED, GL_FLOAT );
+		gradiantMap = Texture2D(gradiantMapData, n, n, "gradiantMap", 0, GL_RGB32F, GL_RGB, GL_FLOAT );
 
 		delete[] heightMapData;
 		delete[] laplacianMapData;
+		delete[] gradiantMapData;
 	}
 
+	vec3 pack(vec3 n) {
+		return normalize(n) * 0.5f + 0.5f;
+	}
 
 	void render(bool shadowMode = false) override {
 		scene().shader("scalar_field")([&] {
@@ -154,6 +122,7 @@ public:
 			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
 
 			glBindTextureUnit(0, heightMap.buffer());
+			glBindTextureUnit(1, gradiantMap.buffer());
 			send(cam);
 			//	send(scene().activeCamera());
 			send("minVal", minVal);
@@ -174,7 +143,7 @@ public:
 
 	void renderLaplacian() {
 		scene().shader("field")([&] {
-			glBindTextureUnit(0, laplacianMap.buffer());
+			glBindTextureUnit(0, gradiantMap.buffer());
 			send("isHeatMap", false);
 			shade(quad);
 		});
@@ -212,6 +181,7 @@ private:
 //	std::unique_ptr<Texture2D> heightMap;
 	Texture2D heightMap;
 	Texture2D laplacianMap;
+	Texture2D gradiantMap;
 //	std::unique_ptr<Texture2D> laplacianMap;
 	ProvidedMesh patch;
 	ProvidedMesh quad;

@@ -3,12 +3,14 @@
 layout (quads, equal_spacing, ccw) in;
 
 layout(binding = 0) uniform sampler2D heightMap;
+layout(binding = 1) uniform sampler2D gradiantMap;
 
 uniform mat4 MVP;
 uniform mat4 M;
 
 smooth out vec2 uv;
 smooth out float val;
+smooth out vec3 normal;
 
 void main(){
 	uv = gl_TessCoord.xy;
@@ -28,6 +30,7 @@ void main(){
 			 p2 * u * v;
 
 	val = texture(heightMap, uv).r;
-	val = p.y;
+	normal = texture(gradiantMap, uv).rgb * 2 - 1;
+	p.y = val;
 	gl_Position = MVP * p;
 }

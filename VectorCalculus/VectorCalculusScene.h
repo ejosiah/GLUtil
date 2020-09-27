@@ -190,9 +190,9 @@ public:
 	//	renderHeatMap();
 		//renderSeparator();
 		//sField->renderHeatMap();
-	//	sField->renderField();
-		sField->renderLaplacian();
-	//	renderGradiantField();
+		sField->renderField();
+	//	sField->renderLaplacian();
+		renderGradiantField();
 	//	renderVectorField();
 	
 	}
