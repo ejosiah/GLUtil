@@ -156,9 +156,14 @@
     <ClCompile Include="VectorCalculus.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\field.frag" />
+    <None Include="shaders\field.vert" />
     <None Include="shaders\image.frag" />
     <None Include="shaders\image.geom" />
     <None Include="shaders\image.vert" />
+    <None Include="shaders\scalar_field.tese" />
+    <None Include="shaders\scalar_field.frag" />
+    <None Include="shaders\scalar_field.vert" />
     <None Include="shaders\vc.frag" />
     <None Include="shaders\vc.geom" />
     <None Include="shaders\vc.vert" />

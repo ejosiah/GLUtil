@@ -21,9 +21,14 @@ public:
 		return pow(p.x, 2) * sin( 5 * p.y);
 	}
 
+	//virtual glm::vec3 gradient(const vec3& p) const override {
+
+	//	return { 2 * p.x * sin(5 * p.z), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
+	//}
+	
 	virtual glm::vec3 gradient(const vec3& p) const override {
 
-		return { 2 * p.x * sin(5 * p.z), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
+		return { 2 * p.x * sin(5 * p.y), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
 	}
 
 	virtual double laplacian(const glm::vec3& p) const {
@@ -60,7 +65,7 @@ public:
 
 };
 
-constexpr int numPoints = 1000;
+constexpr int numPoints = 10000;
 
 class VectorCalculusScene : public Scene {
 public:
@@ -71,15 +76,19 @@ public:
 		_modelHeight = 20;
 		addShader("canvas", GL_VERTEX_SHADER, identity_vert_shader);
 		addShader("canvas", GL_FRAGMENT_SHADER, texture_frag_shader);
+		addShader("screen", GL_VERTEX_SHADER, screen_vert_shader);
+		addShader("screen", GL_FRAGMENT_SHADER, screen_frag_shader);
 	}
 
 	void init() override {
-		sField = std::unique_ptr<ScalaFieldObject>(new ScalaFieldObject(field, numPoints, numPoints, RED, 4));
+		sField = std::make_unique<ScalaFieldObject>(*this, field, numPoints, 4);
+		sField->init();
+
 		gradiantField = unique_ptr<VectorFieldObject>{ new VectorFieldObject(field, 50, 50, 0, 20, 5, RED) };
 		vField = VectorFieldObject{ cvField, 10, 10, 10, 10, 2, RED};
 		createSeparator();
-		createHeatMap();
-		creatLaplacianMap();
+		//createHeatMap();
+		//creatLaplacianMap();
 		createImageCanvas();
 		lightModel.colorMaterial = true;
 		initDefaultCamera();
@@ -118,56 +127,56 @@ public:
 		separator = std::unique_ptr<ProvidedMesh>{ new ProvidedMesh(vector<Mesh>(1, mesh)) };
 	}
 
-	void createHeatMap() {
-		auto data = new GLubyte[numPoints * numPoints * 4];
-		auto id = 0;
-		sField->get<vec4>(0, VAOObject::Color, [&](vec4* itr) {
-			for (auto i = 0; i < numPoints; i++) {
-				for (auto j = 0; j < numPoints; j++) {
-					int idx = (i * numPoints + j) * 4;
-					auto color = *itr;
-					data[idx] = color.r * 255;
-					data[idx + 1] = color.g * 255;
-					data[idx + 2] = color.b * 255;
-					data[idx + 3] = color.a * 255;
-					itr++;
-				}
-			}
-			});
-		heatMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "heatMap", 0) };
-	}
+	//void createHeatMap() {
+	//	auto data = new GLubyte[numPoints * numPoints * 4];
+	//	auto id = 0;
+	//	sField->get<vec4>(0, VAOObject::Color, [&](vec4* itr) {
+	//		for (auto i = 0; i < numPoints; i++) {
+	//			for (auto j = 0; j < numPoints; j++) {
+	//				int idx = (i * numPoints + j) * 4;
+	//				auto color = *itr;
+	//				data[idx] = color.r * 255;
+	//				data[idx + 1] = color.g * 255;
+	//				data[idx + 2] = color.b * 255;
+	//				data[idx + 3] = color.a * 255;
+	//				itr++;
+	//			}
+	//		}
+	//		});
+	//	heatMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "heatMap", 0) };
+	//}
 
-	void creatLaplacianMap() {
-		auto data = new GLubyte[numPoints * numPoints * 4];
-		auto id = 0;
-		float lower = numeric_limits<float>::max();
-		float upper = numeric_limits<float>::min(); 
-		float* laplacian = new float[numPoints * numPoints];
-		sField->get<vec3>(0, VAOObject::Position, [&](vec3* itr) {
-			for (auto i = 0; i < numPoints; i++) {
-				for (auto j = 0; j < numPoints; j++) {
-					float res = field.laplacian(*itr);
-					lower = std::min(lower, res);
-					upper = std::max(upper, res);
-					laplacian[(i * numPoints + j)] = res;
-					itr++;
-				}
-			}
-		});
-		lower = lower > 0 ? 0 : lower;
-		for (auto i = 0; i < numPoints; i++) {
-			for (auto j = 0; j < numPoints; j++) {
-				float l = convertRange(laplacian[(i * numPoints + j)], lower, upper, 0, 1);
-				int idx = (i * numPoints + j) * 4;
-				auto color = vec4(l, l, l, 1);
-				data[idx] = color.r * 255;
-				data[idx + 1] = color.g * 255;
-				data[idx + 2] = color.b * 255;
-				data[idx + 3] = color.a * 255;
-			}
-		}
-		laplacianMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "laplacianMap", 0) };
-	}
+	//void creatLaplacianMap() {
+	//	auto data = new GLubyte[numPoints * numPoints * 4];
+	//	auto id = 0;
+	//	float lower = numeric_limits<float>::max();
+	//	float upper = numeric_limits<float>::min(); 
+	//	float* laplacian = new float[numPoints * numPoints];
+	//	sField->get<vec3>(0, VAOObject::Position, [&](vec3* itr) {
+	//		for (auto i = 0; i < numPoints; i++) {
+	//			for (auto j = 0; j < numPoints; j++) {
+	//				float res = field.laplacian(*itr);
+	//				lower = std::min(lower, res);
+	//				upper = std::max(upper, res);
+	//				laplacian[(i * numPoints + j)] = res;
+	//				itr++;
+	//			}
+	//		}
+	//	});
+	//	lower = lower > 0 ? 0 : lower;
+	//	for (auto i = 0; i < numPoints; i++) {
+	//		for (auto j = 0; j < numPoints; j++) {
+	//			float l = convertRange(laplacian[(i * numPoints + j)], lower, upper, 0, 1);
+	//			int idx = (i * numPoints + j) * 4;
+	//			auto color = vec4(l, l, l, 1);
+	//			data[idx] = color.r * 255;
+	//			data[idx + 1] = color.g * 255;
+	//			data[idx + 2] = color.b * 255;
+	//			data[idx + 3] = color.a * 255;
+	//		}
+	//	}
+	//	laplacianMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "laplacianMap", 0) };
+	//}
 
 	float convertRange(float x, float old_min, float old_max, float new_min, float new_max) {
 		double num = (new_max - new_min) * (x - old_min);
@@ -178,10 +187,12 @@ public:
 
 	void display() override {
 		sFont->render("fps: " + to_string(fps), 20, 20);
-		renderHeatMap();
+	//	renderHeatMap();
 		//renderSeparator();
-		renderScalaField();
-		renderGradiantField();
+		//sField->renderHeatMap();
+	//	sField->renderField();
+		sField->renderLaplacian();
+	//	renderGradiantField();
 	//	renderVectorField();
 	
 	}
@@ -191,26 +202,26 @@ public:
 		light[0].position = { 0, 10, 0, 0 };
 
 		
-		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		shader("vc")([&](Shader& s) {
-			bool blendingOff = !glIsEnabled(GL_BLEND);
-			bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
-			if (blendingOff) glEnable(GL_BLEND);
-			if (depthTestOn) glDisable(GL_DEPTH_TEST);
-			glViewportIndexedf(0, 0, 0, width(), height());
-		//	glViewportIndexedf(0, 0, 0, width() * 0.65f, height());
-			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
-			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
-			cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
-			float ar = float(width() * 0.65) / height();
-			cam.projection = perspective(half_pi<float>() / 2.0f, ar, 0.1f, 1000.0f);
-			//send(light[0]);
-			send(cam);
-		//	send(lightModel);
-			shade(sField.get());
-			if (blendingOff) glDisable(GL_BLEND);
-			if (depthTestOn) glEnable(GL_DEPTH_TEST);
-		});
+		//shader("vc")([&](Shader& s) {
+		//	bool blendingOff = !glIsEnabled(GL_BLEND);
+		//	bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
+		//	if (blendingOff) glEnable(GL_BLEND);
+		//	if (depthTestOn) glDisable(GL_DEPTH_TEST);
+		//	glViewportIndexedf(0, 0, 0, width(), height());
+		////	glViewportIndexedf(0, 0, 0, width() * 0.65f, height());
+		//	cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
+		//	cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
+		//	cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
+		//	float ar = float(width() * 0.65) / height();
+		//	cam.projection = perspective(half_pi<float>() / 2.0f, ar, 0.1f, 1000.0f);
+		//	//send(light[0]);
+		//	send(cam);
+		////	send(lightModel);
+		//	shade(sField.get());
+		//	if (blendingOff) glDisable(GL_BLEND);
+		//	if (depthTestOn) glEnable(GL_DEPTH_TEST);
+		//});
+		sField->render();
 	}
 
 	void renderGradiantField() {
@@ -277,28 +288,11 @@ public:
 	}
 
 	void processInput(const Key& key) override {
-		if (key.value() == 'w' && key.pressed()) {
-			eyes.z -= dz;
-		}
-		else if (key.value() == 's' && key.pressed()) {
-			eyes.z += dz;
-		}
-		if (key.value() == 'a' && key.pressed()) {
-			eyes.x -= dz;
-		}
-		else if (key.value() == 'd' && key.pressed()) {
-			eyes.x += dz;
-		}
-		if (key.value() == 'r' && key.pressed()) {
-			eyes.y -= dz;
-		}
-		else if (key.value() == 'e' && key.pressed()) {
-			eyes.y += dz;
-		}
+		sField->processInput(key);
 	}
 
 	void update(float t) override {
-		angle += speed * t;
+		sField->update(t);
 	}
 
 	void resized() override {

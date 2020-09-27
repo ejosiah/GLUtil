@@ -337,6 +337,8 @@ namespace ncl {
 
 		class TextureBuffer {
 		public:
+			TextureBuffer() = default;
+
 			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, GLuint bufId = 0, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW):_buffer(bufId) { // TODO fix nextId bug
 				glActiveTexture(TEXTURE(id));
 			
@@ -498,27 +500,26 @@ namespace ncl {
 			GLuint _front = 0, _back = 1;
 		};
 
-		class Image2D {
+		template<GLenum textureType>
+		class Image_t {
 		public:
-			Image2D(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint img_id = 0, GLuint id = 0, GLuint buffer = 0):
+			Image_t(GLuint width, GLuint height, GLenum format = GL_RGBA32F, std::string name = "", GLuint img_id = 0, GLuint id = 0, GLuint buffer = 0):
 				_id(id), _buffer(buffer), _img_id(img_id), _format(format), _name(name) {
 				if (glIsTexture(_buffer) == GL_FALSE) {
 					glGenTextures(1, &_buffer);
 				}
 				glActiveTexture(TEXTURE(_id));
-				CHECK_GL_ERRORS
-				glBindTexture(GL_TEXTURE_2D, _buffer);
-				CHECK_GL_ERRORS
-				glTexStorage2D(GL_TEXTURE_2D, 1, _format, width, height);
-				CHECK_GL_ERRORS
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Todo pass in gl_tex_params
-				CHECK_GL_ERRORS
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-				CHECK_GL_ERRORS
+				glBindTexture(textureType, _buffer);
+				glTexStorage2D(textureType, 1, _format, width, height);
+				glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// Todo pass in gl_tex_params
+				glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-				if (_name == "") _name = std::string("image") + std::to_string(id);
-				gl::objectLabel(GL_TEXTURE, _buffer, "image2D:" + name);
-				CHECK_GL_ERRORS
+				if constexpr (textureType == GL_TEXTURE_3D) {
+					glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+				}
+
+				//if (_name == "") _name = std::string("image") + std::to_string(id);
+				//gl::objectLabel(GL_TEXTURE, _buffer, "image2D:" + name);
 
 				mode = Mode::COMPUTE;
 			}
@@ -542,7 +543,7 @@ namespace ncl {
 				}
 				else {
 					glActiveTexture(TEXTURE(_id));
-					glBindTexture(GL_TEXTURE_2D, _buffer);
+					glBindTexture(textureType, _buffer);
 					shader.sendUniform1i(_name, _id);
 				}
 			}
@@ -558,6 +559,9 @@ namespace ncl {
 			std::string _name;
 			Mode mode;
 		};
+
+		using Image2D = Image_t<GL_TEXTURE_2D>;
+		
 		inline Texture2D* load_hdr_texture(std::string path, GLuint textureUnit, std::string name = "") {
 
 			stbi_set_flip_vertically_on_load(true);

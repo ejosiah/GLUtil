@@ -301,6 +301,7 @@ namespace ncl {
 					compute->update(elapsedTime);
 					compute->compute();
 				}
+				glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 				if (cameraControlActive) {
 					getActiveCameraController().update(elapsedTime);

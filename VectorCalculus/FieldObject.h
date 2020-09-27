@@ -1,18 +1,29 @@
 #pragma once
-#include "../GLUtil/include/ncl/gl/Shape.h"
 #include <glm/glm.hpp>
 #include <limits>
 #include <memory>
+#include "../GLUtil/include/ncl/gl/Shape.h"
+#include "../GLUtil/include/ncl/gl/textures.h"
+#include "../GLUtil/include/ncl/gl/SceneObject.h"
 #include "../fsim/fields.h"
 
-class ScalaFieldObject : public ncl::gl::Shape {
-public:
-	ScalaFieldObject(const fsim::ScalarField& field, int p, int q, const glm::vec4& color, int width = 2):
-		ncl::gl::Shape(createMesh(field, p, q, color, width), 1){
+using namespace std;
+using namespace ncl;
+using namespace gl;
+using namespace glm;
+using namespace fsim;
 
+class ScalaFieldObject : public SceneObject {
+public:
+	ScalaFieldObject(Scene& scene, const fsim::ScalarField& field, int numPoints = 1000, int width = 2)
+		:SceneObject{ &scene }
+		, numPoints{ numPoints }
+		, width{ width }
+		, field{ field }
+	{
+		
 	}
 
-protected:
 	std::vector<ncl::gl::Mesh> createMesh(const fsim::ScalarField& field, int p, int q, const glm::vec4& color, int w) {
 		using namespace ncl::gl;
 		using namespace glm;
@@ -35,13 +46,12 @@ protected:
 			}
 		}
 
-
 		float h = max - min;
 		mesh.colors = std::vector<vec4>(mesh.positions.size());
 		for (int i = 0; i < mesh.positions.size(); i++) {
 			float ratio = (mesh.positions[i].z - min) / h;
 			float r = smoothstep(0.6f, 0.8f, ratio);
-			float g = smoothstep(0.0f, 0.4f, ratio) - smoothstep(0.8f, 1.0f, ratio);;
+			float g = smoothstep(0.0f, 0.4f, ratio) - smoothstep(0.8f, 1.0f, ratio);
 			float b = 1 - smoothstep(0.4f, 0.6f, ratio);
 			mesh.colors[i] = { r, g, b, 1 };
 		}
@@ -56,6 +66,164 @@ protected:
 		mesh.primitiveType = GL_POINTS;
 		return std::vector<Mesh>(1, mesh);
 	}
+
+	void init() {
+		initField();
+		initPatch();
+
+		float ar = float(scene().width()) / scene().height();
+	//	cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
+		cam.projection = perspective(half_pi<float>() / 2.0f, ar, 0.1f, 1000.0f);
+	}
+
+	void initPatch() {
+		float n = std::sqrt(numPoints);
+		vec4 outer{ n };
+		vec2 inner{ n };
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
+		glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, &outer[0]);
+		glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, &inner[0]);
+
+		Mesh mesh;
+		float halfWidth = width / 2;
+		mesh.positions.emplace_back(-halfWidth, 0, halfWidth);
+		mesh.positions.emplace_back(halfWidth, 0, halfWidth);
+		mesh.positions.emplace_back(halfWidth, 0, -halfWidth);
+		mesh.positions.emplace_back(-halfWidth, 0, -halfWidth);
+		mesh.primitiveType = GL_PATCHES;
+
+		patch = ProvidedMesh{ mesh };
+		quad = ProvidedMesh{ screnSpaceQuad() };
+	}
+
+	void initField() {
+		float n = 1024;
+		GLfloat* heightMapData = new GLfloat[n * n];
+		GLfloat* laplacianMapData = new GLfloat[n * n];
+
+		for (int j = 0; j < n; j++) {
+			for (int i = 0; i < n; i++) {
+				float x = width * i / float(n) - width / 2;
+				float y = width * j / float(n) - width / 2;
+				vec3 point = { x, y, 0 };
+				float val = field.sample(point);
+
+				int idx = (i * n + j);
+
+				auto grad = field.gradient(point);
+				float lapVal = field.laplacian(grad);
+
+				heightMapData[idx] = val;
+				laplacianMapData[idx] = lapVal;
+
+				minVal = std::min(val, minVal);
+				maxVal = std::max(val, maxVal);
+
+				lapMinVal = std::min(lapVal, lapMinVal);
+				lapMaxVal = std::max(lapVal, lapMaxVal);
+			}
+		}
+
+		heightMap = Texture2D( heightMapData, n, n, "heightMapData", 0, GL_R32F, GL_RED, GL_FLOAT );
+		laplacianMap = Texture2D(laplacianMapData, n, n, "laplacianMap", 0, GL_R32F, GL_RED, GL_FLOAT );
+
+		delete[] heightMapData;
+		delete[] laplacianMapData;
+	}
+
+
+	void render(bool shadowMode = false) override {
+		scene().shader("scalar_field")([&] {
+			
+			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
+			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
+			
+			glBindTextureUnit(0, heightMap.buffer());
+			send(cam);
+		//	send(scene().activeCamera());
+			send("minVal", minVal);
+			send("maxVal", maxVal);
+			shade(patch);
+		});
+	}
+
+	void renderField() {
+		scene().shader("scalar_field")([&] {
+
+			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
+			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
+
+			glBindTextureUnit(0, heightMap.buffer());
+			send(cam);
+			//	send(scene().activeCamera());
+			send("minVal", minVal);
+			send("maxVal", maxVal);
+			shade(patch);
+			});
+	}
+
+	void renderHeatMap() {
+		scene().shader("field")([&] {
+			glBindTextureUnit(0, heightMap.buffer());
+			send("minVal", minVal);
+			send("maxVal", maxVal);
+			send("isHeatMap", true);
+			shade(quad);
+		});
+	}
+
+	void renderLaplacian() {
+		scene().shader("field")([&] {
+			glBindTextureUnit(0, laplacianMap.buffer());
+			send("isHeatMap", false);
+			shade(quad);
+		});
+	}
+
+	void update(float t) override {
+		angle += speed * t;
+	}
+
+	void processInput(const Key& key) override {
+		if (key.value() == 'w' && key.pressed()) {
+			eyes.z -= dz;
+		}
+		else if (key.value() == 's' && key.pressed()) {
+			eyes.z += dz;
+		}
+		if (key.value() == 'a' && key.pressed()) {
+			eyes.x -= dz;
+		}
+		else if (key.value() == 'd' && key.pressed()) {
+			eyes.x += dz;
+		}
+		if (key.value() == 'r' && key.pressed()) {
+			eyes.y -= dz;
+		}
+		else if (key.value() == 'e' && key.pressed()) {
+			eyes.y += dz;
+		}
+	}
+
+private:
+	int numPoints;
+	int width;
+	const fsim::ScalarField& field;
+//	std::unique_ptr<Texture2D> heightMap;
+	Texture2D heightMap;
+	Texture2D laplacianMap;
+//	std::unique_ptr<Texture2D> laplacianMap;
+	ProvidedMesh patch;
+	ProvidedMesh quad;
+	float minVal = std::numeric_limits<float>::max();
+	float maxVal = std::numeric_limits<float>::min();
+	float lapMinVal = std::numeric_limits<float>::max();
+	float lapMaxVal = std::numeric_limits<float>::min();
+	GlmCam cam;
+	float angle = 0;
+	float speed = 20;
+	vec3 eyes{ 0, 3, 10 };
+	float dz = 1;
 };
 
 class VectorFieldObject : public ncl::gl::Drawable {

@@ -140,6 +140,7 @@ namespace ncl {
 			attachment.type = GL_FLOAT;
 			attachment.attachment = GL_DEPTH_ATTACHMENT;
 			config.attachments.push_back(attachment);
+
 			frameBuffer = FrameBuffer{ config };
 
 			auto _onFrag = onFragment.value_or(point_shadow_on_fragment_frag_shader);

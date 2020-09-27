@@ -11,12 +11,11 @@ in VERTEX {
 	smooth vec2 texCoord;
 	smooth vec4 color;
 } vertex;
-in flat int currentView;
 
 out vec4 fragColor;
 
 void main(){
-	if(currentView == 1){
+	if(gl_ViewportIndex == 1){
 		fragColor = texture(image0, vertex.texCoord);
 	}else{
 		fragColor = vertex.color;

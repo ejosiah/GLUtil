@@ -1,7 +1,7 @@
 #version 450 core  
 #pragma compile(off)
 
-layout(std430, binding=0) buffer HOLES_SSOB{
+layout(std430, binding=3) buffer HOLES_SSOB{
 	vec4 holes[];
 };
 

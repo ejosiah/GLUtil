@@ -150,7 +150,9 @@ namespace ncl {
 		FrameBuffer& FrameBuffer::operator=(FrameBuffer&& source) noexcept {
 			transfer(source, *this);
 			return *this;
-		}		inline void transfer(FrameBuffer& source, FrameBuffer& destination) {
+		}		
+		
+		inline void transfer(FrameBuffer& source, FrameBuffer& destination) {
 			destination._fbo = source._fbo;
 			destination._textures = std::move(source._textures);
 			destination._rbo = source._rbo;

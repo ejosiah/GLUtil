@@ -147,9 +147,14 @@
     <ClCompile Include="volumeLights.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\debug.frag" />
+    <None Include="shaders\debug.vert" />
+    <None Include="shaders\generate_rays.comp" />
     <None Include="shaders\holes.frag" />
     <None Include="shaders\holes.vert" />
     <None Include="shaders\holes_onFragment.frag" />
+    <None Include="shaders\screen.frag" />
+    <None Include="shaders\volume_light.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

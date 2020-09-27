@@ -24,7 +24,6 @@ out VERTEX {
 	smooth vec4 color;
 } vertex_out;
 
-out flat int currentView;
 
 void main(){
 	for(int n = 0; n < gl_in.length(); n++){
@@ -37,7 +36,6 @@ void main(){
 		vertex_out.color = vertex_in[n].color;
 
 		gl_Position = P * vec4(vertex_out.position, 1);;
-		currentView = gl_ViewportIndex;
 		EmitVertex();
 	}
 	EndPrimitive();

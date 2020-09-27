@@ -1,0 +1,168 @@
+#version 450 core
+
+#define PI (3.1415926535897932384626433832795)
+#define _4_PI (12.566370614359172953850573533118)
+
+layout(local_size_x=32, local_size_y=32) in;
+
+layout(binding=0, rgba32f) uniform image2D out_color_buffer;
+layout(binding=1, rgba32f) uniform image2D out_depth_buffer;
+
+layout(binding = 2) uniform sampler2D in_color_buffer;
+layout(binding = 3) uniform sampler2D in_depth_buffer;
+layout(binding = 4) uniform samplerCube shadowMap;
+
+const vec2 frag_coord = vec2(gl_GlobalInvocationID.xy)/(vec2(gl_WorkGroupSize.xy * gl_NumWorkGroups.xy) - vec2(1));
+const int NUM_SAMPLES = 250;
+
+struct Ray {
+	vec3 origin;
+	vec3 direction;
+	float tMax;
+};
+
+layout(std430, binding=1) buffer RAY_SSB0{
+	Ray rays[];
+};
+
+uniform vec3 light_pos;
+uniform vec3 cam_pos;
+uniform float volume_radius;
+uniform float light_radius;
+uniform vec3 light_color = vec3(1);
+uniform float g;
+uniform float far_plane;
+uniform mat4 MVP;
+
+int globalIndex();
+
+float depthValue(Ray ray, float tNear, float tFar);
+
+void swap(inout float a, inout float b);
+
+bool intersectSphere(Ray ray, float radius,  vec3 center, out float t0, out float t1);
+
+float HG(float g, float cos0){
+	float gg = g * g;
+	float num = 1 - gg;
+	float denom = _4_PI * pow(1 + gg - 2 * g * cos0, 1.5);
+
+	return num/denom;
+}
+
+float shadow(vec3 light_dir){
+	float currentDepth = length(light_dir);
+	float closedDepth =  texture(shadowMap, -light_dir).r * far_plane;
+	return currentDepth > closedDepth ? 0 : 1;
+}
+
+void main(){
+	int index = globalIndex();
+	Ray ray = rays[index];
+
+	float tNear, tFar;
+	vec4 color = vec4(0);
+
+
+	vec3 fog = vec3(0); 
+	if(intersectSphere(ray, volume_radius,  light_pos, tNear, tFar)){
+	//	color.rgb = vec3(1, 0, 0);
+		float src_depth_value = depthValue(ray, tNear, tFar);
+		float in_depth_value = texture(in_depth_buffer, frag_coord).r;
+
+		//if(src_depth_value < in_depth_value){
+			vec3 p0 = ray.origin + ray.direction * tNear;
+			//vec3 p1 = ray.origin  + ray.direction * sign(tNear) * light_radius;
+			vec3 p1 = ray.origin + ray.direction * tFar;
+
+			float stepSize = distance(p1, p0)/NUM_SAMPLES;
+			vec3 stepDir = ray.direction * stepSize;
+			vec3 p = p0;
+			bool stop = false;
+			for(int i = 0; i < NUM_SAMPLES; i++ ){
+				p += stepDir;
+				vec3 light_dir = light_pos - p;
+
+				stop = dot(light_dir, light_dir) < light_radius * light_radius;
+				if(stop) break;
+			//	if(color.a > 0.99) break;
+
+				vec3 L = normalize(light_dir);
+				vec3 V = normalize(cam_pos - p);
+				float cos0 = max(0, dot(L, V));
+				float phase = HG(g, cos0);
+
+				fog += 10 * phase * shadow(light_dir);
+
+			}
+			fog /= NUM_SAMPLES;
+			color.rgb = fog * light_color;
+			color.a = fog.r;
+
+			color.rgb = color.rgb/(color.rgb + 1);
+			imageStore(out_depth_buffer, ivec2(gl_GlobalInvocationID.xy), vec4(src_depth_value));
+
+//		}else{
+//			imageStore(out_depth_buffer, ivec2(gl_GlobalInvocationID.xy), vec4(1));
+//		}
+	}else{
+		imageStore(out_depth_buffer, ivec2(gl_GlobalInvocationID.xy), vec4(1));
+	}
+
+	imageStore(out_color_buffer, ivec2(gl_GlobalInvocationID.xy), color);
+}
+
+int globalIndex(){
+	ivec3 size = ivec3(gl_WorkGroupSize * gl_NumWorkGroups);
+	ivec3 pos = ivec3(gl_GlobalInvocationID);
+
+	return pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
+}
+
+bool intersectSphere(Ray ray, float volume_radius,  vec3 center, out float t0, out float t1){
+	vec3 cs = center;
+	vec3 m = ray.origin - cs;
+	float b = dot(m, ray.direction);
+	float c = dot(m , m) - volume_radius * volume_radius;
+
+	// ray is facing away from sphere
+	if(c > 0 && b > 0) return false;
+
+	float discr = b * b - c;
+
+	// sqrt(-discr) imaginary number corresponds to ray missing sphere
+	if(discr < 0) return false; 
+
+	//t = 0;
+	t0 = -b - sqrt(discr);
+	t1 = -b + sqrt(discr);
+
+	if(t0 > t1){
+		swap(t0, t1);
+	}
+
+	return true;
+}
+
+void swap(inout float a, inout float b){
+	float temp = a;
+	a = b;
+	b = temp;
+}
+
+float depthValue(Ray ray, float tNear, float tFar){
+	float t = tNear < 0 ? tFar * 0.1 : tNear;
+	vec3 p = ray.origin + ray.direction * t;
+	vec4 pos = MVP * vec4(p, 1);
+
+	if(pos.w == 0) return 1;
+
+	// apply perspective division
+	float d = pos.z/pos.w;
+
+	// outside NDC [-1, 1]
+	if(d < -1 || d > 1) return 1;
+
+	// remap from NDC [-1, 1] to screen space [0, 1]
+	return d * 0.5 + 0.5;
+}

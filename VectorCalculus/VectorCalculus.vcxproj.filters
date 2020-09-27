@@ -46,5 +46,20 @@
     <None Include="shaders\image.geom">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\scalar_field.tese">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\scalar_field.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\scalar_field.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\field.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\field.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -34,5 +34,18 @@
     <None Include="shaders\holes_onFragment.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\volume_light.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\generate_rays.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\debug.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\debug.frag" />
+    <None Include="shaders\screen.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
