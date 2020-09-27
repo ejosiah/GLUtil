@@ -71,7 +71,7 @@ class VectorCalculusScene : public Scene {
 public:
 	VectorCalculusScene() :Scene("Vector Calculus", 1500, 1000) , logger(Logger::get("vc")) {
 		useImplictShaderLoad(true);
-	//	_requireMouse = true;
+		_requireMouse = false;
 	//	camInfoOn = true;
 		_modelHeight = 20;
 		addShader("canvas", GL_VERTEX_SHADER, identity_vert_shader);
@@ -81,7 +81,7 @@ public:
 	}
 
 	void init() override {
-		sField = std::make_unique<ScalaFieldObject>(*this, field, numPoints, 4);
+		sField = std::make_unique<ScalaFieldObject>(*this, field, numPoints, 1, 4);
 		sField->init();
 
 		gradiantField = unique_ptr<VectorFieldObject>{ new VectorFieldObject(field, 50, 50, 0, 20, 5, RED) };
@@ -189,8 +189,8 @@ public:
 		sFont->render("fps: " + to_string(fps), 20, 20);
 	//	renderHeatMap();
 		//renderSeparator();
-		//sField->renderHeatMap();
-		sField->renderField();
+		sField->renderHeatMap();
+	//	sField->renderField();
 	//	sField->renderLaplacian();
 		renderGradiantField();
 	//	renderVectorField();

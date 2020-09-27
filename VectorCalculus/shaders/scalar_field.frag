@@ -19,7 +19,6 @@ void main(){
 	col.g = smoothstep(0.0f, 0.4f, ratio) - smoothstep(0.8f, 1.0f, ratio);
 	col.b = 1 - smoothstep(0.4f, 0.6f, ratio);
 
-//	col = max(0, dot(N, L)) * col;
 
 	fragColor.rgb = col;
 	fragColor.a = 1;

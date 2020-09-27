@@ -31,6 +31,7 @@ namespace ncl {
 			GLenum wrap_r = GL_REPEAT;
 			GLsizei numLayers = 1;
 			bool mipMap = false;
+			std::string name = "";
 		};
 
 		struct Data {
@@ -151,7 +152,18 @@ namespace ncl {
 			//	delete[] data;	TODO fix this, should not be shared
 			}
 
-			Texture2D(Content content, TextureConfig config, std::function<void()> extraOptions = [] {}) {
+			Texture2D(Content content, TextureConfig config, std::function<void()> extraOptions = [] {})
+				:Texture2D{
+					*std::get<Data>(content).contents,
+					std::get<Data>(content).width,
+					std::get<Data>(content).height,
+					config.name,
+					0,
+					config.internalFmt,
+					config.fmt,
+					config.type
+				} 
+			{
 
 			}
 

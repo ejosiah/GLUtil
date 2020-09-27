@@ -2,11 +2,13 @@
 
 layout (quads, equal_spacing, ccw) in;
 
-layout(binding = 0) uniform sampler2D heightMap;
-layout(binding = 1) uniform sampler2D gradiantMap;
+layout(binding = 0) uniform sampler3D heightMap;
+layout(binding = 1) uniform sampler3D gradiantMap;
 
 uniform mat4 MVP;
 uniform mat4 M;
+uniform int slice;
+uniform int numSlices;
 
 smooth out vec2 uv;
 smooth out float val;
@@ -29,8 +31,9 @@ void main(){
 			 p3 * v * i_u +
 			 p2 * u * v;
 
-	val = texture(heightMap, uv).r;
-	normal = texture(gradiantMap, uv).rgb * 2 - 1;
+	float z = float(slice)/float(numSlices);
+	val = texture(heightMap, vec3(uv, z)).r;
+	normal = texture(gradiantMap, vec3(uv, z)).rgb * 2 - 1;
 	p.y = val;
 	gl_Position = MVP * p;
 }

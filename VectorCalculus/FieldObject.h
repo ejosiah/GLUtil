@@ -15,9 +15,10 @@ using namespace fsim;
 
 class ScalaFieldObject : public SceneObject {
 public:
-	ScalaFieldObject(Scene& scene, const fsim::ScalarField& field, int numPoints = 1000, int width = 2)
+	ScalaFieldObject(Scene& scene, const fsim::ScalarField& field, int numPoints = 1000, int numLayers = 1, int width = 2)
 		:SceneObject{ &scene }
 		, numPoints{ numPoints }
+		, numLayers{ numLayers }
 		, width{ width }
 		, field{ field }
 	{
@@ -53,47 +54,69 @@ public:
 	}
 
 	void initField() {
-		float n = 1024;
-		GLfloat* heightMapData = new GLfloat[n * n];
-		GLfloat* laplacianMapData = new GLfloat[n * n];
-		GLfloat* gradiantMapData = new GLfloat[n * n * 3];
+		GLsizei n = 1024;
+		GLfloat* heightMapData = new GLfloat[n * n * numLayers];
+		GLfloat* laplacianMapData = new GLfloat[n * n * numLayers];
+		GLfloat* gradiantMapData = new GLfloat[n * n *numLayers * 3];
 
-		for (int j = 0; j < n; j++) {
-			for (int i = 0; i < n; i++) {
-				float x = width * i / float(n) - width / 2;
-				float y = width * j / float(n) - width / 2;
-				vec3 point = { x, y, 0 };
-				float val = field.sample(point);
+		
+		for (int k = 0; k < numLayers; k++) {
+			for (int j = 0; j < n; j++) {
+				for (int i = 0; i < n; i++) {
+					float x = width * i / float(n) - width / 2;
+					float y = width * j / float(n) - width / 2;
+					float z = numLayers * k / float(n) - numLayers / 2;
+					vec3 point = { x, y, z };
+					float val = field.sample(point);
 
-				int idx = (i * n + j);
+					// pos.z * (size.y * size.x) + (pos.y * size.x) + pos.x;
 
-				auto grad = field.gradient(point);
-				float lapVal = field.laplacian(grad);
+					int idx = k * (n * n) + (i * n + j);
 
-				heightMapData[idx] = val;
-				laplacianMapData[idx] = lapVal;
+					auto grad = field.gradient(point);
+					float lapVal = field.laplacian(grad);
 
-				auto n = pack(grad);
-				auto gradId = idx * 3;
-				gradiantMapData[gradId] = n.x;
-				gradiantMapData[gradId + 1] = n.y;
-				gradiantMapData[gradId + 2] = n.z;
+					heightMapData[idx] = val;
+					laplacianMapData[idx] = lapVal;
 
-				minVal = std::min(val, minVal);
-				maxVal = std::max(val, maxVal);
+					auto n = pack(grad);
+					auto gradId = idx * 3;
+					gradiantMapData[gradId] = n.x;
+					gradiantMapData[gradId + 1] = n.y;
+					gradiantMapData[gradId + 2] = n.z;
 
-				lapMinVal = std::min(lapVal, lapMinVal);
-				lapMaxVal = std::max(lapVal, lapMaxVal);
+					minVal = std::min(val, minVal);
+					maxVal = std::max(val, maxVal);
+
+					lapMinVal = std::min(lapVal, lapMinVal);
+					lapMaxVal = std::max(lapVal, lapMaxVal);
+				}
 			}
 		}
 
-		heightMap = Texture2D( heightMapData, n, n, "heightMap", 0, GL_R32F, GL_RED, GL_FLOAT );
-		laplacianMap = Texture2D(laplacianMapData, n, n, "laplacianMap", 0, GL_R32F, GL_RED, GL_FLOAT );
-		gradiantMap = Texture2D(gradiantMapData, n, n, "gradiantMap", 0, GL_RGB32F, GL_RGB, GL_FLOAT );
+		TextureConfig config;
+		config.internalFmt = GL_RGB32F;
+		config.fmt = GL_RED;
+		config.type = GL_FLOAT;
+		config.name = "heightMap";
 
-		delete[] heightMapData;
-		delete[] laplacianMapData;
-		delete[] gradiantMapData;
+		Data data{ heightMapData, n, n, numLayers };
+
+		heightMap = make_unique < Texture3D>( data, config);
+		
+		data = Data{ laplacianMapData, n , n, numLayers };
+		config.name = "laplacianMap";
+		laplacianMap = make_unique < Texture3D>(data, config );
+	
+		data = Data{ gradiantMapData, n, n, numLayers };
+		config.internalFmt = GL_RGB32F;
+		config.fmt = GL_RGB;
+		config.name = "gradiantMap";
+		gradiantMap = make_unique<Texture3D>(data, config );
+
+		//delete[] heightMapData;
+		//delete[] laplacianMapData;
+		//delete[] gradiantMapData;
 	}
 
 	vec3 pack(vec3 n) {
@@ -106,11 +129,13 @@ public:
 			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
 			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
 			
-			glBindTextureUnit(0, heightMap.buffer());
+			glBindTextureUnit(0, heightMap->buffer());
 			send(cam);
 		//	send(scene().activeCamera());
 			send("minVal", minVal);
 			send("maxVal", maxVal);
+			send("slice", slice);
+			send("numSlices", numLayers);
 			shade(patch);
 		});
 	}
@@ -121,30 +146,36 @@ public:
 			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
 			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
 
-			glBindTextureUnit(0, heightMap.buffer());
-			glBindTextureUnit(1, gradiantMap.buffer());
+			glBindTextureUnit(0, heightMap->buffer());
+			glBindTextureUnit(1, gradiantMap->buffer());
 			send(cam);
 			//	send(scene().activeCamera());
 			send("minVal", minVal);
 			send("maxVal", maxVal);
+			send("slice", slice);
+			send("numSlices", numLayers);
 			shade(patch);
 			});
 	}
 
 	void renderHeatMap() {
 		scene().shader("field")([&] {
-			glBindTextureUnit(0, heightMap.buffer());
+			glBindTextureUnit(0, heightMap->buffer());
 			send("minVal", minVal);
 			send("maxVal", maxVal);
 			send("isHeatMap", true);
+			send("slice", slice);
+			send("numSlices", numLayers);
 			shade(quad);
 		});
 	}
 
 	void renderLaplacian() {
 		scene().shader("field")([&] {
-			glBindTextureUnit(0, gradiantMap.buffer());
+			glBindTextureUnit(0, gradiantMap->buffer());
 			send("isHeatMap", false);
+			send("slice", slice);
+			send("numSlices", numLayers);
 			shade(quad);
 		});
 	}
@@ -176,12 +207,13 @@ public:
 
 private:
 	int numPoints;
+	int numLayers;
 	int width;
 	const fsim::ScalarField& field;
 //	std::unique_ptr<Texture2D> heightMap;
-	Texture2D heightMap;
-	Texture2D laplacianMap;
-	Texture2D gradiantMap;
+	std::unique_ptr<Texture3D> heightMap;
+	std::unique_ptr<Texture3D> laplacianMap;
+	std::unique_ptr<Texture3D> gradiantMap;
 //	std::unique_ptr<Texture2D> laplacianMap;
 	ProvidedMesh patch;
 	ProvidedMesh quad;
@@ -194,6 +226,7 @@ private:
 	float speed = 20;
 	vec3 eyes{ 0, 3, 10 };
 	float dz = 1;
+	int slice = 0;
 };
 
 class VectorFieldObject : public ncl::gl::Drawable {
