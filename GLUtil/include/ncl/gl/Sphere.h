@@ -101,6 +101,6 @@ namespace ncl {
 			static const float PI;
 		};
 		
-		const float Sphere::PI = 3.142857143f;
+		const float Sphere::PI = 3.1415926535897932384626433832795;
 	}
 }

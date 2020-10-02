@@ -8,11 +8,12 @@
 #include "mesh.h"
 #include "Drawable.h"
 #include "common.h"
+#include "CopyBuffer.h"
 
 namespace ncl {
 	namespace gl {
 
-		class VBOObject{
+		class VBOObject : public CopyBuffer{
 		public:
 			VBOObject() = default;
 
@@ -183,6 +184,14 @@ namespace ncl {
 
 			std::vector<GLuint*> getBuffers() const {
 				return buffers;
+			}
+
+			bool hasNormals() const {
+				return normals[0];
+			}
+
+			bool hasIndices() const {
+				return indices[0];
 			}
 
 		protected:

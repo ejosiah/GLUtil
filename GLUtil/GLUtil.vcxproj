@@ -157,6 +157,8 @@
     <ClInclude Include="exampleScene.h" />
     <ClInclude Include="FontTest.h" />
     <ClInclude Include="include\glm\vec_util.h" />
+    <ClInclude Include="include\ncl\animation\Animation.h" />
+    <ClInclude Include="include\ncl\animation\Image2D.h" />
     <ClInclude Include="include\ncl\audio\wav\WaveFile.h" />
     <ClInclude Include="include\ncl\audio\wav\wave_io.h" />
     <ClInclude Include="include\ncl\collision\model.h" />
@@ -232,6 +234,7 @@
     <ClInclude Include="include\ncl\physics\particle\ParticleIntegrator.h" />
     <ClInclude Include="include\ncl\physics\particle\ParticleObject.h" />
     <ClInclude Include="include\ncl\physics\particle\ParticleRegistry.h" />
+    <ClInclude Include="include\ncl\physics\particle\render_particles.h" />
     <ClInclude Include="include\ncl\physics\particle\SpringForceGenerator.h" />
     <ClInclude Include="include\ncl\type_wrapper.h" />
     <ClInclude Include="include\ncl\ray_tracing\camera.h" />
@@ -250,6 +253,7 @@
     <ClInclude Include="include\ncl\ui\component.h" />
     <ClInclude Include="include\ncl\ui\ui.h" />
     <ClInclude Include="include\ncl\units\units.h" />
+    <ClInclude Include="include\ncl\util\numeric_iterator.h" />
     <ClInclude Include="include\ncl\util\profile.h" />
     <ClInclude Include="include\ncl\util\SphericalCoord.h" />
     <ClInclude Include="include\ncl\util\string_util.h" />
@@ -349,6 +353,7 @@
     <None Include="shaders\font.frag" />
     <None Include="shaders\font.vert" />
     <None Include="shaders\identity.frag" />
+    <None Include="shaders\identity.geom" />
     <None Include="shaders\identity.vert" />
     <None Include="shaders\irradiance_convolution.frag" />
     <None Include="shaders\lfp_irradiance_render.frag" />

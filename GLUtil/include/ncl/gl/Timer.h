@@ -32,6 +32,10 @@ public:
 	float timeSinceStart() {
 		return totalElapsedTime / 1000.f;
 	}
+
+	long int millisSinceStart() {
+		return totalElapsedTime;
+	}
 	
     
 private:

@@ -17,7 +17,7 @@ namespace ncl {
 				glBufferData(GL_COPY_WRITE_BUFFER, size, nullptr, GL_DYNAMIC_COPY);
 				glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size);
 
-					return copyBufferId;
+				return copyBufferId;
 			}
 		};
 	}

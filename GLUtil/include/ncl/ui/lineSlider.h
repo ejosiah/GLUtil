@@ -74,7 +74,7 @@ namespace ncl {
 
 			void update() {
 				headPos.x = glm::clamp(headPos.x, 0.0f, float(_length));
-				head->update2<glm::vec3>(gl::VAOObject::Position, [&](glm::vec3* points) {
+				head->update2<glm::vec3>(gl::VertexAttrib::Position, [&](glm::vec3* points) {
 					float theta = 0;
 					points[0] = headPos;
 					points++;

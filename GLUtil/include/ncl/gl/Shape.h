@@ -293,26 +293,6 @@ namespace ncl {
 				glBindVertexArray(0);
 			}
 
-			GLuint bufferFor(int meshId, int attribute) const {
-				if (attribute < Position || attribute > Indices)
-					throw std::runtime_error("invalid attribute id");
-				int buffer = 0;
-				switch (attribute) {
-				case Position:
-					break;
-				case Indices:
-					buffer = numBuffers - 1;
-					break;
-				default:
-					for (int i = 0; i < attribute; i++) {
-						if (attributes[meshId][i]) {
-							buffer++;
-						}
-					}
-				}
-				return buffers[meshId][buffer];
-			}
-
 
 			template<typename T>
 		//	[[deprecated("Replaced by get(unsigned int, int, std::function<void(buffer_iterator<true, T>)>), which has an improved interface")]]
@@ -349,7 +329,7 @@ namespace ncl {
 			}
 
 			 glm::vec3 getFirstVertex() const {
-				return mapTo<glm::vec3, glm::vec3>(0, VAOObject::Position, [](glm::vec3* v) { return *v; });
+				return mapTo<glm::vec3, glm::vec3>(0, Position, [](glm::vec3* v) { return *v; });
 			}
 
 			template<typename R, typename T>
@@ -401,7 +381,7 @@ namespace ncl {
 				return total;
 			}
 
-			size_t numIndices(int meshId) const {
+			size_t numIndices(int meshId = 0) const {
 				if (!indices[meshId]) return 0;
 				GLint64 size;
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufferFor(meshId, Indices));
@@ -484,6 +464,10 @@ namespace ncl {
 
 			void changePrimitiveType(GLenum newType) {
 				primitiveType[0] = newType;
+			}
+
+			GLenum getPrimitiveType(int index = 0) {
+				return primitiveType[0];
 			}
 
 			void defautMaterial(bool flag) {

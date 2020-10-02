@@ -9,10 +9,13 @@
 
 namespace ncl {
 	namespace gl {
+
+		// XForm = TexCoord + MAX_UVS + 1;
+		enum VertexAttrib { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices, XForms = 8 };
+
 		class VAOObject : public VBOObject {	
 		public:
-			// XForm = TexCoord + MAX_UVS + 1;
-			enum BufferIds { Position, Normal, Tangent, BiTangent, Color, TexCoord, Indices, XForms = 8};
+
 			friend class DoubleBufferedObj;
 
 			VAOObject() = default;
@@ -126,6 +129,42 @@ namespace ncl {
 
 			GLuint getVaoId(int index) {
 				return vaoIds[index];
+			}
+
+			GLuint bufferFor(int meshId, int attribute) const {
+				if (attribute < Position || attribute > Indices)
+					throw std::runtime_error("invalid attribute id");
+				int buffer = 0;
+				switch (attribute) {
+				case Position:
+					break;
+				case Indices:
+					buffer = numBuffers - 1;
+					break;
+				default:
+					for (int i = 0; i < attribute; i++) {
+						if (attributes[meshId][i]) {
+							buffer++;
+						}
+					}
+				}
+				return buffers[meshId][buffer];
+			}
+
+			GLuint copyNormals(int mesh = 0) {
+				return copy(bufferFor(mesh, Normal));
+			}
+
+			GLuint copyTangents(int mesh = 0) {
+				return copy(bufferFor(mesh, Tangent));
+			}
+
+			GLuint copyBiTangents(int mesh = 0) {
+				return copy(bufferFor(mesh, BiTangent));
+			}
+
+			GLuint copyIndices(int mesh = 0) {
+				return indices[mesh] ? copy(bufferFor(mesh, Indices)) : 0;
 			}
 
 		protected:

@@ -93,10 +93,10 @@ namespace ncl {
 
 					float r = 100;
 					glm::vec3 c = { r * glm::cos(theta), r * glm::sin(theta), 0 };
-					handle->update2<glm::vec3>(gl::VAOObject::Position, [&](glm::vec3* points) {
+					handle->update2<glm::vec3>(gl::VertexAttrib::Position, [&](glm::vec3* points) {
 						points[1] = c;
 					});
-					head->update2<glm::vec3>(gl::VAOObject::Position, [&](glm::vec3* points) {
+					head->update2<glm::vec3>(gl::VertexAttrib::Position, [&](glm::vec3* points) {
 						theta = 0;
 						points[0] = c;
 						points++;

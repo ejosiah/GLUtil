@@ -97,6 +97,9 @@
     <Filter Include="Header Files\sound\wave\detail">
       <UniqueIdentifier>{1b1f115b-97d0-4181-a983-e0a416579055}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\animation">
+      <UniqueIdentifier>{e1a9f0a9-4e05-411c-a5f2-e727a48cdd42}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -498,6 +501,18 @@
     <ClInclude Include="include\ncl\gl\perlin_noise.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="include\ncl\physics\particle\render_particles.h">
+      <Filter>Header Files\physics\particle</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\animation\Animation.h">
+      <Filter>Header Files\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\animation\Image2D.h">
+      <Filter>Header Files\animation</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\util\numeric_iterator.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -877,6 +892,9 @@
       <Filter>shaders\include</Filter>
     </None>
     <None Include="shaders\point_shadow_on_fragment.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shaders\identity.geom">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

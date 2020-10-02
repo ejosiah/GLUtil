@@ -52,7 +52,7 @@ namespace ncl {
 	namespace gl {
 #define BUFFER_OFFSET(offset) ((void*)offset)
 
-		const float EPSILON = 0.000001;
+		constexpr float EPSILON = 0.000001;
 
 		const bool DONT_CULL_BACK_FACE = false;
 
