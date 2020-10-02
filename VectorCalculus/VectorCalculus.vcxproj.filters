@@ -21,6 +21,9 @@
     <ClInclude Include="FieldObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="calculus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VectorCalculus.cpp">
@@ -46,19 +49,34 @@
     <None Include="shaders\image.geom">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shaders\scalar_field.tese">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\scalar_field.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\scalar_field.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\field.vert">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\field.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\field.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\isosurface.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\shader.conf">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\height_map.tese">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\height_map.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\viewport_tri.geom">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\isosurface.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

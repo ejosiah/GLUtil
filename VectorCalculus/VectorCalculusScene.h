@@ -1,11 +1,13 @@
 #pragma once
+
+#include <memory>
+#include <tuple>
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/textures.h"
+#include "../GLUtil/include/glm/vec_util.h"
 #include "../fsim/fields.h"
 #include "FieldObject.h"
-#include <memory>
-#include "../GLUtil/include/glm/vec_util.h"
-#include <tuple>
+#include "calculus.h"
 
 using namespace std;
 using namespace ncl;
@@ -18,22 +20,34 @@ public:
 	virtual ~CustomScalaField() {};
 
 	virtual double sample(const vec3& p) const override {
-		return pow(p.x, 2) * sin( 5 * p.y);
+		auto [x, y, z] = toTuple(p);
+		z = half_pi<float>();
+		return sin(x) * sin(y) * sin(z);
+	//	return x * x + x * y * sin(z) - y * z;
 	}
-
-	//virtual glm::vec3 gradient(const vec3& p) const override {
-
-	//	return { 2 * p.x * sin(5 * p.z), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
-	//}
 	
 	virtual glm::vec3 gradient(const vec3& p) const override {
-
-		return { 2 * p.x * sin(5 * p.y), 0, pow(p.x, 2) * 5 * cos(5 * p.x) };
+		auto [x, y, z] = toTuple(p);
+		z = half_pi<float>();
+		return { cos(x) * sin(y) * sin(z), sin(x) * cos(y) * sin(z), sin(x) * sin(y) *cos(z)};
+		//return {
+		//	2 * x + y * sin(z),
+		//	x * sin(z) - z,
+		//	x * y * cos(z) - y
+		//};
 	}
 
 	virtual double laplacian(const glm::vec3& p) const {
-		return  (2 - p.y * p.y) + (p.x * p.x - 2);
+		auto [x, y, z] = toTuple(p);
+		z = half_pi<float>();
+		return  
+			- sin(x) * sin(y) * sin(z)
+			- sin(x) * sin(y) * sin(z)
+			- sin(x) * sin(y) * sin(z);
+	//	return 2 - x * y * sin(z);
 	}
+private:
+
 };
 
 class CustomVectorField : public VectorField {
@@ -49,29 +63,38 @@ public:
 	virtual glm::vec3 sample(const glm::vec3& p) const {
 		auto [x, y, z] = toTuple(p);
 		return {
-			5 * z * z,
-			2 * x,
-			x + 2 * y
+			sin(x) * sin(y),
+			sin(y) * sin(z),
+			sin(z) * sin(x)
 		};
 	}
+	std::function<float(void)> rng = rngReal(0, 1);
+	virtual double div(const glm::vec3& p) const {
+		auto [x, y, z] = toTuple(p);
+		z = half_pi<float>();
+		return
+			  cos(x) * sin(y)
+			+ cos(y) * sin(z)
+			+ cos(z) * sin(x);
 
-	virtual double div(const glm::vec3& x) const {
-		return 0.0;
 	}
 
-	virtual glm::vec3 curl(const glm::vec3& x) const {
+	virtual glm::vec3 curl(const glm::vec3& p) const {
 		return vec3{ 0 };
 	}
 
 };
 
 constexpr int numPoints = 10000;
+constexpr int WIDTH =  1500;
+constexpr int HEIGHT = 1000;
+
 
 class VectorCalculusScene : public Scene {
 public:
-	VectorCalculusScene() :Scene("Vector Calculus", 1500, 1000) , logger(Logger::get("vc")) {
+	VectorCalculusScene() :Scene("Vector Calculus", WIDTH, HEIGHT) , logger(Logger::get("vc")) {
 		useImplictShaderLoad(true);
-		_requireMouse = false;
+		_requireMouse = true;
 	//	camInfoOn = true;
 		_modelHeight = 20;
 		addShader("canvas", GL_VERTEX_SHADER, identity_vert_shader);
@@ -81,11 +104,17 @@ public:
 	}
 
 	void init() override {
-		sField = std::make_unique<ScalaFieldObject>(*this, field, numPoints, 1, 4);
+
+		sField = std::make_unique<ScalaFieldObject>(*this, field, numPoints, 1, two_pi<float>());
 		sField->init();
 
-		gradiantField = unique_ptr<VectorFieldObject>{ new VectorFieldObject(field, 50, 50, 0, 20, 5, RED) };
-		vField = VectorFieldObject{ cvField, 10, 10, 10, 10, 2, RED};
+		gradiantField = unique_ptr<VectorFieldObject>{ new VectorFieldObject([&](auto v) { 
+			vec3 res = field.gradient(v.xzy).xzy;
+			return res;
+			}, 100, 1, 100, vec3(10, 10, 10), 5, RED) };
+		
+		vField = VectorFieldObject{ [&](auto v) { return cvField.sample(v); } , 10, 10, 10, vec3(10), 2, RED };
+		vField1 = std::make_unique<VectorFieldSceneObject>(*this, cvField);
 		createSeparator();
 		//createHeatMap();
 		//creatLaplacianMap();
@@ -97,6 +126,7 @@ public:
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		setForeGroundColor(WHITE);
 		setBackGroundColor(BLACK);
+		fontColor(WHITE);
 	}
 
 	void createImageCanvas() {
@@ -127,101 +157,15 @@ public:
 		separator = std::unique_ptr<ProvidedMesh>{ new ProvidedMesh(vector<Mesh>(1, mesh)) };
 	}
 
-	//void createHeatMap() {
-	//	auto data = new GLubyte[numPoints * numPoints * 4];
-	//	auto id = 0;
-	//	sField->get<vec4>(0, VAOObject::Color, [&](vec4* itr) {
-	//		for (auto i = 0; i < numPoints; i++) {
-	//			for (auto j = 0; j < numPoints; j++) {
-	//				int idx = (i * numPoints + j) * 4;
-	//				auto color = *itr;
-	//				data[idx] = color.r * 255;
-	//				data[idx + 1] = color.g * 255;
-	//				data[idx + 2] = color.b * 255;
-	//				data[idx + 3] = color.a * 255;
-	//				itr++;
-	//			}
-	//		}
-	//		});
-	//	heatMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "heatMap", 0) };
-	//}
-
-	//void creatLaplacianMap() {
-	//	auto data = new GLubyte[numPoints * numPoints * 4];
-	//	auto id = 0;
-	//	float lower = numeric_limits<float>::max();
-	//	float upper = numeric_limits<float>::min(); 
-	//	float* laplacian = new float[numPoints * numPoints];
-	//	sField->get<vec3>(0, VAOObject::Position, [&](vec3* itr) {
-	//		for (auto i = 0; i < numPoints; i++) {
-	//			for (auto j = 0; j < numPoints; j++) {
-	//				float res = field.laplacian(*itr);
-	//				lower = std::min(lower, res);
-	//				upper = std::max(upper, res);
-	//				laplacian[(i * numPoints + j)] = res;
-	//				itr++;
-	//			}
-	//		}
-	//	});
-	//	lower = lower > 0 ? 0 : lower;
-	//	for (auto i = 0; i < numPoints; i++) {
-	//		for (auto j = 0; j < numPoints; j++) {
-	//			float l = convertRange(laplacian[(i * numPoints + j)], lower, upper, 0, 1);
-	//			int idx = (i * numPoints + j) * 4;
-	//			auto color = vec4(l, l, l, 1);
-	//			data[idx] = color.r * 255;
-	//			data[idx + 1] = color.g * 255;
-	//			data[idx + 2] = color.b * 255;
-	//			data[idx + 3] = color.a * 255;
-	//		}
-	//	}
-	//	laplacianMap = std::unique_ptr<Texture2D>{ new Texture2D(static_cast<void*>(data), numPoints, numPoints, "laplacianMap", 0) };
-	//}
-
-	float convertRange(float x, float old_min, float old_max, float new_min, float new_max) {
-		double num = (new_max - new_min) * (x - old_min);
-		double denum = old_max - old_min;
-
-		return (num / denum + new_min);
-	}
-
 	void display() override {
 		sFont->render("fps: " + to_string(fps), 20, 20);
-	//	renderHeatMap();
 		//renderSeparator();
-		sField->renderHeatMap();
-	//	sField->renderField();
-	//	sField->renderLaplacian();
-		renderGradiantField();
-	//	renderVectorField();
+		//sField->render();
+		//glDepthFunc(GL_ALWAYS);
+		//renderGradiantField();
+		//glDepthFunc(GL_LESS);
+		renderVectorField();
 	
-	}
-
-	void renderScalaField() {
-		light[0].on;
-		light[0].position = { 0, 10, 0, 0 };
-
-		
-		//shader("vc")([&](Shader& s) {
-		//	bool blendingOff = !glIsEnabled(GL_BLEND);
-		//	bool depthTestOn = glIsEnabled(GL_DEPTH_TEST);
-		//	if (blendingOff) glEnable(GL_BLEND);
-		//	if (depthTestOn) glDisable(GL_DEPTH_TEST);
-		//	glViewportIndexedf(0, 0, 0, width(), height());
-		////	glViewportIndexedf(0, 0, 0, width() * 0.65f, height());
-		//	cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
-		//	cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
-		//	cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
-		//	float ar = float(width() * 0.65) / height();
-		//	cam.projection = perspective(half_pi<float>() / 2.0f, ar, 0.1f, 1000.0f);
-		//	//send(light[0]);
-		//	send(cam);
-		////	send(lightModel);
-		//	shade(sField.get());
-		//	if (blendingOff) glDisable(GL_BLEND);
-		//	if (depthTestOn) glEnable(GL_DEPTH_TEST);
-		//});
-		sField->render();
 	}
 
 	void renderGradiantField() {
@@ -230,15 +174,14 @@ public:
 		float w = width() * 0.35f;
 		float h = height() * 0.5;
 		glViewportIndexedf(3, width() * 0.65f, 0, w, h);
-		shader("image")([&](Shader& s) {
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			cam.view = lookAt({ 0, 3, 0 }, vec3(0), {1, 0, 0});
-			cam.model = mat4(1);
-			cam.projection = perspective(half_pi<float>() / 2.0f, w/h, 0.1f, 100.0f);
+		shader("flat")([&](Shader& s) {
+			cam.view = lookAt({ 0, 2, 0 }, vec3(0), { 1, 0, 0 });
+			//cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
+			cam.projection = perspective(half_pi<float>() / 2.0f, aspectRatio, 0.1f, 1000.0f);
 			send(cam);
-			send("id", 3);
+			send(light[0]);
+			send(lightModel);
 			gradiantField->draw(s);
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		});
 	}
 
@@ -246,17 +189,17 @@ public:
 		light[0].on;
 		light[0].position = { 0, 0, 1, 0 };
 		lightModel.colorMaterial = true;
-		shader("default")([&](Shader& s) {
+		shader("flat")([&](Shader& s) {
 			cam.view = lookAt(eyes, vec3(0, 1, 0), { 0, 1, 0 });
 			cam.model = rotate(mat4(1), glm::radians(angle), { 0, 1, 0 });
-			cam.model = rotate(cam.model, -glm::half_pi<float>(), { 1.0f, 0, 0 });
 			cam.projection = perspective(half_pi<float>() / 2.0f, aspectRatio, 0.1f, 1000.0f);
 			send(cam);
 			send(light[0]);
 			send(lightModel);
 		//	send(activeCamera(), getActiveCameraController().modelTrans());
-			vField.draw(s);
+		//	vField.draw(s);
 		});
+		vField1->render();
 	}
 
 	void renderHeatMap() {
@@ -289,10 +232,13 @@ public:
 
 	void processInput(const Key& key) override {
 		sField->processInput(key);
+		vField1->processInput(key);
 	}
 
 	void update(float t) override {
 		sField->update(t);
+		vField1->update(t);
+		angle += speed * t;
 	}
 
 	void resized() override {
@@ -303,6 +249,7 @@ private:
 	std::unique_ptr<ScalaFieldObject> sField;
 	std::unique_ptr<VectorFieldObject> gradiantField;
 	VectorFieldObject vField;
+	std::unique_ptr <VectorFieldSceneObject> vField1;
 	std::unique_ptr<ProvidedMesh> canvas;
 	std::unique_ptr<ProvidedMesh> separator;
 	std::unique_ptr<Texture2D> heatMap;

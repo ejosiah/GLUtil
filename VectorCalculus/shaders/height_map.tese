@@ -1,4 +1,5 @@
 #version 450 core
+#pragma compile(off)
 
 layout (quads, equal_spacing, ccw) in;
 
@@ -10,9 +11,13 @@ uniform mat4 M;
 uniform int slice;
 uniform int numSlices;
 
-smooth out vec2 uv;
-smooth out float val;
-smooth out vec3 normal;
+
+out ncl_PerVertex{
+	smooth vec2 uv;
+	smooth float val;
+	smooth vec3 normal;
+	smooth vec3 position;
+};
 
 void main(){
 	uv = gl_TessCoord.xy;
@@ -35,5 +40,6 @@ void main(){
 	val = texture(heightMap, vec3(uv, z)).r;
 	normal = texture(gradiantMap, vec3(uv, z)).rgb * 2 - 1;
 	p.y = val;
+	position = p.xyz;
 	gl_Position = MVP * p;
 }

@@ -149,6 +149,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="calculus.h" />
     <ClInclude Include="FieldObject.h" />
     <ClInclude Include="VectorCalculusScene.h" />
   </ItemGroup>
@@ -157,13 +158,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\field.frag" />
+    <None Include="shaders\field.geom" />
     <None Include="shaders\field.vert" />
     <None Include="shaders\image.frag" />
     <None Include="shaders\image.geom" />
     <None Include="shaders\image.vert" />
-    <None Include="shaders\scalar_field.tese" />
+    <None Include="shaders\isosurface.frag" />
+    <None Include="shaders\isosurface.geom" />
+    <None Include="shaders\viewport_tri.geom" />
+    <None Include="shaders\height_map.tese" />
     <None Include="shaders\scalar_field.frag" />
-    <None Include="shaders\scalar_field.vert" />
+    <None Include="shaders\height_map.vert" />
+    <None Include="shaders\shader.conf" />
     <None Include="shaders\vc.frag" />
     <None Include="shaders\vc.geom" />
     <None Include="shaders\vc.vert" />

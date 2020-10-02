@@ -1,11 +1,15 @@
 #version 450 core
-
-smooth in vec2 uv;
-smooth in float val;
-smooth in vec3 normal;
+#pragma compile(off)
 
 uniform float minVal;
 uniform float maxVal;
+
+in ncl_PerVertex{
+	smooth vec2 uv;
+	smooth float val;
+	smooth vec3 normal;
+};
+
 
 layout(location = 0) out vec4 fragColor;
 

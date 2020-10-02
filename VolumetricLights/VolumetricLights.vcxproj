@@ -153,6 +153,9 @@
     <None Include="shaders\holes.frag" />
     <None Include="shaders\holes.vert" />
     <None Include="shaders\holes_onFragment.frag" />
+    <None Include="shaders\particle.frag" />
+    <None Include="shaders\particle.geom" />
+    <None Include="shaders\particle.vert" />
     <None Include="shaders\screen.frag" />
     <None Include="shaders\volume_light.comp" />
   </ItemGroup>

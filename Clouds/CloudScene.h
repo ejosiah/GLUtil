@@ -146,7 +146,7 @@ public:
 		//glBindTexture(GL_TEXTURE_3D, 0);
 
 		int val;
-		glGetIntegerv(GL_MAX_GEOMETRY_SHADER_INVOCATIONS, &val);
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &val);
 		logger.info("Max GL invocations: " + to_string(val));
 
 		generateNoise();

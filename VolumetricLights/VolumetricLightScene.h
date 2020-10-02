@@ -7,6 +7,7 @@
 #include "../GLUtil/include/ncl/gl/ShadowMap.h"
 #include "../GLUtil/include/ncl/gl/SkyBox.h"
 #include "../GLUtil/include/ncl/ray_tracing/RayGenerator.h"
+#include "../GLUtil/include/ncl/physics/particle/render_particles.h"
 
 using namespace std;
 using namespace ncl;
@@ -14,6 +15,7 @@ using namespace gl;
 using namespace glm;
 
 namespace rt = ray_tracing;
+namespace pm = physics::pm;
 
 class VolumetricLightScene : public Scene {
 public:
@@ -21,16 +23,20 @@ public:
 		addShader("debug_shadow_map", GL_VERTEX_SHADER, point_shadow_map_render_vert_shader);
 		addShader("debug_shadow_map", GL_FRAGMENT_SHADER, point_shadow_map_render_frag_shader);
 		addShader("screen", GL_VERTEX_SHADER, screen_vert_shader);
+		camInfoOn = true;
 	}
 
 	void init() override {
+		fontColor(WHITE);
+		fontSize(15);
 		initDefaultCamera();
 		activeCamera().setPosition({ 0, 0, 10 });
+	//	activeCamera().setPosition({ -1.64, 0.736, -4.67 });
 		activeCamera().collisionTestOff();
-		sphere = Sphere{ 1 };
+		sphere = Sphere{ 0.1 };
 		sphere.defautMaterial(false);
 		sphere.cullBackFaceOff();
-		sphere0 = Sphere{ 0.98, 50, 50, vec4(lightColor,1 ) };
+		sphere0 = Sphere{ 0.98, 10, 10, vec4(lightColor,1 ) };
 		sphere0.defautMaterial(false);
 		sphere0.cullBackFaceOff();
 
@@ -60,7 +66,7 @@ public:
 		vec3 p = sampling::pointInSphere(0.5, 0.8);
 		float r = length(p);
 		logger.info("radius: " + to_string(r));
-		glPointSize(5);
+	//	glPointSize(5);
 
 		auto onFragment = getSource("holes_onFragment.frag")->data;
 
@@ -68,6 +74,9 @@ public:
 		shadowMap = OminiDirectionalShadowMap{ 5, lightPos, 1024, 1024, 0.1f, farPlane, onFragment};
 	//	CHECK_GL_ERRORS
 		cube = Cube{ 1 };
+
+		particles = pm::Particles(holes, sphere);
+	//	particles = pm::Particles(holes);
 
 		initFrameBuffer();
 		initVolumeLightCompute();
@@ -128,35 +137,35 @@ public:
 	}
 
 	void display() override {
-		shadowMap.update(lightPos);
-		shadowMap.capture([&] {
-			holesSsbo.sendToGPU();
-			send("num_holes", numPoints);
-			shade(sphere);
-		});
-		
+		//shadowMap.update(lightPos);
+		//shadowMap.capture([&] {
+		//	holesSsbo.sendToGPU();
+		//	send("num_holes", numPoints);
+		//	shade(sphere);
+		//});
+		//
 
-		shader("holes")([&] {
-			holesSsbo.sendToGPU();
-			send("num_holes", numPoints);
-			send("light_color", lightColor);
-			send(activeCamera());
-			shade(sphere);
-		});
-		shader("flat")([&] {
-			send(activeCamera());
-			shade(sphere0);
-		});
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		shader("screen")([&] {
-			volumeLight->images().front().renderMode();
-			glBindTextureUnit(0, volumeLight->images().at(0).buffer());
-			glBindTextureUnit(1, volumeLight->images().at(1).buffer());
-			shade(quad);
-		});
-		glDisable(GL_BLEND);
+		//shader("holes")([&] {
+		//	holesSsbo.sendToGPU();
+		//	send("num_holes", numPoints);
+		//	send("light_color", lightColor);
+		//	send(activeCamera());
+		//	shade(sphere);
+		//});
+		//shader("flat")([&] {
+		//	send(activeCamera());
+		//	shade(sphere0);
+		//});
+		//
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		//shader("screen")([&] {
+		//	volumeLight->images().front().renderMode();
+		//	glBindTextureUnit(0, volumeLight->images().at(0).buffer());
+		//	glBindTextureUnit(1, volumeLight->images().at(1).buffer());
+		//	shade(quad);
+		//});
+		//glDisable(GL_BLEND);
 
 		//shader("debug")([&] {
 		//	glBindTextureUnit(0, shadowMap.texture());
@@ -165,25 +174,35 @@ public:
 		//	shade(sphereBounds);
 		//});
 
+		shader("particle")([&] {
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glDisable(GL_CULL_FACE);
+			send(activeCamera());
+			/*subroutineGeom("shape", "Torus");*/
+			//particles.swapBuffers();
+			shade(particles);
+		//	shade(sphere);
+		});
+
 	}
 
 	void resized() override {
-		cam.projection = perspective(radians(60.0f), aspectRatio, 0.1f, 10.0f);
+		cam.projection = perspective(radians(60.0f), aspectRatio, 0.1f, 100.0f);
 	}
 
 	void update() {
-		fb.use([&] {
-			shader("flat")([&] {
-				send(activeCamera());
-				shade(sphere0);
-				});
-			shader("holes")([&] {
-				holesSsbo.sendToGPU();
-				send("num_holes", numPoints);
-				send(activeCamera());
-				shade(sphere);
-				});
-		});
+		//fb.use([&] {
+		//	shader("flat")([&] {
+		//		send(activeCamera());
+		//		shade(sphere0);
+		//		});
+		//	shader("holes")([&] {
+		//		holesSsbo.sendToGPU();
+		//		send("num_holes", numPoints);
+		//		send(activeCamera());
+		//		shade(sphere);
+		//		});
+		//});
 	}
 
 	void processInput(const Key& key) override {
@@ -207,6 +226,7 @@ private:
 	Sphere sphere0;
 	Sphere sphereBounds;
 	StorageBufferObj<vec4> holesSsbo;
+	pm::Particles particles;
 	ProvidedMesh pMesh;
 	Logger logger = Logger::get("VL");
 	OminiDirectionalShadowMap shadowMap;

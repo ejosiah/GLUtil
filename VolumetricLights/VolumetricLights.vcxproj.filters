@@ -47,5 +47,14 @@
     <None Include="shaders\screen.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\particle.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\particle.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\particle.geom">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

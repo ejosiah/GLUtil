@@ -85,15 +85,15 @@ public:
 
 	void display() override {
 		shader("subroutine")([&] {
-			glGetProgramStageiv(shader("subroutine").program(), GL_FRAGMENT_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &n);
+		//	glGetProgramStageiv(shader("subroutine").program(), GL_FRAGMENT_SHADER, GL_ACTIVE_SUBROUTINE_UNIFORMS, &n);
 			//GLuint* indices = new GLuint[n];
 			//indices[colorLoc] = greenIndex;
 			//indices[subLoc] = cyanIndex;
 
-			subroutineFrag("color", "green");
+			subroutineFrag("color", "blue");
 			subroutineFrag("sub_color", "yellow");
 			//glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, n, indices);
-			send("sub", true);
+			send("sub", false);
 			shade(quad);
 		});
 	}

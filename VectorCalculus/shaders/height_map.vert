@@ -1,6 +1,7 @@
 #version 460 core
 #pragma debug(on)
 #pragma optimize(off)
+#pragma compile(off)
 
 layout(location=0) in vec3 position;
 
