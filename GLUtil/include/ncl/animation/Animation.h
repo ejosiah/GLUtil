@@ -1,28 +1,42 @@
 #pragma once
 
+#include <map>
 #include <memory>
 #include <vector>
-#include "../gl/Drawable.h"
-#include "../gl/SceneObject.h"
+#include <memory>
+#include <regex>
+#include <functional>
+#include <filesystem>
+#include <glm/glm.hpp>
+#include "../gl/Timer.h"
 #include "../gl/Scene.h"
 #include "../gl/Shader.h"
-#include "../gl/Timer.h"
-#include <glm/glm.hpp>
+#include "../gl/Drawable.h"
+#include "../gl/SceneObject.h"
+#include "../gl/Model.h"
+#include "Image2D.h"
+
+namespace fs = std::filesystem;
 
 namespace ncl {
 	namespace animation {
 
 		struct Frame {
-			int id;
-			std::unique_ptr<gl::Drawable> content;
-			long int duration;
+			int id = 0;
+			gl::Drawable* content = nullptr;
+			long int duration = 0;
+
+			~Frame() {
+//				delete content;
+			}
 		};
 
 		class Animation : public gl::SceneObject {
 		public:
-			Animation(gl::Scene& scene, bool loop = false)
+			Animation(gl::Scene& scene, std::vector <Frame> frames, bool loop = true)
 				:gl::SceneObject(&scene)
 				, _loop(loop)
+				, _frames(std::move(frames))
 			{}
 
 			void update(float dt) override {
@@ -31,12 +45,18 @@ namespace ncl {
 
 				if (timer.millisSinceStart() > _duration) {
 					_currentFrame = &_frames.at(_index);
-					_duration += timer.millisSinceStart() + _currentFrame->duration;
+					_duration = timer.millisSinceStart() + _currentFrame->duration;
 
-					if (_loop) {
-						_index %= size;
+					_index++;
+					if (_index >= size) {
+						if (_loop) {
+							_duration = 0;
+							_index = 0;
+						}else{
+							_index--;
+						}
 					}
-					_index = _index < size ? (_index + 1) : size - 1;
+
 				}
 			}
 
@@ -49,11 +69,72 @@ namespace ncl {
 			}
 
 		private:
-			bool _loop;
+			bool _loop = true;
 			std::vector<Frame> _frames;
-			int _index;
-			Frame* _currentFrame;
-			long int _duration;
+			int _index = 0;
+			Frame* _currentFrame = nullptr;
+			long int _duration = 0;
+		};
+
+		using FrameFactory = std::function<gl::Drawable*(fs::path)>;
+
+		class AnimationBuilder {
+		public:
+			inline std::unique_ptr<Animation> build(gl::Scene& scene, fs::path path, int fps = 60) {
+				auto itr = fs::directory_iterator(path);
+
+				std::vector<fs::path> files;
+				for (auto entry : itr) {
+					if (entry.is_regular_file()) {
+						files.push_back(entry.path());
+					}
+				}
+
+				std::vector<Frame> frames(files.size());
+				const std::regex DIGIT("\(\\d+\)");
+				std::smatch match;
+				long int duration = (1.0 / fps) * 1000;
+
+				for (auto p : files) {
+					auto filename = p.filename().string();
+					auto ext = p.filename().extension().string();
+					auto i = filename.find(ext);
+
+					auto name = filename.substr(0, i);
+					if (std::regex_search(name, match, DIGIT)) {
+						auto id = match[1];
+						auto index = std::stoi(id);
+						frames[index] = {
+							index,
+							factory(p),
+							duration
+						};
+					}
+					
+				}
+
+				return std::make_unique<Animation>(scene, frames);
+			}
+			
+			static inline AnimationBuilder ObjAnimationBuilder() {
+				return AnimationBuilder([](fs::path path) {
+					return new gl::Model(path.string());
+				});
+			}
+
+			static inline AnimationBuilder Image2DAnimationBuilder() {
+				return AnimationBuilder([](fs::path path) {
+					return new Image2D{ path.string() };
+				});
+			}
+
+		private:
+			AnimationBuilder(FrameFactory factory)
+				:factory{ factory }
+			{}
+
+
+			FrameFactory factory;
 		};
 	}
 }
