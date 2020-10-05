@@ -408,9 +408,6 @@
     <ClInclude Include="include\ncl\gl\FrameBuffer.h">
       <Filter>Header Files\core</Filter>
     </ClInclude>
-    <ClInclude Include="include\ncl\gl\StorageBufferObj.h">
-      <Filter>Header Files\core</Filter>
-    </ClInclude>
     <ClInclude Include="include\ncl\gl\pbr.h">
       <Filter>Header Files\pbr</Filter>
     </ClInclude>
@@ -512,6 +509,9 @@
     </ClInclude>
     <ClInclude Include="include\ncl\util\numeric_iterator.h">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ncl\gl\BufferObject.h">
+      <Filter>Header Files\core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -676,9 +676,6 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="include\ncl\gl\detail\FrameBuffer.inl">
-      <Filter>Header Files\core\detail</Filter>
-    </None>
-    <None Include="include\ncl\gl\detail\StorageBufferObj.inl">
       <Filter>Header Files\core\detail</Filter>
     </None>
     <None Include="shaders\equi_rectangular_map.vert">
@@ -896,6 +893,9 @@
     </None>
     <None Include="shaders\identity.geom">
       <Filter>shaders</Filter>
+    </None>
+    <None Include="include\ncl\gl\detail\BufferObject_inl.h">
+      <Filter>Header Files\core\detail</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

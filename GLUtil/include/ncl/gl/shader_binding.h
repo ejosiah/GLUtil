@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include "Shader.h"
 #include "textures.h"
-#include "StorageBufferObj.h"
+#include "BufferObject.h"
 #include "pbr.h"
 #include "ShadowMap.h"
 //#include "light_field_probes.h"

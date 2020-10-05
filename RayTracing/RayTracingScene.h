@@ -385,13 +385,17 @@ public:
 	}
 
 	void initRayCounter() {
-		unsigned counters[3]{ 0, 0, 0 };
-		glGenBuffers(1, &rayCounterBuffer);
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
-		glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned) * 3, NULL, GL_DYNAMIC_DRAW);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 3, counters);
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, rayCounterBuffer);
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+		//unsigned counters[3]{ 0, 0, 0 };
+		//glGenBuffers(1, &rayCounterBuffer);
+		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+		//glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(unsigned) * 3, NULL, GL_DYNAMIC_DRAW);
+		//glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 3, counters);
+		//glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, rayCounterBuffer);
+		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+		atomicCounters0 = AtomicCounterBuffer(size_t(3), 0);
+		atomicCounters0.read([](auto counter) {
+			for (int i = 0; i < 3; i++) *counter++ = 0;
+		});
 	}
 
 	void initNextIndex() {
@@ -428,7 +432,8 @@ public:
 		//	send("triangles[" + to_string(i) + "].matId", triangle.matId);
 		//}
 
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+	//	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+		atomicCounters0.sendToGPU();
 		send("bounces", _bounces);
 		send("numPlanes", numPlanes);
 		send("bounds.min", vec3(bounds.min));
@@ -546,15 +551,21 @@ public:
 	void log(Font& font) {
 		if (showRayCount) {
 			showRayCount = false;
-			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
-			auto rayCounts = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
-			NumRays = rayCounts[0];
-			shadowRays = rayCounts[1];
-			testPerPixel = rayCounts[2];
-			rayCounts[0] = rayCounts[1] = rayCounts[2] = 0;
-			//glFlushMappedBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 2 * sizeof(unsigned));
-			glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
-			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+			//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
+			//auto rayCounts = (unsigned*)glMapBuffer(GL_ATOMIC_COUNTER_BUFFER, GL_READ_WRITE);
+			//NumRays = rayCounts[0];
+			//shadowRays = rayCounts[1];
+			//testPerPixel = rayCounts[2];
+			//rayCounts[0] = rayCounts[1] = rayCounts[2] = 0;
+			////glFlushMappedBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 2 * sizeof(unsigned));
+			//glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
+			//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+			atomicCounters0.read([&](auto rayCounts) {
+				NumRays = rayCounts[0];
+				shadowRays = rayCounts[1];
+				testPerPixel = rayCounts[2];
+				rayCounts[0] = rayCounts[1] = rayCounts[2] = 0;
+			});
 		}
 
 		font.render("Rays: " + toString(NumRays), 10, 100);
@@ -616,7 +627,8 @@ private:
 	unsigned int rayCounters[3] = { 0, 0, 0 };
 	int NumRays;
 	int shadowRays;
-	GLuint rayCounterBuffer;
+	//GLuint rayCounterBuffer;
+	AtomicCounterBuffer atomicCounters0;
 	GLuint nextIndexBuffer;
 	bool showRayCount = false;
 	size_t numTriangles = 0;

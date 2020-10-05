@@ -7,7 +7,7 @@
 #include "textures.h"
 #include "Scene.h"
 #include "Shader.h"
-#include "StorageBufferObj.h"
+#include "BufferObject.h"
 #include "FrameBuffer.h"
 #include "shaders.h"
 #include "mesh.h"

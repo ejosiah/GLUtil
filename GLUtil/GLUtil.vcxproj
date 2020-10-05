@@ -214,7 +214,7 @@
     <ClInclude Include="include\ncl\gl\ShadowMap.h" />
     <ClInclude Include="include\ncl\gl\SkyBox.h" />
     <ClInclude Include="include\ncl\gl\spectrum.h" />
-    <ClInclude Include="include\ncl\gl\StorageBufferObj.h" />
+    <ClInclude Include="include\ncl\gl\BufferObject.h" />
     <ClInclude Include="include\ncl\gl\textures.h" />
     <ClInclude Include="include\ncl\gl\Cone.h" />
     <ClInclude Include="include\ncl\gl\Cylinder.h" />
@@ -305,7 +305,7 @@
     <None Include="include\ncl\gl\camera.inl" />
     <None Include="include\ncl\gl\detail\FrameBuffer.inl" />
     <None Include="include\ncl\gl\detail\ShadowMap.inl" />
-    <None Include="include\ncl\gl\detail\StorageBufferObj.inl" />
+    <None Include="include\ncl\gl\detail\BufferObject_inl.h" />
     <None Include="include\ncl\gl\detail\textures.inl" />
     <None Include="include\ncl\gl\Shader.inl" />
     <None Include="include\ncl\sampling\Sampler.inl" />

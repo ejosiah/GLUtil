@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "../gl/StorageBufferObj.h"
+#include "../gl/BufferObject.h"
 #include "../gl/common.h"
 #include <vector>
 

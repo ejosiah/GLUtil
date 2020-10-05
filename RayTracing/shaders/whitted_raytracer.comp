@@ -388,9 +388,9 @@ void main(){
 //	debug.wo = vec4(weight, 0);
 	debugs[index] = debug;
 
-	vec3 destColor = imageLoad(image, ivec2(gl_GlobalInvocationID.xy)).rgb;
-	float n = currentSample + 1;
-	color = mix(destColor, color, 1/n);
+//	vec3 destColor = imageLoad(image, ivec2(gl_GlobalInvocationID.xy)).rgb;
+//	float n = currentSample + 1;
+//	color = mix(destColor, color, 1/n);
 
 	imageStore(image, ivec2(gl_GlobalInvocationID.xy), vec4(color, 1));
 }

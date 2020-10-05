@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "..\gl\Scene.h"
-#include "..\gl\StorageBufferObj.h"
+#include "..\gl\BufferObject.h"
 
 namespace ncl {
 	namespace ray_tracing {
