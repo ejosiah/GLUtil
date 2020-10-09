@@ -40,7 +40,7 @@ namespace ncl {
 				return _texture.height();
 			}
 
-			constexpr void transfer(Image2D& source, Image2D& dest) {
+			void transfer(Image2D& source, Image2D& dest) {
 				dest._quad = std::move(source._quad);
 				dest._texture = std::move(source._texture);
 			}
