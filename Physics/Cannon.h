@@ -40,10 +40,10 @@ public:
 		using namespace gcl;
 		send(camera, xform);
 		if (!shadowMode) {
-			glBindTextureUnit(0, diffuseMap->bufferId());
-			glBindTextureUnit(1, diffuseMap->bufferId());
-			glBindTextureUnit(2, specularMap->bufferId());
-			glBindTextureUnit(3, NormalMap->bufferId());
+			glBindTextureUnit(0, diffuseMap->buffer());
+			glBindTextureUnit(1, diffuseMap->buffer());
+			glBindTextureUnit(2, specularMap->buffer());
+			glBindTextureUnit(3, NormalMap->buffer());
 		}
 		send("offset", _offset);
 		send("isBump", true);

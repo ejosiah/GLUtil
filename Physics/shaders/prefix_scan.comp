@@ -1,0 +1,57 @@
+#version 460 core
+
+#define HISTOGRAM 0
+
+#define WG_COUNT gl_NumWorkGroups.x
+#define WG_SIZE 256
+#define BLOCK_SIZE 1024  // (4 * WG_SIZE)
+#define RADICES 16       // (1 << BITS_PER_PASS)
+#define EACH(i, count) for (int i = 0; i < count; i++)
+#define BARRIER groupMemoryBarrier(); barrier()
+#define LC_IDX gl_LocalInvocationIndex
+#define WG_IDX gl_WorkGroupID.x
+
+precision highp float;
+precision highp int;
+layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
+
+layout(local_size_x = WG_SIZE) in;
+
+layout(binding = HISTOGRAM) buffer Histogram { uint histogram[]; };
+
+shared uint local_sort[BLOCK_SIZE];
+shared uint seed;
+
+
+uint prefix_sum(uint data, inout uint total_sum) {
+  const uint lc_idx = LC_IDX + WG_SIZE;
+  local_sort[LC_IDX] = 0;
+  local_sort[lc_idx] = data;
+  BARRIER;
+  for (uint i = 1; i < WG_SIZE; i <<= 1) {
+    uint tmp = local_sort[lc_idx - i];
+    BARRIER;
+    local_sort[lc_idx] += tmp;
+    BARRIER;
+  }
+  total_sum = local_sort[WG_SIZE * 2 - 1];
+  return local_sort[lc_idx - 1];
+}
+
+
+void main() {
+  seed = 0;
+  BARRIER;
+
+  EACH(d, RADICES) {
+    uint val = 0;
+    uint idx = d * WG_COUNT + LC_IDX;
+    if (LC_IDX < WG_COUNT) val = histogram[idx];
+    uint total;
+    uint res = prefix_sum(val, total);
+    if (LC_IDX < WG_COUNT) histogram[idx] = res + seed;
+    if (LC_IDX == WG_COUNT - 1) seed += res + val;
+    BARRIER;
+  }
+}

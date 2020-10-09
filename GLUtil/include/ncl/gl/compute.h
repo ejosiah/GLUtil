@@ -57,8 +57,8 @@ namespace ncl {
 						img.sendTo(*_shader);
 					}
 					glDispatchCompute(_workers.x, _workers.y, _workers.z);
+					postCompute();
 				});
-				postCompute();
 			}
 
 			virtual void preCompute() {

@@ -3,7 +3,7 @@
 #include <tuple>
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/SceneObject.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/BufferObject.h"
 #include "../GLUtil/include/ncl/physics/particle/Particle.h"
 #include "../GLUtil/include/ncl/physics/particle/ParticleRegistry.h"
 #include "../GLUtil/include/ncl/physics/particle/ParticleObject.h"

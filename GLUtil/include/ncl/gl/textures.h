@@ -351,7 +351,10 @@ namespace ncl {
 		public:
 			TextureBuffer() = default;
 
-			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, GLuint bufId = 0, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW):_buffer(bufId) { // TODO fix nextId bug
+			TextureBuffer(std::string name, const void* data, GLuint size, GLenum iFormat = GL_RGBA32F, GLuint bufId = 0, unsigned id = nextId++, GLenum usage = GL_STATIC_DRAW)
+				:_buffer(bufId)
+				, _size(size)
+			{ // TODO fix nextId bug
 				glActiveTexture(TEXTURE(id));
 			
 				if (glIsBuffer(_buffer) == GL_FALSE) {
@@ -397,6 +400,11 @@ namespace ncl {
 
 			GLuint id() const { return _id; }
 
+			[[nodiscard]]
+			GLuint size(int blockSize = 1) const {
+				return _size / blockSize;
+			}
+
 			void sendTo(Shader& shader) {
 				glActiveTexture(TEXTURE(_id));
 				glBindTexture(GL_TEXTURE_BUFFER, _tbo_id);
@@ -409,6 +417,7 @@ namespace ncl {
 				dest._tbo_id = source._tbo_id;
 				dest._id = source._id;
 				dest._name = source._name;
+				dest._size = source._size;
 
 				source._buffer = 0;
 				source._tbo_id = 0;
@@ -419,6 +428,7 @@ namespace ncl {
 			GLuint _buffer;
 			GLuint _tbo_id;
 			GLuint _id;
+			size_t _size;
 			std::string _name;
 		};
 

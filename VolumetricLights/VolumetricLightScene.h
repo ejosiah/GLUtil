@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/BufferObject.h"
 #include "../GLUtil/include/ncl/sampling/sampling.h"
 #include "../GLUtil/include/ncl/gl/ShadowMap.h"
 #include "../GLUtil/include/ncl/gl/SkyBox.h"
@@ -61,7 +61,7 @@ public:
 			mesh.positions.push_back(p);
 			mesh.colors.push_back(GREEN);
 		}
-		holesSsbo = StorageBufferObj<vec4>{ holes, 3 };
+		holesSsbo = StorageBuffer<vec4>{ holes, 3 };
 		pMesh = ProvidedMesh{ mesh };
 		vec3 p = sampling::pointInSphere(0.5, 0.8);
 		float r = length(p);
@@ -104,7 +104,7 @@ public:
 	}
 
 	void initVolumeLightCompute() {
-		camera_ssbo = StorageBufferObj<rt::Camera>{ rt::Camera{} };
+		camera_ssbo = StorageBuffer<rt::Camera>{ rt::Camera{} };
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 
 		ivec3 workers = ivec3{ _width / 32, _height / 32, 1 };
@@ -225,14 +225,14 @@ private:
 	Sphere sphere;
 	Sphere sphere0;
 	Sphere sphereBounds;
-	StorageBufferObj<vec4> holesSsbo;
+	StorageBuffer<vec4> holesSsbo;
 	pm::Particles particles;
 	ProvidedMesh pMesh;
 	Logger logger = Logger::get("VL");
 	OminiDirectionalShadowMap shadowMap;
 	vec3 lightPos = vec3(0);
 	rt::RayGenerator* rayGenerator;
-	StorageBufferObj<rt::Camera> camera_ssbo;
+	StorageBuffer<rt::Camera> camera_ssbo;
 	Compute* volumeLight;
 	vec3 lightColor = { 0.9, 0.8, 0.4 };
 	FrameBuffer fb;

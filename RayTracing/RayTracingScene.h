@@ -57,7 +57,7 @@ class RayTracer : public Compute {
 	using Bounds = geom::bvol::AABB2;
 
 public:
-	RayTracer(Scene& scene, StorageBufferObj<rt::Ray>& rays)
+	RayTracer(Scene& scene, StorageBuffer<rt::Ray>& rays)
 		:Compute(vec3{ scene.width() / 32.0f, scene.height() / 32.0f, 1.0f }
 			, vector<Image2D>{ Image2D(scene.width(), scene.height(), GL_RGBA32F, "image", 0) }
 	, & scene.shader("whitted_raytracer"))
@@ -140,13 +140,13 @@ public:
 
 		numPlanes = planes.size();
 
-		plane_ssbo = StorageBufferObj<rt::Plane>{ planes, 5 };
+		plane_ssbo = StorageBuffer<rt::Plane>{ planes, 5 };
 		initRayCounter();
 		initLights();
 		initSpheres(materials);
 		initTriangles(materials);
-		material_ssbo = StorageBufferObj<rt::Material>{ materials, 3 };
-		debug_ssbo = StorageBufferObj<Debug>{ size_t(scene.width() * scene.height()), 8 };
+		material_ssbo = StorageBuffer<rt::Material>{ materials, 3 };
+		debug_ssbo = StorageBuffer<Debug>{ size_t(scene.width() * scene.height()), 8 };
 
 	}
 
@@ -165,7 +165,7 @@ public:
 	//	light.position = vec4(0, 1, 0, 1);
 		lights.push_back(light);
 		
-		light_ssbo = StorageBufferObj<rt::LightSource>{ lights, 2 };
+		light_ssbo = StorageBuffer<rt::LightSource>{ lights, 2 };
 	}
 
 	void initSpheres(vector< rt::Material>& materials) {
@@ -242,7 +242,7 @@ public:
 			continue;
 		}
 		numSpheres = spheres.size();
-		sphere_ssbo = StorageBufferObj<rt::Sphere>{ spheres, 4 };
+		sphere_ssbo = StorageBuffer<rt::Sphere>{ spheres, 4 };
 	}
 
 	void initTriangles(vector< rt::Material>& materials) {
@@ -272,8 +272,8 @@ public:
 	//	numTriangles = cube.numTriangles();
 
 		initNextIndex();
-		triangle_ssbo = StorageBufferObj<rt::Triangle>{ 1000000,  6};
-		shading_ssbo = StorageBufferObj<rt::Shading>{ 1000000,  7};
+		triangle_ssbo = StorageBuffer<rt::Triangle>{ 1000000,  6};
+		shading_ssbo = StorageBuffer<rt::Shading>{ 1000000,  7};
 
 		auto aabb = cube.aabb();
 		auto d = box::diagonal(aabb);
@@ -380,8 +380,8 @@ public:
 		stats.primsPerNode = stats.primsPerNode / total;
 		numNodes += ds::tree::size(bvhRoot);
 
-		bvh_ssbo = StorageBufferObj<bvh::LinearBVHNode>{ bvh_buffer.nodes, 8 };
-		primivite_indices_ssbo = StorageBufferObj<int>{ index_buffer.data, 9 };
+		bvh_ssbo = StorageBuffer<bvh::LinearBVHNode>{ bvh_buffer.nodes, 8 };
+		primivite_indices_ssbo = StorageBuffer<int>{ index_buffer.data, 9 };
 	}
 
 	void initRayCounter() {
@@ -392,8 +392,8 @@ public:
 		//glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(unsigned) * 3, counters);
 		//glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, rayCounterBuffer);
 		//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-		atomicCounters0 = AtomicCounterBuffer(size_t(3), 0);
-		atomicCounters0.read([](auto counter) {
+		rayCounterBuffer = AtomicCounterBuffer(size_t(3), 0);
+		rayCounterBuffer.read([](auto counter) {
 			for (int i = 0; i < 3; i++) *counter++ = 0;
 		});
 	}
@@ -433,7 +433,7 @@ public:
 		//}
 
 	//	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, rayCounterBuffer);
-		atomicCounters0.sendToGPU();
+		rayCounterBuffer.sendToGPU();
 		send("bounces", _bounces);
 		send("numPlanes", numPlanes);
 		send("bounds.min", vec3(bounds.min));
@@ -560,7 +560,7 @@ public:
 			////glFlushMappedBufferRange(GL_ATOMIC_COUNTER_BUFFER, 0, 2 * sizeof(unsigned));
 			//glUnmapBuffer(GL_ATOMIC_COUNTER_BUFFER);
 			//glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-			atomicCounters0.read([&](auto rayCounts) {
+			rayCounterBuffer.read([&](auto rayCounts) {
 				NumRays = rayCounts[0];
 				shadowRays = rayCounts[1];
 				testPerPixel = rayCounts[2];
@@ -606,16 +606,16 @@ public:
 	}
 
 private:
-	StorageBufferObj<rt::Ray>& rays;
-	StorageBufferObj<rt::Plane> plane_ssbo;
-	StorageBufferObj<rt::LightSource> light_ssbo;
-	StorageBufferObj<rt::Sphere> sphere_ssbo;
-	StorageBufferObj<rt::Material> material_ssbo;
-	StorageBufferObj<rt::Triangle> triangle_ssbo;
-	StorageBufferObj<rt::Shading> shading_ssbo;
-	StorageBufferObj<bvh::LinearBVHNode> bvh_ssbo;
-	StorageBufferObj<int> primivite_indices_ssbo;
-	StorageBufferObj<Debug> debug_ssbo;
+	StorageBuffer<rt::Ray>& rays;
+	StorageBuffer<rt::Plane> plane_ssbo;
+	StorageBuffer<rt::LightSource> light_ssbo;
+	StorageBuffer<rt::Sphere> sphere_ssbo;
+	StorageBuffer<rt::Material> material_ssbo;
+	StorageBuffer<rt::Triangle> triangle_ssbo;
+	StorageBuffer<rt::Shading> shading_ssbo;
+	StorageBuffer<bvh::LinearBVHNode> bvh_ssbo;
+	StorageBuffer<int> primivite_indices_ssbo;
+	StorageBuffer<Debug> debug_ssbo;
 	CheckerBoard_gpu* checkerboard;
 	SkyBox* skybox;
 	Scene& scene;
@@ -627,8 +627,7 @@ private:
 	unsigned int rayCounters[3] = { 0, 0, 0 };
 	int NumRays;
 	int shadowRays;
-	//GLuint rayCounterBuffer;
-	AtomicCounterBuffer atomicCounters0;
+	AtomicCounterBuffer rayCounterBuffer;
 	GLuint nextIndexBuffer;
 	bool showRayCount = false;
 	size_t numTriangles = 0;
@@ -661,7 +660,7 @@ public:
 		initDefaultCamera();
 		activeCamera().setPosition({ 0, 0, 15 });
 	//	activeCamera().lookAt({ 0, 10, 0 }, vec3(0), { 0, 0, 1 });
-		camera_ssbo = gl::StorageBufferObj<rt::Camera>{ rt::Camera{} };
+		camera_ssbo = gl::StorageBuffer<rt::Camera>{ rt::Camera{} };
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 		raytracer = new RayTracer{ *this, rayGenerator->getRaySSBO() };
 		quad = ProvidedMesh{ screnSpaceQuad() };
@@ -740,7 +739,7 @@ public:
 private:
 	rt::RayGenerator* rayGenerator;
 	RayTracer* raytracer;
-	StorageBufferObj<rt::Camera> camera_ssbo;
+	StorageBuffer<rt::Camera> camera_ssbo;
 	ProvidedMesh quad;
 	rt::Camera* rCamera;
 	Teapot* teapot;

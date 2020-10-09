@@ -284,7 +284,7 @@ namespace ncl {
 		}
 
 		template<typename T>
-		inline void  send(StorageBufferObj<T>& obj) {
+		inline void  send(StorageBuffer<T>& obj) {
 			ensureShaderbound();
 			obj.sendToGPU();
 		}

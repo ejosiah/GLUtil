@@ -23,10 +23,10 @@ public:
 		mesh.positions.resize(12);
 		textureSlices = ProvidedMesh{ mesh,  false, (unsigned)MAX_SLICES };
 		textureSlices.defautMaterial(false);
-//		slices = StorageBufferObj<vec3>{ textureSlices, 0 };
+//		slices = StorageBuffer<vec3>{ textureSlices, 0 };
 
 		
-		slices = StorageBufferObj<int>{ size_t{4096}, 0 };
+		slices = StorageBuffer<int>{ size_t{4096}, 0 };
 
 		int workers = (int)(std::ceil(MAX_SLICES / 512.0));
 
@@ -117,8 +117,8 @@ public:
 private:
 	const int MAX_SLICES = 4096;
 	ProvidedMesh textureSlices;
-//	StorageBufferObj<vec3> slices;
-	StorageBufferObj<int> slices;
+//	StorageBuffer<vec3> slices;
+	StorageBuffer<int> slices;
 	Cube cube;
 	int num_slices = 256;
 	Compute* sliceVolumeOp;

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\gpu_sort">
+      <UniqueIdentifier>{0c9626e9-afc4-47d2-8214-d1e0fe4c5d61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhysicsScene.h">
@@ -33,6 +36,15 @@
     <ClInclude Include="Rope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RadixSort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu_sort\const_data.h">
+      <Filter>Header Files\gpu_sort</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu_sort\Histogram.h">
+      <Filter>Header Files\gpu_sort</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="physics_test.cpp">
@@ -41,6 +53,15 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ballistics_rest.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\radix_sort.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\histogram_count.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\prefix_scan.comp">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

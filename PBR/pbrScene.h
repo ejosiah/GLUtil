@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../GLUtil/include/ncl/gl/pbr.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/StorageBuffer.h"
 
 
 using namespace std;
@@ -205,7 +205,7 @@ public:
 		scene.lights[5].position = { -3, 0, 0 };
 		scene.lights[5].Intensity = vec3(23.47, 21.31, 20.79);
 		numLights = 1;
-		ssboScene = StorageBufferObj<pbr::Scene>{ scene, 0};
+		ssboScene = StorageBuffer<pbr::Scene>{ scene, 0};
 
 		initSkyBox();
 		glDisable(GL_CULL_FACE);
@@ -598,7 +598,7 @@ private:
 	float step = 0;
 	stringstream ss;
 	int numLights;
-	StorageBufferObj<pbr::Scene> ssboScene;
+	StorageBuffer<pbr::Scene> ssboScene;
 	LightType currentLightType;
 	bool useNormalMapping;
 	bool ibl = false;

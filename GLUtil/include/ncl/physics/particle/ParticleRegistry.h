@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../gl/StorageBufferObj.h"
+#include "../../gl/BufferObject.h"
 #include "Particle.h"
 #include <tuple>
 
@@ -12,16 +12,17 @@ namespace ncl {
 				ParticleRegistry() = default;
 
 				ParticleRegistry(size_t size) 
-					:_particles{ new gl::StorageBufferObj<Particle>{ size, 0 } }
-					, _offset{ 0 } {
-
+					:_particles{ new gl::StorageBuffer<Particle>{} }
+					, _offset{ 0 } 
+				{
+					_particles->allocate(size);
 				}
 
 				~ParticleRegistry() {
 					delete _particles;
 				}
 
-				std::tuple<int, gl::StorageBufferObj<Particle>*> _register(size_t count) {
+				std::tuple<int, gl::StorageBuffer<Particle>*> _register(size_t count) {
 					if (count < 0 || count >= _particles->count()) throw  "Index out of bounds";
 
 					
@@ -30,12 +31,12 @@ namespace ncl {
 					return res;
 				}
 
-				gl::StorageBufferObj<Particle>& particles() {
+				gl::StorageBuffer<Particle>& particles() {
 					return *_particles;
 				}
 
 			private:
-				gl::StorageBufferObj<Particle>* _particles;
+				gl::StorageBuffer<Particle>* _particles;
 				int _offset;
 			};
 		}

@@ -152,19 +152,19 @@ namespace ncl {
 			}
 
 			GLuint copyNormals(int mesh = 0) {
-				return copy(bufferFor(mesh, Normal));
+				return std::get<1>(copy(bufferFor(mesh, Normal)));
 			}
 
 			GLuint copyTangents(int mesh = 0) {
-				return copy(bufferFor(mesh, Tangent));
+				return std::get<1>(copy(bufferFor(mesh, Tangent)));
 			}
 
 			GLuint copyBiTangents(int mesh = 0) {
-				return copy(bufferFor(mesh, BiTangent));
+				return std::get<1>(copy(bufferFor(mesh, BiTangent)));
 			}
 
 			GLuint copyIndices(int mesh = 0) {
-				return indices[mesh] ? copy(bufferFor(mesh, Indices)) : 0;
+				return indices[mesh] ? std::get<1>(copy(bufferFor(mesh, Indices))) : 0;
 			}
 
 		protected:

@@ -8,7 +8,7 @@
 #include "../GLUtil/include/ncl/gl/Scene.h"
 #include "../GLUtil/include/ncl/gl/common.h"
 #include "../GLUtil/include/ncl/gl/FrameBuffer.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/StorageBuffer.h"
 #include "../GLUtil/include/ncl/gl/Resolution.h"
 #include "../GLUtil/include/ncl/units/units.h"
 #include "../GLUtil/include/ncl/gl/SkyBox.h"
@@ -224,7 +224,7 @@ public:
 	void rayInit() {
 
 		initSkyBox();
-		camera_ssbo = StorageBufferObj<rt::Camera>{ rt::Camera{} };
+		camera_ssbo = StorageBuffer<rt::Camera>{ rt::Camera{} };
 		rayGenerator = new rt::RayGenerator{ *this, camera_ssbo };
 
 		ivec3 workers = ivec3{ _width/32, _height / 32, 1 };
@@ -235,7 +235,7 @@ public:
 		//CHECK_GL_ERRORS
 		
 		
-		sample_point = StorageBufferObj<vec4>{ size_t(_width * _height), 2 };
+		sample_point = StorageBuffer<vec4>{ size_t(_width * _height), 2 };
 		sample_point.read([&](vec4* p) {
 			for (int i = 0; i < _width * _height; i++) {
 				*(p + i) = vec4(0);
@@ -537,12 +537,12 @@ private:
 	const vec3 stepSize = vec3(1) / vec3(dim);
 	CloudUI* cloudUI;
 	rt::RayGenerator* rayGenerator;
-	StorageBufferObj<rt::Camera> camera_ssbo;
+	StorageBuffer<rt::Camera> camera_ssbo;
 	SkyBox* skybox;
 	Compute* clouds;
 	FrameBuffer fb;
-	StorageBufferObj<vec4> sample_point;
-	StorageBufferObj<float> height_data;
+	StorageBuffer<vec4> sample_point;
+	StorageBuffer<float> height_data;
 	std::unique_ptr<WeatherGenerator> weatherGenerator;
 	rt::Ray ray;
 	bool showRay = false;

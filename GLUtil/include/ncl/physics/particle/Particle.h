@@ -36,11 +36,11 @@ namespace ncl {
 
 			class ParticleCompute : public gl::Compute {
 			public:
-				ParticleCompute(gl::StorageBufferObj<Particle>& particles, std::string shaderSource, glm::vec3 workers) :
+				ParticleCompute(gl::StorageBuffer<Particle>& particles, std::string shaderSource, glm::vec3 workers) :
 					Compute{ workers, {}, shaderSource }, particles{ particles } {
 				}
 
-				ParticleCompute(gl::StorageBufferObj<Particle>& particles, gl::Shader* shader, glm::vec3 workers) :
+				ParticleCompute(gl::StorageBuffer<Particle>& particles, gl::Shader* shader, glm::vec3 workers) :
 					Compute{ workers, {}, shader }, particles{ particles } {
 				}
 
@@ -51,7 +51,7 @@ namespace ncl {
 				}
 
 			protected:
-				gl::StorageBufferObj<Particle>& particles;
+				gl::StorageBuffer<Particle>& particles;
 			};
 
 		}

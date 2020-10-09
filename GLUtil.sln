@@ -92,6 +92,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clouds", "Clouds\Clouds.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VolumetricLights", "VolumetricLights\VolumetricLights.vcxproj", "{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPUInfo", "GPUInfo\GPUInfo.vcxproj", "{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -436,6 +438,14 @@ Global
 		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x64.Build.0 = Release|x64
 		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x86.ActiveCfg = Release|Win32
 		{8BBA1C66-BF92-40EB-8DF9-EF21C2D58A8C}.Release|x86.Build.0 = Release|Win32
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Debug|x64.ActiveCfg = Debug|x64
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Debug|x64.Build.0 = Debug|x64
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Debug|x86.ActiveCfg = Debug|Win32
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Debug|x86.Build.0 = Debug|Win32
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Release|x64.ActiveCfg = Release|x64
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Release|x64.Build.0 = Release|x64
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Release|x86.ActiveCfg = Release|Win32
+		{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

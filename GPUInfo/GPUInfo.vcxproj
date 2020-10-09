@@ -20,8 +20,8 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{B04151BC-95AD-41E0-BE32-F24640625368}</ProjectGuid>
-    <RootNamespace>Physics</RootNamespace>
+    <ProjectGuid>{4925DE5B-5846-4AD8-A5BC-60BEC66837CF}</ProjectGuid>
+    <RootNamespace>GPUInfo</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -71,8 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Josiah\OneDrive\cpp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Josiah\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\$(Username)\OneDrive\cpp\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\$(Username)\OneDrive\cpp\lib\debug\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -141,24 +141,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CannonBallReset.h" />
-    <ClInclude Include="Cannon.h" />
-    <ClInclude Include="CannonBall.h" />
-    <ClInclude Include="Floor.h" />
-    <ClInclude Include="gpu_sort\const_data.h" />
-    <ClInclude Include="gpu_sort\Histogram.h" />
-    <ClInclude Include="PhysicsScene.h" />
-    <ClInclude Include="RadixSort.h" />
-    <ClInclude Include="Rope.h" />
+    <ClInclude Include="GPUInfoScene.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="physics_test.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="shaders\ballistics_rest.comp" />
-    <None Include="shaders\histogram_count.comp" />
-    <None Include="shaders\prefix_scan.comp" />
-    <None Include="shaders\radix_sort.comp" />
+    <ClCompile Include="gpuInfo.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

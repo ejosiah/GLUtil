@@ -3,7 +3,7 @@
 #include <tuple>
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/SceneObject.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/BufferObject.h"
 #include "../GLUtil/include/ncl/physics/particle/Particle.h"
 #include "../GLUtil/include/ncl/physics/particle/ParticleRegistry.h"
 #include "../GLUtil/include/ncl/physics/particle/ParticleObject.h"
@@ -75,10 +75,10 @@ public:
 
 		scene().shader("particle_lfp")([&] {	
 			_particles->sendToGPU();
-			glBindTextureUnit(0, diffuse->bufferId());
-			glBindTextureUnit(1, diffuse->bufferId());
-			glBindTextureUnit(2, specular->bufferId());
-			glBindTextureUnit(3, normal->bufferId());
+			glBindTextureUnit(0, diffuse->buffer());
+			glBindTextureUnit(1, diffuse->buffer());
+			glBindTextureUnit(2, specular->buffer());
+			glBindTextureUnit(3, normal->buffer());
 			send("isBump", false);
 			send("offset", _offset);
 			send(scene().activeCamera());

@@ -7,7 +7,7 @@
 #include <tuple>
 #include "Particle.h"
 #include "ParticleRegistry.h"
-#include "../../gl/StorageBufferObj.h"
+#include "../../gl/BufferObject.h"
 
 namespace ncl {
 	namespace physics {
@@ -23,7 +23,7 @@ namespace ncl {
 				}
 
 
-				gl::StorageBufferObj<Particle>& particles() {
+				gl::StorageBuffer<Particle>& particles() {
 					return *_particles;
 				}
 
@@ -44,7 +44,7 @@ namespace ncl {
 			protected:
 				size_t _count;
 				int _offset;
-				gl::StorageBufferObj<Particle>* _particles;
+				gl::StorageBuffer<Particle>* _particles;
 			};
 		}
 	}

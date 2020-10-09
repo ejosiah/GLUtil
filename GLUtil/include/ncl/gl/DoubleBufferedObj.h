@@ -57,7 +57,7 @@ namespace ncl {
 						auto source = copyFrom().empty() ? attribute : copyFrom()[j];
 						
 						vbos[0] = shape->getBuffers()[i][attribute];
-						vbos[1] = copy(shape->getBuffers()[i][source]);
+						vbos[1] = std::get<Buffer>(copy(shape->getBuffers()[i][source]));
 
 						glBindBuffer(GL_ARRAY_BUFFER, vbos[1]);
 						glEnableVertexAttribArray(attribute);

@@ -12,11 +12,11 @@ namespace ncl {
 
 			class ForceGenerator : public ParticleCompute {
 			public:
-				ForceGenerator(int id, gl::StorageBufferObj<Particle>& particles, ncl::gl::Shader* shader, glm::vec3 workers = { 1, 1, 1 }) :
+				ForceGenerator(int id, gl::StorageBuffer<Particle>& particles, ncl::gl::Shader* shader, glm::vec3 workers = { 1, 1, 1 }) :
 					ParticleCompute{ particles,  shader, workers }, _id{ id } {
 				}
 
-				ForceGenerator(int id, gl::StorageBufferObj<Particle>& particles, std::string shaderSource, glm::vec3 workers = { 1, 1, 1 }) :
+				ForceGenerator(int id, gl::StorageBuffer<Particle>& particles, std::string shaderSource, glm::vec3 workers = { 1, 1, 1 }) :
 					ParticleCompute{ particles,  shaderSource, workers }, _id{ id } {
 				}
 
@@ -35,7 +35,7 @@ namespace ncl {
 
 			class Gravity : public ForceGenerator {
 			public:
-				Gravity(int id, glm::vec3 value, gl::StorageBufferObj<Particle>& particles, glm::vec3 workers = { 1, 1, 1 })
+				Gravity(int id, glm::vec3 value, gl::StorageBuffer<Particle>& particles, glm::vec3 workers = { 1, 1, 1 })
 					:ForceGenerator{ id, particles, particle_gravity_comp_shader, workers }
 					, _value{ value }
 				{

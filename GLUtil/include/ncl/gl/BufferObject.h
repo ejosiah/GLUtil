@@ -2,19 +2,21 @@
 
 #include <gl/gl_core_4_5.h>
 #include <functional>
-#include "../type_wrapper.h"
 #include <array>
+#include "../type_wrapper.h"
+#include "CopyBuffer.h"
 
 namespace ncl {
 	namespace gl {
 		template<GLenum Target, typename T>
-		class BufferObject {
+		class BufferObject : public CopyBuffer {
 		public:
-			BufferObject() = default;
+			BufferObject();
 
 			explicit BufferObject(T, GLuint = 0);
 
-			explicit BufferObject(size_t count, GLuint id = 0);
+			[[deprecated]]
+			explicit BufferObject(size_t, GLuint = 0);
 
 			explicit BufferObject(std::vector<T>, GLuint = 0);
 
@@ -40,8 +42,22 @@ namespace ncl {
 				return _buf;
 			}
 
+			// TODO use iterator
+			inline void fill(T val) {
+				auto size = count();
+				update([size, val](auto ptr) {
+					for (int i = 0; i < size; i++) {
+						*(ptr + i) = val;
+					}
+				});
+			}
+
 			inline size_t count() {
 				return _size / sizeof(T);
+			}
+
+			inline size_t size() {
+				return _size;
 			}
 
 			template<GLenum Target0, typename U>
@@ -52,6 +68,10 @@ namespace ncl {
 
 			void sendToGPU(bool update = true);
 
+			void bind(GLuint index = _idx);
+
+			void bind(GLuint index, GLsizeiptr offset, GLsizeiptr size);
+
 			static inline GLsizeiptr sizeOf(std::vector<T> v) {
 				return sizeof(T) * v.size();
 			}
@@ -60,20 +80,36 @@ namespace ncl {
 				return sizeof(T) * count;
 			}
 			
-			void read(std::function<void(T*)> use);
+			void read(std::function<void(T*)> use) const;
+
+			void update(std::function<void(T*)> use);
+
+			void update(T* data);
+
+			void update(GLintptr offset, GLsizeiptr size, T* data);
+
+			void allocate(size_t size = 1, GLuint index = 0);
+
+			void reference(GLuint buffer);
+
+			void copy(GLuint buffer, GLuint index);
 
 		private:
 			std::vector<T> _obj;
 			GLsizeiptr _size;
 			GLuint _buf;
 			GLuint _idx;
+			bool _owner = true;
 
 		}; 
 
 		template<typename T>
-		using StorageBufferObj = BufferObject<GLenum(GL_SHADER_STORAGE_BUFFER), T>;
+		using StorageBuffer = BufferObject<GL_SHADER_STORAGE_BUFFER, T>;
+
+		template<typename T>
+		using UniformBuffer = BufferObject<GL_UNIFORM_BUFFER, T>;
 		
-		using AtomicCounterBuffer = BufferObject<GLenum(GL_ATOMIC_COUNTER_BUFFER), GLuint>;
+		using AtomicCounterBuffer = BufferObject<GL_ATOMIC_COUNTER_BUFFER, GLuint>;
 		
 	}
 }

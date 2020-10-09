@@ -2,7 +2,7 @@
 
 #include "Particle.h"
 #include "ForceGenerator.h"
-#include "../../gl/StorageBufferObj.h"
+#include "../../gl/StorageBuffer.h"
 #include "../../gl/common.h"
 
 namespace ncl {
@@ -19,10 +19,10 @@ namespace ncl {
 
 			class SpringForceGenerator : public ForceGenerator {
 			public:
-				SpringForceGenerator(int id, gl::StorageBufferObj<Particle>& particles, glm::vec3 workers = { 1, 1, 1 })
+				SpringForceGenerator(int id, gl::StorageBuffer<Particle>& particles, glm::vec3 workers = { 1, 1, 1 })
 					:ForceGenerator{ id, particles, particle_spring_comp_shader, workers } 
 				{
-					springData = gl::StorageBufferObj<SpringData>{ particles.count(), 1 };
+					springData = gl::StorageBuffer<SpringData>{ particles.count(), 1 };
 				}
 
 				void add(int particleId, SpringData data) {
@@ -39,7 +39,7 @@ namespace ncl {
 				}
 
 			private:
-				gl::StorageBufferObj<SpringData> springData;
+				gl::StorageBuffer<SpringData> springData;
 			};
 		}
 	}

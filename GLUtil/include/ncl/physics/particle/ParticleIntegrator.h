@@ -12,7 +12,7 @@ namespace ncl {
 			
 			class ParticleIntegrator : public ParticleCompute {
 			public:
-				ParticleIntegrator(gl::StorageBufferObj<Particle>& particles, glm::vec3 workers = { 1, 1, 1 }) :
+				ParticleIntegrator(gl::StorageBuffer<Particle>& particles, glm::vec3 workers = { 1, 1, 1 }) :
 					ParticleCompute{ particles,  particle_integrator_comp_shader, workers } {
 				}
 

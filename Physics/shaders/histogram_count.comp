@@ -1,0 +1,84 @@
+#version 460 core 
+
+#define CONSTS 0
+
+#define HISTOGRAM 0
+#define DATA 1
+#define KEY_IN 0
+#define KEY_OUT 1
+#define VALUE_IN 2
+#define VALUE_OUT 3
+
+#define WG_COUNT gl_NumWorkGroups.x
+#define WG_SIZE 256
+#define BLOCK_SIZE 1024  // (4 * WG_SIZE)
+#define BITS_PER_PASS 4
+#define RADICES 16       // (1 << BITS_PER_PASS)
+#define RADICES_MASK 0xf // (RADICES - 1)
+#define EACH(i, count) for (int i = 0; i < count; i++)
+#define TO_MASK(n) ((1 << (n)) - 1)
+#define BFE(src, s, n) ((src >> s) & TO_MASK(n))
+#define BFE_SIGN(src, s, n) (((((src >> s) & TO_MASK(n - 1)) ^ TO_MASK(n - 1)) & TO_MASK(n - 1)) | ((src >> s) & (1 << (n - 1))))
+#define BARRIER groupMemoryBarrier(); barrier()
+#define LC_IDX gl_LocalInvocationIndex
+#define WG_IDX gl_WorkGroupID.x
+#define MIX(T, x, y, a) (x) * T(a) + (y) * (1 - T(a))
+#define GET_BY4(T, src, idx) T(src[idx.x], src[idx.y], src[idx.z], src[idx.w])
+#define SET_BY4(dest, idx, val) do { dest[idx.x] = val.x; dest[idx.y] = val.y; dest[idx.z] = val.z; dest[idx.w] = val.w; } while(false)
+#define SET_BY4_CHECKED(dest, idx, val, flag) do { if (flag.x) dest[idx.x] = val.x; if (flag.y) dest[idx.y] = val.y; if (flag.z) dest[idx.z] = val.z; if (flag.w) dest[idx.w] = val.w; } while(false)
+#define INC_BY4_CHECKED(dest, idx, flag) do { atomicAdd(dest[idx.x], uint(flag.x)); atomicAdd(dest[idx.y], uint(flag.y)); atomicAdd(dest[idx.z], uint(flag.z)); atomicAdd(dest[idx.w], uint(flag.w)); } while(false)
+
+precision highp float;
+precision highp int;
+layout(std140, column_major) uniform;
+layout(std430, column_major) buffer;
+
+layout(local_size_x = WG_SIZE) in;
+
+layout(binding = CONSTS) uniform Consts {
+  uint shift;
+  bool descending;
+  bool is_signed;
+  bool key_index;
+};
+layout(binding = HISTOGRAM) buffer Histogram { uint histogram[]; };
+layout(binding = DATA) buffer Data { uint buf[]; } data[4];
+
+shared uint local_histogram[WG_SIZE * RADICES];
+
+struct blocks_info { uint count; uint offset; };
+
+blocks_info get_blocks_info(const uint n, const uint wg_idx) {
+  const uint aligned = n + BLOCK_SIZE - (n % BLOCK_SIZE);
+  const uint blocks = (n + BLOCK_SIZE - 1) / BLOCK_SIZE;
+  const uint blocks_per_wg = (blocks + WG_COUNT - 1) / WG_COUNT;
+  const int n_blocks = int(aligned / BLOCK_SIZE) - int(blocks_per_wg * wg_idx);
+  return blocks_info(uint(clamp(n_blocks, 0, int(blocks_per_wg))), blocks_per_wg * BLOCK_SIZE * wg_idx);
+}
+
+void main() {
+  EACH(i, RADICES) local_histogram[i * WG_SIZE + LC_IDX] = 0;
+  BARRIER;
+
+  const uint n = data[KEY_IN].buf.length();
+  const blocks_info blocks = get_blocks_info(n, WG_IDX);
+  uvec4 addr = blocks.offset + 4 * LC_IDX + uvec4(0, 1, 2, 3);
+  EACH(i_block, blocks.count) {
+    const bvec4 less_than = lessThan(addr, uvec4(n));
+    const uvec4 data_vec = GET_BY4(uvec4, data[KEY_IN].buf, addr);
+    const uvec4 k = is_signed
+      ? BFE_SIGN(data_vec, shift, BITS_PER_PASS)
+      : BFE(data_vec, shift, BITS_PER_PASS);
+    const uvec4 key = descending != is_signed ? (RADICES_MASK - k) : k;
+    const uvec4 local_key = key * WG_SIZE + LC_IDX;
+    INC_BY4_CHECKED(local_histogram, local_key, less_than);
+    addr += BLOCK_SIZE;
+  }
+  BARRIER;
+
+  if (LC_IDX < RADICES) {
+    uint sum = 0; EACH(i, WG_SIZE) sum += local_histogram[LC_IDX * WG_SIZE + i];
+    histogram[LC_IDX * WG_COUNT + WG_IDX] = sum;
+  }
+  BARRIER;
+}

@@ -4,7 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "../GLUtil/include/ncl/gl/Scene.h"
-#include "../GLUtil/include/ncl/gl/StorageBufferObj.h"
+#include "../GLUtil/include/ncl/gl/BufferObject.h"
 
 using namespace std;
 using namespace ncl;
@@ -41,7 +41,7 @@ public:
 		point_mesh.defautMaterial(false);
 
 		createNextIndex();
-		depth_values = StorageBufferObj<float>{ size_t{points.size()}, 1 };
+		depth_values = StorageBuffer<float>{ size_t{points.size()}, 1 };
 
 		glPointSize(5.0);
 		setBackGroundColor(BLACK);
@@ -115,7 +115,7 @@ private:
 	vector<vec3> points;
 	vector<vec4> xform_points;
 	ProvidedMesh point_mesh;
-	StorageBufferObj<float> depth_values;
+	StorageBuffer<float> depth_values;
 	GLuint startValue = 0;
 	GLuint next_index;
 };
