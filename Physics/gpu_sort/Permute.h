@@ -10,17 +10,16 @@
 namespace ncl {
 	namespace gl {
 		namespace parallel {
-			class Histogram : public Compute {
+			class Permute : public Compute {
 			public:
-				Histogram(std::array<SortData, 4>& data, ConstBuffer& consts, GLsizeiptr size, unsigned workers)
-					:Compute{ glm::ivec3{workers, 1, 1}, {}, histogram_count_comp_shader }
+				Permute(std::array<SortData, 4>& data, ConstBuffer& consts, StorageBuffer<GLuint>& histogram, GLsizeiptr size, unsigned workers)
+					:Compute{ glm::ivec3{workers, 1, 1}, {}, permute_comp_shader }
 					, _data{ data }
 					, _consts{ consts }
-					, _size{ size}
-					, _histogram{}
+					, _size{ size }
+					, _histogram{ histogram }
 				{
-					_histogram.allocate(workers * RADICES);
-					_histogram.fill(0);
+
 				}
 
 				void preCompute() override {
@@ -28,6 +27,8 @@ namespace ncl {
 					_consts.sendToGPU();
 					_data[KEY_IN].bind(DATA + KEY_IN);
 					_data[KEY_OUT].bind(DATA + KEY_OUT);
+					_data[VALUE_IN].bind(DATA + VALUE_IN);
+					_data[VALUE_OUT].bind(DATA + VALUE_OUT);
 				}
 
 				void postCompute() override {
@@ -42,7 +43,7 @@ namespace ncl {
 				std::array<SortData, 4>& _data;
 				ConstBuffer& _consts;
 				GLsizeiptr _size;
-				StorageBuffer<GLuint> _histogram;
+				StorageBuffer<GLuint>& _histogram;
 			};
 		}
 	}

@@ -10,6 +10,7 @@ namespace ncl {
 			constexpr GLuint WG_COUNT = 1;
 			constexpr GLuint RADICES = 16;
 			constexpr GLuint HISTOGRAM = 0;
+			constexpr GLuint CONSTS = 0;
 			constexpr GLuint DATA = 1;
 			constexpr GLuint KEY_IN = 0;
 			constexpr GLuint KEY_OUT = 1;

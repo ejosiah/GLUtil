@@ -12,8 +12,11 @@
 #include "CannonBall.h"
 #include "CannonBallReset.h"
 #include "Floor.h"
-#include "RadixSort.h"
+#include "gpu_sort/RadixSort.h"
 #include "gpu_sort/Histogram.h"
+#include "gpu_sort/PrefixSum.h"
+#include "gpu_sort/Permute.h"
+#include <utility>
 
 using namespace std;
 using namespace ncl;
@@ -24,6 +27,8 @@ using namespace parallel;
 
 static int w = Resolution::QHD.width;
 static int h = Resolution::QHD.height;
+
+struct cudaGraphicsResource* vbo_cuda;
 
 class PhysicsScene : public Scene {
 public:
@@ -127,37 +132,40 @@ public:
 		initHistogram();
 	}
 
-	void initRadix() {
-		std::vector<int> data(1024);
+	//void initRadix() {
+	//	std::vector<int> data(1024);
 
-		auto engine = std::default_random_engine{ 123456789 };
-		auto dist = std::uniform_int_distribution<int>(0, 255);
-		auto rng = std::bind(dist, engine);
-		std::generate(begin(data), end(data), [&rng](){ return rng(); });
-		//std::generate(begin(data), end(data), [&rng]() { return 0; });
+	//	auto engine = std::default_random_engine{ 123456789 };
+	//	auto dist = std::uniform_int_distribution<int>(0, 255);
+	//	auto rng = std::bind(dist, engine);
+	//	std::generate(begin(data), end(data), [&rng](){ return rng(); });
+	//	//std::generate(begin(data), end(data), [&rng]() { return 0; });
 
-		std::vector<int> count(256);
+	//	std::vector<int> count(256);
 
-		for (int i = 0; i < data.size(); i++) {
-			int key = data[i];
-			count[key] += 1;
-		}
+	//	for (int i = 0; i < data.size(); i++) {
+	//		int key = data[i];
+	//		count[key] += 1;
+	//	}
 
-		//for (int i = 0; i < count.size(); i++) {
-		//	logger.info(std::to_string(i) + ": " + std::to_string(count[i]));
-		//}
+	//	//for (int i = 0; i < count.size(); i++) {
+	//	//	logger.info(std::to_string(i) + ": " + std::to_string(count[i]));
+	//	//}
 
-		GLuint size = sizeof(unsigned int) * data.size();
-		input = TextureBuffer{ "input", &data[0], size, GL_R32UI, 0, 0, GL_DYNAMIC_READ };
-		//input.read([&data](auto ptr) {
-		//	for (int i = 0; i < data.size(); i++) *(ptr + i) = data[i];
-		//});
-		radixSort = new RadixSort{ input, &shader("radix_sort") };
-		radixSort->compute();
+	//	GLuint size = sizeof(unsigned int) * data.size();
+	//	input = TextureBuffer{ "input", &data[0], size, GL_R32UI, 0, 0, GL_DYNAMIC_READ };
+	//	//input.read([&data](auto ptr) {
+	//	//	for (int i = 0; i < data.size(); i++) *(ptr + i) = data[i];
+	//	//});
+	//	radixSort = new RadixSort{ input, &shader("radix_sort") };
+	//	radixSort->compute();
 
-	}
+	//}
 
 	void initHistogram() {
+		std::stringstream sbr;
+		sbr.str("");
+		sbr.clear();
 
 		auto engine = std::default_random_engine{ 123456789 };
 		auto dist = std::uniform_int_distribution<int>(0, 15);
@@ -171,42 +179,82 @@ public:
 			consts->key_index = 0;
 		});
 
-		auto n = 128;
+		auto n = 64;
 		data[KEY_IN].allocate( n, DATA);
 		data[KEY_OUT].allocate(n, DATA);
 		std::vector<GLint> numbers(n);
 		std::generate(begin(numbers), end(numbers), [&rng] { return rng();  });
 
-		//data[KEY_IN].update([&](auto* ptr) {
-		//	for (int i = 0; i < n; i++) {
-		//		*(ptr + i) = numbers[i];
-		//	}
-		//});
-		data[KEY_IN].update(&numbers[0]);
+		StorageBuffer<GLuint> input;
 
-		histogram = new Histogram{ data, consts, sizeof(GLint) * 128, &shader("histogram_count"), WG_COUNT };
-
-		std::vector<int> expected(16);
-		for (auto x : numbers) {
-			expected[x]++;
-		}
-
-		std::stringstream sbr;
-		sbr.str("");
-		sbr.clear();
-
-		for (auto x : expected) sbr << x << " ";
+		input.from(begin(numbers), end(numbers));
 		
-		logger.info("expected:\t" + sbr.str());
+		radixSort = new RadixSort{ input, consts, WG_COUNT };
+		radixSort->compute();
+		radixSort->postCompute();
 
-		histogram->compute();
+		//input.read([&](auto ptr) {
+		//	for (int i = 0; i < 64; i++) sbr << *(ptr+i) << " ";
+		//});
+		//logger.info(sbr.str());
+		//data[KEY_IN].update(&numbers[0]);
 
-		sbr.str("");
-		sbr.clear();
-		histogram->histogram().read([&sbr](auto* ptr) {
-			for (int i = 0; i < 16; i++) sbr << *(ptr + i) << " ";
-		});
-		logger.info("actual:\t" + sbr.str());
+		//histogram = new Histogram{ data, consts, sizeof(GLint) * 128, WG_COUNT };
+		//prefixSum = new PrefixSum{ histogram->histogram(), WG_COUNT };
+		//permute = new Permute{ data, consts, histogram->histogram(), sizeof(GLint) * 128, WG_COUNT };
+
+		//std::vector<int> expected(16);
+		//for (auto x : numbers) {
+		//	expected[x]++;
+		//}
+
+
+
+		//for (auto x : expected) sbr << x << " ";
+		//
+		//logger.info("expected Histogram:\t" + sbr.str());
+
+		//histogram->compute();
+
+		//sbr.str("");
+		//sbr.clear();
+		//histogram->histogram().read([&sbr](auto* ptr) {
+		//	for (int i = 0; i < 16; i++) sbr << *(ptr + i) << " ";
+		//});
+		//logger.info("actual Histogram:\t" + sbr.str());
+
+		//std::vector<int> scanned;
+		//scanned.resize(expected.size());
+		//std::exclusive_scan(begin(expected), end(expected), begin(scanned), 0);
+
+		//sbr.str("\n");
+		//sbr.clear();
+		//for (auto x : scanned) sbr << x << " ";
+		//logger.info("expected prefix sum:\t" + sbr.str());
+
+		//sbr.str("");
+		//sbr.clear();
+		//prefixSum->compute();
+		//histogram->histogram().read([&sbr](auto* ptr) {
+		//	for (int i = 0; i < 16; i++) sbr << *(ptr + i) << " ";
+		//	});
+		//logger.info("actual prefix sum:\t" + sbr.str());
+
+		//sbr.str("\n");
+		//sbr.clear();
+		//data[KEY_IN].read([&sbr](auto ptr) {
+		//	for (int i = 0; i < 64; i++) sbr << *(ptr + i) << " ";
+		//});
+		//logger.info("data before:\t" + sbr.str());
+
+		//permute->compute();
+		//sbr.str("");
+		//sbr.clear();
+		//data[KEY_OUT].read([&sbr](auto ptr) {
+		//	for (int i = 0; i < 64; i++) sbr << *(ptr + i) << " ";
+		//	});
+		//logger.info("data after:\t" + sbr.str());
+		
 	}
 
 	void display() override {
@@ -267,7 +315,7 @@ public:
 	//	}
 	//	sbr << "\nCurrent Shot Type: " << cannonBall->shotType();
 	//	sFont->render(sbr.str(), 10, textOffset + 10);
-		histogram->compute();
+	//	histogram->compute();
 	}
 
 	void update(float t) override {
@@ -343,12 +391,14 @@ protected:
 	ParticleRegistry* registry;
 	Gravity* gravity;
 	CannonBallReset* cannonBallReset;
-	RadixSort* radixSort;
 	Logger logger = Logger::get("Physics");
 	bool nm = true;
 	bool interact = false;
 	int nextSkyBox = 0;
+	RadixSort* radixSort;
 	Histogram* histogram;
+	PrefixSum* prefixSum;
+	Permute* permute;
 	ConstBuffer consts;
 	std::array<SortData, 4> data;
 };

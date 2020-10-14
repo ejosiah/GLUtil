@@ -375,6 +375,10 @@
     <None Include="shaders\octahedral_render.frag" />
     <None Include="shaders\octahedral_render.geom" />
     <None Include="shaders\octahedral_skybox.frag" />
+    <None Include="shaders\parallel\histogram_count.comp" />
+    <None Include="shaders\parallel\permute.comp" />
+    <None Include="shaders\parallel\prefix_scan.comp" />
+    <None Include="shaders\parallel\radix_sort.comp" />
     <None Include="shaders\particles_lfp.vert" />
     <None Include="shaders\particle_identity.vert" />
     <None Include="shaders\pass_through.frag" />

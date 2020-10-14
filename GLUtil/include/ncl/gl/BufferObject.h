@@ -5,6 +5,7 @@
 #include <array>
 #include "../type_wrapper.h"
 #include "CopyBuffer.h"
+#include <iterator>
 
 namespace ncl {
 	namespace gl {
@@ -82,15 +83,31 @@ namespace ncl {
 			
 			void read(std::function<void(T*)> use) const;
 
+
 			void update(std::function<void(T*)> use);
 
 			void update(T* data);
+
+			template<typename InputIterator>
+			inline void from(InputIterator first, InputIterator last, GLuint index = 0) {
+				allocate(std::distance(first, last), index);
+				update([&first, &last](auto ptr) {
+					auto itr = first;
+					while(itr != last){
+						*ptr = *itr;
+						++itr;
+						++ptr;
+					}
+				});
+			}
 
 			void update(GLintptr offset, GLsizeiptr size, T* data);
 
 			void allocate(size_t size = 1, GLuint index = 0);
 
 			void reference(GLuint buffer);
+
+			void empty();
 
 			void copy(GLuint buffer, GLuint index);
 

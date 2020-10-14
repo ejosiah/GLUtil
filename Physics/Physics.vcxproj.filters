@@ -36,20 +36,21 @@
     <ClInclude Include="Rope.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RadixSort.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="gpu_sort\const_data.h">
       <Filter>Header Files\gpu_sort</Filter>
     </ClInclude>
     <ClInclude Include="gpu_sort\Histogram.h">
       <Filter>Header Files\gpu_sort</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="physics_test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClInclude Include="gpu_sort\PrefixSum.h">
+      <Filter>Header Files\gpu_sort</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu_sort\RadixSort.h">
+      <Filter>Header Files\gpu_sort</Filter>
+    </ClInclude>
+    <ClInclude Include="gpu_sort\Permute.h">
+      <Filter>Header Files\gpu_sort</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\ballistics_rest.comp">
@@ -64,5 +65,13 @@
     <None Include="shaders\prefix_scan.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shaders\permute.comp">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="physics_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

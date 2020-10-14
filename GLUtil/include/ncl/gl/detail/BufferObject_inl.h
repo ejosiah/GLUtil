@@ -9,6 +9,7 @@ namespace ncl {
 			, _buf{ 0 }{
 		}
 
+
 		template<GLenum Target, typename T>
 		BufferObject<Target, T>::BufferObject(T t, GLuint id)
 			: BufferObject<Target, T>{ std::vector<T>{t} } {
@@ -49,6 +50,10 @@ namespace ncl {
 		{
 			if (!glIsBuffer(buffer)) throw std::runtime_error{ "Not a buffer object" };
 			_owner = false;
+			GLint size;
+			glBindBuffer(GL_COPY_READ_BUFFER, buffer);
+			glGetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
+			_size = size;
 			_buf = buffer;
 		}
 
@@ -60,6 +65,14 @@ namespace ncl {
 			auto [size, buf] = CopyBuffer::copy(buffer);
 			_size = size;
 			_buf = buf;
+		}
+		
+
+		template<GLenum Target, typename T>
+		void BufferObject<Target, T>::empty()
+		{
+			_size = 0;
+			_buf = 0;
 		}
 
 		template<GLenum Target, typename T>
