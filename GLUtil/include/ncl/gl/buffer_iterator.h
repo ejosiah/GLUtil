@@ -3,6 +3,7 @@
 #include <utility>
 #include <iterator>
 #include <gl/gl_core_4_5.h>
+#include <type_traits>
 
 namespace ncl {
 	namespace gl {
@@ -158,6 +159,44 @@ namespace ncl {
 			VaoId _vaoId;
 			BufferId _bufferId;
 		};
+
+		template<typename T, typename Func, bool Const, typename BufferSource>
+		inline void withMayBeConstBufferIterator(BufferSource bufferSource, Func&& func) {
+
+			GLuint buffer = 0;
+			if constexpr (std::is_integral<BufferSource>::value) 
+				buffer = bufferSource;
+			else 
+				buffer = bufferSource.buffer();
+			
+
+			using iterator = buffer_iterator<Const, T>;
+
+			constexpr GLenum accessType = Const ? GL_READ_ONLY : GL_READ_WRITE;
+			GLint size;
+			auto _ptr = (T*)glMapNamedBuffer(buffer, accessType);
+			glBindBuffer(GL_ARRAY_BUFFER, buffer);	// TODO make generic
+			glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &size);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			
+			auto begin = iterator{ _ptr };
+			auto end = iterator{ _ptr + size };
+
+			func(begin, end);
+
+			glUnmapNamedBuffer(buffer);
+			glBindVertexArray(0);
+		}
+
+		template<typename T, typename Func, typename BufferSource>
+		inline void withBufferIterator(BufferSource bufferSource, Func&& func) {
+			withMayBeConstBufferIterator<T, Func, false>(bufferSource, func);
+		}
+
+		template<typename T, typename Func, typename BufferSource>
+		inline void withConstBufferIterator(BufferSource bufferSource, Func&& func) {
+			withMayBeConstBufferIterator<T, Func, true>(bufferSource, func);
+		}
 
 	}
 }

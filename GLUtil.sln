@@ -96,6 +96,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GPUInfo", "GPUInfo\GPUInfo.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CudaIntegration", "CudaIntegration\CudaIntegration.vcxproj", "{332963E0-C38C-43C9-8023-9236FB305BBB}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "collision", "collision\collision.vcxproj", "{6EE40F60-21CB-400D-9AC5-2E60442BA697}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -454,6 +456,14 @@ Global
 		{332963E0-C38C-43C9-8023-9236FB305BBB}.Release|x64.ActiveCfg = Release|x64
 		{332963E0-C38C-43C9-8023-9236FB305BBB}.Release|x64.Build.0 = Release|x64
 		{332963E0-C38C-43C9-8023-9236FB305BBB}.Release|x86.ActiveCfg = Release|x64
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Debug|x64.ActiveCfg = Debug|x64
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Debug|x64.Build.0 = Debug|x64
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Debug|x86.ActiveCfg = Debug|Win32
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Debug|x86.Build.0 = Debug|Win32
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Release|x64.ActiveCfg = Release|x64
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Release|x64.Build.0 = Release|x64
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Release|x86.ActiveCfg = Release|Win32
+		{6EE40F60-21CB-400D-9AC5-2E60442BA697}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,6 +5,7 @@
 #include <array>
 #include "../type_wrapper.h"
 #include "CopyBuffer.h"
+#include "buffer_iterator.h"
 #include <iterator>
 
 namespace ncl {
@@ -111,6 +112,8 @@ namespace ncl {
 
 			void copy(GLuint buffer, GLuint index);
 
+			using const_iterator = buffer_iterator<true, T>;
+			using iterator = buffer_iterator<false, T>;
 		private:
 			std::vector<T> _obj;
 			GLsizeiptr _size;

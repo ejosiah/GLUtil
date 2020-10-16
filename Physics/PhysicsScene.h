@@ -25,8 +25,8 @@ using namespace physics::pm;
 using namespace glm;
 using namespace parallel;
 
-static int w = Resolution::QHD.width;
-static int h = Resolution::QHD.height;
+static int w = 10;
+static int h = 10;
 
 struct cudaGraphicsResource* vbo_cuda;
 
@@ -39,7 +39,7 @@ public:
 		addShader("skybox", GL_FRAGMENT_SHADER, skybox_frag_shader);
 		addShader("skybox", GL_GEOMETRY_SHADER, skybox_geom_shader);
 		addShader("phong", GL_VERTEX_SHADER, phong_lfp_vert_shader);
-//		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
+		//		addShader("phong", GL_GEOMETRY_SHADER, scene_capture_geom_shader);
 		addShader("phong", GL_FRAGMENT_SHADER, phong_lfp_frag_shader);
 
 		addShader("particle", GL_VERTEX_SHADER, particle_identity_vert_shader);
@@ -47,7 +47,7 @@ public:
 
 		addShader("particle_lfp", GL_VERTEX_SHADER, particles_lfp_vert_shader);
 		addShader("particle_lfp", GL_FRAGMENT_SHADER, phong_lfp_frag_shader);
-		
+
 	}
 
 	void init() override {
@@ -70,7 +70,7 @@ public:
 
 			transform(skyTextures.begin(), skyTextures.end(), skyTextures.begin(), [&root](string path) {
 				return root + path;
-			});
+				});
 			skyboxes.push_back(SkyBox::create(skyTextures, 0, *this));
 		}
 
@@ -78,10 +78,10 @@ public:
 		ground = new Plane(4, 4, 2000, 2000, 200);
 		floor = new Floor(this);
 		cube = new Cube(5, RED);
-		
+
 		sun = Sphere{ 1, 50, 50, vec4(0.96, 0.99, 0.96, 1) };
 		ball = Sphere{ 0.2, 10, 10 };
-	//	ballPos = vec3(0.289, 1.58, -0.029);
+		//	ballPos = vec3(0.289, 1.58, -0.029);
 		ballPos = vec3(0.504, 1.6, 0);
 		auto lightPos = vec3{ 0, 10, 10 };
 		light[0].position = vec4{ lightPos, 1 };
@@ -95,7 +95,7 @@ public:
 		lv.projection = ortho(-dist, dist, -dist, dist, 1.0f, 20.f);
 		shader("phong")([&] {
 			send("lightSpaceView", lv.view);
-		});
+			});
 		//shadowMap = new DirectionalShadowMap{ 4, lv, 2048, 2048 };
 
 		// TODO reset background color after framebuffer execution
@@ -113,18 +113,18 @@ public:
 
 
 		integrator = new ParticleIntegrator{ registry->particles() };
-	//	cannonBallReset = new CannonBallReset{ registry->particles(), *this };
+		//	cannonBallReset = new CannonBallReset{ registry->particles(), *this };
 		gravity = new Gravity{ 1, vec3{0, -9.81, 0}, registry->particles() };
 
 		addCompute(gravity);
 		addCompute(integrator);
-//		addCompute(cannonBallReset);
+		//		addCompute(cannonBallReset);
 
 		shadowMap->capture([&] {
 			floor->render(true);
 			cannon->render(true);
 			cannonBall->render(true);
-		});
+			});
 		setBackGroundColor(BLACK);
 		setForeGroundColor(YELLOW);
 
@@ -168,7 +168,7 @@ public:
 		sbr.clear();
 
 		auto engine = std::default_random_engine{ 123456789 };
-		auto dist = std::uniform_int_distribution<int>(0, 15);
+		auto dist = std::uniform_int_distribution<int>(0, 1024);
 		auto rng = std::bind(dist, engine);
 
 		consts.allocate();
@@ -177,10 +177,10 @@ public:
 			consts->descending = 0;
 			consts->is_signed = 0;
 			consts->key_index = 0;
-		});
+			});
 
-		auto n = 64;
-		data[KEY_IN].allocate( n, DATA);
+		auto n = 1024 * 1024;
+		data[KEY_IN].allocate(n, DATA);
 		data[KEY_OUT].allocate(n, DATA);
 		std::vector<GLint> numbers(n);
 		std::generate(begin(numbers), end(numbers), [&rng] { return rng();  });
@@ -188,14 +188,16 @@ public:
 		StorageBuffer<GLuint> input;
 
 		input.from(begin(numbers), end(numbers));
-		
-		radixSort = new RadixSort{ input, consts, WG_COUNT };
-		radixSort->compute();
+
+		radixSort = new RadixSort{ input };
+		radixSort->execute();
 		radixSort->postCompute();
 
-		//input.read([&](auto ptr) {
-		//	for (int i = 0; i < 64; i++) sbr << *(ptr+i) << " ";
-		//});
+		input.read([&](auto ptr) {
+			for (int i = 1; i < n; i++) {
+				assert(ptr[i - 1] <= ptr[i]);
+			}
+		});
 		//logger.info(sbr.str());
 		//data[KEY_IN].update(&numbers[0]);
 
@@ -207,7 +209,6 @@ public:
 		//for (auto x : numbers) {
 		//	expected[x]++;
 		//}
-
 
 
 		//for (auto x : expected) sbr << x << " ";
@@ -254,7 +255,7 @@ public:
 		//	for (int i = 0; i < 64; i++) sbr << *(ptr + i) << " ";
 		//	});
 		//logger.info("data after:\t" + sbr.str());
-		
+
 	}
 
 	void display() override {
@@ -325,7 +326,7 @@ public:
 	void processInput(const Key& key) override {
 		if (key.pressed()) {
 			switch (key.value()) {
-			case 'i' : 
+			case 'i':
 				getActiveCameraController().move(false);
 				interact = true;
 				break;

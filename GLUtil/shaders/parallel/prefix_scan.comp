@@ -2,7 +2,7 @@
 
 #define HISTOGRAM 0
 
-#define WG_COUNT gl_NumWorkGroups.x
+#define WG_COUNT 64
 #define WG_SIZE 256
 #define BLOCK_SIZE 1024  // (4 * WG_SIZE)
 #define RADICES 16       // (1 << BITS_PER_PASS)

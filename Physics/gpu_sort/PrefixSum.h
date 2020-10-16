@@ -11,8 +11,8 @@ namespace ncl {
 		namespace parallel {
 			class PrefixSum : public Compute {
 			public:
-				PrefixSum(StorageBuffer<GLuint>& histogram, unsigned workers)
-					: Compute{ glm::ivec3{workers, 1, 1}, {}, prefix_scan_comp_shader }
+				PrefixSum(StorageBuffer<GLuint>& histogram)
+					: Compute{ glm::ivec3{1}, {}, prefix_scan_comp_shader }
 					, _histogram{ histogram }
 				{
 				}

@@ -7,7 +7,7 @@ namespace ncl {
 	namespace gl {
 		namespace parallel {
 
-			constexpr GLuint WG_COUNT = 1;
+			constexpr GLuint WG_COUNT = 64;
 			constexpr GLuint RADICES = 16;
 			constexpr GLuint HISTOGRAM = 0;
 			constexpr GLuint CONSTS = 0;

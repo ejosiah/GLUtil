@@ -86,14 +86,24 @@ public:
 		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &res[2]);
 		sbr << "\n\t" << "Max Workgroup size: (" << res[0] << ", " << res[1] << ", " << res[2] << ")";
 
-		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, 0, res);
-		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, 1, &res[1]);
-		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, 2, &res[2]);
-		sbr << "\n\t" << "Max Workgroup invocations: (" << res[0] << ", " << res[1] << ", " << res[2] << ")";
+		clear(res);
+		glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &res[0]);
+		sbr << "\n\t" << "Max Workgroup invocations: " << res[0];
+
+		clear(res);
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, res);
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &res[1]);
+		glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &res[2]);
+		sbr << "\n\t" << "Max Workgroup counts: (" << res[0] << ", " << res[1] << ", " << res[2] << ")";
 
 		
+		clear(res);
 		glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &res[0]);
 		sbr << "\n\t" << "Shared memory size: " << res[0];
+	}
+
+	void clear(int* arr) {
+		arr[0] = arr[1] = arr[2];
 	}
 
 	void display() override {

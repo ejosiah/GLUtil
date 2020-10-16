@@ -30,7 +30,8 @@ namespace ncl {
 		static glm::vec2 center(0);
 
 		static void onError(int error, const char* description) {
-
+			static auto logger = Logger::get("GLFW");
+			logger.error("encountered error code: " + std::to_string(error) + ", reason: " + description);
 		}
 
 		static void onKey(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -306,11 +307,73 @@ namespace ncl {
 			}
 		};
 
-		int start(Scene* s, const GLVersion& v = { 4, 5 }) {
+		inline int start(Scene* s, const GLVersion& v = { 4, 5 }) {
 			GlfwApp app(*s, v);
 			app.run();
 			delete s;
 			return 0;
+		}
+
+		template<typename Func>
+		inline void withGL(const GLVersion& v, Func && func) {
+			static auto logger = Logger::get("GLFW");
+			GLFWwindow* window = nullptr;
+			try {
+				glfwSetErrorCallback(onError);
+
+				if (!glfwInit()) {
+					throw std::runtime_error("GLFW intialization failed");
+				}
+
+				glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, v.major);
+				glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, v.minor);
+				glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+				glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+				logger.info("OpenGL context " + std::to_string(v.major) + "." + std::to_string(v.minor) + " created");
+
+#ifdef DEBUG_MODE
+				glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+				logger.info("debug mode enabled, using OpenGL debug context");
+
+#endif
+
+				glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+				window = glfwCreateWindow(10, 10, "", nullptr, nullptr);
+
+				if (!window) {
+					throw std::runtime_error("GLFW window creation failed");
+				}
+
+				glfwMakeContextCurrent(window);
+
+				int loaded = ogl_LoadFunctions();
+				if (loaded == ogl_LOAD_FAILED) {
+					int failedCount = loaded - ogl_LOAD_SUCCEEDED;
+					throw std::runtime_error("failed loading gl functions");
+				}
+
+
+#ifdef DEBUG_MODE
+				glDebugMessageCallback(&debugCallback, nullptr);
+#endif
+
+				func();
+
+				if (window) {
+					glfwSetWindowShouldClose(window, GLFW_TRUE);
+					glfwDestroyWindow(window);
+				}
+
+				logger.info("OpenGL context destroyed");
+			}
+			catch (std::runtime_error& error) {
+				if (window) {
+					glfwSetWindowShouldClose(window, GLFW_TRUE);
+					glfwDestroyWindow(window);
+				}
+				std::cout << error.what() << "\n";
+			}
 		}
 	}
 }
