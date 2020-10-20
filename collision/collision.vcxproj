@@ -144,6 +144,13 @@
   <ItemGroup>
     <ClCompile Include="collision.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\add_value.comp" />
+    <None Include="shader\prefix_scan.comp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="algorithm.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

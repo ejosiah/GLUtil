@@ -62,10 +62,18 @@ blocks_info get_blocks_info(const uint n, const uint wg_idx) {
 uint prefix_scan(inout uvec4 v) {
   uint sum = 0;
   uint tmp;
-  tmp = v.x; v.x = sum; sum += tmp;
-  tmp = v.y; v.y = sum; sum += tmp;
-  tmp = v.z; v.z = sum; sum += tmp;
-  tmp = v.w; v.w = sum; sum += tmp;
+  tmp = v.x; 
+  v.x = sum; 
+  sum += tmp;
+  tmp = v.y; 
+  v.y = sum; 
+  sum += tmp;
+  tmp = v.z; 
+  v.z = sum; 
+  sum += tmp;
+  tmp = v.w; 
+  v.w = sum; 
+  sum += tmp;
   return sum;
 }
 

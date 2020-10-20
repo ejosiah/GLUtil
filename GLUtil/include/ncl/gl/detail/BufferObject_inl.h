@@ -60,9 +60,9 @@ namespace ncl {
 		template<GLenum Target, typename T>
 		void BufferObject<Target, T>::copy(GLuint buffer, GLuint index)
 		{
-			if (!glIsBuffer(buffer)) throw std::runtime_error{ "Not a buffer object" };
-			_owner = true;
-			auto [size, buf] = CopyBuffer::copy(buffer);
+			if (glIsBuffer(buffer) == GL_FALSE) throw std::runtime_error{ "Not a buffer object" };
+			_owner = (glIsBuffer(_buf) == GL_FALSE);
+			auto [size, buf] = CopyBuffer::copy(buffer, _buf, _size);
 			_size = size;
 			_buf = buf;
 		}

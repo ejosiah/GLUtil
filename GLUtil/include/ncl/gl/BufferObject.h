@@ -40,7 +40,7 @@ namespace ncl {
 
 			T getFromGPU(unsigned int index);
 
-			inline GLuint buffer() {
+			inline GLuint buffer() const {
 				return _buf;
 			}
 
@@ -54,11 +54,11 @@ namespace ncl {
 				});
 			}
 
-			inline size_t count() {
+			inline size_t count() const {
 				return _size / sizeof(T);
 			}
 
-			inline size_t size() {
+			inline size_t size() const {
 				return _size;
 			}
 
@@ -110,7 +110,7 @@ namespace ncl {
 
 			void empty();
 
-			void copy(GLuint buffer, GLuint index);
+			void copy(GLuint buffer, GLuint index = 0);
 
 			using const_iterator = buffer_iterator<true, T>;
 			using iterator = buffer_iterator<false, T>;
