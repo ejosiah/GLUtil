@@ -73,17 +73,17 @@ constexpr uint nearestMultiple(uint n, uint x) {
 	return nModx == 0 ? n : n + x - nModx;
 }
 
+constexpr uint Num_Threads_Per_Block = 192;
 constexpr uint Radix = 256;
-//constexpr uint Num_Elements = 1 << 20;
 constexpr uint Num_Elements = 1 << 16;
-//constexpr uint Num_Elements = 65664;
+//constexpr uint Num_Elements = 192 * 352;
+//constexpr uint Num_Elements = nearestMultiple(1 << 16, 192);
 constexpr uint R = 16;
 constexpr uint L = 8;
-constexpr uint Num_Threads_Per_Block = 192;
 constexpr uint Num_Blocks = 16;
 constexpr uint Num_Groups_Per_Block = Num_Threads_Per_Block / R;
-constexpr uint Num_Elements_Per_Block = Num_Elements / Num_Blocks;
-constexpr uint Num_Elements_Per_Group = nearestMultiple(Num_Elements_Per_Block / Num_Groups_Per_Block, R);
+constexpr uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, 192);
+constexpr uint Num_Elements_Per_Group = Num_Elements_Per_Block / Num_Groups_Per_Block;
 
 struct Consts {
 	uint byte;
@@ -92,6 +92,7 @@ struct Consts {
 	uint Num_Groups_per_WorkGroup;
 	uint Num_Elements_per_WorkGroup;
 	uint Num_Elements_Per_Group;
+	uint Num_Elements;
 };
 
 using ConstUniform = UniformBuffer<Consts>;
@@ -110,7 +111,7 @@ int main(int argc, const char** argv) {
 		//constexpr uint size = 1 << 16;
 		uint Size = Num_Elements;
 		std::vector<uint> elements(Size);
-		//std::fill_n(begin(elements), Size, 5);
+	//	std::fill_n(begin(elements), Size, 5);
 		std::generate(begin(elements), end(elements), [&rng] { return rng(); });
 
 		std::array<int, Radix> bits;
@@ -123,9 +124,11 @@ int main(int argc, const char** argv) {
 			int end = offset + Num_Elements_Per_Block;
 			
 			for (int j = offset; j < end; j++) {
-				int bit = elements[j];
-				int bitIdx = i * Radix + bit;
-				counts[bitIdx]++;
+				if (j < Num_Elements) {
+					int bit = elements[j];
+					int bitIdx = i * Radix + bit;
+					counts[bitIdx]++;
+				}
 			}
 		}
 
@@ -134,7 +137,11 @@ int main(int argc, const char** argv) {
 		fmt::print("Num Groups Per WorkGroup: {}\n", Num_Groups_Per_Block);
 		fmt::print("Num Elements Per Groups: {}\n", Num_Elements_Per_Group);
 		fmt::print("{}\n", Num_Elements_Per_Group + R - (Num_Elements_Per_Group % R));
-		fmt::print("{}\n", counts);
+
+		auto num = nearestMultiple(1 << 16, 192);
+		if (num % 12 == 0) printf("%d is mutiple of %d\n", num, 12);
+		if (num % 16 == 0) printf("%d is mutiple of %d\n\n", num, 16);
+		
 
 		uIntBuffer countBuffer;
 		countBuffer.allocate(Radix * Num_Blocks, 0);
@@ -150,8 +157,18 @@ int main(int argc, const char** argv) {
 			}
 		});
 
-		Consts consts{ 0, R, Radix, Num_Groups_Per_Block, Num_Elements_Per_Block, Num_Elements_Per_Group };
-		ConstUniform uConsts{ consts};
+		Consts consts{ 0, R, Radix, Num_Groups_Per_Block, Num_Elements_Per_Block, Num_Elements_Per_Group, Num_Elements };
+
+		//Consts consts;
+		//consts.byte = 0;
+		//consts.R = R;
+		//consts.Radix = Radix;
+		//consts.Num_Groups_per_WorkGroup = Num_Groups_Per_Block;
+		//consts.Num_Elements_per_WorkGroup = nearestMultiple(Num_Elements_Per_Block, Num_Threads_Per_Block);
+		//consts.Num_Elements_Per_Group = consts.Num_Elements_per_WorkGroup / consts.Num_Groups_per_WorkGroup;
+		//consts.Num_Elements = Num_Elements_Per_Block;
+
+		ConstUniform uConsts{ consts };
 
 		static auto countRadicesSrc = getText("shader//count_radices.comp");
 		Shader countRadices;
@@ -164,20 +181,32 @@ int main(int argc, const char** argv) {
 			countBuffer.bind(0);
 			elementBuffer.bind(1);
 
-			glDispatchCompute(1, 1, 1);
+			glDispatchCompute(Num_Blocks, 1, 1);
 		});
 
 		uint sum = 0;
-		//countBuffer.read([&](auto ptr) {
-		//	for (int i = 0; i < (Radix * Num_Blocks); i++) {
-		//		if (*(ptr + i) != counts[i]) {
-		//			fmt::print("{} != {} at index: {}", *(ptr + i), counts[i], i);
-		//			exit(i);
-		//		}
-		//		fmt::print("{} ", *(ptr + i));
-		//		sum += *(ptr + i);
-		//	}
-		//});
+		countBuffer.read([&](auto ptr) {
+			//int block = 1;
+			//int offset = block * Radix;
+			//int end = offset + Radix;
+
+			int offset = 0;
+			int end = counts.size();
+
+			for (int i = offset; i < end; i++) {
+				fmt::print("{} ", counts[i]);
+			}
+			fmt::print("\n");
+
+			for (int i = offset; i < end; i++) {
+				if (*(ptr + i) != counts[i]) {
+					fmt::print("{} != {} at index: {}", *(ptr + i), counts[i], i);
+					exit(i);
+				}
+				fmt::print("{} ", *(ptr + i));
+				sum += *(ptr + i);
+			}
+		});
 		uint sum0 = std::accumulate(begin(counts), end(counts), 0);
 		fmt::print("\nsum: {}\n", sum);
 		fmt::print("sum: {}\n", sum0);

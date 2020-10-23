@@ -19,6 +19,7 @@ layout(binding = CONSTS) uniform Consts{
 	uint Num_Groups_per_WorkGroup;
 	uint Num_Elements_per_WorkGroup;
 	uint Num_Elements_Per_Group;
+	uint Num_Elements;
 };
 
 layout(std430, binding=COUNTS) buffer Counts{
@@ -45,17 +46,20 @@ void main(){
 
 	uint offset = gl_WorkGroupID.x * Num_Elements_per_WorkGroup;
     uint end = offset + Num_Elements_per_WorkGroup;
-
+	uint start = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup) * Num_Elements_Per_Group;
+	uint local_offset = offset - start;
 
 	for(uint r = 0; r < Num_Elements_Per_Group; r += 16){
-		uint idx = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group) * Num_Elements_Per_Group + (thid % R) + r + offset;
+		uint idx = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group) * Num_Elements_Per_Group + (thid % R) + r;
 
-		if(idx < end){
+		if(idx >= Num_Elements) break;
+
 			uint word = data[0].buf[idx];
 			uint bit = DIGIT(word, byte, Radix);
 			uint bitIdx = group * Radix + bit;
 			atomicAdd(local_counts[bitIdx], 1);
-		}
+	
+		
 	}
 	BARRIER;
 
