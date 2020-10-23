@@ -63,12 +63,6 @@ namespace ncl {
 			 GLuint numWorkGroups = std::max(1, int(count / DATA_PER_WORKGROUP));
 			 sum_buffer.allocate(numWorkGroups);
 
-			// data_buffer.read([](auto ptr) {
-			// for (auto i = 1024; i < 1048; i++) {
-			//	 printf("%d ", *(ptr + i));
-			// }
-			// });
-			//printf("\n");
 			 
 			 scan_program([&] {
 				 data_buffer.bind(0);
@@ -78,39 +72,26 @@ namespace ncl {
 				 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 			});
 
-			 //data_buffer.read([](auto ptr) {
-				// for (auto i = 1024; i < 1048; i++) {
-				//	 printf("%d ", *(ptr + i));
-				// }
-				// });
-			 //printf("\n");
-
-			 //sum_buffer.read([n = numWorkGroups](auto ptr) {
-				// for (auto i = 0; i < n; i++) {
-				//	 printf("%d ", *(ptr + i));
-				// }
-				// });
-			 //printf("\n");
-
+			 
 			 scan_program([&] {
+				 // TODO will break if sum_buffer.count() > 1024
+				 // generate sums in previous scan block
 				 sum_buffer.bind(0);
 				 send("N", int(sum_buffer.count()));
-				 glDispatchCompute(numWorkGroups, 1, 1);
+				 glDispatchCompute(numWorkGroups/ sum_buffer.count(), 1, 1);
 				 glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 			});
 
-			 //sum_buffer.read([n = numWorkGroups](auto ptr) {
-				// for (auto i = 0; i < n; i++) {
-				//	 printf("%d ", *(ptr + i));
-				// }
-				// });
-			 //printf("\n");
+			 sum_buffer.read([n = numWorkGroups](auto ptr) {
+				 for (auto i = 0; i < 50; i++) {
+					 printf("%d ", *(ptr + i));
+				 }
+				 });
+			 printf("\n");
 
 
 
 			 add_value_program([&] {
-
-
 				 sum_buffer.bind(0);
 				 data_buffer.bind(1);
 				 send("count", int(sum_buffer.count()));
@@ -121,5 +102,6 @@ namespace ncl {
 
 			 source_buffer.copy(data_buffer.buffer());
 		}
+
 	}
 }

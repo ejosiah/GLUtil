@@ -26,6 +26,9 @@
     <None Include="shader\add_value.comp">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="shader\count_radices.comp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="algorithm.h">

@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\add_value.comp" />
+    <None Include="shader\count_radices.comp" />
     <None Include="shader\prefix_scan.comp" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,71 @@
+#version 460 core
+
+#define CONSTS 0
+#define COUNTS 0
+#define DATA 1
+#define IN_CELL_ID 0
+#define OUT_CELL_ID 1
+#define BYTE_SIZE 8
+#define BARRIER groupMemoryBarrier(); barrier()
+#define DIGIT(WORD, BYTE, RADIX) ((WORD >> BYTE * BYTE_SIZE) & (RADIX-1))
+#define IS_GROUP_LEADER(ID, NUM_INVOC_PER_GROUP) ((ID % NUM_INVOC_PER_GROUP) == 0)
+
+layout(local_size_x = 192) in;
+
+layout(binding = CONSTS) uniform Consts{
+	uint byte;
+	uint R;
+	uint Radix;
+	uint Num_Groups_per_WorkGroup;
+	uint Num_Elements_per_WorkGroup;
+	uint Num_Elements_Per_Group;
+};
+
+layout(std430, binding=COUNTS) buffer Counts{
+	uint counts[];
+};
+
+layout(std430, binding=DATA) buffer Data{
+	uint buf[];
+} data[4];
+
+shared uint local_counts[3072];
+
+void main(){
+	uint thid = gl_LocalInvocationIndex;
+	uint group = thid/R;
+	
+
+	if(thid == 0){
+		for(int i = 0; i < 3072; i++){
+			local_counts[i] = 0;
+		}
+	}
+	BARRIER;
+
+	uint offset = gl_WorkGroupID.x * Num_Elements_per_WorkGroup;
+    uint end = offset + Num_Elements_per_WorkGroup;
+
+
+	for(uint r = 0; r < Num_Elements_Per_Group; r += 16){
+		uint idx = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group) * Num_Elements_Per_Group + (thid % R) + r + offset;
+
+		if(idx < end){
+			uint word = data[0].buf[idx];
+			uint bit = DIGIT(word, byte, Radix);
+			uint bitIdx = group * Radix + bit;
+			atomicAdd(local_counts[bitIdx], 1);
+		}
+	}
+	BARRIER;
+
+	
+	if(IS_GROUP_LEADER(thid, R)){	
+		for(uint i = 0; i < Radix; i++){
+			uint local_bit_Idx = thid * R + i;
+			uint global_bit_Idx = gl_WorkGroupID.x * Radix + i;
+			atomicAdd(counts[global_bit_Idx], local_counts[local_bit_Idx]);
+		}
+	}
+	BARRIER;
+}
