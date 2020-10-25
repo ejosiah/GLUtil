@@ -31,35 +31,36 @@ layout(std430, binding=DATA) buffer Data{
 } data[4];
 
 shared uint local_counts[3072];
+shared uint flags[12];
 
 void main(){
 	uint thid = gl_LocalInvocationIndex;
 	uint group = thid/R;
 	
-
 	if(thid == 0){
+		flags[group] = 0;
 		for(int i = 0; i < 3072; i++){
 			local_counts[i] = 0;
 		}
 	}
 	BARRIER;
 
-	uint offset = gl_WorkGroupID.x * Num_Elements_per_WorkGroup;
-    uint end = offset + Num_Elements_per_WorkGroup;
-	uint start = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup) * Num_Elements_Per_Group;
-	uint local_offset = offset - start;
-
-	for(uint r = 0; r < Num_Elements_Per_Group; r += 16){
+	for(uint r = 0; r < Num_Elements_Per_Group; r += R){
 		uint idx = (gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group) * Num_Elements_Per_Group + (thid % R) + r;
 
 		if(idx >= Num_Elements) break;
-
+			
 			uint word = data[0].buf[idx];
 			uint bit = DIGIT(word, byte, Radix);
-			uint bitIdx = group * Radix + bit;
-			atomicAdd(local_counts[bitIdx], 1);
-	
-		
+			uint bitIdx = group * Radix + bit;	// TODO colomn major order
+
+
+			for(int i = 0; i < R; i++){
+				if(thid%R == i) {
+					local_counts[bitIdx]++;
+				}
+				BARRIER;
+			}
 	}
 	BARRIER;
 
@@ -67,8 +68,8 @@ void main(){
 	if(IS_GROUP_LEADER(thid, R)){	
 		for(uint i = 0; i < Radix; i++){
 			uint local_bit_Idx = thid * R + i;
-			uint global_bit_Idx = gl_WorkGroupID.x * Radix + i;
-			atomicAdd(counts[global_bit_Idx], local_counts[local_bit_Idx]);
+			uint global_bit_Idx = i * gl_NumWorkGroups.x + gl_WorkGroupID.x;
+			atomicAdd(counts[global_bit_Idx], local_counts[local_bit_Idx]);	// TODO don't reduce, 
 		}
 	}
 	BARRIER;

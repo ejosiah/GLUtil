@@ -159,14 +159,6 @@ int main(int argc, const char** argv) {
 
 		Consts consts{ 0, R, Radix, Num_Groups_Per_Block, Num_Elements_Per_Block, Num_Elements_Per_Group, Num_Elements };
 
-		//Consts consts;
-		//consts.byte = 0;
-		//consts.R = R;
-		//consts.Radix = Radix;
-		//consts.Num_Groups_per_WorkGroup = Num_Groups_Per_Block;
-		//consts.Num_Elements_per_WorkGroup = nearestMultiple(Num_Elements_Per_Block, Num_Threads_Per_Block);
-		//consts.Num_Elements_Per_Group = consts.Num_Elements_per_WorkGroup / consts.Num_Groups_per_WorkGroup;
-		//consts.Num_Elements = Num_Elements_Per_Block;
 
 		ConstUniform uConsts{ consts };
 
@@ -193,18 +185,30 @@ int main(int argc, const char** argv) {
 			int offset = 0;
 			int end = counts.size();
 
+			//for (int i = offset; i < end; i++) {
+			//	fmt::print("{} ", counts[i]);
+			//}
+			//fmt::print("\n");
+			
 			for (int i = offset; i < end; i++) {
-				fmt::print("{} ", counts[i]);
-			}
-			fmt::print("\n");
-
-			for (int i = offset; i < end; i++) {
-				if (*(ptr + i) != counts[i]) {
-					fmt::print("{} != {} at index: {}", *(ptr + i), counts[i], i);
-					exit(i);
-				}
-				fmt::print("{} ", *(ptr + i));
-				sum += *(ptr + i);
+				//if (*(ptr + i) != counts[i]) {
+				//	fmt::print("{} != {} at index: {}", *(ptr + i), counts[i], i);
+				//	exit(i);
+				//}
+			//	if (*(ptr + i) == 0) {
+					sum += *(ptr + i);
+					fmt::print("{} ", *(ptr + i));
+					if ((i + 1) % 16 == 0) {
+						auto radix = i / 16;
+						int expected = std::count(begin(elements), std::end(elements), radix);
+						assert(sum == expected);
+						fmt::print("\n");
+						sum = 0;
+					}
+					
+			//	}
+			//	if ((i + 1) % 256 == 0) fmt::print("\n");
+			//	sum += *(ptr + i);
 			}
 		});
 		uint sum0 = std::accumulate(begin(counts), end(counts), 0);
