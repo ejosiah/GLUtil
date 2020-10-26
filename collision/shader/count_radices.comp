@@ -1,5 +1,6 @@
 #version 460 core
 
+#define WORKGROUP_SIZE 1024
 #define CONSTS 0
 #define COUNTS 0
 #define DATA 1
@@ -10,7 +11,7 @@
 #define DIGIT(WORD, BYTE, RADIX) ((WORD >> BYTE * BYTE_SIZE) & (RADIX-1))
 #define IS_GROUP_LEADER(ID, NUM_INVOC_PER_GROUP) ((ID % NUM_INVOC_PER_GROUP) == 0)
 
-layout(local_size_x = 192) in;
+layout(local_size_x = WORKGROUP_SIZE) in;
 
 layout(binding = CONSTS) uniform Consts{
 	uint byte;
@@ -30,16 +31,14 @@ layout(std430, binding=DATA) buffer Data{
 	uint buf[];
 } data[4];
 
-shared uint local_counts[3072];
-shared uint flags[12];
+shared uint local_counts[8192];
 
 void main(){
 	uint thid = gl_LocalInvocationIndex;
 	uint group = thid/R;
 	
 	if(thid == 0){
-		flags[group] = 0;
-		for(int i = 0; i < 3072; i++){
+		for(int i = 0; i < local_counts.length(); i++){
 			local_counts[i] = 0;
 		}
 	}
@@ -52,7 +51,7 @@ void main(){
 			
 			uint word = data[0].buf[idx];
 			uint bit = DIGIT(word, byte, Radix);
-			uint bitIdx = group * Radix + bit;	// TODO colomn major order
+			uint bitIdx = bit * Num_Groups_per_WorkGroup + group;
 
 
 			for(int i = 0; i < R; i++){
@@ -67,9 +66,11 @@ void main(){
 	
 	if(IS_GROUP_LEADER(thid, R)){	
 		for(uint i = 0; i < Radix; i++){
-			uint local_bit_Idx = thid * R + i;
-			uint global_bit_Idx = i * gl_NumWorkGroups.x + gl_WorkGroupID.x;
-			atomicAdd(counts[global_bit_Idx], local_counts[local_bit_Idx]);	// TODO don't reduce, 
+		//	uint local_bit_Idx = thid * R + i;
+			uint local_bit_Idx = i * Num_Groups_per_WorkGroup + group;
+			uint global_bit_Idx = i * (gl_NumWorkGroups.x * Num_Groups_per_WorkGroup) + gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group;
+			counts[global_bit_Idx] = local_counts[local_bit_Idx];
+		//	atomicAdd(counts[global_bit_Idx], local_counts[local_bit_Idx]);	// TODO don't reduce, 
 		}
 	}
 	BARRIER;

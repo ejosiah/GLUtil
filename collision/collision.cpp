@@ -73,16 +73,16 @@ constexpr uint nearestMultiple(uint n, uint x) {
 	return nModx == 0 ? n : n + x - nModx;
 }
 
-constexpr uint Num_Threads_Per_Block = 192;
+constexpr uint Num_Threads_Per_Block = 1024;
 constexpr uint Radix = 256;
-constexpr uint Num_Elements = 1 << 16;
+constexpr uint Num_Elements = 1 << 20;
 //constexpr uint Num_Elements = 192 * 352;
 //constexpr uint Num_Elements = nearestMultiple(1 << 16, 192);
-constexpr uint R = 16;
+constexpr uint R = 32;
 constexpr uint L = 8;
-constexpr uint Num_Blocks = 16;
+constexpr uint Num_Blocks = 64;
 constexpr uint Num_Groups_Per_Block = Num_Threads_Per_Block / R;
-constexpr uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, 192);
+constexpr uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, Num_Threads_Per_Block);
 constexpr uint Num_Elements_Per_Group = Num_Elements_Per_Block / Num_Groups_Per_Block;
 
 struct Consts {
@@ -144,7 +144,7 @@ int main(int argc, const char** argv) {
 		
 
 		uIntBuffer countBuffer;
-		countBuffer.allocate(Radix * Num_Blocks, 0);
+		countBuffer.allocate(Radix * Num_Blocks * Num_Groups_Per_Block, 0);
 		countBuffer.fill(0);
 
 		uIntBuffer elementBuffer;
@@ -178,37 +178,25 @@ int main(int argc, const char** argv) {
 
 		uint sum = 0;
 		countBuffer.read([&](auto ptr) {
-			//int block = 1;
-			//int offset = block * Radix;
-			//int end = offset + Radix;
+
 
 			int offset = 0;
-			int end = counts.size();
+			int end = countBuffer.count();
+			constexpr int rowLength = Num_Groups_Per_Block * Num_Blocks;
 
-			//for (int i = offset; i < end; i++) {
-			//	fmt::print("{} ", counts[i]);
-			//}
-			//fmt::print("\n");
 			
 			for (int i = offset; i < end; i++) {
-				//if (*(ptr + i) != counts[i]) {
-				//	fmt::print("{} != {} at index: {}", *(ptr + i), counts[i], i);
-				//	exit(i);
-				//}
-			//	if (*(ptr + i) == 0) {
+
 					sum += *(ptr + i);
 					fmt::print("{} ", *(ptr + i));
-					if ((i + 1) % 16 == 0) {
-						auto radix = i / 16;
+					if ((i + 1) % rowLength == 0) {
+						auto radix = i / rowLength;
 						int expected = std::count(begin(elements), std::end(elements), radix);
 						assert(sum == expected);
 						fmt::print("\n");
 						sum = 0;
 					}
 					
-			//	}
-			//	if ((i + 1) % 256 == 0) fmt::print("\n");
-			//	sum += *(ptr + i);
 			}
 		});
 		uint sum0 = std::accumulate(begin(counts), end(counts), 0);
