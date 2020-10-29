@@ -1,9 +1,12 @@
 #version 460 core
 
+#define RADIX 256
 #define WORKGROUP_SIZE 1024
 #define CONSTS 0
 #define COUNTS 0
 #define DATA 1
+#define NUM_DATA_ELEMENTS 4
+#define SUMS 5
 #define IN_CELL_ID 0
 #define OUT_CELL_ID 1
 #define BYTE_SIZE 8
@@ -31,19 +34,36 @@ layout(std430, binding=COUNTS) buffer Counts{
 
 layout(std430, binding=DATA) buffer Data{
 	uint buf[];
-} data[4];
+} data[NUM_DATA_ELEMENTS];
+
+layout(std430, binding=SUMS) buffer Sums{
+	uint sums[];
+};
 
 shared uint local_counts[8192];
+shared uint local_sum[RADIX];
 
 void main(){
 	uint thid = gl_LocalInvocationIndex;
 	uint group = thid/R;
 	
 	if(thid == 0){
-		for(int i = 0; i < local_counts.length(); i++){
-			local_counts[i] = 0;
+		uint sum = 0;
+		for(int i = 0; i < RADIX; i++){
+			uint temp = sums[i];
+			local_sum[i] = sum;
+			sum += temp;
 		}
 	}
+
+	if(IS_GROUP_LEADER(thid, R)){	
+		for(uint i = 0; i < Radix; i++){
+			uint local_bit_Idx = i * Num_Groups_per_WorkGroup + group;
+			uint global_bit_Idx = i * (gl_NumWorkGroups.x * Num_Groups_per_WorkGroup) + gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group;
+			local_counts[local_bit_Idx] = counts[global_bit_Idx];
+		}
+	}
+
 	BARRIER;
 
 	for(uint r = 0; r < Num_Elements_Per_Group; r += R){
@@ -51,29 +71,21 @@ void main(){
 
 		if(idx >= Num_Elements) break;
 			
-			uint word = data[IN_CELL_ID].buf[idx];
+			uint word = data[0].buf[idx];
 			uint bit = DIGIT(word, byte, Radix);
 			uint bitIdx = bit * Num_Groups_per_WorkGroup + group;
 
 
 			for(int i = 0; i < R; i++){
 				if(thid%R == i) {
-					local_counts[bitIdx]++;
+					uint localOffset = local_counts[bitIdx]++;
+					uint globalOffset = local_sum[bit];
+					data[OUT_CELL_ID].buf[localOffset + globalOffset] = data[IN_CELL_ID].buf[idx];
+					
 				}
 				BARRIER;
 			}
 	}
-	BARRIER;
-
-	
-	if(IS_GROUP_LEADER(thid, R)){	// TODO group member processes Radix/groupSize
-		for(uint i = 0; i < Radix; i++){
-			uint local_bit_Idx = i * Num_Groups_per_WorkGroup + group;
-			uint global_bit_Idx = i * (gl_NumWorkGroups.x * Num_Groups_per_WorkGroup) + gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group;
-			counts[global_bit_Idx] = local_counts[local_bit_Idx];
-		}
-	}
-
 	BARRIER;
 	memoryBarrier();
 }

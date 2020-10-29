@@ -89,6 +89,10 @@ namespace ncl {
 
 			void update(T* data);
 
+			void set(const T& data);
+
+			void set(T&& data);
+
 			template<typename InputIterator>
 			inline void from(InputIterator first, InputIterator last, GLuint index = 0) {
 				allocate(std::distance(first, last), index);

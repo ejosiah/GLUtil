@@ -171,6 +171,16 @@ namespace ncl {
 		}
 
 		template<GLenum Target, typename T>
+		void BufferObject<Target, T>::set(const T& data) {
+			update(0, _size, &data);
+		}
+
+		template<GLenum Target, typename T>
+		void BufferObject<Target, T>::set(T&& data) {
+			update(0, _size, &data);
+		}
+
+		template<GLenum Target, typename T>
 		void BufferObject<Target, T>::update(GLintptr offset, GLsizeiptr size, T* data) {
 			if ((offset + size < 0) || (offset + size > _size)) {
 				throw std::out_of_range{ "data is out of range" };

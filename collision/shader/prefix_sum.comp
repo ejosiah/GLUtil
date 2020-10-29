@@ -1,7 +1,11 @@
 #version 460 core 
 
-#define N 512	
+#define N 2048
+#define CONSTS 0
 #define COUNTS 0
+#define NEXT_ID 0
+#define SUMS 5
+#define RADIX_SUM_DATA 6
 #define RADICES_PER_WG 4
 #define NUM_RADICES 256
 #define SYNCTHREADS groupMemoryBarrier(); barrier()
@@ -10,17 +14,29 @@
 
 layout(local_size_x=1024) in;
 
-layout(binding=0) uniform atomic_uint nextId;
+layout(binding = CONSTS) uniform Consts{
+	uint byte;
+	uint R;
+	uint Radix;
+	uint Num_Groups_per_WorkGroup;
+	uint Num_Elements_per_WorkGroup;
+	uint Num_Elements_Per_Group;
+	uint Num_Elements;
+	uint Num_Radices_Per_WorkGroup;
+	uint Num_Groups;
+};
+
+layout(binding=NEXT_ID) uniform atomic_uint nextId;
 
 layout(std430, binding=COUNTS) buffer Counts{
 	uint counts[];
 };
 
-layout(std430, binding=1) buffer SUM{
+layout(std430, binding=SUMS) buffer Sums{
 	uint sums[];
 };
 
-layout(std430, binding=2) coherent buffer GLOBAL_SUM_DATA{
+layout(std430, binding=RADIX_SUM_DATA)  buffer RadixSumData{
     uint mutex;
 	uint running_sum;
 };
@@ -28,41 +44,16 @@ layout(std430, binding=2) coherent buffer GLOBAL_SUM_DATA{
 shared uint local_counts[N];
 shared uint local_sums[RADICES_PER_WG];
 
-void prefixScan(inout uvec4 v, out uint sum){
-	sum = 0;
-	uint temp = v.x;
-	v.x = sum;
-	sum += temp;
-	
-	temp = v.y;
-	v.y = sum;
-	sum += temp;
-
-	temp = v.z;
-	v.z = sum;
-	sum += temp;
-
-	temp = v.w;
-	v.w = sum;
-	sum += temp;
-}
 
 void main(){
 	uint thid = gl_LocalInvocationIndex;
-	uint g_thid = gl_GlobalInvocationID.x;
+	
+	for(int i = 0; i < Num_Radices_Per_WorkGroup; i++){	// TODO split into 4 group of 256 threads 
+		uint cOffset = gl_WorkGroupID.x * (Num_Radices_Per_WorkGroup * Num_Groups) + i * Num_Groups;
 
+		local_counts[2 * thid] = counts[2 * thid + cOffset];
 
-	for(int i = 0; i < RADICES_PER_WG; i++){
-		int cOffset = int(gl_WorkGroupID.x * gl_NumWorkGroups.x + i * gl_WorkGroupSize.x * 2); // TODO check indexing and offsets
-		uvec4 temp0 = uvec4(counts[8 * g_thid + 0 + cOffset], counts[8 * g_thid + 1 + cOffset], counts[8 * g_thid + 2 + cOffset], counts[8 * g_thid + 3 + cOffset]);
-		uvec4 temp1 = uvec4(counts[8 * g_thid + 4 + cOffset], counts[8 * g_thid + 5 + cOffset], counts[8 * g_thid + 6 + cOffset], counts[8 * g_thid + 7 + cOffset]);
-
-		uint sum = 0;
-		prefixScan(temp0, sum);
-		local_counts[2 * thid] = sum;
-
-		prefixScan(temp1, sum);
-		local_counts[2 * thid + 1] = sum;
+		local_counts[2 * thid + 1] = counts[2 * thid + 1 + cOffset];
 
 		uint offset = 1;
 		for(uint d = N >> 1; d > 0; d >>= 1){
@@ -76,7 +67,7 @@ void main(){
 		}
 
 		if(thid == 0){  
-			local_sums[i]= local_counts[N - 1];
+			sums[gl_WorkGroupID.x * Num_Radices_Per_WorkGroup + i] = local_counts[N - 1];
 			local_counts[N - 1] = 0;
 		}
 
@@ -93,46 +84,21 @@ void main(){
 		}
 		SYNCTHREADS;
 
-		uint sum0 = local_counts[2 * thid];
-		uint sum1 = local_counts[2 * thid + 1];
-
-		temp0.x += sum0;
-		temp0.y += sum0;
-		temp0.z += sum0;
-		temp0.w += sum0;
-
-    
-		temp1.x += sum1;
-		temp1.y += sum1;
-		temp1.z += sum1;
-		temp1.w += sum1;
-
-		counts[8 * g_thid + cOffset] = temp0.x;
-		counts[8 * g_thid + 1 + cOffset] = temp0.y;   
-		counts[8 * g_thid + 2 + cOffset] = temp0.z;
-		counts[8 * g_thid + 3 + cOffset] = temp0.w;
-
-    
-		counts[8 * g_thid + 4 + cOffset] = temp1.x;
-		counts[8 * g_thid + 5 + cOffset] = temp1.y;   
-		counts[8 * g_thid + 6 + cOffset] = temp1.z;
-		counts[8 * g_thid + 7 + cOffset] = temp1.w;
-
-
-		sums[gl_WorkGroupID.x * RADICES_PER_WG + i] = local_sums[i]; // TODO check indexing and offsets
+		counts[2 * thid + cOffset] = local_counts[2 * thid];
+		counts[2 * thid + 1 + cOffset] = local_counts[2 * thid + 1];
 
 		SYNCTHREADS;
-
-		if(thid == 0){
-			ACQURE_LOCK;
-			uint id = atomicCounterIncrement(nextId) * RADICES_PER_WG + i; // TODO check indexing and offsets
-			running_sum = atomicExchange(sums[id], running_sum);
-			atomicAdd(sums[id + 1], running_sum);
-			RELEASE_LOCK;
-		}
-
-		memoryBarrierBuffer();
 	}
 
-
+//	if(thid == 0){
+//		ACQURE_LOCK;
+//		uint workGroupId = atomicCounterIncrement(nextId);
+//		for(int i = 0; i < 4; i++){
+//			uint id =  workGroupId * Num_Radices_Per_WorkGroup + i;
+//			atomicExchange(running_sum, atomicExchange(sums[id], running_sum));
+//			atomicAdd(sums[id + 1], running_sum);
+//		}
+//		RELEASE_LOCK;
+//	}
+	memoryBarrier();
 }

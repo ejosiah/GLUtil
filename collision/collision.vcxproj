@@ -149,6 +149,7 @@
     <None Include="shader\count_radices.comp" />
     <None Include="shader\prefix_scan.comp" />
     <None Include="shader\prefix_sum.comp" />
+    <None Include="shader\reorder.comp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="algorithm.h" />
