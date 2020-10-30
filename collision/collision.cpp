@@ -6,7 +6,7 @@
 #include <chrono>
 #include <algorithm>
 #include <memory>
-
+#include <limits>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
@@ -31,7 +31,7 @@ using uIntBuffer = StorageBuffer<uint>;
 void test_scan() {
 	auto rng = [] {
 		static std::default_random_engine engine{ 123456789 };
-		static std::uniform_int_distribution<int> dist(0, 20);
+		static std::uniform_int_distribution<int> dist(0, 1 << 20);
 		return dist(engine);
 	};
 
@@ -220,111 +220,62 @@ int main(int argc, const char** argv) {
 		NextId nextId;
 		nextId.allocate(1);
 
-		fmt::print("\n");
-		dElements[KEY_IN].read([](auto ptr) {
-			for (int i = 0; i < 10; i++) fmt::print("{} ", *(ptr + i));
-			});
-		fmt::print("\n");
-		dElements[KEY_OUT].read([](auto ptr) {
-			for (int i = 0; i < 10; i++) fmt::print("{} ", *(ptr + i));
-			});
+		for (int i = 0; i < 4; i++) {
 
-		countRadices([&] {
-			uConsts.bind(CONSTS);
-			countBuffer.bind(COUNTS);
-			dElements[KEY_IN].bind(DATA + KEY_IN);
-			dElements[KEY_OUT].bind(DATA + KEY_OUT);
-			dElements[VALUE_IN].bind(DATA + VALUE_IN);
-			dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
+			uConsts.update([byte = i](auto consts) { consts->byte = byte; });
 
-			glDispatchCompute(Num_Blocks, 1, 1);
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-		});
+			countRadices([&] {
+				uConsts.bind(CONSTS);
+				countBuffer.bind(COUNTS);
+				dElements[KEY_IN].bind(DATA + KEY_IN);
+				dElements[KEY_OUT].bind(DATA + KEY_OUT);
+				dElements[VALUE_IN].bind(DATA + VALUE_IN);
+				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
 
-		fmt::print("\n");
-		dElements[KEY_IN].read([](auto ptr) {
-			for (int i = 0; i < 10; i++) fmt::print("{} ", *(ptr + i));
-		});
-		fmt::print("\n");
-		dElements[KEY_OUT].read([](auto ptr) {
-			for (int i = 0; i < 10; i++) fmt::print("{} ", *(ptr + i));
-		});
-
-		uint sum = 0;
-		//countBuffer.read([&](auto ptr) {
+				glDispatchCompute(Num_Blocks, 1, 1);
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+				});
 
 
-		//	int offset = 0;
-		//	int end = countBuffer.count();
-		//	constexpr int rowLength = Num_Groups_Per_Block * Num_Blocks;
+			prefixSum([&] {
+				nextId.set(0);
+				radixSumDataBuffer.set({});
+				radixSumBuffer.fill(0);
 
-		//	
-		//	for (int i = offset; i < end; i++) {
+				nextId.bind(NEXT_ID);
+				uConsts.bind(CONSTS);
+				countBuffer.bind(COUNTS);
+				radixSumBuffer.bind(SUMS);
+				radixSumDataBuffer.bind(RADIX_SUM_DATA);
 
-		//			sum += *(ptr + i);
-		//			fmt::print("{} ", *(ptr + i));
-		//			if ((i + 1) % rowLength == 0) {
-		//				auto radix = i / rowLength;
-		//				int expected = std::count(begin(elements), std::end(elements), radix);
-		//				assert(sum == expected);
-		//				fmt::print("\n");
-		//				sum = 0;
-		//			}
-		//			
-		//	}
-		//});
-		//uint sum0 = std::accumulate(begin(counts), end(counts), 0);
-		//fmt::print("\nsum: {}\n", sum);
-		//fmt::print("sum: {}\n", sum0);
+				glDispatchCompute(Num_Blocks, 1, 1);
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+				});
 
 
+			reorder([&] {
+				uConsts.bind(CONSTS);
+				countBuffer.bind(COUNTS);
+				dElements[KEY_IN].bind(DATA + KEY_IN);
+				dElements[KEY_OUT].bind(DATA + KEY_OUT);
+				dElements[VALUE_IN].bind(DATA + VALUE_IN);
+				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
+				radixSumBuffer.bind(SUMS);
 
-		prefixSum([&] {
-			nextId.set(0);
-			radixSumDataBuffer.set({});
-			radixSumBuffer.fill(0);
+				glDispatchCompute(Num_Blocks, 1, 1);
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+				});
 
-			nextId.bind(NEXT_ID);
-			uConsts.bind(CONSTS);
-			countBuffer.bind(COUNTS);
-			radixSumBuffer.bind(SUMS);
-			radixSumDataBuffer.bind(RADIX_SUM_DATA);
-
-			glDispatchCompute(Num_Blocks, 1, 1);
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			});
-
-	//	std::vector<uint> expectedSums(Radix);
-	//	for (auto i = 0; i < Radix; i++) {
-	//		expectedSums[i] = std::count(begin(elements), end(elements), i);
-	//	}
-	////	std::inclusive_scan(begin(expectedSums), end(expectedSums), begin(expectedSums));
-	//	radixSumBuffer.read([&expectedSums](auto ptr) {
-	//		//std::exclusive_scan(ptr, ptr + Radix, ptr, 0);
-	//		for (auto i = 0; i < Radix; i++) {
-	//			auto sum = *(ptr + i);
-	//			auto expected = expectedSums[i];
-	//		//	fmt::print("{}: {}, {}\n", i, sum, expected);
-	//			assert(sum == expected);
-	//		}
-	//		});
-
-		reorder([&] {
-			uConsts.bind(CONSTS);
-			countBuffer.bind(COUNTS);
-			dElements[KEY_IN].bind(DATA + KEY_IN);
-			dElements[KEY_OUT].bind(DATA + KEY_OUT);
-			dElements[VALUE_IN].bind(DATA + VALUE_IN);
-			dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
-			radixSumBuffer.bind(SUMS);
-
-			glDispatchCompute(Num_Blocks, 1, 1);
-			glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			});
+			std::swap(dElements[KEY_IN], dElements[KEY_OUT]);
+			std::swap(dElements[VALUE_IN], dElements[VALUE_OUT]);
+		}
 
 		fmt::print("\n");
 		dElements[KEY_OUT].read([&](auto ptr) {
 			assert(std::is_sorted(ptr, ptr + Size));
+			
+			//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
+			//fmt::print("\n");
 
 				for (auto i = 0; i < Radix; i++) {
 					auto expected = std::count(begin(elements), end(elements), i);
