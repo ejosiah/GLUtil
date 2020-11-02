@@ -8,7 +8,7 @@
 #define RADIX_SUM_DATA 6
 #define RADICES_PER_WG 4
 #define NUM_RADICES 256
-#define SYNCTHREADS groupMemoryBarrier(); barrier()
+#define BARRIER groupMemoryBarrier(); barrier()
 #define ACQURE_LOCK while(atomicCompSwap(mutex, 1, 0) == 0){}
 #define RELEASE_LOCK atomicExchange(mutex, 1)
 
@@ -57,7 +57,7 @@ void main(){
 
 		uint offset = 1;
 		for(uint d = N >> 1; d > 0; d >>= 1){
-			SYNCTHREADS;
+			BARRIER;
 			if(thid < d){
 				uint ai = offset * ( 2 * thid+1) -1;
 				uint bi = offset * ( 2 * thid+2) -1;
@@ -73,7 +73,7 @@ void main(){
 
 	    for(uint d = 1; d < N; d *= 2){
 			offset >>= 1;
-			SYNCTHREADS;
+			BARRIER;
 			if(thid < d){
 				uint ai = offset * (2 * thid + 1) - 1;
 				uint bi = offset * (2 * thid + 2) - 1;
@@ -82,12 +82,12 @@ void main(){
 				local_counts[bi] += t;
 			}
 		}
-		SYNCTHREADS;
+		BARRIER;
 
 		counts[2 * thid + cOffset] = local_counts[2 * thid];
 		counts[2 * thid + 1 + cOffset] = local_counts[2 * thid + 1];
 
-		SYNCTHREADS;
+		BARRIER;
 	}
 
 //	if(thid == 0){
@@ -100,5 +100,4 @@ void main(){
 //		}
 //		RELEASE_LOCK;
 //	}
-	memoryBarrier();
 }

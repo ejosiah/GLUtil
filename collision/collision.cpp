@@ -119,6 +119,22 @@ using RadixSumBuffer = StorageBuffer<uint>;
 
 using DataElements = std::array<uIntBuffer, NUM_DATA_ELEMENTS>;
 
+enum QUERY{ HISTOGRAM, PREFIX_SUM, REORDER, NUM_QUERIES};
+
+constexpr bool debug = true;
+
+template<GLenum TARGET, typename Func>
+constexpr void query(GLuint id, Func&& func) {
+	if constexpr (debug) {
+		glBeginQuery(TARGET, id);
+	}
+	func();
+
+	if constexpr (debug) {
+		glEndQuery(TARGET);
+	}
+}
+
 int main(int argc, const char** argv) {
 
 
@@ -128,7 +144,13 @@ int main(int argc, const char** argv) {
 		return dist(engine);
 	};
 
+
 	withGL({ 4, 6 }, [&] {
+
+		GLuint queires[NUM_QUERIES];
+		std::vector<float> stats[NUM_QUERIES];
+
+		glGenQueries(NUM_QUERIES, queires);
 
 		constexpr uint Size = Num_Elements;
 		std::vector<uint> elements(Size);
@@ -179,7 +201,7 @@ int main(int argc, const char** argv) {
 			for (int i = 0; i < Size; i++) {
 				assert(*(ptr + i) == elements[i]);
 			}
-			});
+		});
 
 		Consts consts{
 			0
@@ -220,6 +242,8 @@ int main(int argc, const char** argv) {
 		NextId nextId;
 		nextId.allocate(1);
 
+		
+		
 		for (int i = 0; i < 4; i++) {
 
 			uConsts.update([byte = i](auto consts) { consts->byte = byte; });
@@ -232,9 +256,12 @@ int main(int argc, const char** argv) {
 				dElements[VALUE_IN].bind(DATA + VALUE_IN);
 				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
 
-				glDispatchCompute(Num_Blocks, 1, 1);
-				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+				query<GL_TIME_ELAPSED>(queires[HISTOGRAM], [&] {
+					glDispatchCompute(Num_Blocks, 1, 1);
 				});
+
+				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+			});
 
 
 			prefixSum([&] {
@@ -248,7 +275,10 @@ int main(int argc, const char** argv) {
 				radixSumBuffer.bind(SUMS);
 				radixSumDataBuffer.bind(RADIX_SUM_DATA);
 
-				glDispatchCompute(Num_Blocks, 1, 1);
+				query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
+					glDispatchCompute(Num_Blocks, 1, 1);
+				});
+				
 				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 				});
 
@@ -262,28 +292,61 @@ int main(int argc, const char** argv) {
 				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
 				radixSumBuffer.bind(SUMS);
 
-				glDispatchCompute(Num_Blocks, 1, 1);
+				glBeginQuery(GL_TIME_ELAPSED, queires[PREFIX_SUM]);
+				query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
+					glDispatchCompute(Num_Blocks, 1, 1);
+				});
+
 				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 				});
 
 			std::swap(dElements[KEY_IN], dElements[KEY_OUT]);
 			std::swap(dElements[VALUE_IN], dElements[VALUE_OUT]);
+
+
+			if constexpr (debug) {
+				GLint duration;
+				glGetQueryObjectiv(queires[HISTOGRAM], GL_QUERY_RESULT, &duration);
+				stats[HISTOGRAM].push_back(duration * 1e-6f);
+
+				glGetQueryObjectiv(queires[PREFIX_SUM], GL_QUERY_RESULT, &duration);
+				stats[PREFIX_SUM].push_back(duration * 1e-6f);
+
+				glGetQueryObjectiv(queires[REORDER], GL_QUERY_RESULT, &duration);
+				stats[REORDER].push_back(duration * 1e-6f);
+			}
 		}
 
-		fmt::print("\n");
-		dElements[KEY_OUT].read([&](auto ptr) {
-			assert(std::is_sorted(ptr, ptr + Size));
-			
-			//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
-			//fmt::print("\n");
+
+		if constexpr (debug) {
+			fmt::print("\n");
+			dElements[KEY_OUT].read([&](auto ptr) {
+				assert(std::is_sorted(ptr, ptr + Size));
+
+				//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
+				//fmt::print("\n");
 
 				for (auto i = 0; i < Radix; i++) {
 					auto expected = std::count(begin(elements), end(elements), i);
 					auto actual = std::count(ptr, ptr + Size, i);
 					assert(actual == expected);
 				}
-		});
+				});
 
+
+			float sum = std::accumulate(begin(stats[HISTOGRAM]), end(stats[HISTOGRAM]), 0);
+			float avg = sum / 4;
+			fmt::print("{:<20}{:<20}{:<20}\n", "Step", "Average (ms)", "Total (ms)");
+			fmt::print("{:<20}{:<20}{:<20}\n", "Histogram", avg, sum);
+
+			sum = std::accumulate(begin(stats[PREFIX_SUM]), end(stats[PREFIX_SUM]), 0);
+			avg = sum / 4;
+			fmt::print("{:<20}{:<20}{:<20}\n", "Prefix Sum", avg, sum);
+
+			sum = std::accumulate(begin(stats[REORDER]), end(stats[REORDER]), 0);
+			avg = sum / 4;
+			fmt::print("{:<20}{:<20}{:<20}\n","Reorder", avg, sum);
+		}
 
 	});
 
