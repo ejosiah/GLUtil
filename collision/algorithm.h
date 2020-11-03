@@ -2,13 +2,29 @@
 
 #include <type_traits>
 #include <algorithm>
+#include <optional>
 #include "../GLUtil/include/ncl/gl/Shader.h"
 #include "../GLUtil/include/ncl/gl/shader_binding.h"
 #include "../GLUtil/include/ncl/gl/util.h"
 #include "../GLUtil/include/ncl/gl/BufferObject.h"
 
+
 namespace ncl {
 	namespace gl {
+
+		constexpr bool debug = true;
+
+		template<GLenum TARGET, typename Func>
+		constexpr void query(GLuint id, Func&& func) {
+			if constexpr (debug) {
+				glBeginQuery(TARGET, id);
+			}
+			func();
+
+			if constexpr (debug) {
+				glEndQuery(TARGET);
+			}
+		}
 
 		constexpr int nearestPowerOfTwo(int x) {
 			if (x <= 1) return 2;
@@ -103,5 +119,15 @@ namespace ncl {
 			 source_buffer.copy(data_buffer.buffer());
 		}
 
+
+		template<typename BufferSource>
+		void sort(BufferSource& bufferSource, std::optional<BufferSource>& indices) {
+			GLuint buffer;
+			if constexpr (std::is_integral<BufferSource>::value)
+				buffer = bufferSource;
+
+			else
+				buffer = bufferSource.buffer();
+		}
 	}
 }

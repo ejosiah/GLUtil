@@ -121,20 +121,6 @@ using DataElements = std::array<uIntBuffer, NUM_DATA_ELEMENTS>;
 
 enum QUERY{ HISTOGRAM, PREFIX_SUM, REORDER, NUM_QUERIES};
 
-constexpr bool debug = true;
-
-template<GLenum TARGET, typename Func>
-constexpr void query(GLuint id, Func&& func) {
-	if constexpr (debug) {
-		glBeginQuery(TARGET, id);
-	}
-	func();
-
-	if constexpr (debug) {
-		glEndQuery(TARGET);
-	}
-}
-
 int main(int argc, const char** argv) {
 
 
@@ -217,20 +203,10 @@ int main(int argc, const char** argv) {
 
 		ConstUniform uConsts{ consts };
 
-		static auto countRadicesSrc = getText("shader//count_radices.comp");
-		Shader countRadices;
-		countRadices.load({ GL_COMPUTE_SHADER, countRadicesSrc, "count_radices.comp" });
-		countRadices.createAndLinkProgram();
+		static Shader countRadices({ GL_COMPUTE_SHADER, getText("shader//count_radices.comp"), "count_radices.comp" });
+		static Shader prefixSum({ GL_COMPUTE_SHADER, getText("shader//prefix_sum.comp"), "prefix_sum.comp" });
+		static Shader reorder({ GL_COMPUTE_SHADER, getText("shader//reorder.comp"), "reorder.comp" });
 
-		static auto prefixSumSrc = getText("shader//prefix_sum.comp");
-		Shader prefixSum;
-		prefixSum.load({ GL_COMPUTE_SHADER, prefixSumSrc, "prefix_sum.comp" });
-		prefixSum.createAndLinkProgram();
-
-		static auto reorderSrc = getText("shader//reorder.comp");
-		Shader reorder;
-		reorder.load({ GL_COMPUTE_SHADER, reorderSrc, "reorder.comp" });
-		reorder.createAndLinkProgram();
 
 		RadixSumData radixSumData;
 		RadixSumDataBuffer radixSumDataBuffer;
@@ -298,7 +274,7 @@ int main(int argc, const char** argv) {
 				});
 
 				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-				});
+			});
 
 			std::swap(dElements[KEY_IN], dElements[KEY_OUT]);
 			std::swap(dElements[VALUE_IN], dElements[VALUE_OUT]);

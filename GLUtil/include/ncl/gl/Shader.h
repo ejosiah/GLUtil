@@ -56,6 +56,7 @@ namespace ncl {
 
 		public:
 			Shader();
+			Shader(const ShaderSource& source);
 			~Shader();
 
 			Shader(Shader&& source) noexcept;

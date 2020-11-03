@@ -41,6 +41,13 @@ namespace ncl {
 			clear();
 		}
 
+		Shader::Shader(const ShaderSource& source)
+			:Shader() 
+		{
+			load(source);
+			createAndLinkProgram();
+		}
+
 		Shader::Shader(Shader&& source) noexcept {
 			transfer(source, *this);
 		}
