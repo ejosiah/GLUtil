@@ -65,9 +65,8 @@ void test_scan() {
 		});
 }
 
-
 constexpr uint Num_Elements = 1 << 20;
-constexpr uint Num_Blocks = 64;
+constexpr uint Num_Blocks = Num_Elements/ ELEMENTS_PER_WG;
 constexpr uint Num_Groups_Per_Block = Num_Threads_Per_Block / R;
 constexpr uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, Num_Threads_Per_Block);
 constexpr uint Num_Elements_Per_Group = Num_Elements_Per_Block / Num_Groups_Per_Block;
@@ -80,7 +79,7 @@ int main(int argc, const char** argv) {
 
 	auto rng = [] {
 		static std::default_random_engine engine{ 123456789 };
-		static std::uniform_int_distribution<int> dist(0, 255);
+		static std::uniform_int_distribution<int> dist(0, 1 << 20);
 		return dist(engine);
 	};
 
@@ -100,30 +99,30 @@ int main(int argc, const char** argv) {
 		std::array<int, Radix> bits;
 		std::iota(begin(bits), end(bits), 0);
 
-		std::vector<uint> counts(Radix * Num_Blocks);
-		std::vector<std::vector<uint>> counts_per_block;
-		for (int i = 0; i < Num_Blocks; i++) {
-			int offset = Num_Elements_Per_Block * i;
-			int end = offset + Num_Elements_Per_Block;
+		//std::vector<uint> counts(Radix * Num_Blocks);
+		//std::vector<std::vector<uint>> counts_per_block;
+		//for (int i = 0; i < Num_Blocks; i++) {
+		//	int offset = Num_Elements_Per_Block * i;
+		//	int end = offset + Num_Elements_Per_Block;
 
-			for (int j = offset; j < end; j++) {
-				if (j < Num_Elements) {
-					int bit = elements[j];
-					int bitIdx = i * Radix + bit;
-					counts[bitIdx]++;
-				}
-			}
-		}
+		//	for (int j = offset; j < end; j++) {
+		//		if (j < Num_Elements) {
+		//			int bit = elements[j];
+		//			int bitIdx = i * Radix + bit;
+		//			counts[bitIdx]++;
+		//		}
+		//	}
+		//}
 
-		fmt::print("num elements: {}\n", Size);
-		fmt::print("Radix: {}\n", Radix);
-		fmt::print("Num Groups Per WorkGroup: {}\n", Num_Groups_Per_Block);
-		fmt::print("Num Elements Per Groups: {}\n", Num_Elements_Per_Group);
-		fmt::print("{}\n", Num_Elements_Per_Group + R - (Num_Elements_Per_Group % R));
+		//fmt::print("num elements: {}\n", Size);
+		//fmt::print("Radix: {}\n", Radix);
+		//fmt::print("Num Groups Per WorkGroup: {}\n", Num_Groups_Per_Block);
+		//fmt::print("Num Elements Per Groups: {}\n", Num_Elements_Per_Group);
+		//fmt::print("{}\n", Num_Elements_Per_Group + R - (Num_Elements_Per_Group % R));
 
-		auto num = nearestMultiple(1 << 16, 192);
-		if (num % 12 == 0) printf("%d is mutiple of %d\n", num, 12);
-		if (num % 16 == 0) printf("%d is mutiple of %d\n\n", num, 16);
+		//auto num = nearestMultiple(1 << 16, 192);
+		//if (num % 12 == 0) printf("%d is mutiple of %d\n", num, 12);
+		//if (num % 16 == 0) printf("%d is mutiple of %d\n\n", num, 16);
 
 		uIntBuffer dElement;
 		dElement.allocate(Size);
@@ -255,19 +254,19 @@ int main(int argc, const char** argv) {
 		sort(dElement);
 
 		if constexpr (debug) {
-			fmt::print("\n");
-			dElement.read([&](auto ptr) {
-				assert(std::is_sorted(ptr, ptr + Size));
+		//	fmt::print("\n");
+		//	dElement.read([&](auto ptr) {
+		//	//	assert(std::is_sorted(ptr, ptr + Size));
 
-				//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
-				//fmt::print("\n");
+		//		//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
+		//		//fmt::print("\n");
 
-				for (auto i = 0; i < Radix; i++) {
-					auto expected = std::count(begin(elements), end(elements), i);
-					auto actual = std::count(ptr, ptr + Size, i);
-					assert(actual == expected);
-				}
-				});
+		//		for (auto i = 0; i < Radix; i++) {
+		//			auto expected = std::count(begin(elements), end(elements), i);
+		//			auto actual = std::count(ptr, ptr + Size, i);
+		//			assert(actual == expected);
+		//		}
+		//		});
 
 			//fmt::print("Histogram: {}\n", stats[HISTOGRAM]);
 			//fmt::print("Prefix sum: {}\n", stats[PREFIX_SUM]);

@@ -1,6 +1,7 @@
 #version 460 core 
 
-#define N 2048
+#define MAX_N 4096
+#define N (Num_Groups)
 #define CONSTS 0
 #define COUNTS 0
 #define NEXT_ID 0
@@ -20,6 +21,7 @@
 // due to conflict free offsets
 #define EXTRA_SMEM_ELEMENTS ((N / BANKS) + ((N / BANKS) / BANKS))
 #define NUM_SMEM_ELEMENTS (N + EXTRA_SMEM_ELEMENTS)
+#define NUM_COUNTS (Radix * gl_NumWorkGroups.x * Num_Groups_per_WorkGroup)
 
 layout(local_size_x=1024) in;
 
@@ -50,8 +52,27 @@ layout(std430, binding=RADIX_SUM_DATA)  buffer RadixSumData{
 	uint running_sum;
 };
 
-shared uint local_counts[NUM_SMEM_ELEMENTS];
+shared uint local_counts[MAX_N];
 shared uint local_sums[RADICES_PER_WG];
+
+void prefixScan(inout uvec4 v, out uint sum){
+	sum = 0;
+	uint temp = v.x;
+	v.x = sum;
+	sum += temp;
+	
+	temp = v.y;
+	v.y = sum;
+	sum += temp;
+
+	temp = v.z;
+	v.z = sum;
+	sum += temp;
+
+	temp = v.w;
+	v.w = sum;
+	sum += temp;
+}
 
 
 void main(){
@@ -70,7 +91,7 @@ void main(){
 		local_counts[bi + bankOffsetB] = counts[bi + cOffset];
 
 		uint offset = 1;
-		for(uint d = N >> 1; d > 0; d >>= 1){
+		for(uint d = (N >> 1); d > 0; d >>= 1){
 			BARRIER;
 			if(thid < d){
 				uint ai = offset * ( 2 * thid+1) -1;

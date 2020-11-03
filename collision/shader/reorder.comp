@@ -64,6 +64,14 @@ void main(){
 		}
 	}
 
+//	uint radicesPerThread = Radix/R;
+//	for(uint i = 0; i < radicesPerThread; i++){
+//		uint radix = thid%R * radicesPerThread + i;
+//		uint local_bit_Idx = radix * Num_Groups_per_WorkGroup + group;
+//		uint global_bit_Idx = radix * (gl_NumWorkGroups.x * Num_Groups_per_WorkGroup) + gl_WorkGroupID.x * Num_Groups_per_WorkGroup + group;
+//		local_counts[local_bit_Idx] = counts[global_bit_Idx];
+//	}
+
 	BARRIER;
 
 	for(uint r = 0; r < Num_Elements_Per_Group; r += R){

@@ -1,5 +1,6 @@
 #version 460 core
 
+#define NUM_COUNTERS 8192
 #define WORKGROUP_SIZE 1024
 #define CONSTS 0
 #define COUNTS 0
@@ -33,17 +34,22 @@ layout(std430, binding=DATA) buffer Data{
 	uint buf[];
 } data[4];
 
-shared uint local_counts[8192];
+shared uint local_counts[NUM_COUNTERS];
 
 void main(){
 	uint thid = gl_LocalInvocationIndex;
 	uint group = thid/R;
 	
-	if(thid == 0){
-		for(int i = 0; i < local_counts.length(); i++){
-			local_counts[i] = 0;
-		}
+//	if(thid == 0){
+//		for(int i = 0; i < local_counts.length(); i++){
+//			local_counts[i] = 0;
+//		}
+//	}
+
+	for(uint i = thid; i < NUM_COUNTERS; i+= gl_WorkGroupSize.x){
+		local_counts[i] = 0;
 	}
+
 	BARRIER;
 
 	for(uint r = 0; r < Num_Elements_Per_Group; r += R){

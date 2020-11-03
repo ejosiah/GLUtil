@@ -16,6 +16,7 @@ namespace ncl {
 		using IntBuffer = StorageBuffer<int>;
 		using uIntBuffer = StorageBuffer<uint>;
 
+		constexpr uint ELEMENTS_PER_WG = 1 << 14;
 		constexpr uint CONSTS = 0;
 		constexpr uint COUNTS = 0;
 		constexpr uint NEXT_ID = 0;
@@ -31,7 +32,7 @@ namespace ncl {
 		constexpr uint Radix = 256;
 		constexpr uint R = 32;
 		constexpr uint L = 8;
-		
+		constexpr uint MAX_WORKGROUPS = 64;
 
 
 
@@ -191,7 +192,7 @@ namespace ncl {
 			elements[KEY_IN].reference(buffer);
 
 			uint Num_Elements = elements[KEY_IN].count();
-			uint Num_Blocks = 64;
+			uint Num_Blocks = std::min(std::max(1u, Num_Elements/ ELEMENTS_PER_WG), MAX_WORKGROUPS);
 			uint Num_Groups_Per_Block = Num_Threads_Per_Block / R;
 			uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, Num_Threads_Per_Block);
 			uint Num_Elements_Per_Group = Num_Elements_Per_Block / Num_Groups_Per_Block;
@@ -249,6 +250,9 @@ namespace ncl {
 					});
 
 
+
+
+
 				prefixSum([&] {
 					nextId.set(0);
 					radixSumDataBuffer.set({});
@@ -267,6 +271,10 @@ namespace ncl {
 					glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 					});
 
+				//radixSumBuffer.read([](auto ptr) {
+				//	for (auto i = 0; i < 256; i++) fmt::print("{} : {}\n", i, *(ptr + i));
+				//	});
+				//fmt::print("\n");
 
 				reorder([&] {
 					uConsts.bind(CONSTS);
@@ -299,6 +307,12 @@ namespace ncl {
 					glGetQueryObjectiv(queires[REORDER], GL_QUERY_RESULT, &duration);
 					stats[REORDER].push_back(duration * 1e-6f);
 				}
+			}
+
+			if constexpr (debug) {
+				elements[KEY_IN].read([&](auto ptr) {
+					assert(std::is_sorted(ptr, ptr + Num_Elements));
+				});
 			}
 		}
 	}
