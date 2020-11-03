@@ -1,5 +1,6 @@
 #pragma comment(lib, "fmtd.lib")
 
+constexpr bool debug = true;
 
 #include <iostream>
 #include <random>
@@ -23,10 +24,6 @@
 
 using namespace ncl;
 using namespace gl;
-using uint = unsigned int;
-using IntBuffer = StorageBuffer<int>;
-using uIntBuffer = StorageBuffer<uint>;
-
 
 void test_scan() {
 	auto rng = [] {
@@ -68,27 +65,8 @@ void test_scan() {
 		});
 }
 
-constexpr uint nearestMultiple(uint n, uint x) {
-	uint nModx = n % x;
-	return nModx == 0 ? n : n + x - nModx;
-}
 
-constexpr uint CONSTS = 0;
-constexpr uint COUNTS = 0;
-constexpr uint NEXT_ID = 0;
-constexpr uint NUM_DATA_ELEMENTS = 4;
-constexpr uint DATA = 1;
-constexpr uint KEY_IN = 0;
-constexpr uint KEY_OUT = 1;
-constexpr uint VALUE_IN = 2;
-constexpr uint VALUE_OUT = 3;
-constexpr uint SUMS = 5;
-constexpr uint RADIX_SUM_DATA = 6;
-constexpr uint Num_Threads_Per_Block = 1024;
-constexpr uint Radix = 256;
 constexpr uint Num_Elements = 1 << 20;
-constexpr uint R = 32;
-constexpr uint L = 8;
 constexpr uint Num_Blocks = 64;
 constexpr uint Num_Groups_Per_Block = Num_Threads_Per_Block / R;
 constexpr uint Num_Elements_Per_Block = nearestMultiple(Num_Elements / Num_Blocks, Num_Threads_Per_Block);
@@ -96,30 +74,6 @@ constexpr uint Num_Elements_Per_Group = Num_Elements_Per_Block / Num_Groups_Per_
 constexpr uint Num_Radices_Per_WorkGroup = Radix / Num_Blocks;
 constexpr uint Num_Groups = Num_Blocks * Num_Groups_Per_Block;
 
-struct Consts {
-	uint byte;
-	uint R;
-	uint Radix;
-	uint Num_Groups_per_WorkGroup;
-	uint Num_Elements_per_WorkGroup;
-	uint Num_Elements_Per_Group;
-	uint Num_Elements;
-	uint Num_Radices_Per_WorkGroup;
-	uint Num_Groups;
-};
-struct RadixSumData {
-	uint mutex = 1;
-	uint running_sum = 0;
-};
-
-using ConstUniform = UniformBuffer<Consts>;
-using RadixSumDataBuffer = StorageBuffer<RadixSumData>;
-using NextId = AtomicCounterBuffer;
-using RadixSumBuffer = StorageBuffer<uint>;
-
-using DataElements = std::array<uIntBuffer, NUM_DATA_ELEMENTS>;
-
-enum QUERY{ HISTOGRAM, PREFIX_SUM, REORDER, NUM_QUERIES};
 
 int main(int argc, const char** argv) {
 
@@ -133,10 +87,10 @@ int main(int argc, const char** argv) {
 
 	withGL({ 4, 6 }, [&] {
 
-		GLuint queires[NUM_QUERIES];
-		std::vector<float> stats[NUM_QUERIES];
+		//GLuint queires[NUM_QUERIES];
+		//std::vector<float> stats[NUM_QUERIES];
 
-		glGenQueries(NUM_QUERIES, queires);
+		//glGenQueries(NUM_QUERIES, queires);
 
 		constexpr uint Size = Num_Elements;
 		std::vector<uint> elements(Size);
@@ -171,132 +125,138 @@ int main(int argc, const char** argv) {
 		if (num % 12 == 0) printf("%d is mutiple of %d\n", num, 12);
 		if (num % 16 == 0) printf("%d is mutiple of %d\n\n", num, 16);
 
-
-		uIntBuffer countBuffer;
-		countBuffer.allocate(Radix * Num_Blocks * Num_Groups_Per_Block, 0);
-		countBuffer.fill(0);
-
-		DataElements dElements;
-		for (auto i = 0; i < NUM_DATA_ELEMENTS; i++) {
-			dElements[i].allocate(Size);
-		}
-
-		dElements[KEY_IN].update(&elements[0]); // TODO num elements instead of byte size
-
-		dElements[KEY_IN].read([&](auto ptr) {
-			for (int i = 0; i < Size; i++) {
-				assert(*(ptr + i) == elements[i]);
-			}
-		});
-
-		Consts consts{
-			0
-			, R
-			, Radix
-			, Num_Groups_Per_Block
-			, Num_Elements_Per_Block
-			, Num_Elements_Per_Group
-			, Num_Elements
-			, Num_Radices_Per_WorkGroup
-			, Num_Groups };
+		uIntBuffer dElement;
+		dElement.allocate(Size);
+		dElement.update(&elements[0]);
 
 
-		ConstUniform uConsts{ consts };
+		//uIntBuffer countBuffer;
+		//countBuffer.allocate(Radix * Num_Blocks * Num_Groups_Per_Block, 0);
+		//countBuffer.fill(0);
 
-		static Shader countRadices({ GL_COMPUTE_SHADER, getText("shader//count_radices.comp"), "count_radices.comp" });
-		static Shader prefixSum({ GL_COMPUTE_SHADER, getText("shader//prefix_sum.comp"), "prefix_sum.comp" });
-		static Shader reorder({ GL_COMPUTE_SHADER, getText("shader//reorder.comp"), "reorder.comp" });
+		//DataElements dElements;
+		//for (auto i = 0; i < NUM_DATA_ELEMENTS; i++) {
+		//	dElements[i].allocate(Size);
+		//}
+
+		//dElements[KEY_IN].update(&elements[0]); // TODO num elements instead of byte size
+
+		//dElements[KEY_IN].read([&](auto ptr) {
+		//	for (int i = 0; i < Size; i++) {
+		//		assert(*(ptr + i) == elements[i]);
+		//	}
+		//});
+
+		//Consts consts{
+		//	0
+		//	, R
+		//	, Radix
+		//	, Num_Groups_Per_Block
+		//	, Num_Elements_Per_Block
+		//	, Num_Elements_Per_Group
+		//	, Num_Elements
+		//	, Num_Radices_Per_WorkGroup
+		//	, Num_Groups };
 
 
-		RadixSumData radixSumData;
-		RadixSumDataBuffer radixSumDataBuffer;
-		radixSumDataBuffer.allocate(1);
+		//ConstUniform uConsts{ consts };
 
-		RadixSumBuffer radixSumBuffer;
-		radixSumBuffer.allocate(Radix + 1);
+		//static Shader countRadices({ GL_COMPUTE_SHADER, getText("shader//count_radices.comp"), "count_radices.comp" });
+		//static Shader prefixSum({ GL_COMPUTE_SHADER, getText("shader//prefix_sum.comp"), "prefix_sum.comp" });
+		//static Shader reorder({ GL_COMPUTE_SHADER, getText("shader//reorder.comp"), "reorder.comp" });
 
-		NextId nextId;
-		nextId.allocate(1);
+
+		//RadixSumData radixSumData;
+		//RadixSumDataBuffer radixSumDataBuffer;
+		//radixSumDataBuffer.allocate(1);
+
+		//RadixSumBuffer radixSumBuffer;
+		//radixSumBuffer.allocate(Radix + 1);
+
+		//NextId nextId;
+		//nextId.allocate(1);
+
+		//
+		//
+		//for (int i = 0; i < 4; i++) {
+
+		//	uConsts.update([byte = i](auto consts) { consts->byte = byte; });
+
+		//	countRadices([&] {
+		//		uConsts.bind(CONSTS);
+		//		countBuffer.bind(COUNTS);
+		//		dElements[KEY_IN].bind(DATA + KEY_IN);
+		//		dElements[KEY_OUT].bind(DATA + KEY_OUT);
+		//		dElements[VALUE_IN].bind(DATA + VALUE_IN);
+		//		dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
+
+		//		query<GL_TIME_ELAPSED>(queires[HISTOGRAM], [&] {
+		//			glDispatchCompute(Num_Blocks, 1, 1);
+		//		});
+
+		//		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		//	});
+
+
+		//	prefixSum([&] {
+		//		nextId.set(0);
+		//		radixSumDataBuffer.set({});
+		//		radixSumBuffer.fill(0);
+
+		//		nextId.bind(NEXT_ID);
+		//		uConsts.bind(CONSTS);
+		//		countBuffer.bind(COUNTS);
+		//		radixSumBuffer.bind(SUMS);
+		//		radixSumDataBuffer.bind(RADIX_SUM_DATA);
+
+		//		query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
+		//			glDispatchCompute(Num_Blocks, 1, 1);
+		//		});
+		//		
+		//		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		//		});
+
+
+		//	reorder([&] {
+		//		uConsts.bind(CONSTS);
+		//		countBuffer.bind(COUNTS);
+		//		dElements[KEY_IN].bind(DATA + KEY_IN);
+		//		dElements[KEY_OUT].bind(DATA + KEY_OUT);
+		//		dElements[VALUE_IN].bind(DATA + VALUE_IN);
+		//		dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
+		//		radixSumBuffer.bind(SUMS);
+
+		//		glBeginQuery(GL_TIME_ELAPSED, queires[PREFIX_SUM]);
+		//		query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
+		//			glDispatchCompute(Num_Blocks, 1, 1);
+		//		});
+
+		//		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		//	});
+
+		//	std::swap(dElements[KEY_IN], dElements[KEY_OUT]);
+		//	std::swap(dElements[VALUE_IN], dElements[VALUE_OUT]);
+
+
+		//	if constexpr (debug) {
+		//		GLint duration;
+		//		glGetQueryObjectiv(queires[HISTOGRAM], GL_QUERY_RESULT, &duration);
+		//		stats[HISTOGRAM].push_back(duration * 1e-6f);
+
+		//		glGetQueryObjectiv(queires[PREFIX_SUM], GL_QUERY_RESULT, &duration);
+		//		stats[PREFIX_SUM].push_back(duration * 1e-6f);
+
+		//		glGetQueryObjectiv(queires[REORDER], GL_QUERY_RESULT, &duration);
+		//		stats[REORDER].push_back(duration * 1e-6f);
+		//	}
+		//}
 
 		
-		
-		for (int i = 0; i < 4; i++) {
-
-			uConsts.update([byte = i](auto consts) { consts->byte = byte; });
-
-			countRadices([&] {
-				uConsts.bind(CONSTS);
-				countBuffer.bind(COUNTS);
-				dElements[KEY_IN].bind(DATA + KEY_IN);
-				dElements[KEY_OUT].bind(DATA + KEY_OUT);
-				dElements[VALUE_IN].bind(DATA + VALUE_IN);
-				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
-
-				query<GL_TIME_ELAPSED>(queires[HISTOGRAM], [&] {
-					glDispatchCompute(Num_Blocks, 1, 1);
-				});
-
-				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			});
-
-
-			prefixSum([&] {
-				nextId.set(0);
-				radixSumDataBuffer.set({});
-				radixSumBuffer.fill(0);
-
-				nextId.bind(NEXT_ID);
-				uConsts.bind(CONSTS);
-				countBuffer.bind(COUNTS);
-				radixSumBuffer.bind(SUMS);
-				radixSumDataBuffer.bind(RADIX_SUM_DATA);
-
-				query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
-					glDispatchCompute(Num_Blocks, 1, 1);
-				});
-				
-				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-				});
-
-
-			reorder([&] {
-				uConsts.bind(CONSTS);
-				countBuffer.bind(COUNTS);
-				dElements[KEY_IN].bind(DATA + KEY_IN);
-				dElements[KEY_OUT].bind(DATA + KEY_OUT);
-				dElements[VALUE_IN].bind(DATA + VALUE_IN);
-				dElements[VALUE_OUT].bind(DATA + VALUE_OUT);
-				radixSumBuffer.bind(SUMS);
-
-				glBeginQuery(GL_TIME_ELAPSED, queires[PREFIX_SUM]);
-				query<GL_TIME_ELAPSED>(queires[PREFIX_SUM], [&] {
-					glDispatchCompute(Num_Blocks, 1, 1);
-				});
-
-				glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-			});
-
-			std::swap(dElements[KEY_IN], dElements[KEY_OUT]);
-			std::swap(dElements[VALUE_IN], dElements[VALUE_OUT]);
-
-
-			if constexpr (debug) {
-				GLint duration;
-				glGetQueryObjectiv(queires[HISTOGRAM], GL_QUERY_RESULT, &duration);
-				stats[HISTOGRAM].push_back(duration * 1e-6f);
-
-				glGetQueryObjectiv(queires[PREFIX_SUM], GL_QUERY_RESULT, &duration);
-				stats[PREFIX_SUM].push_back(duration * 1e-6f);
-
-				glGetQueryObjectiv(queires[REORDER], GL_QUERY_RESULT, &duration);
-				stats[REORDER].push_back(duration * 1e-6f);
-			}
-		}
-
+		sort(dElement);
 
 		if constexpr (debug) {
 			fmt::print("\n");
-			dElements[KEY_OUT].read([&](auto ptr) {
+			dElement.read([&](auto ptr) {
 				assert(std::is_sorted(ptr, ptr + Size));
 
 				//for (int i = 0; i < (1 << 16); i++) fmt::print("{} ", *(ptr + i));
@@ -309,19 +269,34 @@ int main(int argc, const char** argv) {
 				}
 				});
 
+			//fmt::print("Histogram: {}\n", stats[HISTOGRAM]);
+			//fmt::print("Prefix sum: {}\n", stats[PREFIX_SUM]);
+			//fmt::print("Reorder: {}\n", stats[REORDER]);
 
-			float sum = std::accumulate(begin(stats[HISTOGRAM]), end(stats[HISTOGRAM]), 0);
+			float total = 0;
+			float sum = 0;
+			for (auto x : stats[HISTOGRAM]) sum += x;
+			total += sum;
+
+		//	float sum = std::accumulate(begin(stats[HISTOGRAM]), end(stats[HISTOGRAM]), 0);
 			float avg = sum / 4;
 			fmt::print("{:<20}{:<20}{:<20}\n", "Step", "Average (ms)", "Total (ms)");
 			fmt::print("{:<20}{:<20}{:<20}\n", "Histogram", avg, sum);
 
-			sum = std::accumulate(begin(stats[PREFIX_SUM]), end(stats[PREFIX_SUM]), 0);
+			sum = 0;
+			for (auto x : stats[PREFIX_SUM]) sum += x;
+			total += sum;
+		//	sum = std::accumulate(begin(stats[PREFIX_SUM]), end(stats[PREFIX_SUM]), 0);
 			avg = sum / 4;
 			fmt::print("{:<20}{:<20}{:<20}\n", "Prefix Sum", avg, sum);
 
-			sum = std::accumulate(begin(stats[REORDER]), end(stats[REORDER]), 0);
+			sum = 0;
+			for (auto x : stats[REORDER]) sum += x;
+			total += sum;
+		//	sum = std::accumulate(begin(stats[REORDER]), end(stats[REORDER]), 0);
 			avg = sum / 4;
 			fmt::print("{:<20}{:<20}{:<20}\n","Reorder", avg, sum);
+			fmt::print("{:>49}\n", total);
 		}
 
 	});
